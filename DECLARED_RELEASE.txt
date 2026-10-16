@@ -1,0 +1,89 @@
+PLEA gateway v1.2.1: a release check that tells the truth, and wider adversarial testing of the in-database contract engine (the response to the v1.2 independent review, conditional clearance)
+declared 2026-10-13T11:17:00Z, before the official declared run. Database: plea121, recreated clean. No product code changed: every file under plea_gateway/ and mcp/ is byte-identical to the shipped v1.2 (store.py sha256 8a5f7c36...).
+
+before this declaration (not evidence):
+  * Finding A (the regression runner can conceal failure) and finding B (the runner and the README disagree about where the virtual
+    environment is) were reproduced on a fresh extraction of the shipped v1.2 zip (sha256 2abf0215...), with no venv above the bundle root, the layout
+    the README's own instructions produce: bash run_chain_v12.sh printed exit=127 for all 22 stages, exited 0, and wrote outputs/rerun.done.
+    Preserved: outputs/review8/runner_before_v1_2_all_stages_127.log and runner_before_v1_2_NOTE.txt, with the shipped runner as run_chain_v12.sh.shipped.
+    The declared v1.2 run was not affected: its venv sat beside the bundle and every stage exited 0.  A third inconsistency found while fixing it: the README's
+    manual G01 commands said 1,000 rounds, the declared chain runs 300.
+  * The runner is rewritten as run_chain_v121.sh: it picks its Python (PLEA_PYTHON, else ./venv/bin/python in the bundle root, else python3), checks before
+    starting that the interpreter imports psycopg and cryptography and that the database is reachable (exit 2 if not), runs every stage even after a failure,
+    lists the failed stages, requires all 22 stages to have run, and exits 0 only if every one exited 0 (exit 1 otherwise; rerun.failed instead of rerun.done).
+    check_runner.sh exercises the two failure paths in a throwaway copy in seconds: no usable Python -> exit 2; every stage failing -> exit 1.  Both pass.
+  * Finding C (the contract engine needs continued adversarial testing) is answered with two additions to x_tests.py, both seeded: X2.11, a second mutation
+    sweep (another seed, budgets up to k=5 and m=3, six walks of 120 genuine decisions) with the v1.2 sweep's criterion (a mutated record is accepted exactly
+    when it is the contract's own decision, every genuine decision is accepted, every chain verifies and replays); and X4.4, a random differential beyond the
+    exhaustive bound: 3,000 walks of 40 operations on budgets up to k=5 and m=3 with six attempt identities, plea_step against the reference engine and the
+    independent oracle at every one of the 120,000 steps.  The bounded evidence stays bounded; these widen it, they do not make it a proof.
+  * Development run of the extended X suite on a fresh plea121d (outputs/review8/x_tests_dev_run1_coverage_threshold.txt): 0 mismatches in both additions
+    (sweep: 720 genuine, 3,141 mutated, 1,136 the contract's own, 2,005 not; differential: 120,000 steps, APPLIED 15,681, DENIED 98,440, NOOP 2,186,
+    DUPLICATE 3,693) and one failure of my own making: X4.4 required more than 20,000 applying steps, a guess; random walks are mostly denied (13% apply).
+    The threshold is now more than 10,000.  Nothing else changed after that run.  Duration of the X suite: 9 min 16 s (v1.2: about 6 min).
+  * The reviewer also asked for a separate reviewer to run the unchanged release on a fresh PostgreSQL and for staging-condition failure tests.  Neither is
+    something this release can supply; both stay open.
+
+changes from v1.2: run_chain_v121.sh and check_runner.sh (new); tests/x_tests.py (X2.11, X4.4; a parameter on the sweep and on next_op); README.md; the reports.
+Product code, every other test file, the contract, the oracle and the reference are byte-identical to v1.2.
+
+files (sha256):
+1313ade4d3834b0f57471447c94824e6504ecc7daafcdf95843d03155229f605  plea_gateway/__init__.py
+e7893edad3603b20a28b4ed733d702e327e510db13a4db1a2a92b060e942aac3  plea_gateway/binding.py
+7defee95701e7c6edde68d4438468d1f42f4fadc91fb73581a73ad3107e68dfc  plea_gateway/evidence.py
+67c9ac8f872d31b530a3c51f2e7963dda3fdc3ecbbb2b47130e465161a934ccd  plea_gateway/faults.py
+44f2a180a456467a8fc694e384f90f200bdc279c3fcd66a93e70e631f9b01bc9  plea_gateway/gate_host.py
+3dac342419c705dd6cdec11058902364de8634d65f40dd45240ad8fb598967f0  plea_gateway/governor.py
+a367a4bbc2ca21b49ffa781b276710c9bf3ceeb3549ee3ee3c2de2ca910fe749  plea_gateway/plea_budget_ref.py
+be23f1182d2110399e4584c630017f81f59246737294efde519db6e1f6541b6e  plea_gateway/receipts.py
+8a5f7c36bf5cb0315d9134f230c818ecd9c3ac6b51143c1dec279898cce1a152  plea_gateway/store.py
+e08e322d53539bd929c2c3c91790a3bfe9963cd1868a6858117e9ee113b7361b  plea_gateway/tls.py
+f5c8d64d85efd3f9d1a404f8452da005ced5971d3d2520a2ed41a29555816998  plea_gateway/witness.py
+92ea90044d14fe2180fb9fdf15caf11cb2ad49caa21eef9bf3365bcc2e9155b0  plea_gateway/witness_service.py
+7f672232e9988fb1f26fa5160d909a1c4b17f1f23e2e505384aa368e4ad212fd  mcp/demo_tools.py
+4291467d674248c427dc117d47ef802c3b584a43b5141ad3d5d40ce675f15c72  mcp/plea_ctl.py
+dcb60eb17678092420f795ac9b3344e43ddf6730328e19c04825dfd5bf18f5df  mcp/plea_mcp.py
+3b574ba659f905a84475b94f8310a58e047b4fbbf57786c9223d8bb1b44c8b1c  mcp/vanilla_mcp.py
+18a47ba1a8fc9379ae9123547d75d2ebf89b72f3cda1d6dc70244adbea1e8835  tests/apply_once.py
+6b7646b7e2f4824f55ea400370acd1c6d72254b7ec3f56c4e292ab01df3fc136  tests/budget_oracle.py
+22932e82a196e76d80b9dbdd7424f5bcfc213110d781202ab500c4ddeb9bb8fe  tests/chaos.py
+a4ce3f1512af7de052281346ac44c6cef91a3c7510c54907d0274ea72b13d61e  tests/common.py
+22b3d5a1e0198f0dc35351e26959401e608a2efdeffdc78aa754ba1799e90290  tests/conform_store.py
+1ecc76ee74aa2804bfed37e25d8b130cb203097c9c4a064292cc6372a7953323  tests/e1_release_evidence.py
+afc43394784e487530bd5c86c47f16f82b62503fe5146e4fc12d5eac25be375d  tests/e2_reconcile_evidence.py
+5c9cfba268546e0248d3b1f62209040093d6e1830c47794576b78ea050936b48  tests/e3_lifecycle_evidence.py
+06ceff722e90122508b18fb3993ee835304264d54409d4f99edea220d5aa5dac  tests/g01_race.py
+4640e08d322857b3305a650f933874532a909540adabf70e43bf6f11de7dfeb0  tests/g02b.py
+b4f4159d654399d71c2d088edbd8971b85fe16e30d5421f522598206cc639651  tests/h_tests.py
+136008b533db3717f16af9d3bf9242c07ef18a46e75f6f247116cdbbf82fdfac  tests/mcp_tests.py
+6559ad22728f3db0f6c01e3ec968ea139feea272ba0007d4b1bff0c16b7a25d0  tests/p_repro.py
+c5d180888d563ddb7446ffcee01e53ab1a0fc2c67283d40cd0bd6fca8d5962ed  tests/p_tests.py
+621db1c0086aa9ff8ca8df7b69152c47460782fdf1818a0a18d57583f5a7c2cd  tests/q_tests.py
+bffd16d842cbc51c071fbef11b10cedad22130204758a4bebf8ecd51b216c8c7  tests/r_repro.py
+3f104113df34a3ae04a41ec5fe709392be8fb713023062e88f82ff6ac7578e8b  tests/r_tests.py
+491eeb6d02091ed65c2713c85a1143fc8b8ccb37ecabcf9d7894677e9b71aa69  tests/review_tools.py
+18c370802420b0f54ccdd65499dbc9b20334db9d3d1d2551988302c64bf1c819  tests/s_tests.py
+830ee4c0faa305250385e0633187e85931df189662964119863a490e1d7070ef  tests/t_tests.py
+87a57c90a7a2a0d229609fe7d9f5ec3de1876c3ba16c84a5058d80dc3ddae589  tests/u_tests.py
+24ea5ab0c1f58f317bf068ae00f01048d418d7b0ba449f47115152c75f056fe2  tests/v_repro.py
+a80a84a62aedc1bea20ee06afd0e959c79c7f02abe160ad0d43d969126f3b495  tests/v_tests.py
+ee0147c353c331cf7aa9e92d42696633df7d83d19a00b20f913033ab470bbcb3  tests/vectors.py
+3c8da656e62e3c0151ceb3f7ecb7d2c88e86a8a318f4abefdbefe9a5d2a544ae  tests/w1_authority.py
+4ce148a65f8785703ba70efe5cc5de48186518b0d143771e0b0a97b8c71dc1ce  tests/w2_receipts.py
+d5359d1dbb7ca14d85e7332a1623c077a4b5a8149e01808c56125742a6d44294  tests/w3_service_lockstep.py
+7b6a1bab28ccd9569220fd926b0e32a969a3fcd1a5c4e7ba966b31572f945878  tests/w4_service_crash.py
+845142df7b9a4bb6a18758d42a14207e4e18c366edadd075dc26470d456d686e  tests/x_tests.py
+7c720ffe13a409fe1962ec05686ace85f0c72089050e2985370646d057062db4  run_chain_v121.sh
+22e9ef7f3f406af7256a29dcd29cd317b181fad4a211d9be1cefb9a210976240  check_runner.sh
+ddc7209f2d505f7974c8e079614e0343e8cd41216e247300c033635dafc8d527  README.md
+2b01d4d7d20528d9630eba34bcb9461fdd1267db703629eb82a7a21e6104d6a8  outputs/review8/run_chain_v12.sh.shipped
+dd91e21e175ab7f6aa8c55c824d1b7d2617efbd5b7e6691a159a5f75711b71e2  outputs/review8/runner_before_v1_2_NOTE.txt
+f0e80a779d61f04ef35ee6352c63e38b0ef5ea7f1b60f91c0d704f4ed139ef2d  outputs/review8/runner_before_v1_2_all_stages_127.log
+c8467773e161c8d506f2004cd2d9e4e4e8f3458e53ea5c46bb16240a314bca92  outputs/review8/x_tests_dev_run1_coverage_threshold.txt
+
+expected results (declared before the official run): run_chain_v121.sh with PLEA_DB=plea121 on a clean database
+  runner     the chain prints "CHAIN PASSED: 22 of 22 stages exit 0", exits 0, writes outputs/rerun.done and no rerun.failed; check_runner.sh exits 0 with both lines ok
+  X1 15, X2 11, X3 7, X4 4 (37): every v1.2 check as declared in DECLARED_BINDING.txt; X2.11 0 mismatches over 6 walks (720 genuine decisions); X4.4 120,000 steps, 0 mismatches
+  re-runs    U1 21, U2 15 (36); S1 15, S2 13, S3 9 (37); Q1 17, Q2 16 (33); P1 11, P2 15 (26); V1-V6 43; R1-R6 43; H1-H5 33; T1-T4 35; M1-M3 28;
+             E1 13, E2 9, E3 PASS; W1-W4 PASS (W4 18/18); conform_store 34/34; chaos 90/90; G02b 200/200; G01 lock 300/300; G01 serializable 300/300
+  timing     G01 lock about 258 s and serializable about 421 s (v1.2's declared run), not a pass criterion

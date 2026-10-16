@@ -1,0 +1,114 @@
+PLEA gateway v1.0: accepted bindings immutable in place, a stored outcome authenticated on every replay, the privileged functions hardened (the response to the v0.9 independent security review, NOT CLEARED)
+declared 2026-10-13T02:05:00Z, before the official declared run. Database: plea10, recreated clean; the owner (plea) installs the schema and the authority; the four login roles as the README; every root is created by its test through the guarded functions.
+
+before this declaration (not evidence):
+  * The reviewer's own native probe (native_pg_probes_NOT_RUN.py, sha256 3fa3e0e3..., syntax-checked only by them) was run
+    UNCHANGED against the shipped v0.9 package on a fresh disposable database before any repair, as they required.  Every
+    suspected path reproduced natively (outputs/review5/native_pg_before_v0_9.json): the same-phase accepted-nonce rewrite
+    via plea_write as plea_local ACCEPTED, nonce n-old -> n-new; a fabricated results row returned by the governor as a
+    successful payment of 999999 with zero attempts; PUBLIC EXECUTE true on plea_write and plea_new_root; a temporary
+    'roots' in the caller's session captured plea_new_root's insert (temp 1 row, public 0); the control role created a
+    root.  The raw-DML control was refused (42501), as expected.
+  * The same probe, unchanged, against v1.0: the nonce rewrite REJECTED 23514, the nonce still n-old; the script then
+    stops at its cache injection because the direct INSERT into results is now refused (permission denied) and that
+    line has no try -- the stop is preserved (native_pg_after_v1_0_UNCHANGED.stdout.txt).  An adapted copy, whose only
+    change wraps the two cache-injection sites and additionally plants the fake row as the owner so the governor's check
+    is exercised on its own (diff shipped: native_pg_probes_ADAPTED.diff), completes: direct cache INSERT REJECTED 42501;
+    the owner-planted row REJECTED by the governor (RequestKeyReused); PUBLIC EXECUTE false on both functions; the
+    temporary 'roots' no longer captures the insert (temp 0, public 1); the control role's root creation REJECTED 42501;
+    plea_local's TEMPORARY privilege left on by decision (REPORT_BOUNDARY.md section 8).
+  * The reviewer's no-PostgreSQL script (independent_scoped.py, unchanged) against v1.0: its first eleven observations
+    match; it stops at its cache test because the governor refuses the injected row instead of returning it
+    (scoped_after_v1_0.stdout.txt).  Its nonce test injects into a memory adapter, bypassing the database by construction.
+  * The v0.8 counterexamples A/B re-run with the unchanged attack SQL against v0.8 and v1.0 (review4_repro_v1_0.json):
+    both accepted on v0.8, both rejected on v1.0 (A now trips the binding rule first).
+  * Development smokes of the repair: a full lifecycle and the release/hold/recover/reregister paths through the proper
+    credentials on plea9, showing the nonce set by START, carried by ACCEPT_INTENT/RECEIPT/CROSS/RECONCILE/REREGISTER and
+    cleared by RECOVER; s_tests.py 37/37 on plea10; then the whole earlier chain on plea9 (v1.0 authority) -- q_tests and
+    every earlier test, both isolation modes -- all green on the first pass, no test changed, no product change needed.
+
+updates to earlier declared tests, made for v1.0 before this declaration: none.  The product change is confined to
+plea_gateway/store.py (plea_write reads and enforces the existing req and nonce on every update; plea_put_result; every
+table reference schema-qualified; search_path = pg_catalog, pg_temp; REVOKE EXECUTE FROM PUBLIC then the named grants;
+results written only through the function) and plea_gateway/governor.py (a terminal outcome is stored with the
+executor's signed effect report and replayed only once it re-verifies, the stored nonce must be this action's, and the
+operator methods take an explicit control= with no fallback to admin).  The reference engine, gate host, witness,
+evidence, binding, receipts, TLS, the MCP layer and every test file but the new s_tests.py are byte-identical to the
+v0.9 declaration (the hashes below are the same lines).
+
+files (sha256):
+1313ade4d3834b0f57471447c94824e6504ecc7daafcdf95843d03155229f605  plea_gateway/__init__.py
+e7893edad3603b20a28b4ed733d702e327e510db13a4db1a2a92b060e942aac3  plea_gateway/binding.py
+7defee95701e7c6edde68d4438468d1f42f4fadc91fb73581a73ad3107e68dfc  plea_gateway/evidence.py
+67c9ac8f872d31b530a3c51f2e7963dda3fdc3ecbbb2b47130e465161a934ccd  plea_gateway/faults.py
+44f2a180a456467a8fc694e384f90f200bdc279c3fcd66a93e70e631f9b01bc9  plea_gateway/gate_host.py
+ec2242e6e99891bc46b1eaf1ab4b8a31bc911cf9161a79cf380616fc69da8c10  plea_gateway/governor.py
+a367a4bbc2ca21b49ffa781b276710c9bf3ceeb3549ee3ee3c2de2ca910fe749  plea_gateway/plea_budget_ref.py
+be23f1182d2110399e4584c630017f81f59246737294efde519db6e1f6541b6e  plea_gateway/receipts.py
+787e7da39de514d6dd2d03a0b97c3cc5545c93976aae13cc1e7f1c0a4b7d2c30  plea_gateway/store.py
+e08e322d53539bd929c2c3c91790a3bfe9963cd1868a6858117e9ee113b7361b  plea_gateway/tls.py
+f5c8d64d85efd3f9d1a404f8452da005ced5971d3d2520a2ed41a29555816998  plea_gateway/witness.py
+92ea90044d14fe2180fb9fdf15caf11cb2ad49caa21eef9bf3365bcc2e9155b0  plea_gateway/witness_service.py
+7f672232e9988fb1f26fa5160d909a1c4b17f1f23e2e505384aa368e4ad212fd  mcp/demo_tools.py
+9414322bb984264555ebce0af3ee57534541f0901c2440c8a352fbbe8d0a422f  mcp/plea_ctl.py
+d8c45904f9e7fd4a06e56bbbaeff63ef0cfde8307b5e1c5c152d1fc873b8f8fb  mcp/plea_mcp.py
+3b574ba659f905a84475b94f8310a58e047b4fbbf57786c9223d8bb1b44c8b1c  mcp/vanilla_mcp.py
+18a47ba1a8fc9379ae9123547d75d2ebf89b72f3cda1d6dc70244adbea1e8835  tests/apply_once.py
+6b7646b7e2f4824f55ea400370acd1c6d72254b7ec3f56c4e292ab01df3fc136  tests/budget_oracle.py
+22932e82a196e76d80b9dbdd7424f5bcfc213110d781202ab500c4ddeb9bb8fe  tests/chaos.py
+a4ce3f1512af7de052281346ac44c6cef91a3c7510c54907d0274ea72b13d61e  tests/common.py
+22b3d5a1e0198f0dc35351e26959401e608a2efdeffdc78aa754ba1799e90290  tests/conform_store.py
+1ecc76ee74aa2804bfed37e25d8b130cb203097c9c4a064292cc6372a7953323  tests/e1_release_evidence.py
+afc43394784e487530bd5c86c47f16f82b62503fe5146e4fc12d5eac25be375d  tests/e2_reconcile_evidence.py
+5c9cfba268546e0248d3b1f62209040093d6e1830c47794576b78ea050936b48  tests/e3_lifecycle_evidence.py
+06ceff722e90122508b18fb3993ee835304264d54409d4f99edea220d5aa5dac  tests/g01_race.py
+4640e08d322857b3305a650f933874532a909540adabf70e43bf6f11de7dfeb0  tests/g02b.py
+b4f4159d654399d71c2d088edbd8971b85fe16e30d5421f522598206cc639651  tests/h_tests.py
+136008b533db3717f16af9d3bf9242c07ef18a46e75f6f247116cdbbf82fdfac  tests/mcp_tests.py
+6559ad22728f3db0f6c01e3ec968ea139feea272ba0007d4b1bff0c16b7a25d0  tests/p_repro.py
+c5d180888d563ddb7446ffcee01e53ab1a0fc2c67283d40cd0bd6fca8d5962ed  tests/p_tests.py
+dd50c56fb3a157ad046bdad1ab47f23d08f093d9406ca04e17dbebc40985b28e  tests/q_tests.py
+bffd16d842cbc51c071fbef11b10cedad22130204758a4bebf8ecd51b216c8c7  tests/r_repro.py
+3f104113df34a3ae04a41ec5fe709392be8fb713023062e88f82ff6ac7578e8b  tests/r_tests.py
+491eeb6d02091ed65c2713c85a1143fc8b8ccb37ecabcf9d7894677e9b71aa69  tests/review_tools.py
+6349027af3d05e813f465db668705444b40b5207d1e557ad64039e6d5a562b02  tests/s_tests.py
+830ee4c0faa305250385e0633187e85931df189662964119863a490e1d7070ef  tests/t_tests.py
+24ea5ab0c1f58f317bf068ae00f01048d418d7b0ba449f47115152c75f056fe2  tests/v_repro.py
+a80a84a62aedc1bea20ee06afd0e959c79c7f02abe160ad0d43d969126f3b495  tests/v_tests.py
+ee0147c353c331cf7aa9e92d42696633df7d83d19a00b20f913033ab470bbcb3  tests/vectors.py
+3c8da656e62e3c0151ceb3f7ecb7d2c88e86a8a318f4abefdbefe9a5d2a544ae  tests/w1_authority.py
+4ce148a65f8785703ba70efe5cc5de48186518b0d143771e0b0a97b8c71dc1ce  tests/w2_receipts.py
+d5359d1dbb7ca14d85e7332a1623c077a4b5a8149e01808c56125742a6d44294  tests/w3_service_lockstep.py
+7b6a1bab28ccd9569220fd926b0e32a969a3fcd1a5c4e7ba966b31572f945878  tests/w4_service_crash.py
+0083e843fa1a136ec525e5719fb2a7b004642cea185cadfe1236974451dab385  plan/repro_counterexamples.py
+4200c1ce4931c9ed115c19d3b1d4e95a3b0b4fbbdd689fbbc4aca900bc061797  ../budget_v3_1/contract/CONTRACT_V3_1.md
+afec60b0d16615223bf1ad79dfa85c2bd4630814c232c8a4734684521f02c5b5  outputs/review5/scripts/independent_scoped.py      (the reviewer's, unchanged)
+3fa3e0e3293360c4c6bccd164840c52dc31134d37d83afc991d4c5dfeec14dee  outputs/review5/scripts/native_pg_probes_NOT_RUN.py (the reviewer's, unchanged)
+6a57533006d2a7de56dc0166f5d86f7ad7fadb130d08a346b75844db44a1413b  outputs/review5/scripts/native_pg_probes_ADAPTED.py
+9477a00bf7ee0e7c2bf1a107d197f9b725b7cb9919a5a4d5b2a8fe31ae03ed0f  outputs/review5/scripts/native_pg_probes_ADAPTED.diff
+
+expected results (declared before the official run): s_tests.py first, then q_tests.py, then every earlier test on the same database
+  S1  15 checks (binding immutability): the reviewer's exact probe -- a same-phase CONSUMED write with a new nonce as
+      plea_local -- refused with check_violation, the attempt and the audit log unchanged, the nonce still n-old, and the
+      witness's next receipt still binding n-old; the same rewrite refused as the owner; a request-binding (req) rewrite
+      refused; a nonce change smuggled onto a legal phase change (CONSUMED->EFFECT, INTENT_PENDING->CONSUMED,
+      CONSUMED->INDETERMINATE dropping it) refused; START with a nonce already bound, START without one, RECOVER keeping
+      one, each refused; set by START and carried through ACCEPT_INTENT, RECEIPT, CROSS, RECONCILE; cleared by RECOVER;
+      carried by REREGISTER, all through the proper credentials; replay lockstep
+  S2  13 checks (authenticated replay): a genuine outcome runs once and replays the same value from the stored, signed
+      outcome through a fresh governor; the stored row carries the nonce and the gate's signed report; plea_local raw
+      INSERT into results refused; storing an outcome for a reserved-never-admitted attempt, and for a non-existent one,
+      refused; a known outcome never replaced; an unknown one replaced once; five fabricated rows planted as the owner
+      (no attempt and no nonce -- the reviewer's; right nonce but no report; an impostor's signature; a genuine-key
+      report over a different value; a genuine report whose claim contradicts the stored kind) each refused with
+      nothing run and no attempt created; replay lockstep
+  S3  9 checks (SECURITY DEFINER hardening): pg_proc shows all three functions SECURITY DEFINER with
+      search_path=pg_catalog, pg_temp; PUBLIC holds no EXECUTE on any; the reviewer's shadowing probe (a temporary
+      roots in the session) writes public.roots and leaves the temporary table empty; the same with temporary attempts
+      and results against plea_put_result; the control credential can neither create a root nor store an outcome; the
+      witness cannot store an outcome; no login role can create objects in public; no login role holds direct DML on
+      results
+  re-runs  Q1 17, Q2 16 (33); P1 11, P2 15 (26); V1-V6 43; R1-R6 43; H1-H5 33; T1-T4 35; M1-M3 28; E1 13 (9 service,
+           4 in-process), E2 9, E3 PASS; W1 PASS (the acceptances, the crossing and the six control operations refused to
+           local and applied by the witness and plea_control; all raw authoritative DML refused), W2-W4 PASS (W4 18/18);
+           conform_store 34/34; chaos 90/90; G02b 200/200; G01 lock 300/300; G01 serializable 300/300 (both modes)

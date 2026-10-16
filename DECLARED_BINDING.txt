@@ -1,0 +1,148 @@
+PLEA gateway v1.2: every audit record the contract's own decision, and every budget anchored to its provisioning record (the response to the v1.1 independent review, NOT CLEARED for broad provenance claims)
+declared 2026-10-13T07:53:00Z, before the official declared run. Database: plea12, recreated clean; the owner (plea) installs the schema and the authority; the four login roles as the README; every root is provisioned by its test through the owner or the control credential.
+
+before this declaration (not evidence):
+  * The review's evidence pack verified (SHA256SUMS 10/10); its ORIGINAL release zip and report are byte-identical to
+    what v1.1 shipped (3e313964..., 48e1da73...).  The reviewer's offline scripts review_checks.py (ccf6ea8a...) and
+    model_counterexamples.py (6de33fc8...), run unchanged against a fresh extraction of the shipped zip, reproduce their
+    recorded results exactly (outputs/review7/review_checks_before_v1_1.*, model_counterexamples_before_v1_1.*).
+  * The reviewer's native probe native_pg_v11_PROBES_NOT_RUN.py (a47052ef..., syntax-checked only by them) was run
+    UNCHANGED against the shipped v1.1 on a fresh disposable database (plea12r).  It completed without a harness error.
+    All five probes reproduce: A provisioning leaves seq 0 and no decision; B a caller's starting hash ACCEPTED
+    (verify_chain then fails); C a RESERVE logged for 'declared-aid' while 'actual-aid' is inserted ACCEPTED as
+    plea_local, verify_chain ok; D two reservations under one RESERVE ACCEPTED, verify_chain ok; E STOP recorded as
+    DENIED on an OPEN run ACCEPTED, verify_chain ok (outputs/review7/native_pg_v11_before_UNCHANGED.*).  As the reviewer
+    asked, the probe's roots were then replayed through the independent oracle: C, D and E are detected after the
+    fact (observation differs; DENIED vs APPLIED), B by verify_chain (native_pg_v11_before_REPLAY.*).
+  * The new suite x_tests.py (X1-X4) was written before any repair and run against the shipped v1.1 (fresh plea12x):
+      - run 1 exposed two defects in the harness itself, not the product: it read the store's decision kind (a string)
+        as the reference's enum, so every genuine apply looked failed; and its malformed-operation list was compared
+        with `op in bad_ops`, where True == 1 makes ['RECOVER', True, False] equal ['RECOVER', 1, 0].  Also a check
+        ("the owner cannot rewrite the provisioning log") passed vacuously on v1.1 because the table did not exist; it
+        now requires the record to exist and be unchanged.  The forgery count was corrected to 14.  Preserved:
+        x_tests_before_v1_1_run1_harness_defects.*;
+      - run 2 with the harness fixed: 6 of 34 pass on v1.1 (x_tests_before_v1_1_run2.*);
+      - after the evidence-row finding below, one X2 check was added and the sweep's refusals classified by rule
+        (reporting only); run 3, with the declared file, on a fresh v1.1 database: x_tests_before_v1_1.* (6 of 35 pass on v1.1 -- X1 2/15 (the gateway and witness cannot provision; a moved head is detected), X2 2/10 (the genuine records apply), X3 2/7 (the v0.7 witness rule; the declared limit), X4 0/3 (no engine); the sweep: of 2,252 mutated records that are not the contract's decision v1.1 accepted 1,876 and refused 376 under its earlier rules, and refused none of the 994 that are; the evidence check shows the gateway's row accepted and the witness's genuine RELEASE then failing (UniqueViolation evidence_pkey)).
+  * Development of the repair, in order (plea12d, plea12p):
+      - the first install failed on `e->>0 COLLATE "C"` (COLLATE binds tighter than ->>); parenthesised; nothing ran on
+        the faulty text;
+      - x_tests 34/34 on v1.2 at once (the exhaustive differential: 0 mismatches over 768,544 pairs); the reviewer's
+        probe, unchanged, against the v1.2 development code: B refused 42883 (no 4-argument function), C and D refused
+        23514 ("does not produce the rows written"), E refused 23514 ("the contract decides ["STOP"] here as APPLIED
+        (STOPPING), not DENIED (SYNTHETIC_REFUSAL)"); A's view of the decision log unchanged by design (separate log);
+      - the whole chain on plea12d (run_chain_v12.sh): all 22 steps exit 0 -- X 34/34 (before the evidence-row check existed), U 21/15, S 15/13/9, Q 17/16, P 11/15, V 43, R 43, H 33, T 35, M 28, E1 13, E2 9, E3 PASS, W1-W4 PASS (W4 18/18), conform_store 34/34, chaos 90/90, G02b 200/200, G01 lock 300/300 in 247.2 s and serializable 300/300 in 402.7 s (v1.1's declared run: 214.4 s / 338.2 s; development timings, not declared);
+      - found while closing P3: plea_write stored the evidence row (attempt, sequence number, derived label) as given,
+        for any operation and any credential, so the gateway could attach a row under the witness's next sequence
+        number (whose genuine RELEASE then failed on the duplicate key) or plant a label.  Bound to its decision and
+        reserved to the witness; X2 gained a check (on v1.1 it shows the witness's RELEASE failing);
+      - after that change: on a fresh plea12d the suites that carry evidence or witness writes, and X/U/S/Q, all exit 0: X 35/35 (the sweep: 0 mismatches; the 2,252 non-contract records refused -- 1,876 by the v1.2 rules, exactly the records v1.1 accepted, and 376 by the earlier rules; the 994 contract records accepted), U, S, Q, E1-E3, R, H, V, W1-W4, chaos, M.
+    The official run below uses a one-hour limit.
+
+updates to earlier declared tests, made for v1.2 before this declaration (no test weakened; counts unchanged):
+  * s_tests.py S3 and u_tests.py U2 named plea_new_root's v1.1 signature (text, integer, integer, text), which v1.2
+    drops; they name the v1.2 signature (text, integer, integer).  S3's least-privilege check now calls the 3-argument
+    function as the gateway and the witness, so its refusal is the authority refusal and not "no such function".  S3's
+    temporary-table shadowing probe also plants a temporary 'provisions', since provisioning now writes two tables.
+  * Product change confined to plea_gateway/store.py (schema: the provisions log, roots.provision_seq; authority:
+    plea_obs_of, plea_observe through it, plea_step, the provisions append-only and roots-immutable triggers, plea_write's
+    v1.2 block -- a provisioning record required, the contract's decision required (kind, code, rows and modes), control-
+    plane records the control plane's, evidence rows the witness's and bound to their decision -- plea_new_root
+    (text, integer, integer) appending the record and anchoring the chain, the 4-argument function dropped, grants;
+    Python: new_root returns the record, provisioning, verify_provisioning, verify_chain anchored and budget-checked,
+    put_state provisions), mcp/plea_ctl.py (provision prints the anchor; provenance), README.md (v1.2).  The reference
+    engine, governor, gate host, witness, evidence, binding, receipts, TLS and every other test file are byte-identical
+    to the v1.1 declaration.
+
+files (sha256):
+1313ade4d3834b0f57471447c94824e6504ecc7daafcdf95843d03155229f605  plea_gateway/__init__.py
+e7893edad3603b20a28b4ed733d702e327e510db13a4db1a2a92b060e942aac3  plea_gateway/binding.py
+7defee95701e7c6edde68d4438468d1f42f4fadc91fb73581a73ad3107e68dfc  plea_gateway/evidence.py
+67c9ac8f872d31b530a3c51f2e7963dda3fdc3ecbbb2b47130e465161a934ccd  plea_gateway/faults.py
+44f2a180a456467a8fc694e384f90f200bdc279c3fcd66a93e70e631f9b01bc9  plea_gateway/gate_host.py
+3dac342419c705dd6cdec11058902364de8634d65f40dd45240ad8fb598967f0  plea_gateway/governor.py
+a367a4bbc2ca21b49ffa781b276710c9bf3ceeb3549ee3ee3c2de2ca910fe749  plea_gateway/plea_budget_ref.py
+be23f1182d2110399e4584c630017f81f59246737294efde519db6e1f6541b6e  plea_gateway/receipts.py
+8a5f7c36bf5cb0315d9134f230c818ecd9c3ac6b51143c1dec279898cce1a152  plea_gateway/store.py
+e08e322d53539bd929c2c3c91790a3bfe9963cd1868a6858117e9ee113b7361b  plea_gateway/tls.py
+f5c8d64d85efd3f9d1a404f8452da005ced5971d3d2520a2ed41a29555816998  plea_gateway/witness.py
+92ea90044d14fe2180fb9fdf15caf11cb2ad49caa21eef9bf3365bcc2e9155b0  plea_gateway/witness_service.py
+7f672232e9988fb1f26fa5160d909a1c4b17f1f23e2e505384aa368e4ad212fd  mcp/demo_tools.py
+4291467d674248c427dc117d47ef802c3b584a43b5141ad3d5d40ce675f15c72  mcp/plea_ctl.py
+dcb60eb17678092420f795ac9b3344e43ddf6730328e19c04825dfd5bf18f5df  mcp/plea_mcp.py
+3b574ba659f905a84475b94f8310a58e047b4fbbf57786c9223d8bb1b44c8b1c  mcp/vanilla_mcp.py
+18a47ba1a8fc9379ae9123547d75d2ebf89b72f3cda1d6dc70244adbea1e8835  tests/apply_once.py
+6b7646b7e2f4824f55ea400370acd1c6d72254b7ec3f56c4e292ab01df3fc136  tests/budget_oracle.py
+22932e82a196e76d80b9dbdd7424f5bcfc213110d781202ab500c4ddeb9bb8fe  tests/chaos.py
+a4ce3f1512af7de052281346ac44c6cef91a3c7510c54907d0274ea72b13d61e  tests/common.py
+22b3d5a1e0198f0dc35351e26959401e608a2efdeffdc78aa754ba1799e90290  tests/conform_store.py
+1ecc76ee74aa2804bfed37e25d8b130cb203097c9c4a064292cc6372a7953323  tests/e1_release_evidence.py
+afc43394784e487530bd5c86c47f16f82b62503fe5146e4fc12d5eac25be375d  tests/e2_reconcile_evidence.py
+5c9cfba268546e0248d3b1f62209040093d6e1830c47794576b78ea050936b48  tests/e3_lifecycle_evidence.py
+06ceff722e90122508b18fb3993ee835304264d54409d4f99edea220d5aa5dac  tests/g01_race.py
+4640e08d322857b3305a650f933874532a909540adabf70e43bf6f11de7dfeb0  tests/g02b.py
+b4f4159d654399d71c2d088edbd8971b85fe16e30d5421f522598206cc639651  tests/h_tests.py
+136008b533db3717f16af9d3bf9242c07ef18a46e75f6f247116cdbbf82fdfac  tests/mcp_tests.py
+6559ad22728f3db0f6c01e3ec968ea139feea272ba0007d4b1bff0c16b7a25d0  tests/p_repro.py
+c5d180888d563ddb7446ffcee01e53ab1a0fc2c67283d40cd0bd6fca8d5962ed  tests/p_tests.py
+621db1c0086aa9ff8ca8df7b69152c47460782fdf1818a0a18d57583f5a7c2cd  tests/q_tests.py
+bffd16d842cbc51c071fbef11b10cedad22130204758a4bebf8ecd51b216c8c7  tests/r_repro.py
+3f104113df34a3ae04a41ec5fe709392be8fb713023062e88f82ff6ac7578e8b  tests/r_tests.py
+491eeb6d02091ed65c2713c85a1143fc8b8ccb37ecabcf9d7894677e9b71aa69  tests/review_tools.py
+18c370802420b0f54ccdd65499dbc9b20334db9d3d1d2551988302c64bf1c819  tests/s_tests.py
+830ee4c0faa305250385e0633187e85931df189662964119863a490e1d7070ef  tests/t_tests.py
+87a57c90a7a2a0d229609fe7d9f5ec3de1876c3ba16c84a5058d80dc3ddae589  tests/u_tests.py
+24ea5ab0c1f58f317bf068ae00f01048d418d7b0ba449f47115152c75f056fe2  tests/v_repro.py
+a80a84a62aedc1bea20ee06afd0e959c79c7f02abe160ad0d43d969126f3b495  tests/v_tests.py
+ee0147c353c331cf7aa9e92d42696633df7d83d19a00b20f913033ab470bbcb3  tests/vectors.py
+3c8da656e62e3c0151ceb3f7ecb7d2c88e86a8a318f4abefdbefe9a5d2a544ae  tests/w1_authority.py
+4ce148a65f8785703ba70efe5cc5de48186518b0d143771e0b0a97b8c71dc1ce  tests/w2_receipts.py
+d5359d1dbb7ca14d85e7332a1623c077a4b5a8149e01808c56125742a6d44294  tests/w3_service_lockstep.py
+7b6a1bab28ccd9569220fd926b0e32a969a3fcd1a5c4e7ba966b31572f945878  tests/w4_service_crash.py
+95039a0e8df09a30245bc89d12500711ebc41fcfcd66c988cd0f2e8f3cf89e48  tests/x_tests.py
+2b01d4d7d20528d9630eba34bcb9461fdd1267db703629eb82a7a21e6104d6a8  run_chain_v12.sh
+0083e843fa1a136ec525e5719fb2a7b004642cea185cadfe1236974451dab385  plan/repro_counterexamples.py
+4200c1ce4931c9ed115c19d3b1d4e95a3b0b4fbbdd689fbbc4aca900bc061797  contract/CONTRACT_V3_1.md
+6de33fc845c471c2ede41ee5302790f25c1431ea4d91eee45b1ffa6306b4f44a  outputs/review7/scripts/model_counterexamples.py
+a47052ef3c0a4dc1660173d65d193f319834e1aab5cf29f2f902f7a4910c4e23  outputs/review7/scripts/native_pg_v11_PROBES_NOT_RUN.py
+ccf6ea8a88d360ff144594cd30d0325b7098ccaf72bf9398437fb4804c8a6d93  outputs/review7/scripts/review_checks.py
+
+expected results (declared before the official run): x_tests.py, then u_tests.py, s_tests.py, q_tests.py, then every earlier test on the same database
+  X1  15 checks (provisioning anchor): a control-plane provisioning appends a record naming the root, k, m, the issuer
+      plea_control, the contract, the release and the database time; the root's chain starts at the record's hash, which
+      recomputes outside the database; the first decision links to it and after a full lifecycle verify_chain and replay
+      lockstep hold; the reviewer's probe B (the 4-argument call with a caller's starting hash) refused to the control
+      plane and the owner, no root; the gateway and witness cannot provision; no login role can insert, update or
+      delete a record (42501); the owner cannot update, delete or truncate one and the record is unchanged; the owner
+      cannot change a root's k or m; verify_chain detects a budget differing from its record (trigger bypassed by the
+      owner) and holds once restored; verify_chain detects a moved anchor; a root with no record is not written to and
+      verify_chain refuses it; re-provisioning a removed root's identity appends a new record and the log verifies; 16
+      concurrent provisionings leave a contiguous linked log; the 4-argument signature gone, plea_new_root(text,int,int)
+      granted to the owner and the control plane only, the log readable and not writable by the login roles;
+      plea_ctl provision prints the anchor and plea_ctl provenance prints the record and 'chain ok'
+  X2  10 checks (every operand bound): the reviewer's probe C (one attempt logged, another inserted) refused as
+      plea_local with no trace; probe D (two reservations under one RESERVE) refused with no trace; 14 forgeries naming
+      the right operation over the wrong operands (attempt, request, nonce, verdict, evidence label) for every
+      single-attempt operation, each by the credential that performs it, refused with nothing changed; the 9 genuine
+      records they imitate APPLIED; batch forgeries (one of two discards, an incomplete RECOVER reactivating, a partial
+      REREGISTER, one ACCEPT_RESERVATION accepting two) refused and the genuine batches applying; 6 guard forgeries
+      (TOKEN, RESERVE, ACCEPT_INTENT, CROSS while HELD, START while STOPPING, TERMINAL with an unresolved attempt)
+      refused; 7 malformed-operation records refused; evidence rows: the gateway's refused, the witness's genuine
+      RELEASE then recording its own, the witness's rows for another attempt, sequence number or label, or on an
+      operation that takes none, refused; the mutation sweep over 6 walks of 120 genuine decisions with 0 mismatches
+      (720 genuine, 3,246 mutated, 994 the contract's own and accepted, 2,252 not and refused); every genuine decision
+      accepted, every walked chain verifying and replaying in lockstep
+  X3  7 checks (refusals): probe E (STOP recorded DENIED on an OPEN run) refused as plea_local with no trace, and as
+      plea_control; an invented code refused while the contract's own refusal (DENIED NOT_OPEN) records; a contract
+      refusal of STOP, RECOVER, HOLD and TERMINAL written by the gateway refused 42501; a witness-operation refusal by the
+      gateway refused 42501; a DUPLICATE RESERVE of an absent attempt, a NOOP TIMEOUT of an unknown one and a NOOP HOLD
+      on an ACTIVE run refused; the declared limit: a contract refusal (RESERVE on an exhausted budget, DENIED
+      BUDGET_EXHAUSTED) for a request never made is accepted, changes no state and replays clean
+  X4  3 checks (the engine): plea_step equals the reference engine (kind, code, observation) and the independent oracle
+      (kind, observation) on all 768,544 pairs of the two complete explorations (k=1 m=0: 3,550 states; k=2 m=1: 10,174
+      states; 56 operations each); it rejects exactly the 45 malformed operations the reference's parser rejects and
+      accepts the 10 well-formed edge cases; PUBLIC holds no EXECUTE on plea_step or plea_obs_of and no login role can
+      call them
+  re-runs  U1 21, U2 15 (36); S1 15, S2 13, S3 9 (37); Q1 17, Q2 16 (33); P1 11, P2 15 (26); V1-V6 43; R1-R6 43;
+           H1-H5 33; T1-T4 35; M1-M3 28; E1 13, E2 9, E3 PASS; W1-W4 PASS (W4 18/18); conform_store 34/34; chaos 90/90;
+           G02b 200/200; G01 lock 300/300; G01 serializable 300/300 (both modes)

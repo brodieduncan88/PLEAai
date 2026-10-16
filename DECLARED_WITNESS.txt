@@ -1,0 +1,51 @@
+PLEA gateway v0.1 (witness service, authority boundary, signed receipts): declared 2026-10-12T07:29:51Z, before any declared test ran
+development smoke before this declaration: one lifecycle with the split credentials, one refused local acceptance, one lifecycle over HTTP
+roles: plea (owner, setup only), plea_local (the gateway), plea_witness (the service); PostgreSQL 16.13, psycopg 3.3.6, cryptography (Ed25519)
+
+4180970ecf1834494ec037ee9f9c6a0bb4c6f31d9fdf40ab7105b3b223ab5be1  plea_gateway/__init__.py
+67c9ac8f872d31b530a3c51f2e7963dda3fdc3ecbbb2b47130e465161a934ccd  plea_gateway/faults.py
+2630347b92365f09537a1913a118c95dc4fe031a456e6215e21ca9f145b1a52f  plea_gateway/governor.py
+a367a4bbc2ca21b49ffa781b276710c9bf3ceeb3549ee3ee3c2de2ca910fe749  plea_gateway/plea_budget_ref.py
+0b6de9b374e2cbdc8287308677aecf15cd0f82c3ff1c75729372882f4dcde8f9  plea_gateway/receipts.py
+7ec6a48ed255b2b31fa3213236076647e693d1c46ea27a3994b25e288d444812  plea_gateway/store.py
+3275ee5b1ae7f34c72d3a1bada33ef450b81f6ef7b18102fbe9a941f3615d553  plea_gateway/witness.py
+e38e89fcdf084bbe8d2ba712059819d1f316347cdcd8542d179d033c8c173199  plea_gateway/witness_service.py
+18a47ba1a8fc9379ae9123547d75d2ebf89b72f3cda1d6dc70244adbea1e8835  tests/apply_once.py
+6b7646b7e2f4824f55ea400370acd1c6d72254b7ec3f56c4e292ab01df3fc136  tests/budget_oracle.py
+22932e82a196e76d80b9dbdd7424f5bcfc213110d781202ab500c4ddeb9bb8fe  tests/chaos.py
+62e148586449b1ab2a1ef1bf0aa8786d29a0c1b86256ee26b2b160f3c99001e9  tests/common.py
+22b3d5a1e0198f0dc35351e26959401e608a2efdeffdc78aa754ba1799e90290  tests/conform_store.py
+34b00e079e0a055a593d63a79d4f905b9c66174960a62f54b328f09b255b68f6  tests/g01_race.py
+aa910a9ab41eef6b6a67e601c848e94427e5903c833af6a5e6144a1228081c85  tests/g02b.py
+061df2240a9d1e33af966d5953392821e84322de5b91c556d974b370e82d3ecd  tests/w1_authority.py
+ae80070baa9eb532a76f168b3808d0985ea42aed88f7d78b7d9b0d1ebb13d238  tests/w2_receipts.py
+ee4cd7c5ebe76e13a17387b9e80bd15ac0d6a032abd445a5d217c3bb455b43b5  tests/w3_service_lockstep.py
+13188e9cbf0f403190c313e97c013aacdb1cf04a42f59b3c754fe46acc230584  tests/w4_service_crash.py
+4200c1ce4931c9ed115c19d3b1d4e95a3b0b4fbbdd689fbbc4aca900bc061797  ../budget_v3_1/contract/CONTRACT_V3_1.md
+
+expected results (declared before execution):
+  W1 authority     4/4 acceptances refused to plea_local by the database with the state and log unchanged, and APPLIED to
+                   plea_witness; 14/14 raw SQL statements by plea_local (5 phase updates, 5 phase inserts, 4 forged log rows)
+                   refused; 14/14 local operations APPLIED or NOOP through plea_local
+  W2 receipts      the honest receipt crosses; 9/9 forgeries rejected with a2 untouched; a2 then crosses with its own receipt
+  W3 service       part A: 8 roots x 10 governed calls over HTTP: per root 3 executed, 3 denied, 4 retries served, 0 re-executed;
+                   part B: G02b through the service, 100/100 rounds; replay lockstep and chain ok throughout
+  W4 service crash 3 acceptances x 6 crash points = 18 kills: service exits 137, client sees WitnessUnavailable, state is pre
+                   (in-transaction points) or post (after commit); after restart with the same key the retry is APPLIED for the
+                   15 in-transaction kills and DUPLICATE for the 3 after-commit kills; receipts verify; gate_cross applies for
+                   the intent cases; lockstep and chain ok
+  re-runs under the split credentials (callers plea_local, acceptances plea_witness):
+                   conform_store 34/34; chaos 90/90; G02b 200/200; G01 lock 1000/1000; G01 serializable 1000/1000, 0 worker errors
+
+amendment 1, 2026-10-12T08:02:52Z, after the declared chain finished. Two findings, neither in the store, the boundary or the contract:
+  (a) W3 FAIL: RemoteWitness.accept verified every receipt with the gate's rule (kind must be APPLIED or DUPLICATE); a receipt for a DENIED release is a valid signed statement and the client refused it, so the release racer died and the parent timed out. Fix: receipts.verify_signed (signer, fields, signature) for the client; receipts.verify (adds the acceptance requirement) for the gate. Part A of the declared W3 run had passed.
+  (b) G02b FAIL in the harness: when the racer was repointed at the split credentials the line recording each decision was left after a trailing comment and was commented out; the store was correct in all 200 rounds by every audit-log check. Fix: the line restored.
+  Declared outputs for W2, W3, W4 and G02b are kept in outputs/declared_w/. W1, conform_store, chaos and both G01 modes do not use the changed files and are not repeated.
+7a72297f5785080302f90e2cb68f1a909a064d4a94a12c9bcb227e948e08016b  plea_gateway/receipts.py
+8386997a0a0c4268ba80dba10f3e0f26dd7fa41a23fc0e2d616840d3b04ecbfb  plea_gateway/witness.py
+4640e08d322857b3305a650f933874532a909540adabf70e43bf6f11de7dfeb0  tests/g02b.py
+  expected on re-run: W2 9/9 forgeries rejected; W3 part A 24 executed, 24 denied, 32 retries served, 0 re-executed, part B 100/100; W4 18/18; G02b 200/200
+
+amendment 2, 2026-10-12T08:06:28Z, after the amendment-1 re-run. W3 part A FAIL on the declared expectation, not on behaviour: every root showed 3 executed, 4 denied, 3 retries served, 0 re-executed, with replay lockstep and chain ok. The schedule's fourth retry is of a key that was DENIED at the budget, so no attempt exists for it and the contract denies the retry again (5.1 rule 6); it is not a DUPLICATE. The declaration counted it as a served retry. Fix: the harness's expectation corrected to 3 executed, 4 denied, 3 retries served, 0 re-executed. The amendment-1 output is kept in outputs/amend1_w3/.
+692004dced8fe45a394c7f523068507f56aae3ae784a2c22d05f06d0b73e7081  tests/w3_service_lockstep.py
+  expected on re-run: W3 part A 24 executed, 32 denied, 24 retries served, 0 re-executed; part B 100/100

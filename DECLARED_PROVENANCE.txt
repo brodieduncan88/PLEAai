@@ -1,0 +1,147 @@
+PLEA gateway v1.1: the audit record authored by the database, and a budget provisioned only by the control plane (the response to the v1.0 independent security review, NOT CLEARED)
+declared 2026-10-13T04:00:00Z, before the official declared run. Database: plea11, recreated clean; the owner (plea) installs the schema and the authority; the four login roles as the README; every root is provisioned by its test through the owner or the control credential (the gateway credential can no longer create one).
+
+before this declaration (not evidence):
+  * The reviewer's native probe (native_pg_forged_audit_NOT_RUN.py, sha256 21afadc7..., syntax-checked only by them) was run
+    UNCHANGED against the shipped v1.0 package on a fresh disposable database, as they required.  It stops in its own
+    harness before any SQL: line 41 hands the reference a raw tuple, ref.apply(state, ('STOP',)), where the reference
+    takes a parsed operation, and raises InvalidInput.  Preserved (outputs/review6/forged_audit_before_v1_0_UNCHANGED.stdout.txt).
+  * A copy with that ONE line fixed (ref.parse_op(('STOP',)); native_pg_forged_audit_ADAPTED.py, diff shipped) was run on
+    the same frozen shipped-v1.0 copy, fresh database: BOTH findings reproduce natively.  Probe A: a ["STOP"]/APPLIED record
+    with a correctly recomputed hash and no mode change ACCEPTED by plea_write as plea_local, verify_chain ok, the business
+    mode still OPEN, a subsequent RESERVE APPLIED.  Probe B: after exhausting a k=1 root, plea_local CREATED a k=1000,
+    m=999 root and a RESERVE on it was APPLIED (forged_audit_before_v1_0_ADAPTED.json).
+  * After, on v1.1, a second adaptation (the two SETUP roots owner-provisioned, because the gateway can no longer create
+    a root; the forged write and the attacking local.new_root(root2,1000,999) untouched; diff shipped): Probe A REJECTED
+    23514 "decision kind APPLIED does not describe this write (state changed: f)", no record, business OPEN, RESERVE
+    APPLIED; Probe B REJECTED, AuthorityError "permission denied for function plea_new_root"
+    (forged_audit_after_v1_1_ADAPTED.json, re-run on the final code).
+  * The reviewer's no-PostgreSQL script (run_scoped_checks.py, unchanged) reproduces its 16/16 on shipped v1.0 here
+    (scoped_before_v1_0.json).  Against v1.1 its "plea_new_root ... grants role plea_local" source check fails (the grant
+    is gone); its "plea_write SQL accepts caller-supplied p_kind, p_code and p_head" check still passes because it greps for
+    the strings 'IF p_head <>' and 'chain_hash(' and the recomputation is written 'IF p_head IS DISTINCT FROM h' and
+    'plea_decision_hash('; the code was not reworded to satisfy a grep (REPORT_PROVENANCE.md section 7).  It is re-run
+    against the shipped bundle at verification (scoped_after_v1_1.json).
+  * The v0.8 counterexamples A/B re-run with the unchanged attack SQL against v0.8 and v1.1 (review4_repro_v1_1.json):
+    both accepted on v0.8, both rejected on v1.1 (A now at the operation-name check, before the transition rule).
+  * Development smokes of the repair, in order:
+      - a full lifecycle, a duplicate, a no-op, a release, hold/recover (complete and incomplete), stop/terminalise/
+        terminal and reregister through the proper credentials on plea10; verify_chain and replay lockstep ok;
+      - s_tests 37/37 and u_tests 36/36 on plea10, after one finding: plea10 had been initialised by v1.0 and CREATE OR
+        REPLACE keeps a function's ACL, so plea_new_root still carried EXECUTE for plea_local and plea_witness (the
+        in-function session_user check refused them regardless; one U2 ACL check failed).  AUTHORITY now revokes those
+        grants explicitly, so re-running init_authority() on a v1.0 database removes them; re-run green;
+      - the whole chain on plea10 (run_chain_v11.sh): u, s, p, v, r, h, t, mcp, e1-e3, w1-w4, chaos, G02b and G01 lock
+        (300/300) green, with two development failures: q_tests (one Q2 authority check expected the witness-authority
+        refusal and got "unknown operation FORGE": the Q and S forges carried a placeholder operation name, which v1.1
+        refuses before any other rule -- the other forges would have been refused for the wrong reason while still
+        passing) and conform_store 33/34 (B25, re-registration from TERMINALISING restarts in STOPPING, erratum E6: my
+        business-pair rule did not admit TERMINALISING->STOPPING).  The chain was then killed by the harness's 15-minute
+        background limit during G01 serializable (contended by the concurrent smokes).  Both failures fixed (below);
+      - after the fixes, on plea11 (final code): conform_store 34/34 (B25 PASS); u 36/36, s 37/37, q 33/33; each S1
+        binding forge re-read to be refused by the binding rule ("the accepted executor/action binding (nonce) ... is
+        immutable", "START must bind a fresh nonce", "RECOVER clears the nonce"), not by the operation-name check;
+        G01 lock 300/300 in 206.8 s and serializable 300/300 in 327.5 s, uncontended (v1.0: 150.2 s / 240.4 s) --
+        about +5 ms per decision, the cost of the database deriving, canonicalising and hashing every record.
+    The official run below uses a one-hour limit.
+
+updates to earlier declared tests, made for v1.1 before this declaration (no test weakened; counts unchanged):
+  * s_tests.py S3: the check "the control credential cannot create a root" encoded the old least-privilege policy; the
+    policy is now explicit (a budget is provisioned by the control plane), so it became "neither the gateway nor the
+    witness credential can create a root", and S3's temporary-table shadowing probe runs as the provisioning credential.
+  * s_tests.py S1 and q_tests.py Q1/Q2: every hand-written plea_write names the operation that produces its transition
+    (an ACCEPT_RESERVATION for RESERVING->RESERVED, a RECEIPT for a same-phase rewrite, a RECONCILE for CONSUMED->EFFECT,
+    a START, a RECOVER, a REREGISTER, a CROSS, ...) instead of a placeholder name, so the rule each check targets is the
+    rule that refuses it.
+  * Product change confined to plea_gateway/store.py (plea_jstr, plea_canonical, plea_decision_hash, plea_observe;
+    plea_write: operation and kind shape, obs_before/obs_after, kind bound to the change, operation bound to each
+    attempt and mode change, the contract's mode pairs including E6, observation equality, hash recomputed and verified,
+    the database's hash and observation stored; plea_new_root reserved to plea_control with an in-function check and
+    the stale grants revoked; the helpers' EXECUTE revoked from PUBLIC; AUTHORITY a raw string; Store.new_root maps a
+    refused provisioning to AuthorityError), plea_gateway/governor.py (provisioner = control or admin, else an
+    unprovisioned root is refused by name), mcp/plea_ctl.py (provision), mcp/plea_mcp.py (--control-dsn; refuses an
+    unprovisioned root), README.md (v1.1 title, production shape, provisioning).  The reference engine, gate host,
+    witness, evidence, binding, receipts, TLS and every other test file are byte-identical to the v1.0 declaration.
+
+files (sha256):
+1313ade4d3834b0f57471447c94824e6504ecc7daafcdf95843d03155229f605  plea_gateway/__init__.py
+e7893edad3603b20a28b4ed733d702e327e510db13a4db1a2a92b060e942aac3  plea_gateway/binding.py
+7defee95701e7c6edde68d4438468d1f42f4fadc91fb73581a73ad3107e68dfc  plea_gateway/evidence.py
+67c9ac8f872d31b530a3c51f2e7963dda3fdc3ecbbb2b47130e465161a934ccd  plea_gateway/faults.py
+44f2a180a456467a8fc694e384f90f200bdc279c3fcd66a93e70e631f9b01bc9  plea_gateway/gate_host.py
+3dac342419c705dd6cdec11058902364de8634d65f40dd45240ad8fb598967f0  plea_gateway/governor.py
+a367a4bbc2ca21b49ffa781b276710c9bf3ceeb3549ee3ee3c2de2ca910fe749  plea_gateway/plea_budget_ref.py
+be23f1182d2110399e4584c630017f81f59246737294efde519db6e1f6541b6e  plea_gateway/receipts.py
+55737d978e78a692b784de43820430836cbc093c705e7eec8a25a71061592447  plea_gateway/store.py
+e08e322d53539bd929c2c3c91790a3bfe9963cd1868a6858117e9ee113b7361b  plea_gateway/tls.py
+f5c8d64d85efd3f9d1a404f8452da005ced5971d3d2520a2ed41a29555816998  plea_gateway/witness.py
+92ea90044d14fe2180fb9fdf15caf11cb2ad49caa21eef9bf3365bcc2e9155b0  plea_gateway/witness_service.py
+7f672232e9988fb1f26fa5160d909a1c4b17f1f23e2e505384aa368e4ad212fd  mcp/demo_tools.py
+e84fcbdd88fb0696c7e0ce157b3732b786c2b0c7a58281026d7abccfac364a23  mcp/plea_ctl.py
+dcb60eb17678092420f795ac9b3344e43ddf6730328e19c04825dfd5bf18f5df  mcp/plea_mcp.py
+3b574ba659f905a84475b94f8310a58e047b4fbbf57786c9223d8bb1b44c8b1c  mcp/vanilla_mcp.py
+18a47ba1a8fc9379ae9123547d75d2ebf89b72f3cda1d6dc70244adbea1e8835  tests/apply_once.py
+6b7646b7e2f4824f55ea400370acd1c6d72254b7ec3f56c4e292ab01df3fc136  tests/budget_oracle.py
+22932e82a196e76d80b9dbdd7424f5bcfc213110d781202ab500c4ddeb9bb8fe  tests/chaos.py
+a4ce3f1512af7de052281346ac44c6cef91a3c7510c54907d0274ea72b13d61e  tests/common.py
+22b3d5a1e0198f0dc35351e26959401e608a2efdeffdc78aa754ba1799e90290  tests/conform_store.py
+1ecc76ee74aa2804bfed37e25d8b130cb203097c9c4a064292cc6372a7953323  tests/e1_release_evidence.py
+afc43394784e487530bd5c86c47f16f82b62503fe5146e4fc12d5eac25be375d  tests/e2_reconcile_evidence.py
+5c9cfba268546e0248d3b1f62209040093d6e1830c47794576b78ea050936b48  tests/e3_lifecycle_evidence.py
+06ceff722e90122508b18fb3993ee835304264d54409d4f99edea220d5aa5dac  tests/g01_race.py
+4640e08d322857b3305a650f933874532a909540adabf70e43bf6f11de7dfeb0  tests/g02b.py
+b4f4159d654399d71c2d088edbd8971b85fe16e30d5421f522598206cc639651  tests/h_tests.py
+136008b533db3717f16af9d3bf9242c07ef18a46e75f6f247116cdbbf82fdfac  tests/mcp_tests.py
+6559ad22728f3db0f6c01e3ec968ea139feea272ba0007d4b1bff0c16b7a25d0  tests/p_repro.py
+c5d180888d563ddb7446ffcee01e53ab1a0fc2c67283d40cd0bd6fca8d5962ed  tests/p_tests.py
+621db1c0086aa9ff8ca8df7b69152c47460782fdf1818a0a18d57583f5a7c2cd  tests/q_tests.py
+bffd16d842cbc51c071fbef11b10cedad22130204758a4bebf8ecd51b216c8c7  tests/r_repro.py
+3f104113df34a3ae04a41ec5fe709392be8fb713023062e88f82ff6ac7578e8b  tests/r_tests.py
+491eeb6d02091ed65c2713c85a1143fc8b8ccb37ecabcf9d7894677e9b71aa69  tests/review_tools.py
+fd2b428b2dfeb9930afdcec2b9529568744607ed2716c994bf5074728146df70  tests/s_tests.py
+830ee4c0faa305250385e0633187e85931df189662964119863a490e1d7070ef  tests/t_tests.py
+9a35e4275c6e6bb34292219747f738e8f9c58c9ca196c9079da83e188eb7029d  tests/u_tests.py
+24ea5ab0c1f58f317bf068ae00f01048d418d7b0ba449f47115152c75f056fe2  tests/v_repro.py
+a80a84a62aedc1bea20ee06afd0e959c79c7f02abe160ad0d43d969126f3b495  tests/v_tests.py
+ee0147c353c331cf7aa9e92d42696633df7d83d19a00b20f913033ab470bbcb3  tests/vectors.py
+3c8da656e62e3c0151ceb3f7ecb7d2c88e86a8a318f4abefdbefe9a5d2a544ae  tests/w1_authority.py
+4ce148a65f8785703ba70efe5cc5de48186518b0d143771e0b0a97b8c71dc1ce  tests/w2_receipts.py
+d5359d1dbb7ca14d85e7332a1623c077a4b5a8149e01808c56125742a6d44294  tests/w3_service_lockstep.py
+7b6a1bab28ccd9569220fd926b0e32a969a3fcd1a5c4e7ba966b31572f945878  tests/w4_service_crash.py
+0083e843fa1a136ec525e5719fb2a7b004642cea185cadfe1236974451dab385  plan/repro_counterexamples.py
+4200c1ce4931c9ed115c19d3b1d4e95a3b0b4fbbdd689fbbc4aca900bc061797  ../budget_v3_1/contract/CONTRACT_V3_1.md
+afec60b0d16615223bf1ad79dfa85c2bd4630814c232c8a4734684521f02c5b5  outputs/review5/scripts/independent_scoped.py
+6a57533006d2a7de56dc0166f5d86f7ad7fadb130d08a346b75844db44a1413b  outputs/review5/scripts/native_pg_probes_ADAPTED.py
+3fa3e0e3293360c4c6bccd164840c52dc31134d37d83afc991d4c5dfeec14dee  outputs/review5/scripts/native_pg_probes_NOT_RUN.py
+9477a00bf7ee0e7c2bf1a107d197f9b725b7cb9919a5a4d5b2a8fe31ae03ed0f  outputs/review5/scripts/native_pg_probes_ADAPTED.diff
+5d08d62593cae2a61e781f1586cfc1dda727bdd3d260b8d2aa3becdf3e3b038e  outputs/review6/scripts/native_pg_forged_audit_ADAPTED.py
+8f16fce2dc1c0caaccf190e0fb9d73a75ac45820db91cebea27a1188dbcf070b  outputs/review6/scripts/native_pg_forged_audit_ADAPTED_v1_1.py
+21afadc70075d61ba8662f50cbea24937eb29b6fc8396beb4fbf6ae79e9e5369  outputs/review6/scripts/native_pg_forged_audit_NOT_RUN.py
+23a1fdfa087d75397ba9c4ef69bb5bbb3c013ab8a93d622768aa6ac7aab59fcc  outputs/review6/scripts/run_scoped_checks.py
+3e534ba8812ff23f71a736035ee02aaf55edc196facd37bc130b07dc27c332cf  outputs/review6/scripts/native_pg_forged_audit_ADAPTED.diff
+bf0a48b328d66b3d94a263e7a6ccce6099f677378dce650b313774ecbca81ecd  outputs/review6/scripts/native_pg_forged_audit_ADAPTED_v1_1.diff
+
+expected results (declared before the official run): u_tests.py, then s_tests.py, q_tests.py, then every earlier test on the same database
+  U1  21 checks (audit integrity): the reviewer's probe (STOP/APPLIED, correct hash, no mode change) refused as plea_local
+      with check_violation, atomically -- no audit entry, no head advance, the run still OPEN and the next RESERVE APPLIED;
+      the same record refused as the owner; a real change recorded as DENIED, an observation that misdescribes the
+      post-state, a correct record hashed over a different observation, an insert recorded under another operation, an
+      unknown kind and an unknown operation each refused with no trace; an APPLIED whose payload changes nothing refused;
+      a witness hold recorded as a STOP refused as the control plane; the chain still verifying; plea_canonical equal to
+      the client's canonical form on 300 random values (quotes, backslashes, control, non-ASCII, non-BMP) and
+      plea_decision_hash equal to chain_hash on 100 random bodies; a non-integer refused; a full lifecycle with a
+      duplicate, a no-op, a release, hold/recover and stop/terminalise/terminal applying (18 decisions: 8 APPLIED,
+      DUPLICATE, NOOP, 8 APPLIED); every stored observation the database's own and APPLIED exactly the records that change
+      it; verify_chain and replay lockstep; REREGISTER applying with lockstep
+  U2  15 checks (provisioning authority): the gateway and the witness credentials cannot create a root; the control
+      credential provisions one with the budget given; no root for the refused creations; the reviewer's probe (exhaust a
+      k=1 root, then plea_local creates k=1000, m=999) refused and the gateway still exhausted with no other root; a
+      gateway-only governor refuses an unprovisioned root naming the provisioning step; given the control credential it
+      provisions, a second does not change the immutable budget, a gateway-only governor then runs against it; plea_ctl
+      provision creates and reports an existing root; PUBLIC holds no EXECUTE on plea_new_root nor on the four helpers and
+      plea_new_root is granted to the owner and the control plane only; no login role can call the helpers; plea_mcp.py
+      with only the gateway credential refuses an unprovisioned root naming the step, and starts against a provisioned one
+      and answers initialize
+  re-runs  S1 15, S2 13, S3 9 (37); Q1 17, Q2 16 (33); P1 11, P2 15 (26); V1-V6 43; R1-R6 43; H1-H5 33; T1-T4 35; M1-M3 28;
+           E1 13 (9 service, 4 in-process), E2 9, E3 PASS; W1-W4 PASS (W4 18/18); conform_store 34/34; chaos 90/90;
+           G02b 200/200; G01 lock 300/300; G01 serializable 300/300 (both modes)

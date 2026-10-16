@@ -1,0 +1,1 @@
+CONTRACT_V3_1.md sha256 4200c1ce4931c9ed115c19d3b1d4e95a3b0b4fbbdd689fbbc4aca900bc061797 frozen 2026-10-11T01:41:58Z (before oracle amendment 3, harness changes or any v3.1 run; supersedes CONTRACT_V3.md sha256 af3590f077d029bad8e8eb2d8e27a6718c916ac5b89c8d3b82a6e0df3e0c1c6b)

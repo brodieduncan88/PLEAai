@@ -1,0 +1,67 @@
+PLEA gateway v0.8: atomic host-state ownership with fencing, and a gateway credential that cannot rewrite accounting (the response to the v0.7 independent review)
+declared 2026-10-12T20:06:10Z, before any declared test ran. Database: plea8, recreated clean; the owner (plea) installs the schema and the authority; every root is created by its test through the guarded functions.
+
+before this declaration (not evidence): the review's two findings were reproduced on the unchanged v0.7 code (tests/p_repro.py, record outputs/review3_repro_v0_7.json) in process and over HTTP, the credential ones as plea_local with hand-written SQL against native PostgreSQL. Development smokes of the repair: the host-state lease in isolation (atomic acquisition under threads and 4-process stampedes, a fenced stale owner, a late completion); p_tests.py 28/28 in 25.2 s; then the whole earlier chain on plea8, with two test failures and one product fix: v_tests and r_tests failed the interrupted-host recovery because the new owner-scoped finish could not finalise another owner's interrupted row; a separate finalize_interrupted (not owner-scoped, conditioned on status=interrupted and no report) was added, and both re-run passing; a correction to the business-state guard (it first rejected a HOLD, whose mode change carries the unchanged business field; narrowed to reject only a transition back to OPEN). The v0.7 outputs were moved to outputs/v0_7/ before this run.
+
+updates to earlier declared tests, made for v0.8 before this declaration: none to the test expectations; the authority change is entirely in plea_gateway/store.py (the guarded write functions, the advisory lock) and plea_gateway/gate_host.py (atomic ownership, the generation fence, finalize_interrupted). W1 already exercised the local credential against raw SQL and passes unchanged, now refused by the revoke rather than the triggers. G01 is declared in both isolation modes, the advisory lock replacing SELECT FOR UPDATE.
+
+files (sha256):
+1313ade4d3834b0f57471447c94824e6504ecc7daafcdf95843d03155229f605  plea_gateway/__init__.py
+e7893edad3603b20a28b4ed733d702e327e510db13a4db1a2a92b060e942aac3  plea_gateway/binding.py
+7defee95701e7c6edde68d4438468d1f42f4fadc91fb73581a73ad3107e68dfc  plea_gateway/evidence.py
+67c9ac8f872d31b530a3c51f2e7963dda3fdc3ecbbb2b47130e465161a934ccd  plea_gateway/faults.py
+44f2a180a456467a8fc694e384f90f200bdc279c3fcd66a93e70e631f9b01bc9  plea_gateway/gate_host.py
+d61c600bdcdef9c5afbdd504303257f0656fdd3e69120ac3d31ee629a8b0b3f6  plea_gateway/governor.py
+a367a4bbc2ca21b49ffa781b276710c9bf3ceeb3549ee3ee3c2de2ca910fe749  plea_gateway/plea_budget_ref.py
+be23f1182d2110399e4584c630017f81f59246737294efde519db6e1f6541b6e  plea_gateway/receipts.py
+74314fe19029ce8036b61a49cf2ef93d3a4e2499ea4b9965820fb00d31276fab  plea_gateway/store.py
+e08e322d53539bd929c2c3c91790a3bfe9963cd1868a6858117e9ee113b7361b  plea_gateway/tls.py
+f5c8d64d85efd3f9d1a404f8452da005ced5971d3d2520a2ed41a29555816998  plea_gateway/witness.py
+92ea90044d14fe2180fb9fdf15caf11cb2ad49caa21eef9bf3365bcc2e9155b0  plea_gateway/witness_service.py
+7f672232e9988fb1f26fa5160d909a1c4b17f1f23e2e505384aa368e4ad212fd  mcp/demo_tools.py
+a8974537035ea0141ccc8924c98faa49bac18e96f11f1d75ae34ae6070651a36  mcp/plea_ctl.py
+d8c45904f9e7fd4a06e56bbbaeff63ef0cfde8307b5e1c5c152d1fc873b8f8fb  mcp/plea_mcp.py
+3b574ba659f905a84475b94f8310a58e047b4fbbf57786c9223d8bb1b44c8b1c  mcp/vanilla_mcp.py
+18a47ba1a8fc9379ae9123547d75d2ebf89b72f3cda1d6dc70244adbea1e8835  tests/apply_once.py
+6b7646b7e2f4824f55ea400370acd1c6d72254b7ec3f56c4e292ab01df3fc136  tests/budget_oracle.py
+22932e82a196e76d80b9dbdd7424f5bcfc213110d781202ab500c4ddeb9bb8fe  tests/chaos.py
+22185e8b31e81bddccf40dd21c8c2ece80db2242029b74c004b9da03a931b080  tests/common.py
+22b3d5a1e0198f0dc35351e26959401e608a2efdeffdc78aa754ba1799e90290  tests/conform_store.py
+1ecc76ee74aa2804bfed37e25d8b130cb203097c9c4a064292cc6372a7953323  tests/e1_release_evidence.py
+afc43394784e487530bd5c86c47f16f82b62503fe5146e4fc12d5eac25be375d  tests/e2_reconcile_evidence.py
+5c9cfba268546e0248d3b1f62209040093d6e1830c47794576b78ea050936b48  tests/e3_lifecycle_evidence.py
+34b00e079e0a055a593d63a79d4f905b9c66174960a62f54b328f09b255b68f6  tests/g01_race.py
+4640e08d322857b3305a650f933874532a909540adabf70e43bf6f11de7dfeb0  tests/g02b.py
+b4f4159d654399d71c2d088edbd8971b85fe16e30d5421f522598206cc639651  tests/h_tests.py
+fede07f8300dfd044de0a4a15410658b78fe044fff5fff23524889d0900cf5a9  tests/mcp_tests.py
+c9007cbf08d3104b7819c22bed9d97c5079d4964b4b70aa4ac011378bf8ae24a  tests/p_repro.py
+b22d0ce7dfb70cce364767b98b4c9b46ea2e976714ee0569a0cdb77a8bd786a8  tests/p_tests.py
+bffd16d842cbc51c071fbef11b10cedad22130204758a4bebf8ecd51b216c8c7  tests/r_repro.py
+3f104113df34a3ae04a41ec5fe709392be8fb713023062e88f82ff6ac7578e8b  tests/r_tests.py
+491eeb6d02091ed65c2713c85a1143fc8b8ccb37ecabcf9d7894677e9b71aa69  tests/review_tools.py
+830ee4c0faa305250385e0633187e85931df189662964119863a490e1d7070ef  tests/t_tests.py
+24ea5ab0c1f58f317bf068ae00f01048d418d7b0ba449f47115152c75f056fe2  tests/v_repro.py
+a80a84a62aedc1bea20ee06afd0e959c79c7f02abe160ad0d43d969126f3b495  tests/v_tests.py
+ee0147c353c331cf7aa9e92d42696633df7d83d19a00b20f913033ab470bbcb3  tests/vectors.py
+2b66b8764356c3a829c21613c75b619c06d10607b098e38f317f22e75984624b  tests/w1_authority.py
+4ce148a65f8785703ba70efe5cc5de48186518b0d143771e0b0a97b8c71dc1ce  tests/w2_receipts.py
+d5359d1dbb7ca14d85e7332a1623c077a4b5a8149e01808c56125742a6d44294  tests/w3_service_lockstep.py
+7b6a1bab28ccd9569220fd926b0e32a969a3fcd1a5c4e7ba966b31572f945878  tests/w4_service_crash.py
+4200c1ce4931c9ed115c19d3b1d4e95a3b0b4fbbdd689fbbc4aca900bc061797  ../budget_v3_1/contract/CONTRACT_V3_1.md
+
+expected results (declared before execution): p_tests.py first, then every earlier test on the same database
+  P1  11 checks: two then four simultaneous acquirers of an expired-lease file give exactly one owner; a 4-process
+      stampede over 6 trials never yields more than one owner; the generation increments on takeover; a stale owner
+      cannot claim new work (StateLost) and its row is not written; the new owner can claim; over HTTP, a host frozen
+      past its lease and resumed refuses the /run (503) and runs nothing, across 3 trials
+  P2  17 checks: as plea_local, raw reset of HOLD and of STOP is refused and the crossing stays denied with no run;
+      deleting a consumed attempt to free budget is refused and the budget stays exhausted (one execution); resetting
+      crossed is refused (second crossing ALREADY_CROSSED); raising the budget is refused (second call exhausted);
+      inserting a reservation is refused; editing or deleting the audit log is refused and the chain stays valid;
+      deleting or inserting a root is refused; the witness credential cannot rewrite a root either; a forged call to
+      plea_write injecting an accepted phase (authority), a reservation beyond the budget (I2), a non-sequential
+      decision and a mis-chained decision (append-only) are each refused; every legitimate operation still applies
+      through the proper path; replay lockstep on a governed root
+  re-runs  V1-V6 43/43; R1-R6 43/43; H1-H5 33/33; T1-T4 35/35; M1-M3 28/28; E1 8/8, E2 8/8, E3 PASS; W1 PASS (CROSS
+           witnessed; raw crossed and all raw authoritative DML refused), W2-W4 PASS (W4 18/18); conform_store 34/34;
+           chaos 90/90; G02b 200/200; G01 lock 300/300; G01 serializable 300/300 (advisory lock, both modes)
