@@ -1,0 +1,67 @@
+PLEA gateway v0.5: mutual TLS between the governor, the witness service and the gate host
+declared 2026-10-12T10:36:04Z, before any declared test ran. Database: plea4 (the v0.4 schema; roots are recreated by each test).
+
+development smokes before this declaration (not evidence): tls.py certificate generation and the two contexts; the witness service over TLS probed with curl and the Python client (plain HTTP refused, no client certificate refused, a server certificate as a client certificate refused, the governor admitted and named as the peer); t_tests.py three times: a fixture failure (an import shadowed inside the readiness probe), a harness failure (argument slicing in T3's no-TLS check), then 35/35 in 12.5 s. The v0.4 outputs were moved to outputs/v0_4/ before this run.
+
+files (sha256):
+d04abe271653aafdb1ee90d0978ab3a2d59a186885d8f4e928464704ca3a80fb  plea_gateway/__init__.py
+41f6a14b7a5c21b061393b33e3b6ce9752d15f4329f996f5790e34ea4e8ceea7  plea_gateway/evidence.py
+67c9ac8f872d31b530a3c51f2e7963dda3fdc3ecbbb2b47130e465161a934ccd  plea_gateway/faults.py
+b0d030911b996893d4d96547e3a995ac2c4fdbd599860de365ad8bcf9f2eed0f  plea_gateway/gate_host.py
+b04868e5dde647804629960d9e7e3052eb2ef329eab84a73bd9a23e409108f1a  plea_gateway/governor.py
+a367a4bbc2ca21b49ffa781b276710c9bf3ceeb3549ee3ee3c2de2ca910fe749  plea_gateway/plea_budget_ref.py
+b1a58566bbae8cf6710de05c6f3d8486d1b3b12412f853323caf8b8713df2b71  plea_gateway/receipts.py
+f006c7646ba5918262923dc6ca1902606b391f5e5430471e6113e310537b40c8  plea_gateway/store.py
+9b7510bdbc26c18ea1d6439bfc0cc4a090cd6a03655328295308528659f70bef  plea_gateway/tls.py
+dd87f36d712c7070258dda5be2c06253882e5c99823dabc0aec4a839982ad1a1  plea_gateway/witness.py
+a1fb02f605eec6f9b582573691c20849e3a9ceaa6ecc2c28b7930959ce4ba53a  plea_gateway/witness_service.py
+7f672232e9988fb1f26fa5160d909a1c4b17f1f23e2e505384aa368e4ad212fd  mcp/demo_tools.py
+a8974537035ea0141ccc8924c98faa49bac18e96f11f1d75ae34ae6070651a36  mcp/plea_ctl.py
+baddf62e40c792909aa130a444c1bb8e65febfb33ada944d23de63fdde1be999  mcp/plea_mcp.py
+3b574ba659f905a84475b94f8310a58e047b4fbbf57786c9223d8bb1b44c8b1c  mcp/vanilla_mcp.py
+18a47ba1a8fc9379ae9123547d75d2ebf89b72f3cda1d6dc70244adbea1e8835  tests/apply_once.py
+6b7646b7e2f4824f55ea400370acd1c6d72254b7ec3f56c4e292ab01df3fc136  tests/budget_oracle.py
+22932e82a196e76d80b9dbdd7424f5bcfc213110d781202ab500c4ddeb9bb8fe  tests/chaos.py
+916d40e28084378b09b0dff6623172739147475d5b6fea2ab18324f08e9a338e  tests/common.py
+22b3d5a1e0198f0dc35351e26959401e608a2efdeffdc78aa754ba1799e90290  tests/conform_store.py
+1ecc76ee74aa2804bfed37e25d8b130cb203097c9c4a064292cc6372a7953323  tests/e1_release_evidence.py
+afc43394784e487530bd5c86c47f16f82b62503fe5146e4fc12d5eac25be375d  tests/e2_reconcile_evidence.py
+8e57f66c347583517207218ca153f1b0831c42ecbac261d556dd2cef82502d0c  tests/e3_lifecycle_evidence.py
+34b00e079e0a055a593d63a79d4f905b9c66174960a62f54b328f09b255b68f6  tests/g01_race.py
+4640e08d322857b3305a650f933874532a909540adabf70e43bf6f11de7dfeb0  tests/g02b.py
+8ce6557f09837b8c1e59e820e83d306cfa3a407ea48fbf62b5d9a468ca0c7589  tests/h_tests.py
+fede07f8300dfd044de0a4a15410658b78fe044fff5fff23524889d0900cf5a9  tests/mcp_tests.py
+0767cd4dec6b28141270458a530df9c64948f5164d05ff62bd29242318e255e9  tests/t_tests.py
+ee0147c353c331cf7aa9e92d42696633df7d83d19a00b20f913033ab470bbcb3  tests/vectors.py
+061df2240a9d1e33af966d5953392821e84322de5b91c556d974b370e82d3ecd  tests/w1_authority.py
+ae80070baa9eb532a76f168b3808d0985ea42aed88f7d78b7d9b0d1ebb13d238  tests/w2_receipts.py
+d5359d1dbb7ca14d85e7332a1623c077a4b5a8149e01808c56125742a6d44294  tests/w3_service_lockstep.py
+01914f2ce533807147e6bbb79071269e9b2169da55ca3f8da709c6f59bb0bd3b  tests/w4_service_crash.py
+4200c1ce4931c9ed115c19d3b1d4e95a3b0b4fbbdd689fbbc4aca900bc061797  ../budget_v3_1/contract/CONTRACT_V3_1.md
+
+expected results (declared before execution): t_tests.py first, then every earlier test on the same database, because witness.py,
+gate_host.py, witness_service.py, plea_mcp.py and the fixtures changed
+  T1  15 checks: against a witness and a host that require a client certificate and admit only 'governor': plain HTTP to the TLS
+      port, HTTPS with the authority pinned but no client certificate, a client certificate from an impostor authority, and a
+      server certificate presented as a client certificate are each refused at the transport (TransportError), for both services;
+      a 'stranger' certificate from the right authority that the allow-list does not name is refused by the handler (witness
+      PermissionError, host 403); the audit log and the host's ledger are unchanged by the refusals; the governor's certificate
+      is admitted by both (APPLIED; the tool runs once); the witness names its peer 'governor' over TLS
+  T2  7 checks: an impostor witness and an impostor host (certificates from another authority) and a witness with a genuine
+      certificate issued for another name are each refused by the client (TransportError); the impostors applied nothing and
+      ran nothing; the wrongly named witness applied nothing; the genuine witness is accepted
+  T3  6 checks: four roots through the API in host mode over mutual TLS, each 4 ran, 1 NoEffect, 1 denied, credit 1, no gate key
+      in the governor, labels AUTHORISED, lockstep; the MCP server with --tls-ca/--tls-cert/--tls-key in host mode lists the
+      host's tools, a retried charge runs once, beyond the budget is refused and never runs, lockstep; the MCP server without
+      the TLS options against the TLS services exits non-zero with TransportError and applies nothing
+  T4  7 checks: a new server certificate from the same authority keeps the unchanged client working; a new client certificate
+      from the same authority is admitted by the unchanged service; during an authority rotation a client pinning both
+      authorities with the old certificate works and a client pinning only the old authority is refused; after the cut-over the
+      old client certificate is refused and the new one admitted; replay lockstep
+  re-runs  H1-H5 32/32; M1-M3 28/28; E1 8/8, E2 8/8, E3 PASS; W1-W4 PASS (W4 18/18); conform_store 34/34 (tests/vectors.py);
+           chaos 90/90; G02b 200/200; G01 lock 300 rounds 300/300
+
+amendment 1, 2026-10-12T10:44:22Z, after the declared chain finished. T1-T4 35/35 and every re-run passed except W4, which failed on its first crash point before any check: the client raised TransportError where W4 expects WitnessUnavailable. Cause: is_transport_error (tls.py) counted a connection closed without a response (RemoteDisconnected, ConnectionResetError) as a transport refusal, so a service that died mid-acceptance was reported as "retrying will not help". That classification is wrong: the client cannot tell a crash from plain HTTP spoken to a TLS port, and a crash must be retried (contract 5.2/2, 5.5/2). Fix: only a TLS failure (ssl.SSLError, directly or as a URLError's reason) is a TransportError; a closed connection is WitnessUnavailable at the witness client and the ConnectionError it always was at the host client. T1's two plain-HTTP checks now expect those; the other 33 checks are unchanged. The declared W4 output is kept in outputs/declared_w4/. Re-run: t_tests.py and w4_service_crash.py; nothing else exercises the changed line.
+e08e322d53539bd929c2c3c91790a3bfe9963cd1868a6858117e9ee113b7361b  plea_gateway/tls.py
+b1effcbe6a4bcb05a439c7e42593df45782780d718a29c3480040b024e9a499c  tests/t_tests.py
+  expected on re-run: T1 15/15, T2 7/7, T3 6/6, T4 7/7; W4 18/18

@@ -1,0 +1,37 @@
+PLEA gateway v0: declared 2026-10-12T04:52:52Z, before any declared test ran
+engine: the independent reference of contract v3.1 (unchanged); oracle for replay lockstep: budget_oracle amendment 3 (unchanged)
+store: PostgreSQL 16.13, psycopg 3.3.6; development smoke runs before this declaration: one governor lifecycle, one adapter step
+
+6c2086264aa5866634ce25af93b438b1433a59297f87d8a713ad2300dd6488f7  plea_gateway/__init__.py
+67c9ac8f872d31b530a3c51f2e7963dda3fdc3ecbbb2b47130e465161a934ccd  plea_gateway/faults.py
+cdd433bb0c19c25292dd18aaaeaca8a6948fdc3ad7a02a1a733f09939f15537b  plea_gateway/governor.py
+a367a4bbc2ca21b49ffa781b276710c9bf3ceeb3549ee3ee3c2de2ca910fe749  plea_gateway/plea_budget_ref.py
+91591264c253fb71ce3dd71d6820184ffdc6a15c11a545b393f95adb9e180f9c  plea_gateway/store.py
+2f6b82191b77ee4b0fcaee0e2665ba51091b365f1980d7d5f9fe3f67738cc641  plea_gateway/witness.py
+b7b54bbcfa5b825fb507bd9c4487eb359e7f5fd8bda5c71e28312aa1cc444265  tests/apply_once.py
+6b7646b7e2f4824f55ea400370acd1c6d72254b7ec3f56c4e292ab01df3fc136  tests/budget_oracle.py
+cd37e410cbdda49d940a87c9a3672ee623fc6d04ff8efcba1652048cd9dd01c7  tests/chaos.py
+21b955e91ecd87ac562762f9302a2c2a72594a548461d369ffb7133d0394ded0  tests/common.py
+cc3bc13ed368735e6af35b0b8a15850e4cb744561bfa469639e851532f8f4ca8  tests/conform_store.py
+a4c1ebe3c9c45a06f0aeb480c96eba2a3d1692741aa075b2772b58b68d6f1f02  tests/g01_race.py
+77b27012245fcdb723befde6c610955eac520129e07a1e5f50b542f2092e5b6b  tests/g02b.py
+4200c1ce4931c9ed115c19d3b1d4e95a3b0b4fbbdd689fbbc4aca900bc061797  ../budget_v3_1/contract/CONTRACT_V3_1.md
+
+expected results (declared before execution):
+  conform_store   the store-backed implementation through contract v3.1's 34 vector groups: 34/34 (lock mode)
+  chaos           15 operations x 6 crash points = 90 kills; every child exits 137; state equals the pre-state for the
+                  five in-transaction points and the post-state after commit; invariants, hash chain and replay lockstep
+                  hold after every kill; a follow-up operation succeeds on every root (no lock left behind)
+  G02b            200 rounds: RELEASE DENIED in every round; ACCEPT_INTENT APPLIED in every round; every RESERVE a2
+                  probe DENIED; final state a1 CONSUMED with accepted C = 1 in every round; replay lockstep and chain
+                  ok in every round.  Both orders (acceptance first, release first) are expected to occur, but that is
+                  the scheduler's property, not the gateway's, and is reported rather than required
+  G01 lock        1000 rounds, 16 worker processes, k = 3: wave 1 exactly 3 APPLIED and 13 DENIED in every round;
+                  after recovery exactly k - j DISCARDED and live (j, 0, 0); wave 2 exactly k - j APPLIED in every
+                  round; 0 reader invariant violations; replay lockstep and chain ok in every round
+  G01 serializable same expectations, same parameters, with SERIALIZABLE isolation and retry instead of the row lock
+
+amendment 1, 2026-10-12T05:57:05Z, after the declared runs. Finding: G01 serializable failed in round 0. Without the row lock, two transactions read the same seq; the first inserted the log row and committed; the second's INSERT then hit decisions_pkey (UniqueViolation), which is not retried, so a worker died and the harness hung until its time limit. The transaction rolled back: the state was intact (a liveness defect, not a safety one). Fix: store.py updates the root row before inserting the log row, so the second transaction fails on the root row with a SerializationFailure and retries; g01_race.py reports a worker error instead of hanging and counts it as a failure. The declared outputs are kept in outputs/declared/. All five tests are re-run under the amended store.
+fd8638f4ad35b42bf3019e556e1df1ea171c49a559372b5d1cd97d9ecf494455  plea_gateway/store.py
+4cb62072dfd07450a9bfea6d6ee794855f5a22dbb26934dc886d6350a3723073  tests/g01_race.py
+expected on re-run: conform_store 34/34; chaos 90/90; G02b 200/200; G01 lock 1000/1000; G01 serializable 1000/1000 with 0 worker errors

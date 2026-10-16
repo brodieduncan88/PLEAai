@@ -1,0 +1,58 @@
+PLEA gateway v0.4 (gate host; the governor holds no gate key; pinned key lists): declared 2026-10-12T09:39:38Z, before any declared test ran
+database: plea4, fresh schema (the receipts table gained an op column); the Gate B proxy ran against the v0.3 bundle on the old database and is reported, not re-run
+development smokes before this declaration: two host-mode lifecycles (the first failed on a relative ledger path in the smoke itself), one release through the host, one direct re-run at the host
+
+8694a538e92639effa1a884825bd79ca9e669f82cd556a3b2d1ba2584e69566c  plea_gateway/__init__.py
+41f6a14b7a5c21b061393b33e3b6ce9752d15f4329f996f5790e34ea4e8ceea7  plea_gateway/evidence.py
+67c9ac8f872d31b530a3c51f2e7963dda3fdc3ecbbb2b47130e465161a934ccd  plea_gateway/faults.py
+4b35e95aafeec7c1ebd27efcaecd42422aa33ddf4092c56ab603b8ffa44a19aa  plea_gateway/gate_host.py
+b04868e5dde647804629960d9e7e3052eb2ef329eab84a73bd9a23e409108f1a  plea_gateway/governor.py
+a367a4bbc2ca21b49ffa781b276710c9bf3ceeb3549ee3ee3c2de2ca910fe749  plea_gateway/plea_budget_ref.py
+b1a58566bbae8cf6710de05c6f3d8486d1b3b12412f853323caf8b8713df2b71  plea_gateway/receipts.py
+f006c7646ba5918262923dc6ca1902606b391f5e5430471e6113e310537b40c8  plea_gateway/store.py
+fbd39b39938719c4d6b3150c6ecbe57450d021cd671a1cdcc86b081e665b917f  plea_gateway/witness.py
+0ce82b8d848746fc8dd2463ecd6435fe00aabd7cbde67ed564bb22b56e0f0cd8  plea_gateway/witness_service.py
+7f672232e9988fb1f26fa5160d909a1c4b17f1f23e2e505384aa368e4ad212fd  mcp/demo_tools.py
+a8974537035ea0141ccc8924c98faa49bac18e96f11f1d75ae34ae6070651a36  mcp/plea_ctl.py
+5e3fcfad6e5f9c6816bfc1db228d044d624b203d685841d152df6b7a6ff4b169  mcp/plea_mcp.py
+3b574ba659f905a84475b94f8310a58e047b4fbbf57786c9223d8bb1b44c8b1c  mcp/vanilla_mcp.py
+18a47ba1a8fc9379ae9123547d75d2ebf89b72f3cda1d6dc70244adbea1e8835  tests/apply_once.py
+6b7646b7e2f4824f55ea400370acd1c6d72254b7ec3f56c4e292ab01df3fc136  tests/budget_oracle.py
+22932e82a196e76d80b9dbdd7424f5bcfc213110d781202ab500c4ddeb9bb8fe  tests/chaos.py
+9112ff697ac8a7bf4301a114249884ab4053fb53d4980146c8a2c7b463ea42ad  tests/common.py
+22b3d5a1e0198f0dc35351e26959401e608a2efdeffdc78aa754ba1799e90290  tests/conform_store.py
+1ecc76ee74aa2804bfed37e25d8b130cb203097c9c4a064292cc6372a7953323  tests/e1_release_evidence.py
+afc43394784e487530bd5c86c47f16f82b62503fe5146e4fc12d5eac25be375d  tests/e2_reconcile_evidence.py
+8e57f66c347583517207218ca153f1b0831c42ecbac261d556dd2cef82502d0c  tests/e3_lifecycle_evidence.py
+34b00e079e0a055a593d63a79d4f905b9c66174960a62f54b328f09b255b68f6  tests/g01_race.py
+4640e08d322857b3305a650f933874532a909540adabf70e43bf6f11de7dfeb0  tests/g02b.py
+e57c81e0cabd97090c7518e1d80efd0f034fc32368bfa5efedaf2cb7fdbdbd27  tests/h_tests.py
+fede07f8300dfd044de0a4a15410658b78fe044fff5fff23524889d0900cf5a9  tests/mcp_tests.py
+ee0147c353c331cf7aa9e92d42696633df7d83d19a00b20f913033ab470bbcb3  tests/vectors.py
+061df2240a9d1e33af966d5953392821e84322de5b91c556d974b370e82d3ecd  tests/w1_authority.py
+ae80070baa9eb532a76f168b3808d0985ea42aed88f7d78b7d9b0d1ebb13d238  tests/w2_receipts.py
+d5359d1dbb7ca14d85e7332a1623c077a4b5a8149e01808c56125742a6d44294  tests/w3_service_lockstep.py
+01914f2ce533807147e6bbb79071269e9b2169da55ca3f8da709c6f59bb0bd3b  tests/w4_service_crash.py
+4200c1ce4931c9ed115c19d3b1d4e95a3b0b4fbbdd689fbbc4aca900bc061797  ../budget_v3_1/contract/CONTRACT_V3_1.md
+
+expected results (declared before execution): h_tests.py, then every earlier test on the fresh database
+  H1  7 checks: no receipt, unknown key, reservation receipt, another attempt's receipt, edited kind: all refused (400/403); ledger
+      unchanged; the genuine receipt then runs once
+  H2  5 checks: first run executes; the same run again and a run with other arguments are repeats with the first report and no new
+      ledger line; eight concurrent runs give exactly one execution; after a host restart the run is still a repeat
+  H3  7 checks: fence returns a signed report; a fenced attempt cannot run (409); the witness DENIES releasing an attempt whose intent
+      it accepted; a never-started reservation is released on the fence report (APPLIED BOUND_FENCE); a3 runs; a run attempt cannot
+      be fenced (409); replay lockstep
+  H4  5 checks: four roots in host mode each 4 ran, 1 NoEffect, 1 denied, credit 1, no gate key in the governor, labels AUTHORISED,
+      lockstep; MCP host mode lists the host's tools; a retried charge runs once; beyond the budget refused and never runs; lockstep
+  H5  8 checks: client pinning [old, new] accepts new-key receipts; a host pinning [old, new] runs on either; the witness pinning
+      [old, new] gate keys accepts the old host's report; a host pinning only the new witness key refuses an old receipt (403); a
+      host with fresh state runs a3 again (one-shot state is per host); the witness accepts the new host's report; a witness pinning
+      only the new gate key derives NONE for the old host's report (DENIED); replay lockstep
+  re-runs  E1, E2, E3 PASS; W1, W2, W3, W4 PASS; M1-M3 PASS; conform_store 34/34 (tests/vectors.py); chaos 90/90; G02b 200/200;
+           G01 lock 300 rounds 300/300
+
+amendment 1, 2026-10-12T09:48:56Z, after the declared run. H1, H2 and H4 FAIL on every check that counts ledger lines; H3, H5 and all twelve re-runs passed. Cause: the chain exported PLEA_LEDGER for the MCP tests and the GateHost fixture inherited it, so the host wrote its ledger to mcp_ledger.jsonl while h_tests counted host_ledger.jsonl (0 lines throughout). The host ran the tools correctly: mcp_ledger.jsonl holds the host's lines. Fix: GateHost passes an explicit ledger path, never one inherited from the environment. The declared output is kept in outputs/declared_h/. Only h_tests.py is re-run; nothing else uses the fixture.
+cd6b6ce85b5755ccdee6efee45e8b2b9ce96a8f17653fad4c1551f9ec903cf6a  tests/common.py
+8ce6557f09837b8c1e59e820e83d306cfa3a407ea48fbf62b5d9a468ca0c7589  tests/h_tests.py
+  expected on re-run: H1 7/7, H2 5/5, H3 7/7, H4 5/5, H5 8/8

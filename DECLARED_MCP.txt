@@ -1,0 +1,20 @@
+PLEA gateway v0.3 (governed tools over MCP): declared 2026-10-12T08:27:26Z, before the declared test ran
+development smoke before this declaration: one governed server over stdio: list, charge, retry, zero refund, budget refusal, operator hold
+engine: plea_gateway as declared for v0.2 (DECLARED_EVIDENCE.txt); the MCP layer adds no accounting logic
+
+7f672232e9988fb1f26fa5160d909a1c4b17f1f23e2e505384aa368e4ad212fd  mcp/demo_tools.py
+cd8f09abb7d6e1979e34c092c885151cb328a3ad97673bf0d0b4567eb3cd6177  mcp/plea_ctl.py
+3d20a58fa9a72c60fb1d64b64c4f05c1997c5734a00859e4b881a42e1e8bdd2a  mcp/plea_mcp.py
+3b574ba659f905a84475b94f8310a58e047b4fbbf57786c9223d8bb1b44c8b1c  mcp/vanilla_mcp.py
+fede07f8300dfd044de0a4a15410658b78fe044fff5fff23524889d0900cf5a9  tests/mcp_tests.py
+ccda19a927a4bc549ef0420438fc2b23bb92b8bef972bde21c43b8c9397d53e0  tests/common.py
+
+expected results (declared before execution): mcp_tests.py
+  M1  16 checks true: tools listed; charge 1 runs; its retry is served with the same text and the ledger keeps one charge;
+      a zero refund is a no-effect; charge 2 runs on the replacement; charge 3 refused (budget) and never charged; operator
+      hold; charge 4 refused (held); operator recover; charge 4 refused (budget); plea_status live (0, 3, 1) credit 1;
+      an unknown tool is an error; replay lockstep; chain
+  M2  4 checks true: the ungoverned server charges order 7 twice on a retry; the governed server charges order 8 once;
+      a distinct request key runs a second charge for order 8; replay lockstep.  demo: 2 and 1
+  M3  8 checks true: the proxy lists the upstream's tools; charge 9 runs upstream once and its retry is served; charge 10
+      runs; charge 11 refused (budget) and never reaches the upstream; replay lockstep
