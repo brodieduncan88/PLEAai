@@ -101,6 +101,24 @@ class Client:
     def status(self):               return self.call('GET', '/status')
     def report(self):               return self.call('GET', '/report')
 
+    def raw_post(self, path: str, content_length: str, body: bytes, timeout: float = 15.0):
+        """One request with a chosen Content-Length header, to test malformed framing.  (status, first line) or (None, why)."""
+        host = self.base.split('://', 1)[1]
+        head = f'POST {path} HTTP/1.1\r\nHost: {host}\r\nContent-Type: application/json\r\nContent-Length: {content_length}\r\nConnection: close\r\n\r\n'.encode()
+        try:
+            ctx = TLS.TLSClient(self.ca, self.cert, self.key).context()
+            with socket.create_connection((host.split(':')[0], int(host.split(':')[1])), timeout=timeout) as plain:
+                s = ctx.wrap_socket(plain, server_hostname=host.split(':')[0])
+                s.sendall(head + body); s.settimeout(timeout)
+                reply = s.recv(400); s.close()
+        except (OSError, ssl.SSLError) as exc:
+            return None, _why(exc)
+        line = reply.decode(errors='replace').split('\r\n', 1)[0]
+        try:
+            return int(line.split()[1]), line
+        except (IndexError, ValueError):
+            return None, line
+
 
 class Deployment:
     def __init__(self, tag: str, limits: dict | None = None, decimals: int = 2):
@@ -612,7 +630,29 @@ def v13():
     return checks, e
 
 
-TESTS = {'V1': v1, 'V2': v2, 'V3': v3, 'V4': v4, 'V5': v5, 'V6': v6, 'V7': v7, 'V8': v8, 'V9': v9, 'V10': v10, 'V11': v11, 'V12': v12, 'V13': v13}
+def v14():
+    """A malformed Content-Length is refused and never reaches the scoring path (post-review amendment, 10 Nov 2026)."""
+    d = Deployment('V14', limits={'max_bytes': 4096}).start(); e = {}
+    try:
+        alice = d.enrol('alice', 3)
+        negative_upload = alice.raw_post('/upload', '-1', b'x' * 200)       # one small body; the guard must reject before any read-to-EOF
+        negative_score = alice.raw_post('/score', '-1', b'{"sha256":"' + b'a' * 64 + b'"}')
+        not_a_number = alice.raw_post('/upload', 'abc', b'x' * 10)
+        rows_after_malformed, calls_after_malformed = len(d.audit('alice')), len(d.ledger('called'))
+        still_ok = alice.score(up(alice, predictions(wrong={1})))
+        e.update(negative_upload=negative_upload, negative_score=negative_score, not_a_number=not_a_number, rows_after_malformed=rows_after_malformed,
+                 calls_after_malformed=calls_after_malformed, still_scores=still_ok[1].get('outcome'), rows_after_good=len(d.audit('alice')))
+        checks = {'a negative length on upload is refused 400, not read to EOF': negative_upload[0] == 400,
+                  'a negative length on score is refused 400': negative_score[0] == 400,
+                  'a non-numeric length is refused 411': not_a_number[0] == 411,
+                  'no malformed request reached an attempt or the scoring tool': rows_after_malformed == 0 and calls_after_malformed == 0,
+                  'a well-formed request still scores': still_ok[0] == 200 and e['still_scores'] == 'EFFECT' and e['rows_after_good'] > 0}
+    finally:
+        d.stop()
+    return checks, e
+
+
+TESTS = {'V1': v1, 'V2': v2, 'V3': v3, 'V4': v4, 'V5': v5, 'V6': v6, 'V7': v7, 'V8': v8, 'V9': v9, 'V10': v10, 'V11': v11, 'V12': v12, 'V13': v13, 'V14': v14}
 
 
 def main():

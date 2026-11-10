@@ -296,6 +296,9 @@ def make_handler(vault: Vault):
                 length = int(self.headers.get('Content-Length', ''))
             except ValueError:
                 return self._send(411, {'refused': 'LENGTH_REQUIRED'})
+            if length < 0:
+                self.close_connection = True                       # a negative length would make rfile.read(length) read to EOF, past every cap
+                return self._send(400, {'refused': 'BAD_REQUEST'})
             limit = vault.holdout.limits['max_bytes']
             if self.path == '/upload':
                 if length > limit:

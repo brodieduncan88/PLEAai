@@ -72,4 +72,5 @@ governor runs inside the front door with the gateway's ordinary database credent
 - **Not built yet:** a client for MCP, and any deployment packaging.
 
 `DECLARED_VAULT.md` states what each test was expected to show, written before the official run.
-`REPORT_VAULT.md` gives the result.
+`REPORT_VAULT.md` gives the result. `AMENDMENT_2026-11-10.md` records one fix (a malformed-length guard) and one
+test (V14) added after an independent static review, on top of the frozen V1–V13 record.
