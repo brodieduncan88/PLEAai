@@ -1,0 +1,14 @@
+V1   PASS  A fourth distinct submission is refused and the scoring tool is not run.
+V2   PASS  The same submission twice: one charge, the same score.
+V3   PASS  The backstop: an invalid file placed past the front door gives NO_EFFECT, refunded up to the allowance, then charged.
+V4   PASS  Scoring killed mid-run gives UNKNOWN, stays charged and is never re-run.
+V5   PASS  The report verifies offline; any edited field fails.
+V6   PASS  A submitter's certificate reaches the front door only: not the witness, the gate host, the database, the labels or another submitter's record.
+V7   PASS  An invalid upload is rejected with its code; no attempt and no audit row is created.
+V8   PASS  The score equals the manifest's rounding at the boundaries (0, 1, ties); the result has no other label-dependent field.
+V9   PASS  A report holding one each of EFFECT, NO_EFFECT, UNKNOWN and pending verifies and shows its as-of sequence number.
+V10  PASS  A stopped submitter is refused at admission; a revoked, expired or superseded certificate is refused at the front door.
+V11  PASS  An oversize file and an eleventh unscored upload are refused.
+V12  PASS  Requests beyond the per-minute limit are refused, per certificate.
+V13  PASS  Six different files sent at once against a budget of three: three are scored, never more.
+VAULT RESULT: PASS (13 of 13)

@@ -1,0 +1,694 @@
+{
+ "run": "8ae67e",
+ "tests": {
+  "V1": {
+   "title": "A fourth distinct submission is refused and the scoring tool is not run.",
+   "ok": true,
+   "checks": {
+    "three scored": true,
+    "fourth refused for budget": true,
+    "tool not run for the fourth": true,
+    "budget shows 3 used, 0 remaining": true,
+    "refusal is on the audit log": true
+   },
+   "evidence": {
+    "first": [
+     [
+      200,
+      "EFFECT"
+     ],
+     [
+      200,
+      "EFFECT"
+     ],
+     [
+      200,
+      "EFFECT"
+     ]
+    ],
+    "fourth": [
+     409,
+     {
+      "refused": "BUDGET_EXHAUSTED"
+     }
+    ],
+    "called_before": 3,
+    "called_after": 3,
+    "scored": 3,
+    "status": {
+     "allowed": 3,
+     "used": 3,
+     "refunded": 0,
+     "remaining": 0
+    },
+    "last_audit": "RESERVE DENIED BUDGET_EXHAUSTED"
+   },
+   "seconds": 2.6
+  },
+  "V2": {
+   "title": "The same submission twice: one charge, the same score.",
+   "ok": true,
+   "checks": {
+    "both answers are the same score": true,
+    "one charge": true,
+    "labels opened once": true,
+    "uploading the same file again stores nothing new": true
+   },
+   "evidence": {
+    "first": [
+     200,
+     {
+      "outcome": "EFFECT",
+      "result": {
+       "score": "0.90",
+       "metric": "accuracy",
+       "decimals": 2,
+       "rows": 40,
+       "submission_sha256": "dc02e5a2ee1fae252e88f309b370080e151e76f08ed85566b461396310ec1e5f",
+       "manifest_sha256": "da81a88cd8cb14c5aa8e3fa57dfdf68410ca353a5020230dca27ad22b16a3be5"
+      }
+     }
+    ],
+    "second": [
+     200,
+     {
+      "outcome": "EFFECT",
+      "result": {
+       "rows": 40,
+       "score": "0.90",
+       "metric": "accuracy",
+       "decimals": 2,
+       "manifest_sha256": "da81a88cd8cb14c5aa8e3fa57dfdf68410ca353a5020230dca27ad22b16a3be5",
+       "submission_sha256": "dc02e5a2ee1fae252e88f309b370080e151e76f08ed85566b461396310ec1e5f"
+      }
+     }
+    ],
+    "upload_again": [
+     200,
+     {
+      "sha256": "dc02e5a2ee1fae252e88f309b370080e151e76f08ed85566b461396310ec1e5f",
+      "stored": false
+     }
+    ],
+    "opened": 1,
+    "scored": 1,
+    "used": 1,
+    "attempts": 1
+   },
+   "seconds": 1.9
+  },
+  "V3": {
+   "title": "The backstop: an invalid file placed past the front door gives NO_EFFECT, refunded up to the allowance, then charged.",
+   "ok": true,
+   "checks": {
+    "both give NO_EFFECT": true,
+    "the tool rejected them with their codes": true,
+    "the labels were not opened for them": true,
+    "the first is refunded": true,
+    "beyond the allowance the second is charged": true,
+    "a valid file still scores": true
+   },
+   "evidence": {
+    "first": [
+     200,
+     {
+      "outcome": "NO_EFFECT",
+      "detail": "the file was rejected inside the scoring tool"
+     }
+    ],
+    "after_first": {
+     "used": 0,
+     "refunded": 1,
+     "remaining": 3
+    },
+    "second": [
+     200,
+     {
+      "outcome": "NO_EFFECT",
+      "detail": "the file was rejected inside the scoring tool"
+     }
+    ],
+    "after_second": {
+     "used": 1,
+     "refunded": 1,
+     "remaining": 2
+    },
+    "rejected": [
+     [
+      "BAD_CLASS",
+      "3eba121c"
+     ],
+     [
+      "ROW_COUNT",
+      "7577d9ef"
+     ]
+    ],
+    "opened_for_bad": 0,
+    "good": "EFFECT",
+    "audit_tail": [
+     "RECEIPT APPLIED RECEIPT_RECORDED",
+     "CROSS APPLIED CROSSED",
+     "RECONCILE APPLIED VERDICT_RECORDED"
+    ]
+   },
+   "seconds": 2.4
+  },
+  "V4": {
+   "title": "Scoring killed mid-run gives UNKNOWN, stays charged and is never re-run.",
+   "ok": true,
+   "checks": {
+    "the host died while scoring (exit 137)": true,
+    "afterwards the answer is UNKNOWN, twice": true,
+    "never re-run: called once, labels opened once, no score": true,
+    "the attempt stays charged": true,
+    "the witness recorded UNKNOWN stays charged": true,
+    "another file still scores, and the report verifies": true
+   },
+   "evidence": {
+    "during": [
+     503,
+     {
+      "refused": "UNAVAILABLE",
+      "detail": "a vault service could not be reached; the attempt may be pending"
+     }
+    ],
+    "host_exit": 137,
+    "after_restart": [
+     [
+      200,
+      {
+       "outcome": "UNKNOWN",
+       "detail": "no score; attempt used"
+      }
+     ],
+     [
+      200,
+      {
+       "outcome": "UNKNOWN",
+       "detail": "no score; attempt used"
+      }
+     ]
+    ],
+    "opened": 1,
+    "scored": 0,
+    "called": 1,
+    "used": 1,
+    "outcome_in_status": [
+     "UNKNOWN"
+    ],
+    "other": "EFFECT",
+    "reconcile": [
+     "RECONCILE NOOP VERDICT_UNKNOWN_STAYS_CHARGED",
+     "RECONCILE NOOP VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    "report_verifies": true,
+    "why": []
+   },
+   "seconds": 4.6
+  },
+  "V5": {
+   "title": "The report verifies offline; any edited field fails.",
+   "ok": true,
+   "checks": {
+    "the report verifies, by library and by command line": true,
+    "without pinned keys it says consistent, not verified": true,
+    "every single-field edit fails": true,
+    "a wrong report key fails": true,
+    "re-signed edits verify only for fields the report key alone covers": true
+   },
+   "evidence": {
+    "report_status": 200,
+    "verifies": true,
+    "why": [],
+    "cli_exit": 0,
+    "cli_last_line": "VERIFIED against the keys given.  This is the record as of t",
+    "unpinned_exit": 0,
+    "unpinned_last": "CONSISTENT, but the keys were read from ",
+    "fields": 1410,
+    "edits_that_still_verify": [],
+    "resigned_edits_that_verify": [
+     "as_of.time",
+     "certificate_sha256",
+     "enrolment"
+    ],
+    "outcomes": [
+     "NO_EFFECT",
+     "EFFECT",
+     "EFFECT",
+     "EFFECT"
+    ],
+    "audit_rows": 33
+   },
+   "seconds": 13.1
+  },
+  "V6": {
+   "title": "A submitter's certificate reaches the front door only: not the witness, the gate host, the database, the labels or another submitter's record.",
+   "ok": true,
+   "checks": {
+    "the witness and the gate host refuse the submitter's certificate": true,
+    "no front-door path returns anything but 404 outside the six endpoints": true,
+    "no response holds the salt, a label row or the other submitter's hash": true,
+    "the sealed labels and the report key are readable by their owner only": true,
+    "an unenrolled certificate is refused everywhere": true,
+    "a certificate from another authority cannot connect": true,
+    "scoring another submitter's hash is refused": true,
+    "the report covers the caller's own budget only": true,
+    "the database has no login for the submitter": true
+   },
+   "evidence": {
+    "witness_direct": [
+     403,
+     {
+      "error": "client 'alice' is not allowed"
+     }
+    ],
+    "host_direct": [
+     403,
+     {
+      "error": "client 'alice' is not allowed"
+     }
+    ],
+    "host_run_direct": [
+     403,
+     {
+      "error": "client 'alice' is not allowed"
+     }
+    ],
+    "probes": {
+     "/labels.sealed": 404,
+     "/labels": 404,
+     "/../labels.sealed": 404,
+     "/uploads/bob/3c0cbbbefc66ee8c206c2b9ee07d5caa1dc8b5c3608b32a44425a5fc96828b87.csv": 404,
+     "/index.sqlite": 404,
+     "/report.key": 404,
+     "/status/bob": 404,
+     "/report?submitter=bob": 404,
+     "/status?submitter=bob": 404,
+     "/%2e%2e/labels.sealed": 404,
+     "/audit": 404,
+     "/manifest/../labels.sealed": 404
+    },
+    "sealed_mode": "0o600",
+    "report_key_mode": "0o600",
+    "stranger": [
+     403,
+     403,
+     403,
+     403,
+     403
+    ],
+    "other_ca": [
+     null,
+     "TLSV1_ALERT_UNKNOWN_CA"
+    ],
+    "scoring_bobs_hash": [
+     404,
+     {
+      "refused": "UNKNOWN_SUBMISSION"
+     }
+    ],
+    "alice_report_roots": [
+     "v6-8ae67e/alice"
+    ],
+    "database_as_alice": "refused"
+   },
+   "seconds": 2.6
+  },
+  "V7": {
+   "title": "An invalid upload is rejected with its code; no attempt and no audit row is created.",
+   "ok": true,
+   "checks": {
+    "each is rejected with its own code": true,
+    "no attempt, no audit row, nothing charged or refunded": true,
+    "nothing was stored and the tool was never called": true,
+    "a rejected file cannot be scored": true
+   },
+   "evidence": {
+    "answers": {
+     "TOO_LARGE": [
+      400,
+      {
+       "rejected": "TOO_LARGE"
+      }
+     ],
+     "NOT_UTF8": [
+      400,
+      {
+       "rejected": "NOT_UTF8"
+      }
+     ],
+     "BAD_HEADER": [
+      400,
+      {
+       "rejected": "BAD_HEADER"
+      }
+     ],
+     "ROW_COUNT": [
+      400,
+      {
+       "rejected": "ROW_COUNT"
+      }
+     ],
+     "UNKNOWN_ID": [
+      400,
+      {
+       "rejected": "UNKNOWN_ID"
+      }
+     ],
+     "DUPLICATE_ID": [
+      400,
+      {
+       "rejected": "DUPLICATE_ID"
+      }
+     ],
+     "BAD_CLASS": [
+      400,
+      {
+       "rejected": "BAD_CLASS"
+      }
+     ]
+    },
+    "audit_rows": 0,
+    "ledger_lines": 0,
+    "status": {
+     "used": 0,
+     "refunded": 0,
+     "remaining": 3
+    },
+    "uploads_listed": 0,
+    "files": 0,
+    "scoring_a_rejected_hash": [
+     404,
+     {
+      "refused": "UNKNOWN_SUBMISSION"
+     }
+    ]
+   },
+   "seconds": 1.6
+  },
+  "V8": {
+   "title": "The score equals the manifest's rounding at the boundaries (0, 1, ties); the result has no other label-dependent field.",
+   "ok": true,
+   "checks": {
+    "the six scores are the declared rounding": true,
+    "the result holds exactly the six contract fields": true,
+    "the fields other than the score do not depend on the labels": true,
+    "the rounding rule holds on a table of ties and edges": true
+   },
+   "evidence": {
+    "scores": {
+     "0": "0.00",
+     "40": "1.00",
+     "1": "0.02",
+     "3": "0.08",
+     "5": "0.12",
+     "7": "0.18"
+    },
+    "result_keys": [
+     "decimals",
+     "manifest_sha256",
+     "metric",
+     "rows",
+     "score",
+     "submission_sha256"
+    ],
+    "unit_table": [
+     "0.87",
+     "0.67",
+     "0.12",
+     "0.38",
+     "0.00",
+     "0.02",
+     "0.6",
+     "0",
+     "1",
+     "1.000",
+     "0.0000"
+    ]
+   },
+   "seconds": 3.7
+  },
+  "V9": {
+   "title": "A report holding one each of EFFECT, NO_EFFECT, UNKNOWN and pending verifies and shows its as-of sequence number.",
+   "ok": true,
+   "checks": {
+    "the report holds one of each": true,
+    "the pending attempt answered unavailable": true,
+    "the report verifies": true,
+    "it shows its as-of sequence number, the number of audit rows": true,
+    "pending and unknown count as charged, the rejected one is refunded": true
+   },
+   "evidence": {
+    "answers": {
+     "unknown": [
+      200,
+      {
+       "outcome": "UNKNOWN",
+       "detail": "no score; attempt used"
+      }
+     ],
+     "effect": "EFFECT",
+     "no_effect": [
+      200,
+      {
+       "outcome": "NO_EFFECT",
+       "detail": "the file was rejected inside the scoring tool"
+      }
+     ],
+     "pending": [
+      503,
+      {
+       "refused": "UNAVAILABLE",
+       "detail": "a vault service could not be reached; the attempt may be pending"
+      }
+     ]
+    },
+    "outcomes": [
+     "EFFECT",
+     "NO_EFFECT",
+     "PENDING",
+     "UNKNOWN"
+    ],
+    "phases": [
+     "CONSUMED",
+     "EFFECT",
+     "NO_EFFECT",
+     "RESERVING"
+    ],
+    "verifies": true,
+    "why": [],
+    "as_of_seq": 32,
+    "audit_rows": 32,
+    "summary": {
+     "allowed": 4,
+     "used": 3,
+     "refunded": 1,
+     "remaining": 1
+    },
+    "status": {
+     "used": 3,
+     "refunded": 1,
+     "remaining": 1
+    }
+   },
+   "seconds": 4.9
+  },
+  "V10": {
+   "title": "A stopped submitter is refused at admission; a revoked, expired or superseded certificate is refused at the front door.",
+   "ok": true,
+   "checks": {
+    "a stopped submitter is refused, and the tool is not run": true,
+    "the refusal is at admission, on the audit log": true,
+    "an already-scored hash still returns its stored score": true,
+    "a revoked submitter is refused at once, with no restart": true,
+    "an expired certificate cannot connect": true,
+    "the same enrolment with a valid certificate is served": true,
+    "after renewal the old certificate is refused and the new one served": true
+   },
+   "evidence": {
+    "first": "EFFECT",
+    "stop": "APPLIED STOPPING | witness ACTIVE | business STOPPING | live [0, 1, 0]",
+    "refused": [
+     409,
+     {
+      "refused": "STOPPED"
+     }
+    ],
+    "replay": "0.98",
+    "called_before": 1,
+    "called_after": 1,
+    "ledger_lines_for_refused_file": 0,
+    "audit_tail": [
+     "STOP APPLIED STOPPING",
+     "RESERVE DENIED NOT_ACTIVE_AND_OPEN"
+    ],
+    "bob_before": "EFFECT",
+    "revoke": {
+     "revoked": "bob",
+     "stop": [
+      "APPLIED",
+      "STOPPING"
+     ],
+     "business": "STOPPING"
+    },
+    "bob_after": [
+     [
+      403,
+      {
+       "refused": "NOT_ENROLLED"
+      }
+     ],
+     [
+      403,
+      {
+       "refused": "NOT_ENROLLED"
+      }
+     ]
+    ],
+    "erin": [
+     null,
+     "SSLV3_ALERT_CERTIFICATE_EXPIRED"
+    ],
+    "frank": 200,
+    "erin_expires": "2026-11-10T00:32:11Z",
+    "carol": {
+     "before": 200,
+     "old_certificate": [
+      403,
+      {
+       "refused": "NOT_ENROLLED"
+      }
+     ],
+     "new_certificate": 200
+    }
+   },
+   "seconds": 5.5
+  },
+  "V11": {
+   "title": "An oversize file and an eleventh unscored upload are refused.",
+   "ok": true,
+   "checks": {
+    "an oversize file is refused with TOO_LARGE": true,
+    "ten unscored uploads are held": true,
+    "the eleventh is refused": true,
+    "after one is scored another upload is accepted": true
+   },
+   "evidence": {
+    "oversize": [
+     400,
+     {
+      "rejected": "TOO_LARGE"
+     }
+    ],
+    "ten": [
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200
+    ],
+    "eleventh": 409,
+    "eleventh_body": "UPLOAD_CAP",
+    "after_scoring_one": 200,
+    "files": 11
+   },
+   "seconds": 2.5
+  },
+  "V12": {
+   "title": "Requests beyond the per-minute limit are refused, per certificate.",
+   "ok": true,
+   "checks": {
+    "twenty requests are served": true,
+    "the next are refused with RATE_LIMIT": true,
+    "another submitter is not affected": true,
+    "a refused request creates no attempt": true
+   },
+   "evidence": {
+    "first_twenty": [
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200,
+     200
+    ],
+    "next_two": [
+     429,
+     429
+    ],
+    "upload_while_limited": [
+     429,
+     {
+      "refused": "RATE_LIMIT"
+     }
+    ],
+    "other_submitter": 200,
+    "audit_rows": 0
+   },
+   "seconds": 2.1
+  },
+  "V13": {
+   "title": "Six different files sent at once against a budget of three: three are scored, never more.",
+   "ok": true,
+   "checks": {
+    "three are scored and three refused for budget": true,
+    "the labels were opened three times, never more": true,
+    "the budget shows 3 used, 0 remaining, and the report verifies": true
+   },
+   "evidence": {
+    "first_round": [
+     "EFFECT",
+     "IN_PROGRESS",
+     "IN_PROGRESS",
+     "IN_PROGRESS",
+     "IN_PROGRESS",
+     "IN_PROGRESS"
+    ],
+    "rounds": 6,
+    "final": [
+     "BUDGET_EXHAUSTED",
+     "BUDGET_EXHAUSTED",
+     "BUDGET_EXHAUSTED",
+     "EFFECT",
+     "EFFECT",
+     "EFFECT"
+    ],
+    "scored": 3,
+    "opened": 3,
+    "called": 3,
+    "status": {
+     "allowed": 3,
+     "used": 3,
+     "refunded": 0,
+     "remaining": 0
+    },
+    "report_verifies": true,
+    "why": []
+   },
+   "seconds": 3.0
+  }
+ },
+ "passed": 13,
+ "of": 13,
+ "seconds": 50.6,
+ "PASS": true
+}

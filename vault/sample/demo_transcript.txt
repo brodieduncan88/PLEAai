@@ -1,0 +1,50 @@
+OWNER  seals the holdout
+       demo-25dd79: 200 rows, classes bird, cat, dog, score = accuracy to 2 decimal places
+       manifest sha256 ac27196285a0eed2…  (public; carried in every signed result)
+       three services are up under mutual TLS: witness, gate host (holds the labels), front door
+OWNER  enrols submitter "lab-a": 3 attempts, certificate aa1a8fcf55338d9d…, budget demo-25dd79/lab-a
+
+SUBMITTER  holds a client certificate only; sends four different prediction files
+  file 1  f3d1033b613b…  scored   accuracy 0.65
+  file 2  0aa48de8d45d…  scored   accuracy 0.74
+  file 2  sent again           same answer, no charge: 0.74
+  file 3  38565d58702b…  scored   accuracy 0.80
+  file 4  63cc931c6fb2…  REFUSED  BUDGET_EXHAUSTED   (HTTP 409; the scoring tool was not run)
+  status: allowed 3, used 3, remaining 0
+  the scoring tool's own log: labels opened 3 times
+
+ANYONE  checks the signed report offline, with three public keys from the owner
+  ok   1  report signature
+  ok   2  manifest and provisioning record
+  ok   3  audit chain
+  ok   4  witness receipts
+  ok   5  attempts bound to their submissions
+  ok   6  gate reports and results
+  ok   7  budget arithmetic
+
+  demo-25dd79 / lab-a   as of 2026-11-10T00:32:49Z, sequence number 25
+  attempts allowed 3, used 3, refunded 0, remaining 0;  requests refused: 1
+    0aa48de8d45d9ebe…  EFFECT    0.74
+    f3d1033b613bd17c…  EFFECT    0.65
+    38565d58702ba419…  EFFECT    0.80
+
+VERIFIED against the keys given.  This is the record as of the sequence number above; ask the owner for the current one.
+
+ANYONE  the same report with one score raised by 0.10
+  FAIL 1  report signature: bad signature: the report was changed after it was signed
+  ok   2  manifest and provisioning record
+  ok   3  audit chain
+  ok   4  witness receipts
+  ok   5  attempts bound to their submissions
+  FAIL 6  gate reports and results: a-ef1eb1d0044227bc: the result does not hash to the digest the gate signed
+  ok   7  budget arithmetic
+
+  demo-25dd79 / lab-a   as of 2026-11-10T00:32:49Z, sequence number 25
+  attempts allowed 3, used 3, refunded 0, remaining 0;  requests refused: 1
+    0aa48de8d45d9ebe…  EFFECT    0.74
+    f3d1033b613bd17c…  EFFECT    0.65
+    38565d58702ba419…  EFFECT    0.90
+
+FAILED: do not rely on this report.
+
+Left in outputs/vault_demo/: report.json, keys.json, report_edited.json, the service logs.

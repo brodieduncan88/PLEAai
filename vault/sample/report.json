@@ -1,0 +1,1507 @@
+{
+ "format": "plea-vault-report/1",
+ "holdout": "demo-25dd79",
+ "submitter": "lab-a",
+ "root": "demo-25dd79/lab-a",
+ "certificate_sha256": "aa1a8fcf55338d9d762c82ec55c619baab6a5b47455de7f363b1d77c1bef07b8",
+ "enrolment": {
+  "submitter": "lab-a",
+  "organisation": "Lab A (demo)",
+  "issued": "2026-11-10T00:27:47Z",
+  "expires": "2026-11-12T00:32:47Z"
+ },
+ "manifest": {
+  "classes": [
+   "bird",
+   "cat",
+   "dog"
+  ],
+  "decimals": 2,
+  "holdout": "demo-25dd79",
+  "ids_sha256": "53fcb6fd3d1cdea600df0c68fe1ac5ad2b517862b4d361dcb01f60b9aec3fc05",
+  "labels_sha256": "f70828a98444e4db5620c2e724d43ecd2b3cdd907c45233e2451912c0d14790f",
+  "limits": {
+   "max_bytes": 20971520,
+   "max_requests_per_minute": 60,
+   "max_rows": 1000000,
+   "max_unscored": 10
+  },
+  "metric": "accuracy",
+  "rows": 200,
+  "version": 1
+ },
+ "manifest_sha256": "ac27196285a0eed20f9ef6d7a4bfe2c2a2e959ff9d5e13f045cec3d7f011a39c",
+ "keys": {
+  "witness": "4fa8829656ebf22f24efad8eda219ffa03a5a386354c7847e9ac163a2524e149",
+  "gate": "8b859a7f226abbd00ae8e350bbfa87adc0e52e14d2facbb30e5bafe989ae19ca",
+  "report": "005680849e3ea31b806b7fcec6f6347838124a9b7e1d80d3e04d0e56eebc18b1"
+ },
+ "provisioning": {
+  "record": "PROVISION",
+  "seq": 110,
+  "root": "demo-25dd79/lab-a",
+  "k": 3,
+  "m": 0,
+  "issuer": "plea_control",
+  "contract": "attempt-budget contract v3.1",
+  "release": "plea-gateway v1.2",
+  "created_at": "2026-11-10T00:32:47.765483Z",
+  "prev_hash": "950a0c25134f2668cd0ed39b17963123f29cfb53748f661300dc74c15d5a9ef3",
+  "hash": "a8bdb3ede3fb658ebd6c3a3aa720daf2e19e10c60680dfcd616b0535231841ca"
+ },
+ "audit": [
+  {
+   "seq": 1,
+   "op": [
+    "RESERVE",
+    "a-25951f31befb88c9",
+    "score:7db660e5f73f653c88197860"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_COMMITTED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     1,
+     0,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "RESERVING",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "a8bdb3ede3fb658ebd6c3a3aa720daf2e19e10c60680dfcd616b0535231841ca",
+   "hash": "1006b273116d37d76afb1325840bce6c823b28d15b33097d68d5cb394bd0e81c"
+  },
+  {
+   "seq": 2,
+   "op": [
+    "ACCEPT_RESERVATION",
+    "a-25951f31befb88c9"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_ACCEPTED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     1,
+     0,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "RESERVED",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "1006b273116d37d76afb1325840bce6c823b28d15b33097d68d5cb394bd0e81c",
+   "hash": "64742ffc832c295852830e3f44db619e71d0cabc2744c0938dc390be93b38de4"
+  },
+  {
+   "seq": 3,
+   "op": [
+    "TOKEN",
+    "a-25951f31befb88c9"
+   ],
+   "kind": "APPLIED",
+   "code": "TOKEN_RELEASED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     1,
+     0,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "TOKEN",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "64742ffc832c295852830e3f44db619e71d0cabc2744c0938dc390be93b38de4",
+   "hash": "2431bf545b9fa1a5c926899e38214272cff66b78286ea0ba723b1c160f6d3212"
+  },
+  {
+   "seq": 4,
+   "op": [
+    "START",
+    "a-25951f31befb88c9",
+    "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_COMMITTED_LOCALLY",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "INTENT_PENDING",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "2431bf545b9fa1a5c926899e38214272cff66b78286ea0ba723b1c160f6d3212",
+   "hash": "aabd2b5116d6c79458158cfc62f431d053bcaacce9f4c0d6c76aff0fff3213a3"
+  },
+  {
+   "seq": 5,
+   "op": [
+    "ACCEPT_INTENT",
+    "a-25951f31befb88c9"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_ACCEPTED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "CONSUMED",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "aabd2b5116d6c79458158cfc62f431d053bcaacce9f4c0d6c76aff0fff3213a3",
+   "hash": "4b01620d56b6752f8ea7157cc8f6621f6def951c20cd63603cb0ef2a7635f175"
+  },
+  {
+   "seq": 6,
+   "op": [
+    "RECEIPT",
+    "a-25951f31befb88c9"
+   ],
+   "kind": "APPLIED",
+   "code": "RECEIPT_RECORDED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "CONSUMED",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "4b01620d56b6752f8ea7157cc8f6621f6def951c20cd63603cb0ef2a7635f175",
+   "hash": "822bccc9cf1bc71f6aae1972888b122d40edb6193c667bac5ec85bc5b4d10cd5"
+  },
+  {
+   "seq": 7,
+   "op": [
+    "CROSS",
+    "a-25951f31befb88c9"
+   ],
+   "kind": "APPLIED",
+   "code": "CROSSED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "CONSUMED",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "822bccc9cf1bc71f6aae1972888b122d40edb6193c667bac5ec85bc5b4d10cd5",
+   "hash": "949582dae63cb9f466724093d0ec2379800867752849e648ab5c027b27645962"
+  },
+  {
+   "seq": 8,
+   "op": [
+    "RECONCILE",
+    "a-25951f31befb88c9",
+    "EFFECT",
+    "AUTHORISED"
+   ],
+   "kind": "APPLIED",
+   "code": "VERDICT_RECORDED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "949582dae63cb9f466724093d0ec2379800867752849e648ab5c027b27645962",
+   "hash": "c978e56753bad4fa0c3e7fa90e192fc54706c8029cbfe1ba509d6dfa9cc11a59"
+  },
+  {
+   "seq": 9,
+   "op": [
+    "RESERVE",
+    "a-106c327155f05137",
+    "score:b10f9eba93bc03cbefcdaff0"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_COMMITTED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     1,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "RESERVING",
+      null,
+      false,
+      false
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "c978e56753bad4fa0c3e7fa90e192fc54706c8029cbfe1ba509d6dfa9cc11a59",
+   "hash": "806c2662d497e2b045ae47309b857c76eaddcc2e685bfbdaa138c0829616e1d8"
+  },
+  {
+   "seq": 10,
+   "op": [
+    "ACCEPT_RESERVATION",
+    "a-106c327155f05137"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_ACCEPTED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     1,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "RESERVED",
+      null,
+      false,
+      false
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "806c2662d497e2b045ae47309b857c76eaddcc2e685bfbdaa138c0829616e1d8",
+   "hash": "3ed957bfd123e8c2a7f2b1e45f411455e30e53f11fdcf4a05179975ac0a45977"
+  },
+  {
+   "seq": 11,
+   "op": [
+    "TOKEN",
+    "a-106c327155f05137"
+   ],
+   "kind": "APPLIED",
+   "code": "TOKEN_RELEASED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     1,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "TOKEN",
+      null,
+      false,
+      false
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "3ed957bfd123e8c2a7f2b1e45f411455e30e53f11fdcf4a05179975ac0a45977",
+   "hash": "3a663aabb6bed92fa0d71b873703ab4494b10902d648db7b8ad92ac5f844c0a0"
+  },
+  {
+   "seq": 12,
+   "op": [
+    "START",
+    "a-106c327155f05137",
+    "n-626dd325791e05d5d4c417b7637ba7fc459cb39d"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_COMMITTED_LOCALLY",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "INTENT_PENDING",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      false,
+      false
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "3a663aabb6bed92fa0d71b873703ab4494b10902d648db7b8ad92ac5f844c0a0",
+   "hash": "fbbb124f7c608525ed914b6ecf2fa0e2fefb6c22f2d0d159843fbb1966b2bdb5"
+  },
+  {
+   "seq": 13,
+   "op": [
+    "ACCEPT_INTENT",
+    "a-106c327155f05137"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_ACCEPTED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "CONSUMED",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      false,
+      false
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "fbbb124f7c608525ed914b6ecf2fa0e2fefb6c22f2d0d159843fbb1966b2bdb5",
+   "hash": "2cc789a0e8ae123b3e739ca3d410d3c562f2f294ee84e28d19a8e054b9ded0ee"
+  },
+  {
+   "seq": 14,
+   "op": [
+    "RECEIPT",
+    "a-106c327155f05137"
+   ],
+   "kind": "APPLIED",
+   "code": "RECEIPT_RECORDED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "CONSUMED",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      false
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "2cc789a0e8ae123b3e739ca3d410d3c562f2f294ee84e28d19a8e054b9ded0ee",
+   "hash": "b5a70a8c4d100a238a593f8497fa8674ad8fc2cce305c320248c340bb9a416a5"
+  },
+  {
+   "seq": 15,
+   "op": [
+    "CROSS",
+    "a-106c327155f05137"
+   ],
+   "kind": "APPLIED",
+   "code": "CROSSED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "CONSUMED",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "b5a70a8c4d100a238a593f8497fa8674ad8fc2cce305c320248c340bb9a416a5",
+   "hash": "d475b48c3edb10c4020904a3986d9dd523fe7496580581e61b344aa7083614e8"
+  },
+  {
+   "seq": 16,
+   "op": [
+    "RECONCILE",
+    "a-106c327155f05137",
+    "EFFECT",
+    "AUTHORISED"
+   ],
+   "kind": "APPLIED",
+   "code": "VERDICT_RECORDED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "EFFECT",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "d475b48c3edb10c4020904a3986d9dd523fe7496580581e61b344aa7083614e8",
+   "hash": "ad212955f8cf7d884905d279675b668cfd561bb3022e63a9bf0e2c6ec8dab201"
+  },
+  {
+   "seq": 17,
+   "op": [
+    "RESERVE",
+    "a-ef1eb1d0044227bc",
+    "score:4c4b95b47ad1532ee2368296"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_COMMITTED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     1,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "EFFECT",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ],
+     [
+      "a-ef1eb1d0044227bc",
+      "score:4c4b95b47ad1532ee2368296",
+      "RESERVING",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "ad212955f8cf7d884905d279675b668cfd561bb3022e63a9bf0e2c6ec8dab201",
+   "hash": "97cef89604442e0f10dbdf92edd55c9583127e23028c52a63dee0839de80e822"
+  },
+  {
+   "seq": 18,
+   "op": [
+    "ACCEPT_RESERVATION",
+    "a-ef1eb1d0044227bc"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_ACCEPTED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     1,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "EFFECT",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ],
+     [
+      "a-ef1eb1d0044227bc",
+      "score:4c4b95b47ad1532ee2368296",
+      "RESERVED",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "97cef89604442e0f10dbdf92edd55c9583127e23028c52a63dee0839de80e822",
+   "hash": "584b9b8a77cef201f224cf9f94595d7571f65010132cfc75dd2992fc95412185"
+  },
+  {
+   "seq": 19,
+   "op": [
+    "TOKEN",
+    "a-ef1eb1d0044227bc"
+   ],
+   "kind": "APPLIED",
+   "code": "TOKEN_RELEASED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     1,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "EFFECT",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ],
+     [
+      "a-ef1eb1d0044227bc",
+      "score:4c4b95b47ad1532ee2368296",
+      "TOKEN",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "584b9b8a77cef201f224cf9f94595d7571f65010132cfc75dd2992fc95412185",
+   "hash": "7033a8a32492566608da44d9f4976f98ea4e0a14514bdaae221cecaf240c0da5"
+  },
+  {
+   "seq": 20,
+   "op": [
+    "START",
+    "a-ef1eb1d0044227bc",
+    "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_COMMITTED_LOCALLY",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "EFFECT",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ],
+     [
+      "a-ef1eb1d0044227bc",
+      "score:4c4b95b47ad1532ee2368296",
+      "INTENT_PENDING",
+      "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "7033a8a32492566608da44d9f4976f98ea4e0a14514bdaae221cecaf240c0da5",
+   "hash": "b1f28fdfac7e5bda895a44d09622d7effb8e861a1eec1dba0b46bf34a9483510"
+  },
+  {
+   "seq": 21,
+   "op": [
+    "ACCEPT_INTENT",
+    "a-ef1eb1d0044227bc"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_ACCEPTED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "EFFECT",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ],
+     [
+      "a-ef1eb1d0044227bc",
+      "score:4c4b95b47ad1532ee2368296",
+      "CONSUMED",
+      "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "b1f28fdfac7e5bda895a44d09622d7effb8e861a1eec1dba0b46bf34a9483510",
+   "hash": "0d15db1da0cfe3753d656d90cced62a6cd9d8411a3b2d053a5360d130bdd2270"
+  },
+  {
+   "seq": 22,
+   "op": [
+    "RECEIPT",
+    "a-ef1eb1d0044227bc"
+   ],
+   "kind": "APPLIED",
+   "code": "RECEIPT_RECORDED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "EFFECT",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ],
+     [
+      "a-ef1eb1d0044227bc",
+      "score:4c4b95b47ad1532ee2368296",
+      "CONSUMED",
+      "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea",
+      true,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "0d15db1da0cfe3753d656d90cced62a6cd9d8411a3b2d053a5360d130bdd2270",
+   "hash": "c44e18dcadcf5e996ed51940d23c04ccbb8ee915bbbf5a0456c6f7371f9667ab"
+  },
+  {
+   "seq": 23,
+   "op": [
+    "CROSS",
+    "a-ef1eb1d0044227bc"
+   ],
+   "kind": "APPLIED",
+   "code": "CROSSED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "EFFECT",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ],
+     [
+      "a-ef1eb1d0044227bc",
+      "score:4c4b95b47ad1532ee2368296",
+      "CONSUMED",
+      "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "c44e18dcadcf5e996ed51940d23c04ccbb8ee915bbbf5a0456c6f7371f9667ab",
+   "hash": "a4de56e7f9b0bcd88c784b0c3c901223b50ef0e5cdc69aebdac9f0580f8c9cb7"
+  },
+  {
+   "seq": 24,
+   "op": [
+    "RECONCILE",
+    "a-ef1eb1d0044227bc",
+    "EFFECT",
+    "AUTHORISED"
+   ],
+   "kind": "APPLIED",
+   "code": "VERDICT_RECORDED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "EFFECT",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ],
+     [
+      "a-ef1eb1d0044227bc",
+      "score:4c4b95b47ad1532ee2368296",
+      "EFFECT",
+      "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "a4de56e7f9b0bcd88c784b0c3c901223b50ef0e5cdc69aebdac9f0580f8c9cb7",
+   "hash": "891e88c19fe871def1479c590c7789861c0d4ca4de7ff9ae6ab1692909333cd4"
+  },
+  {
+   "seq": 25,
+   "op": [
+    "RESERVE",
+    "a-92c0cbd0e16d93c5",
+    "score:ed34d5103998ac312056e90a"
+   ],
+   "kind": "DENIED",
+   "code": "BUDGET_EXHAUSTED",
+   "observation": {
+    "k": 3,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-106c327155f05137",
+      "score:b10f9eba93bc03cbefcdaff0",
+      "EFFECT",
+      "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      true,
+      true
+     ],
+     [
+      "a-25951f31befb88c9",
+      "score:7db660e5f73f653c88197860",
+      "EFFECT",
+      "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      true,
+      true
+     ],
+     [
+      "a-ef1eb1d0044227bc",
+      "score:4c4b95b47ad1532ee2368296",
+      "EFFECT",
+      "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "891e88c19fe871def1479c590c7789861c0d4ca4de7ff9ae6ab1692909333cd4",
+   "hash": "39fb5fa9969ca0477c6aab06d35d973c62ba98a4892326a413cd5fb42e23f3f1"
+  }
+ ],
+ "attempts": [
+  {
+   "aid": "a-106c327155f05137",
+   "request_key": "score:b10f9eba93bc03cbefcdaff0",
+   "arguments": {
+    "submission_sha256": "0aa48de8d45d9ebe3f6a14d1ee2edd62389dd6705faf669db5c043f24910a81c",
+    "manifest_sha256": "ac27196285a0eed20f9ef6d7a4bfe2c2a2e959ff9d5e13f045cec3d7f011a39c",
+    "submitter": "lab-a"
+   },
+   "phase": "EFFECT",
+   "nonce": "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+   "outcome": "EFFECT",
+   "receipts": {
+    "ACCEPT_RESERVATION": {
+     "op": [
+      "ACCEPT_RESERVATION",
+      "a-106c327155f05137"
+     ],
+     "aid": "a-106c327155f05137",
+     "seq": 10,
+     "code": "RESERVATION_ACCEPTED",
+     "hash": "3ed957bfd123e8c2a7f2b1e45f411455e30e53f11fdcf4a05179975ac0a45977",
+     "kind": "APPLIED",
+     "root": "demo-25dd79/lab-a",
+     "signer": "4fa8829656ebf22f24efad8eda219ffa03a5a386354c7847e9ac163a2524e149",
+     "binding": null,
+     "signature": "6e5c29bc5511d45806cf23e6bf2255899f9eebd7701549a897c45d35c884e89c5ee445f7baa10e0b7f75bb31be004c6554b75126429e9ccd9dbde59b888cca02"
+    },
+    "ACCEPT_INTENT": {
+     "op": [
+      "ACCEPT_INTENT",
+      "a-106c327155f05137"
+     ],
+     "aid": "a-106c327155f05137",
+     "seq": 13,
+     "code": "INTENT_ACCEPTED",
+     "hash": "2cc789a0e8ae123b3e739ca3d410d3c562f2f294ee84e28d19a8e054b9ded0ee",
+     "kind": "APPLIED",
+     "root": "demo-25dd79/lab-a",
+     "signer": "4fa8829656ebf22f24efad8eda219ffa03a5a386354c7847e9ac163a2524e149",
+     "binding": "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+     "signature": "6275f47bdb0626879f6182316ac7c0acd9c8c03061418453e6d370ed32e0922a5c67ce9b2ae4fefc4de4c484bda773ce2ab3b05709b955f6905812392eaf2e07"
+    },
+    "CROSS": {
+     "op": [
+      "CROSS",
+      "a-106c327155f05137"
+     ],
+     "aid": "a-106c327155f05137",
+     "seq": 15,
+     "code": "CROSSED",
+     "hash": "d475b48c3edb10c4020904a3986d9dd523fe7496580581e61b344aa7083614e8",
+     "kind": "APPLIED",
+     "root": "demo-25dd79/lab-a",
+     "signer": "4fa8829656ebf22f24efad8eda219ffa03a5a386354c7847e9ac163a2524e149",
+     "binding": "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+     "signature": "7292819e57d83197028a0ae09bf139151708d1fc7149774c7904366799666d46a4dedf080fedfe185c9b15546f224c0d50ef2a67d9ba84a3899731cf01e95300"
+    }
+   },
+   "evidence": [
+    {
+     "seq": 16,
+     "evidence": {
+      "aid": "a-106c327155f05137",
+      "kind": "EFFECT_REPORT",
+      "root": "demo-25dd79/lab-a",
+      "claim": "EFFECT",
+      "nonce": "n-626dd325791e05d5d4c417b7637ba7fc459cb39d",
+      "signer": "8b859a7f226abbd00ae8e350bbfa87adc0e52e14d2facbb30e5bafe989ae19ca",
+      "signature": "97133ba111a2b0ddeccaf2e05ac41351efa316f1cc4688f0486009bf16ec15103796eabba21a344c1ba614480de37ebf279e974405899eae216c5c809e056209",
+      "result_digest": "dd3aebe6c33a58e0ff9dfb9c84fa87afc8fb4e7dcf9a22df3d703dd37f439423"
+     }
+    }
+   ],
+   "result": {
+    "rows": 200,
+    "score": "0.74",
+    "metric": "accuracy",
+    "decimals": 2,
+    "manifest_sha256": "ac27196285a0eed20f9ef6d7a4bfe2c2a2e959ff9d5e13f045cec3d7f011a39c",
+    "submission_sha256": "0aa48de8d45d9ebe3f6a14d1ee2edd62389dd6705faf669db5c043f24910a81c"
+   }
+  },
+  {
+   "aid": "a-25951f31befb88c9",
+   "request_key": "score:7db660e5f73f653c88197860",
+   "arguments": {
+    "submission_sha256": "f3d1033b613bd17cb98d4a5efcbf388fea5159c2a24930f1dadcd4f4b411231b",
+    "manifest_sha256": "ac27196285a0eed20f9ef6d7a4bfe2c2a2e959ff9d5e13f045cec3d7f011a39c",
+    "submitter": "lab-a"
+   },
+   "phase": "EFFECT",
+   "nonce": "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+   "outcome": "EFFECT",
+   "receipts": {
+    "ACCEPT_RESERVATION": {
+     "op": [
+      "ACCEPT_RESERVATION",
+      "a-25951f31befb88c9"
+     ],
+     "aid": "a-25951f31befb88c9",
+     "seq": 2,
+     "code": "RESERVATION_ACCEPTED",
+     "hash": "64742ffc832c295852830e3f44db619e71d0cabc2744c0938dc390be93b38de4",
+     "kind": "APPLIED",
+     "root": "demo-25dd79/lab-a",
+     "signer": "4fa8829656ebf22f24efad8eda219ffa03a5a386354c7847e9ac163a2524e149",
+     "binding": null,
+     "signature": "d32ef7cd6baa46e5f018d8bed61c1702f30b906e596e49331a576b7ee9bf2a758f9320e2d2d59442857416540defbc2a27ede9d07240a16510ec1dd8f79a6e0b"
+    },
+    "ACCEPT_INTENT": {
+     "op": [
+      "ACCEPT_INTENT",
+      "a-25951f31befb88c9"
+     ],
+     "aid": "a-25951f31befb88c9",
+     "seq": 5,
+     "code": "INTENT_ACCEPTED",
+     "hash": "4b01620d56b6752f8ea7157cc8f6621f6def951c20cd63603cb0ef2a7635f175",
+     "kind": "APPLIED",
+     "root": "demo-25dd79/lab-a",
+     "signer": "4fa8829656ebf22f24efad8eda219ffa03a5a386354c7847e9ac163a2524e149",
+     "binding": "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+     "signature": "1dcf8a9f5c5313bd451f76bd43cc287ada2ced05224862a41ddd527fd2dd56e09dfb7d2d8a621f59c34e284d78b49b8e6e0336b5e47899a74bc51809fb7c8503"
+    },
+    "CROSS": {
+     "op": [
+      "CROSS",
+      "a-25951f31befb88c9"
+     ],
+     "aid": "a-25951f31befb88c9",
+     "seq": 7,
+     "code": "CROSSED",
+     "hash": "949582dae63cb9f466724093d0ec2379800867752849e648ab5c027b27645962",
+     "kind": "APPLIED",
+     "root": "demo-25dd79/lab-a",
+     "signer": "4fa8829656ebf22f24efad8eda219ffa03a5a386354c7847e9ac163a2524e149",
+     "binding": "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+     "signature": "d5a050f04f5315383c08ae0e6d93fb75492d4817f1ce7cccde22a38041654a9cf0314f423621b00fffc1c3971c0ff9bc93f68bc7125a641db1b47451a7eeef0e"
+    }
+   },
+   "evidence": [
+    {
+     "seq": 8,
+     "evidence": {
+      "aid": "a-25951f31befb88c9",
+      "kind": "EFFECT_REPORT",
+      "root": "demo-25dd79/lab-a",
+      "claim": "EFFECT",
+      "nonce": "n-44ae57998dcd886aa21ba576cb3785ca05e3cc3b",
+      "signer": "8b859a7f226abbd00ae8e350bbfa87adc0e52e14d2facbb30e5bafe989ae19ca",
+      "signature": "3a4b57a258159a9e2e3d17dc5583a011129829e9ce1af0a053683720fa4f05b15810561aa4309dbcf51d46088ec7a56d7c680fc779ec9d5822e60aa97e5f5f0b",
+      "result_digest": "badae533b29562daa1c580c378a949c76383dc79dbb17233ebe5376239577b6b"
+     }
+    }
+   ],
+   "result": {
+    "rows": 200,
+    "score": "0.65",
+    "metric": "accuracy",
+    "decimals": 2,
+    "manifest_sha256": "ac27196285a0eed20f9ef6d7a4bfe2c2a2e959ff9d5e13f045cec3d7f011a39c",
+    "submission_sha256": "f3d1033b613bd17cb98d4a5efcbf388fea5159c2a24930f1dadcd4f4b411231b"
+   }
+  },
+  {
+   "aid": "a-ef1eb1d0044227bc",
+   "request_key": "score:4c4b95b47ad1532ee2368296",
+   "arguments": {
+    "submission_sha256": "38565d58702ba419a1c855204491ca0ecaa62088fa24830c3aaa26a1b45dbe8c",
+    "manifest_sha256": "ac27196285a0eed20f9ef6d7a4bfe2c2a2e959ff9d5e13f045cec3d7f011a39c",
+    "submitter": "lab-a"
+   },
+   "phase": "EFFECT",
+   "nonce": "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea",
+   "outcome": "EFFECT",
+   "receipts": {
+    "ACCEPT_RESERVATION": {
+     "op": [
+      "ACCEPT_RESERVATION",
+      "a-ef1eb1d0044227bc"
+     ],
+     "aid": "a-ef1eb1d0044227bc",
+     "seq": 18,
+     "code": "RESERVATION_ACCEPTED",
+     "hash": "584b9b8a77cef201f224cf9f94595d7571f65010132cfc75dd2992fc95412185",
+     "kind": "APPLIED",
+     "root": "demo-25dd79/lab-a",
+     "signer": "4fa8829656ebf22f24efad8eda219ffa03a5a386354c7847e9ac163a2524e149",
+     "binding": null,
+     "signature": "11bbed0f23c9ceef78099f43cd5b03f6b670f39bce9d536214ddf73d602a000e6b574a0b50001941204aab0f79c52e0dcad5e6ab126517a5e215b409318d0502"
+    },
+    "ACCEPT_INTENT": {
+     "op": [
+      "ACCEPT_INTENT",
+      "a-ef1eb1d0044227bc"
+     ],
+     "aid": "a-ef1eb1d0044227bc",
+     "seq": 21,
+     "code": "INTENT_ACCEPTED",
+     "hash": "0d15db1da0cfe3753d656d90cced62a6cd9d8411a3b2d053a5360d130bdd2270",
+     "kind": "APPLIED",
+     "root": "demo-25dd79/lab-a",
+     "signer": "4fa8829656ebf22f24efad8eda219ffa03a5a386354c7847e9ac163a2524e149",
+     "binding": "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea",
+     "signature": "07416fba5f732ad16170ede99de0a2d8bbf71a8ad76ab2902780eddb48376824184b36791f5e7977fb99b0568eaf6226592bc50d06e02c157917781efd81540c"
+    },
+    "CROSS": {
+     "op": [
+      "CROSS",
+      "a-ef1eb1d0044227bc"
+     ],
+     "aid": "a-ef1eb1d0044227bc",
+     "seq": 23,
+     "code": "CROSSED",
+     "hash": "a4de56e7f9b0bcd88c784b0c3c901223b50ef0e5cdc69aebdac9f0580f8c9cb7",
+     "kind": "APPLIED",
+     "root": "demo-25dd79/lab-a",
+     "signer": "4fa8829656ebf22f24efad8eda219ffa03a5a386354c7847e9ac163a2524e149",
+     "binding": "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea",
+     "signature": "5c10dffbcadfe3abb36b048416cfc03bfbba993807c700a55e4aaceae3b57535622808a6fddc617b3fd914f90ee4ca3e05788ad50737d84b495bf9cc31454a0f"
+    }
+   },
+   "evidence": [
+    {
+     "seq": 24,
+     "evidence": {
+      "aid": "a-ef1eb1d0044227bc",
+      "kind": "EFFECT_REPORT",
+      "root": "demo-25dd79/lab-a",
+      "claim": "EFFECT",
+      "nonce": "n-8cc12250a0bf9f0e3a1d90feac89429dc157aeea",
+      "signer": "8b859a7f226abbd00ae8e350bbfa87adc0e52e14d2facbb30e5bafe989ae19ca",
+      "signature": "67e09db20ca161ceb5daca7ce815ed3df2ea6b67753cc768eff23d8213b578804630b9990b62a4b542eb1ed9fc89038a74debde39f4de57efdf63e5b021be304",
+      "result_digest": "71e652db00086258392114e462dd4b7516936aae9fbc3f66ddc4fe0d3a6ee4dc"
+     }
+    }
+   ],
+   "result": {
+    "rows": 200,
+    "score": "0.80",
+    "metric": "accuracy",
+    "decimals": 2,
+    "manifest_sha256": "ac27196285a0eed20f9ef6d7a4bfe2c2a2e959ff9d5e13f045cec3d7f011a39c",
+    "submission_sha256": "38565d58702ba419a1c855204491ca0ecaa62088fa24830c3aaa26a1b45dbe8c"
+   }
+  }
+ ],
+ "as_of": {
+  "time": "2026-11-10T00:32:49Z",
+  "seq": 25,
+  "head": "39fb5fa9969ca0477c6aab06d35d973c62ba98a4892326a413cd5fb42e23f3f1"
+ },
+ "signature": {
+  "signer": "005680849e3ea31b806b7fcec6f6347838124a9b7e1d80d3e04d0e56eebc18b1",
+  "signature": "cac8ea20ec2ce0c215dd899e88ad38e8380c7f077b8969c72b3ea3c01bb4b309b1b7d3c6c7bcea33617cfd4806fdaf6a186c86b3b2b3638b3bd6924af2aeed02"
+ }
+}
