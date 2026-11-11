@@ -1,0 +1,96 @@
+# Front door and MCP server for the verification record
+
+11 November 2026. Private working material. Branch `verification-mcp-front-door`; not merged, not released.
+
+An assistant's host application talks to the verification service through three MCP tools: show the requirement,
+submit a design, read the status. Behind the tools is one HTTPS address, the front door, which is the only part of
+the service the assistant's side can reach. The assistant's side holds a certificate for its job and nothing else.
+
+It adds files beside the first plug-in and changes none of them. The witness service, the gate host, the governor
+and the store are PLEA gateway v1.2.1, unchanged. This is internal evidence: nobody outside has reviewed or attacked
+it.
+
+## Why it exists
+
+Two defects were found in the first plug-in after its results were reported. `AMENDMENT_2026-11-11.md` records them.
+
+1. **The caller chose the baseline.** The assistant-side command held the gateway's database credential and sent
+   the baseline's hash itself. The gate's tool cannot see which budget a run was admitted under, so a design could
+   be run against a relaxed baseline while another baseline's budget was charged, and the caller was told PASS.
+   The offline check of the record catches it afterwards, but the wrong answer had been given.
+2. **One malformed design broke a record.** A design holding a character or a number the database cannot store
+   was run and signed, could not be saved, and left the record of its baseline unable to verify.
+
+The front door closes both. No request names a baseline: the service knows the job from the caller's certificate
+and the baseline from a binding the engineer signed. A request that is not a design is refused before anything
+happens. A third, smaller defect is recorded in the amendment and is not closed here.
+
+## The pieces
+
+| file | what it does |
+| --- | --- |
+| `front_door.py` | The service's one address for callers, over mutual TLS. Holds the gateway's database credential and no signing key. Runs the governor. |
+| `front_ctl.py` | The engineer's console for it: enrol a job, move it to a revision, revoke it, build the record. Needs the engineer's key. |
+| `front_client.py` | The assistant's side as a command: `show`, `submit`, `status`. Standard library only. |
+| `plea_verify_mcp.py` | The same three as MCP tools over stdio, and the signed baseline as a read-only resource. Standard library only. |
+| `deploy_front.py` | One service with a front door on one machine, for the tests and the demonstration. |
+| `../tests/verify_front_tests.py` | Tests F1 to F16. |
+
+`DECLARED_FRONT.md` states what the tests were expected to show before the official run; `REPORT_FRONT.md` gives
+the results.
+
+## Who holds what
+
+| party | holds | cannot |
+| --- | --- | --- |
+| Assistant's side (MCP server, or the command) | the service's address, the authority's certificate, the job's certificate and key | reach the database, the witness or the gate; name a baseline, a limit, a check or a run; sign anything |
+| Front door | the gateway's database credential, a certificate the witness and the gate admit, three public keys | provision, stop or rewrite a budget; sign a receipt, a verdict, a baseline or a record |
+| Witness service, gate host | their signing keys (as in v1.2.1) | be reached by any certificate but the front door's |
+| Responsible engineer | the engineer's key, the control credential, the authority's key | (this is the trusted party for the requirement) |
+
+## Setting it up
+
+The service side, once (the witness service and the gate host as in `deploy.py`, each started with
+`--tls-allow frontdoor`):
+
+    python verify/front_door.py --home HOME --port 8973 --witness-url https://... --witness-key HEX \
+        --gate-host https://... --gate-key HEX --engineer-key HEX \
+        --tls-cert front.crt --tls-key front.key --tls-ca ca.crt --upstream-cert frontdoor.crt --upstream-key frontdoor.key
+
+The engineer, for each job, after baselining with `verify_ctl.py baseline`:
+
+    python verify/front_ctl.py enrol HOME pump-station-17 BASELINE_HASH --key engineer.key \
+        --ca ca.crt --ca-key ca.key --url https://verify.example:8973 --out job-folder
+
+`job-folder` then holds `job.json`, `ca.crt`, `job.crt` and `job.key`. Give that folder, `front_client.py` and
+`plea_verify_mcp.py` to the assistant's machine. In the host application's MCP settings:
+
+    {"mcpServers": {"plea-verification": {"command": "python3",
+        "args": ["/path/to/plea_verify_mcp.py", "--job-dir", "/path/to/job-folder"]}}}
+
+After a revision (`verify_ctl.py revise`), move the job: `front_ctl.py rebind HOME pump-station-17 NEW_HASH --key
+engineer.key`. The record is built with `front_ctl.py record` and checked with `check_record.py`, as before.
+
+## What the tools return
+
+`plea_submit_design` returns the verdict first, in words, and the same verdict as fields. PASS, FAIL and UNKNOWN are
+all results: `isError` is false. `isError` is true only when nothing was decided: the call was malformed, the
+service refused (stopped, held, used up, not enrolled, another run in progress) or could not be reached. One tool
+call is one request and nothing retries. Sending the same design again returns the verdict already held.
+
+## What it does not do
+
+- **It cannot make a host show a result, or an assistant repeat it truthfully.** MCP delivers a tool's result to the
+  host application and stops there. The failure does not depend on it: the service keeps the signed verdict and
+  sends a FAIL or UNKNOWN to the engineer itself. The rule is unchanged: no record, not verified.
+- **The record's format is the first plug-in's.** A reader of one record sees a change of requirement only when it
+  was made by revision. Opening a second job for the same requirement under another baseline needs the engineer's
+  reason, which is kept in the service's signed log (`HOME/front/enrolment.jsonl`), not in the record.
+- **A party who can write the service's files** can put an earlier signed binding back. The front door refuses one
+  older than it has seen since it started; a restart forgets that.
+- **A job certificate is a bearer of the job.** Whoever holds the folder can spend the job's runs and cause notices.
+  It cannot change what is verified against.
+- **One machine does not show separation.** In the tests every party runs under one account. An assistant with a
+  shell on that machine could read the keys.
+- Everything the first plug-in's README says it does not do still holds: it does not know whether the check is
+  right, and it sees only work that goes through it.

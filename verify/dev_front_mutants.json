@@ -1,0 +1,350 @@
+{
+ "M1": {
+  "defect": "the front door honours a baseline named in the request",
+  "tests_run": 15,
+  "caught_by": [
+   "F5",
+   "F6"
+  ],
+  "failed_checks": {
+   "F5": [
+    "asked directly, the front door refuses the same shapes (400)",
+    "nothing was run or recorded: no run of the check, no audit row, no journal line, no notice"
+   ],
+   "F6": [
+    "a baseline named as a tool argument or as a field of the request is refused and nothing is run",
+    "a baseline named in a header changes nothing: the design is decided against the job's own baseline and fails",
+    "the relaxed baseline has no run and no audit row; the job's record verifies with two failures, NOT VERIFIED"
+   ]
+  }
+ },
+ "M2": {
+  "defect": "the front door admits any certificate with the job's name (fingerprint not checked)",
+  "tests_run": 15,
+  "caught_by": [
+   "F10"
+  ],
+  "failed_checks": {
+   "F10": [
+    "a certificate of this authority that was not enrolled is refused (403), whatever its name",
+    "nothing was run in any of this"
+   ]
+  }
+ },
+ "M3": {
+  "defect": "the front door does not check the engineer's signature on a binding",
+  "tests_run": 15,
+  "caught_by": [
+   "F10"
+  ],
+  "failed_checks": {
+   "F10": [
+    "a binding pointed at another baseline, or re-signed by another key, or unreadable, admits nobody",
+    "nothing was run in any of this"
+   ]
+  }
+ },
+ "M4": {
+  "defect": "the front door ignores a revocation",
+  "tests_run": 15,
+  "caught_by": [
+   "F10"
+  ],
+  "failed_checks": {
+   "F10": [
+    "after the engineer revokes the job its own certificate is refused, and the tool says so as an error",
+    "nothing was run in any of this"
+   ]
+  }
+ },
+ "M5": {
+  "defect": "the front door accepts an earlier binding put back",
+  "tests_run": 15,
+  "caught_by": [
+   "F10"
+  ],
+  "failed_checks": {
+   "F10": [
+    "putting the earlier signed binding back in the file does not undo the revocation",
+    "nothing was run in any of this"
+   ]
+  }
+ },
+ "M6": {
+  "defect": "a job can be moved to any baseline (no revision needed)",
+  "tests_run": 15,
+  "caught_by": [
+   "F11"
+  ],
+  "failed_checks": {
+   "F11": [
+    "moving the job to a baseline that is merely different is refused, and so is a second job for the same requirement with no reason",
+    "once the engineer revises, the old baseline takes no further runs: the tool reports the refusal as an error, nothing is run, and the requirement shown says so",
+    "the service's log holds the enrolment and the move, each signed by the engineer, the move naming what it replaced"
+   ]
+  }
+ },
+ "M7": {
+  "defect": "a second job for the same requirement needs no reason",
+  "tests_run": 15,
+  "caught_by": [
+   "F10",
+   "F11",
+   "F13"
+  ],
+  "failed_checks": {
+   "F10": [
+    "after the engineer revokes the job its own certificate is refused, and the tool says so as an error"
+   ],
+   "F11": [
+    "moving the job to a baseline that is merely different is refused, and so is a second job for the same requirement with no reason",
+    "the service's log holds the enrolment and the move, each signed by the engineer, the move naming what it replaced"
+   ],
+   "F13": "Refused: job-c is already enrolled; a job name is used once"
+  }
+ },
+ "M8": {
+  "defect": "the front door does not check the characters of a design",
+  "tests_run": 15,
+  "caught_by": [
+   "F7"
+  ],
+  "failed_checks": {
+   "F7": [
+    "each of fourteen malformed requests is refused (400, or 411 with no length)",
+    "through the tool and the command line the same input is refused, and the answer says nothing was recorded",
+    "nothing happened: no run of the check, no audit row, no notice, no journal line",
+    "a good design sent afterwards meets the check, and the record verifies: one run, DECLARED CHECK MET"
+   ]
+  }
+ },
+ "M9": {
+  "defect": "the front door accepts a repeated name",
+  "tests_run": 15,
+  "caught_by": [
+   "F7"
+  ],
+  "failed_checks": {
+   "F7": [
+    "each of fourteen malformed requests is refused (400, or 411 with no length)",
+    "nothing happened: no run of the check, no audit row, no notice, no journal line"
+   ]
+  }
+ },
+ "M10": {
+  "defect": "the front door accepts a number that is not finite",
+  "tests_run": 15,
+  "caught_by": [
+   "F7"
+  ],
+  "failed_checks": {
+   "F7": [
+    "each of fourteen malformed requests is refused (400, or 411 with no length)",
+    "through the tool and the command line the same input is refused, and the answer says nothing was recorded",
+    "nothing happened: no run of the check, no audit row, no notice, no journal line",
+    "a good design sent afterwards meets the check, and the record verifies: one run, DECLARED CHECK MET"
+   ]
+  }
+ },
+ "M11": {
+  "defect": "the witness service and the gate host admit every certificate of the authority",
+  "tests_run": 15,
+  "caught_by": [
+   "F8"
+  ],
+  "failed_checks": {
+   "F8": [
+    "the job's certificate is refused by the witness service and by the gate host (403)",
+    "so is any other certificate of the authority that is not the front door's"
+   ]
+  }
+ },
+ "M12": {
+  "defect": "the MCP relay tries a second time when the service cannot be reached",
+  "tests_run": 15,
+  "caught_by": [
+   "F14"
+  ],
+  "failed_checks": {
+   "F14": [
+    "with the service unreachable a call reports that as an error after one connection, not more, and runs nothing"
+   ]
+  }
+ },
+ "M13": {
+  "defect": "the MCP server offers a fourth tool",
+  "tests_run": 15,
+  "caught_by": [
+   "F5",
+   "F9",
+   "F14"
+  ],
+  "failed_checks": {
+   "F5": [
+    "the tools are plea_show_requirement, plea_submit_design and plea_status, and no other",
+    "plea_submit_design takes `design` and nothing else; the other two take nothing"
+   ],
+   "F9": [
+    "a call to any other tool name is an unknown tool (-32602)"
+   ],
+   "F14": [
+    "with the version on each request (2026-07-28) the same three tools are served, complete, and server/discover lists the versions"
+   ]
+  }
+ },
+ "M14": {
+  "defect": "the MCP relay lets extra arguments through",
+  "tests_run": 15,
+  "caught_by": [
+   "F5",
+   "F6"
+  ],
+  "failed_checks": {
+   "F5": [
+    "the relay refuses each malformed call itself and says nothing was sent",
+    "nothing was run or recorded: no run of the check, no audit row, no journal line, no notice"
+   ],
+   "F6": [
+    "a baseline named as a tool argument or as a field of the request is refused and nothing is run"
+   ]
+  }
+ },
+ "M15": {
+  "defect": "the MCP relay does not mark a refusal as an error",
+  "tests_run": 16,
+  "caught_by": [
+   "F7",
+   "F10",
+   "F11",
+   "F15",
+   "F16"
+  ],
+  "failed_checks": {
+   "F7": [
+    "through the tool and the command line the same input is refused, and the answer says nothing was recorded"
+   ],
+   "F10": [
+    "after the engineer revokes the job its own certificate is refused, and the tool says so as an error"
+   ],
+   "F11": [
+    "once the engineer revises, the old baseline takes no further runs: the tool reports the refusal as an error, nothing is run, and the requirement shown says so"
+   ],
+   "F15": [
+    "the changed baseline is not shown, by address or by tool"
+   ],
+   "F16": [
+    "while the first design is being checked, a second is refused (409), by address and by tool, and is not run"
+   ]
+  }
+ },
+ "M16": {
+  "defect": "the front door lets a job run two designs at once",
+  "tests_run": 1,
+  "caught_by": [
+   "F16"
+  ],
+  "failed_checks": {
+   "F16": [
+    "while the first design is being checked, a second is refused (409), by address and by tool, and is not run"
+   ]
+  }
+ },
+ "M17": {
+  "defect": "the MCP server sends structured content to a revision that has none",
+  "tests_run": 15,
+  "caught_by": [
+   "F14"
+  ],
+  "failed_checks": {
+   "F14": [
+    "a revision without those fields is not sent them: no annotations or structured content in 2024-11-05, structured content from 2025-06-18"
+   ]
+  }
+ },
+ "M18": {
+  "defect": "the front door does not pace a job",
+  "tests_run": 15,
+  "caught_by": [
+   "F13"
+  ],
+  "failed_checks": {
+   "F13": [
+    "a job that asks too often is refused (429) without slowing the other"
+   ]
+  }
+ },
+ "M19": {
+  "defect": "the front door runs a design sent to any address",
+  "tests_run": 15,
+  "caught_by": [
+   "F6",
+   "F9"
+  ],
+  "failed_checks": {
+   "F6": [
+    "a baseline named as a tool argument or as a field of the request is refused and nothing is run"
+   ],
+   "F9": [
+    "the front door answers 404 to every other address and method"
+   ]
+  }
+ },
+ "M20": {
+  "defect": "enrolment leaves the engineer's key in the job folder",
+  "tests_run": 15,
+  "caught_by": [
+   "F8"
+  ],
+  "failed_checks": {
+   "F8": [
+    "the job folder holds the service address, the authority's certificate and the job's certificate and key, and nothing else"
+   ]
+  }
+ },
+ "M21": {
+  "defect": "the front door refuses before the gate is asked when the stored baseline was changed",
+  "tests_run": 15,
+  "caught_by": [
+   "F15"
+  ],
+  "failed_checks": {
+   "F15": [
+    "a design that the relaxed card would pass is decided UNKNOWN by the gate, not a pass",
+    "so is one sent against a relaxed card properly signed by another key, and the runs are counted",
+    "all three results were sent to the engineer",
+    "known gap, not closed here: a stored card that is no longer a card gives a counted run with no verdict, not a pass, and no notice",
+    "no run met the check, the record verifies and the status is NOT VERIFIED"
+   ]
+  }
+ },
+ "M22": {
+  "defect": "the front door reports any error from the governor as an interrupted run",
+  "tests_run": 15,
+  "caught_by": [],
+  "failed_checks": {}
+ },
+ "M23": {
+  "defect": "a revoked job is ignored when a second baseline is opened for its requirement",
+  "tests_run": 15,
+  "caught_by": [
+   "F10"
+  ],
+  "failed_checks": {
+   "F10": [
+    "after the engineer revokes the job its own certificate is refused, and the tool says so as an error"
+   ]
+  }
+ },
+ "M24": {
+  "defect": "the requirement shown does not say its baseline was stopped",
+  "tests_run": 15,
+  "caught_by": [
+   "F11"
+  ],
+  "failed_checks": {
+   "F11": [
+    "once the engineer revises, the old baseline takes no further runs: the tool reports the refusal as an error, nothing is run, and the requirement shown says so"
+   ]
+  }
+ }
+}
