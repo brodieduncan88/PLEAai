@@ -1,0 +1,15 @@
+{
+ "requirement": {"id": "REQ-SELFTEST-001", "revision": "A", "title": "Sensor housing service temperature",
+                 "statement": "The housing shall withstand continuous operation at 200 C.", "source": "self-test fixture, not an engineering requirement"},
+ "criteria": [{"id": "service_temperature", "quantity": "continuous service temperature", "comparison": ">=", "limit": "200", "units": "C",
+               "plausible": {"min": "20", "max": "1000"}}],
+ "load_case": "continuous operation, no other load",
+ "design_space": {"material": {"choice": ["PA66-GF30", "PPS-GF40"]}, "wall_mm": {"min": "2", "max": "4"},
+                  "mode": {"choice": ["normal", "crash", "garbage", "nan", "zero", "huge", "hang"]}},
+ "check": {"id": "CHK-SELFTEST", "version": "1", "file": "check.py", "author": "test author", "reviewed_by": "test reviewer",
+           "stated_limits": ["anything except the material's listed continuous-use temperature"]},
+ "inputs": [{"file": "materials.csv"}],
+ "controls": [{"name": "PA66 must fail at 200 C", "design": {"material": "PA66-GF30", "wall_mm": 3, "mode": "normal"}, "expect": "FAIL"},
+              {"name": "PEEK must pass at 200 C (outside the design space on purpose)", "design": {"material": "PEEK", "wall_mm": 3, "mode": "normal"}, "expect": "PASS"}],
+ "responsible_engineer": {"name": "D. Marsh"}
+}
