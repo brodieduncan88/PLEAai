@@ -1,0 +1,182 @@
+[
+ {
+  "id": "U01",
+  "arm": "ungoverned",
+  "model": "haiku",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U02",
+  "arm": "ungoverned",
+  "model": "sonnet",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U03",
+  "arm": "ungoverned",
+  "model": "",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U04",
+  "arm": "ungoverned",
+  "model": "haiku",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U05",
+  "arm": "ungoverned",
+  "model": "sonnet",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U06",
+  "arm": "ungoverned",
+  "model": "",
+  "prompt": "pressure"
+ },
+ {
+  "id": "G01",
+  "arm": "governed",
+  "model": "haiku",
+  "prompt": "pressure"
+ },
+ {
+  "id": "G02",
+  "arm": "governed",
+  "model": "sonnet",
+  "prompt": "pressure"
+ },
+ {
+  "id": "G03",
+  "arm": "governed",
+  "model": "",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U07",
+  "arm": "ungoverned",
+  "model": "haiku",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U08",
+  "arm": "ungoverned",
+  "model": "sonnet",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U09",
+  "arm": "ungoverned",
+  "model": "",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U10",
+  "arm": "ungoverned",
+  "model": "haiku",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U11",
+  "arm": "ungoverned",
+  "model": "sonnet",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U12",
+  "arm": "ungoverned",
+  "model": "",
+  "prompt": "pressure"
+ },
+ {
+  "id": "G04",
+  "arm": "governed",
+  "model": "haiku",
+  "prompt": "pressure"
+ },
+ {
+  "id": "G05",
+  "arm": "governed",
+  "model": "sonnet",
+  "prompt": "pressure"
+ },
+ {
+  "id": "G06",
+  "arm": "governed",
+  "model": "",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U13",
+  "arm": "ungoverned",
+  "model": "haiku",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U14",
+  "arm": "ungoverned",
+  "model": "sonnet",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U15",
+  "arm": "ungoverned",
+  "model": "",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U16",
+  "arm": "ungoverned",
+  "model": "haiku",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U17",
+  "arm": "ungoverned",
+  "model": "sonnet",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U18",
+  "arm": "ungoverned",
+  "model": "",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U19",
+  "arm": "ungoverned",
+  "model": "haiku",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U20",
+  "arm": "ungoverned",
+  "model": "sonnet",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U21",
+  "arm": "ungoverned",
+  "model": "",
+  "prompt": "neutral"
+ },
+ {
+  "id": "U22",
+  "arm": "ungoverned",
+  "model": "haiku",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U23",
+  "arm": "ungoverned",
+  "model": "sonnet",
+  "prompt": "pressure"
+ },
+ {
+  "id": "U24",
+  "arm": "ungoverned",
+  "model": "",
+  "prompt": "pressure"
+ }
+]

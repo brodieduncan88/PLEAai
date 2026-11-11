@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Declared tests R1-R12 for the verification-record plug-in (verify/DECLARED_VERIFY.md states the expected outcomes).
+"""Declared tests R1-R13 for the verification-record plug-in (verify/DECLARED_VERIFY.md states the expected outcomes).
 
-    verify_tests.py [R1 R5 ...]       all twelve by default; writes outputs/verify_tests.json; exits 1 if any test fails
+    verify_tests.py [R1 R5 ...]       all thirteen by default; writes outputs/verify_tests.json; exits 1 if any test fails
 
 Each test makes a fresh deployment (verify/deploy.py: new keys, the released witness service and gate host under mutual
 TLS, the gate host loading verify_tools), baselines the self-test fixture in tests/verify_case/ as the responsible
@@ -12,6 +12,7 @@ A test passes only if every named check in it is true.  A harness or service err
 """
 import json
 import pathlib
+import shutil
 import subprocess
 import sys
 import time
@@ -395,12 +396,21 @@ def r11():
         cfg = json.loads(cfg2.read_text()); cfg['engineer_key'] = mine.public_hex; cfg2.write_text(json.dumps(cfg))
         own_key_pinned = r.s.submit(cfg2, BAD)                                                    # the client now trusts the forger's key: is anything run?
         calls = r.calls(); ok, why, s = r.checked()
+        # the control credential in the wrong hands as well: a budget is provisioned for the forger's baseline and its files are put where the gate looks
+        d2 = r.s.home / 'baselines' / env['baseline_sha256']; d2.mkdir()
+        for name in ('check.py', 'materials.csv'):
+            shutil.copyfile(CASE / name, d2 / name)
+        (d2 / 'baseline.json').write_text(json.dumps(env))
+        Store(verify_ctl.CONTROL_DSN).new_root(B.root_for(env['card']), 10, 0)
+        with_control = r.s.submit(cfg2, BAD)                                                     # 180 C against the forger's limit of 150 C would pass
+        e.update(forged_baseline_with_a_budget=(with_control[0], head(with_control[1])[:70]))
         e.update(provision_with_gateway_credential=provision, stop_with_gateway_credential=stop, still_runs=still_runs[0], forged_copy=(pinned_engineer[0], head(pinned_engineer[1])[:70]),
                  forged_copy_own_key=(own_key_pinned[0], head(own_key_pinned[1])[:70]), tool_calls=calls, official_runs=s.get('official_runs'), status=s.get('status'), record_verifies=ok, why=why)
         checks = {'the gateway credential cannot provision a budget or stop one': provision.startswith('refused') and stop.startswith('refused') and still_runs[0] == 2,
                   'a relaxed baseline signed by another key is not accepted by the client': pinned_engineer[0] == 4,
                   'even trusting that key, nothing is run: no budget exists for a baseline the engineer did not provision': own_key_pinned[0] == 4 and 'no budget' in own_key_pinned[1] and calls == 1,
-                  'the real record is unchanged: one run, NOT VERIFIED': ok and s.get('official_runs') == 1 and s.get('status') == 'NOT VERIFIED'}
+                  'the real record is unchanged: one run, NOT VERIFIED': ok and s.get('official_runs') == 1 and s.get('status') == 'NOT VERIFIED',
+                  'even with a budget provisioned for it, a baseline the pinned engineer did not sign gets UNKNOWN, not a pass': with_control[0] == 3 and head(with_control[1]).startswith('UNKNOWN')}
     finally:
         r.stop()
     return checks, e
@@ -436,7 +446,35 @@ def r12():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12}
+def r13():
+    """A verdict that does not follow from its own numbers is rejected, even when the gate and the engineer have both signed it."""
+    import hashlib
+    r = Run('R13'); e = {}
+    try:
+        r.submit(BAD)
+        record = r.record(); honest = check_record.verify(record, r.s.keys)[0]
+        forged = json.loads(json.dumps(record)); a = forged['attempts'][0]; res = a['result']
+        res['verdict'], res['reason_code'], res['criteria'][0]['met'] = 'PASS', 'MET', True          # 180 against a limit of 200, now called met
+        digest = hashlib.sha256(canonical(res).encode()).hexdigest()
+        for item in a['evidence']:
+            ev = item['evidence']
+            if ev.get('claim') == 'EFFECT':                                                         # the gate's own key signs the altered verdict
+                ev['result_digest'] = digest; ev['signature'] = r.s.gate._key.sign(check_record.evidence_message(ev)).hex()
+        a['outcome'] = 'PASS'
+        body = {k: v for k, v in forged.items() if k != 'signature'}
+        forged = dict(body, signature={'signer': r.s.engineer.public_hex, 'signature': r.s.engineer.sign(canonical(body).encode())})
+        ok, checks, s = check_record.verify(forged, r.s.keys)
+        failed = [f'{n} {t}: {d}' for n, t, good, d in checks if not good]
+        e.update(honest_record_verifies=honest, forged_record_verifies=ok, failed=failed, status=s.get('status'))
+        checks = {'the honest record verifies': honest,
+                  'the altered verdict, signed by the gate key and the engineer key, fails, and only at the re-derived verdict': not ok and len(failed) == 1 and failed[0].startswith('6 ') and 'recorded as met' in failed[0],
+                  'its status is NOT VERIFIED': s.get('status') == 'NOT VERIFIED'}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13}
 
 
 def main():

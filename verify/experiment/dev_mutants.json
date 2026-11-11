@@ -1,0 +1,10 @@
+[
+ {
+  "mutant": "M7 the gate accepts a baseline signed by any key",
+  "test": "R11",
+  "caught": true,
+  "failed_checks": [
+   "even with a budget provisioned for it, a baseline the pinned engineer "
+  ]
+ }
+]
