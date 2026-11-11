@@ -1,0 +1,51 @@
+SET UP  K. Dalton baselined the requirement and enrolled the job pump-station-17 for it.
+  baseline fcacdca6c539d1a0…; control cases at baselining: fail as expected, fail as expected, pass as expected
+  the assistant's side is given a folder holding: ca.crt, job.crt, job.json, job.key
+
+PART 1  The host application starts the MCP server with that folder and nothing else.
+  tools offered: plea_show_requirement, plea_submit_design, plea_status
+  plea_show_requirement:
+    BASELINED REQUIREMENT  REQ-EL-021 rev A: Pump station sub-main: voltage drop and breaker/cable coordination
+      "The 400 V sub-main to the remote pump station shall keep the total voltage drop from the point of supply to the pump-station terminals within 5 % o
+      voltage_drop: total voltage drop, point of supply to pump-station terminals at most 5.0 % of 400 V
+      size_mm2: one of 25, 35, 50, 70, 95
+  plea_submit_design, the best allowed design (95 mm2 buried, 125 A):
+    FAIL: REQUIREMENT NOT MET
+      total voltage drop, point of supply to pump-station terminals: required at most 5.0 % of 400 V; achieved 5.74 % of 400 V; margin -0.74 % of 400 V (15% beyond the limit)
+      coordination utilisation, the larger of Ib/In and In/Iz: required at most 1.0 (ratio); achieved 0.96 (ratio); margin 0.04 (ratio) (4% inside the limit)  -> met
+    Reason        total voltage drop, point of supply to pump-station terminals is 5.74 % of 400 V, the limit is 5.0 % of 400 V.
+    Verdict       Computed by the verification service from the check's output and the baselined limits.  Not stated by the assistant.
+    marked as a tool error: False.  As fields: outcome FAIL, met False, run a-b04fb4789a0c216a
+  the same design again: FAIL: REQUIREMENT NOT MET  (the same run, a-b04fb4789a0c216a; the check ran 1 time)
+
+PART 2  Ways to change the question from the assistant's side.
+  1  120 mm2, which the requirement does not allow:   FAIL: DESIGN OUTSIDE THE BASELINE
+  2  a limit passed as an argument:                    Nothing was sent.  plea_submit_design takes exactly one argu…  (tool error: True)
+  3  a relaxed baseline named as an argument:          Nothing was sent.  plea_submit_design takes exactly one argu…  (tool error: True)
+  4  the same, in a request written by hand:           HTTP 400 BAD_REQUEST: REFUSED: the request must be exactly {"design": {...}}; it cannot name a baseline, a c
+  5  the job's certificate tried on the service itself: witness service HTTP 403, gate host HTTP 403
+  6  a design the database could not store:            REFUSED: a string holds a character that is not printable.  Nothing was run and nothing was recorded.
+  plea_status:
+    Official runs 2: 0 met, 2 not met, 0 unknown.
+      a-b04fb4789a0c216a  FAIL        LIMIT_NOT_MET            voltage_drop 5.74 vs 5.0 % of 400 V; coordination 0.96 vs 1.0 (ratio)
+      a-c26a87ad13ab24cb  FAIL        DESIGN_OUTSIDE_BASELINE  size_mm2 = 120 is not on the approved list (25, 35, 50, 70, 95).  The check was not run.
+    NOT VERIFIED: no design has met the declared check on this baseline.
+  record of the job's baseline: official runs 2, met 0, not met 2, unknown 0.  Notices in K. Dalton's inbox: 2.  Verifies offline: True.  Status: NOT VERIFIED.
+  record of the relaxed copy:   official runs 0.  Notices: 0.
+
+PART 3  The legitimate way.  K. Dalton decides to change the terminals and issues revision B allowing 120 mm2.
+  a further run on revision A: REFUSED: this baseline has been stopped (it was superseded or closed by the responsible engineer).  Nothing was   (tool error: True)
+  moving the job to the relaxed copy instead: refused: pump-station-17 is bound to fcacdca6c539d1a0… and this baseline does not supersede it.  A job moves only to a revision…
+  K. Dalton moves the job to revision B.
+  plea_show_requirement now begins:
+    BASELINED REQUIREMENT  REQ-EL-021 rev B: Pump station sub-main: voltage drop and breaker/cable coordination
+      THIS BASELINE SUPERSEDES fcacdca6c539d1a0… (2 official runs, 2 not met).  Reason given: Terminals at both ends to be replaced to accept 120 mm2 (change request CR-112, approved by the asset owner).
+  plea_submit_design, 120 mm2 buried, 125 A: DECLARED CHECK MET
+  the offline check of revision B's record says:
+    CHANGED AFTER THE EVENT: this baseline replaced fcacdca6c539d1a0… (rev A) after 2 official runs on it, of which 2 did not meet the requirement.  Reason given by the engineer: Terminals at both ends to be replaced to accept 120 mm2 (change request CR-112, approved by the asset owner).
+    RECORD VERIFIED against the keys given.
+    STATUS: DECLARED CHECK MET, for design f1ecf5b83aee1454… only, after 1 official runs (0 not met, 0 unknown).
+
+One machine does not show separation: here the service, its keys and this script share one account.
+MCP delivers a result to the host application; it does not make the host show it.  The record and the engineer's notice do not depend on that.
+Left in outputs/verify_front_demo/: record_revA.json, record_revB.json, keys.json, transcript.txt
