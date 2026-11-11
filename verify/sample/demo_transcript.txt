@@ -1,0 +1,37 @@
+PART 1  An ordinary job folder.  The requirement cannot be met: the best allowed design gives 5.74 % against 5 %.
+  as issued, best allowed design (95 mm2 buried, 125 A):      the folder's own check prints FAIL
+  change 1: 120 mm2 instead of an allowed size     the folder's own check prints PASS
+  change 2: limit relaxed from 5 % to 7 %          the folder's own check prints PASS
+  change 3: the 1.2 % used elsewhere left out      the folder's own check prints PASS
+  change 4: 330 m instead of the 400 m route       the folder's own check prints PASS
+  change 5: no 20 % spare, 100 A breaker           the folder's own check prints PASS
+  change 6: 120 mm2 resistance read for 95 mm2     the folder's own check prints PASS
+  change 7: square root of three left out          the folder's own check prints PASS
+  7 of 7 changes turn FAIL into PASS.  Nothing in the folder records that the question was changed.
+
+PART 2  The same job under the verification service.  K. Dalton baselined the requirement before work started.
+  baseline cfed827f159e8739…; control cases at baselining: fail as expected, fail as expected, pass as expected
+  a) the seven changes made in the job folder, then the design submitted:
+     change 1: 120 mm2 instead of an allowed size     service says: FAIL: DESIGN OUTSIDE THE BASELINE
+     change 2: limit relaxed from 5 % to 7 %          service says: FAIL: REQUIREMENT NOT MET
+     change 3: the 1.2 % used elsewhere left out      service says: FAIL: REQUIREMENT NOT MET
+     change 4: 330 m instead of the 400 m route       service says: FAIL: REQUIREMENT NOT MET
+     change 5: no 20 % spare, 100 A breaker           service says: FAIL: REQUIREMENT NOT MET
+     change 6: 120 mm2 resistance read for 95 mm2     service says: FAIL: REQUIREMENT NOT MET
+     change 7: square root of three left out          service says: FAIL: REQUIREMENT NOT MET
+  b) the same changes made to the service's own stored files, by someone with access to that machine:
+     change 3: the 1.2 % used elsewhere left out      service says: UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE
+     change 6: 120 mm2 resistance read for 95 mm2     service says: UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE
+     change 7: square root of three left out          service says: UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE
+  official runs 6: met 0, not met 3, unknown 3.  Notices in K. Dalton's inbox: 6.  Record verifies offline: True.  Status: NOT VERIFIED.
+
+PART 3  The legitimate way.  K. Dalton decides to change the terminals and issues revision B allowing 120 mm2.
+  a further run on revision A: REFUSED: this baseline has been stopped (it was superseded or closed by the 
+  120 mm2 buried, 125 A on revision B: DECLARED CHECK MET
+  the offline check of revision B's record says:
+    CHANGED AFTER THE EVENT: this baseline replaced cfed827f159e8739… (rev A) after 6 official runs on it, of which 3 did not meet the requirement.  Reason given by the engineer: Terminals at both ends to be replaced to accept 120 mm2 (change request CR-112, approved by the asset owner).
+    RECORD VERIFIED against the keys given.
+    STATUS: DECLARED CHECK MET, for design f1ecf5b83aee1454… only, after 1 official runs (0 not met, 0 unknown).
+
+One machine does not show separation: here the service, its keys and this script share one account.
+Left in outputs/verify_demo/: record_revA.json, record_revB.json, keys.json, transcript.txt

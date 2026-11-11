@@ -1,0 +1,667 @@
+{
+ "format": "verification-record/1",
+ "root": "REQ-EL-021/A/adeb3c06a6949a5d121cb852d6631971",
+ "baseline": {
+  "card": {
+   "requirement": {
+    "id": "REQ-EL-021",
+    "revision": "A",
+    "title": "Pump station sub-main: voltage drop and breaker/cable coordination",
+    "statement": "The 400 V sub-main to the remote pump station shall keep the total voltage drop from the point of supply to the pump-station terminals within 5 % of 400 V at the design current of 120 A, and the breaker and cable shall be coordinated (Ib <= In <= Iz, with Iz corrected for site ambient temperature).",
+    "source": "Site electrical design basis EDB-07, section 3; wiring-rules voltage-drop limit for a supply from the distributor's shared low-voltage network"
+   },
+   "criteria": [
+    {
+     "id": "voltage_drop",
+     "quantity": "total voltage drop, point of supply to pump-station terminals",
+     "comparison": "<=",
+     "limit": "5.0",
+     "units": "% of 400 V",
+     "plausible": {
+      "min": "1.3",
+      "max": "60"
+     }
+    },
+    {
+     "id": "coordination",
+     "quantity": "coordination utilisation, the larger of Ib/In and In/Iz",
+     "comparison": "<=",
+     "limit": "1.0",
+     "units": "(ratio)",
+     "plausible": {
+      "min": "0.2",
+      "max": "5"
+     }
+    }
+   ],
+   "load_case": "Balanced three-phase, 400 V, 50 Hz. Design current 120 A per phase (assessed maximum demand 100 A plus the site's 20 % spare allowance) at 0.85 lagging power factor. Installed route length 400 m. 1.2 % of voltage drop is already used elsewhere between the point of supply and the load. Site ambient: 50 C shaded air, 35 C soil at 0.5 m.",
+   "design_space": {
+    "size_mm2": {
+     "choice": [
+      25,
+      35,
+      50,
+      70,
+      95
+     ]
+    },
+    "install": {
+     "choice": [
+      "air",
+      "buried",
+      "duct"
+     ]
+    },
+    "breaker_A": {
+     "choice": [
+      100,
+      125,
+      160,
+      200,
+      250
+     ]
+    }
+   },
+   "check": {
+    "id": "CHK-EL-SUBMAIN",
+    "version": "1",
+    "file": "check.py",
+    "author": "R. Tan",
+    "reviewed_by": "P. Moreau",
+    "stated_limits": [
+     "earth-fault loop impedance and disconnection time at the far end",
+     "short-circuit withstand of the cable and breaking capacity of the breaker",
+     "motor-starting voltage dip",
+     "the overload tripping condition I2 <= 1.45 Iz and breaker settings",
+     "grouping with other circuits, solar gain, and soil other than 1.2 K.m/W at 0.5 m",
+     "harmonics, unbalance and neutral current",
+     "whether the maximum demand, the route length and the 1.2 % used elsewhere are themselves right"
+    ],
+    "sha256": "561976e80c0db1d315d2d827c1350b312da8f760d1b186c151fe19dd25b03922"
+   },
+   "inputs": [
+    {
+     "file": "cables.csv",
+     "sha256": "562eef8362567e507135ef6b1a60d2058d4f4858f753d47eb1596353a4da5cc9"
+    },
+    {
+     "file": "site.json",
+     "sha256": "ee53ddd714cada6f743fa8986d42b9c2ef211349cdc4fd766241dd2620c66f48"
+    }
+   ],
+   "controls": [
+    {
+     "name": "50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)",
+     "design": {
+      "size_mm2": 50,
+      "install": "air",
+      "breaker_A": 125
+     },
+     "expect": "FAIL"
+    },
+    {
+     "name": "150 mm2 buried, 100 A breaker: coordination must fail (Ib 120 A above In 100 A)",
+     "design": {
+      "size_mm2": 150,
+      "install": "buried",
+      "breaker_A": 100
+     },
+     "expect": "FAIL"
+    },
+    {
+     "name": "150 mm2 buried, 125 A: both must pass (a size outside the approved list, used only to show the check can pass)",
+     "design": {
+      "size_mm2": 150,
+      "install": "buried",
+      "breaker_A": 125
+     },
+     "expect": "PASS"
+    }
+   ],
+   "responsible_engineer": {
+    "name": "K. Dalton",
+    "key": "24b6e11fa1b21f333f652a71c78a4680d6c0bfdc1db5c56cdba5793dda98661c"
+   },
+   "job": "J2104",
+   "format": "verification-baseline/1",
+   "supersedes": null,
+   "baselined_at": "2026-11-11T02:35:36Z"
+  },
+  "baseline_sha256": "adeb3c06a6949a5d121cb852d663197197b9e3ca1194c637364ae2b1858b67c6",
+  "controls_run": [
+   {
+    "name": "50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)",
+    "expect": "FAIL",
+    "verdict": "FAIL",
+    "reason_code": "LIMIT_NOT_MET",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "achieved": "10.26",
+      "limit": "5.0",
+      "met": false
+     },
+     {
+      "id": "coordination",
+      "achieved": "0.96",
+      "limit": "1.0",
+      "met": true
+     }
+    ]
+   },
+   {
+    "name": "150 mm2 buried, 100 A breaker: coordination must fail (Ib 120 A above In 100 A)",
+    "expect": "FAIL",
+    "verdict": "FAIL",
+    "reason_code": "LIMIT_NOT_MET",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "achieved": "4.36",
+      "limit": "5.0",
+      "met": true
+     },
+     {
+      "id": "coordination",
+      "achieved": "1.2",
+      "limit": "1.0",
+      "met": false
+     }
+    ]
+   },
+   {
+    "name": "150 mm2 buried, 125 A: both must pass (a size outside the approved list, used only to show the check can pass)",
+    "expect": "PASS",
+    "verdict": "PASS",
+    "reason_code": "MET",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "achieved": "4.36",
+      "limit": "5.0",
+      "met": true
+     },
+     {
+      "id": "coordination",
+      "achieved": "0.96",
+      "limit": "1.0",
+      "met": true
+     }
+    ]
+   }
+  ],
+  "signature": {
+   "signer": "24b6e11fa1b21f333f652a71c78a4680d6c0bfdc1db5c56cdba5793dda98661c",
+   "signature": "eb0e87238b3ed183ba7438b0031a83db7dcc53916a552cdd2852dab5463faac11fd17ada7a09db00eaea17a24245304cc6c95c08a7ac1775b180aed5e69d890d"
+  }
+ },
+ "baseline_sha256": "adeb3c06a6949a5d121cb852d663197197b9e3ca1194c637364ae2b1858b67c6",
+ "keys": {
+  "witness": "cb38e4e22113379288c7ead1211d6a93df5eac9a51cb11dc77472d4354d82232",
+  "gate": "b3aecea0075b22f9b37a2f6e0c12b96ec0951cd806056ca4977adb9084e33bb6",
+  "engineer": "24b6e11fa1b21f333f652a71c78a4680d6c0bfdc1db5c56cdba5793dda98661c"
+ },
+ "provisioning": {
+  "record": "PROVISION",
+  "seq": 201,
+  "root": "REQ-EL-021/A/adeb3c06a6949a5d121cb852d6631971",
+  "k": 1000,
+  "m": 0,
+  "issuer": "plea_control",
+  "contract": "attempt-budget contract v3.1",
+  "release": "plea-gateway v1.2",
+  "created_at": "2026-11-11T02:35:36.949778Z",
+  "prev_hash": "3683e5da2215c7722c06cc390f50dbe13636c6efb5bab7acdb0b6ad225e2789f",
+  "hash": "fc64c21d22744d82c667b1c7539a1da674160a57537ba777ba84194775059502"
+ },
+ "audit": [
+  {
+   "seq": 1,
+   "op": [
+    "RESERVE",
+    "a-1d7825264931129a",
+    "verify:b3be258bca77dd34ead7dd69"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_COMMITTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     0,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-1d7825264931129a",
+      "verify:b3be258bca77dd34ead7dd69",
+      "RESERVING",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "fc64c21d22744d82c667b1c7539a1da674160a57537ba777ba84194775059502",
+   "hash": "a51e1c4fd8146cd319c2b3a9ba54a340cea55e85c02c5c71e8b352842975257b"
+  },
+  {
+   "seq": 2,
+   "op": [
+    "ACCEPT_RESERVATION",
+    "a-1d7825264931129a"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     0,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-1d7825264931129a",
+      "verify:b3be258bca77dd34ead7dd69",
+      "RESERVED",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "a51e1c4fd8146cd319c2b3a9ba54a340cea55e85c02c5c71e8b352842975257b",
+   "hash": "12844f6f0f532daffd8c06edae099ed72c78b9c81205fb542e16538d01089def"
+  },
+  {
+   "seq": 3,
+   "op": [
+    "TOKEN",
+    "a-1d7825264931129a"
+   ],
+   "kind": "APPLIED",
+   "code": "TOKEN_RELEASED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     0,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-1d7825264931129a",
+      "verify:b3be258bca77dd34ead7dd69",
+      "TOKEN",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "12844f6f0f532daffd8c06edae099ed72c78b9c81205fb542e16538d01089def",
+   "hash": "7a93aa381a5bca913713bd9c2e17160497986bb3c583941eb421a69b10441898"
+  },
+  {
+   "seq": 4,
+   "op": [
+    "START",
+    "a-1d7825264931129a",
+    "n-62a2f4359efc882893ab735394fc85e4883db19e"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_COMMITTED_LOCALLY",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-1d7825264931129a",
+      "verify:b3be258bca77dd34ead7dd69",
+      "INTENT_PENDING",
+      "n-62a2f4359efc882893ab735394fc85e4883db19e",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "7a93aa381a5bca913713bd9c2e17160497986bb3c583941eb421a69b10441898",
+   "hash": "d0698dd6e0dd191ed0e578f22cc72e91baf7f6fc06b773095410f43201370eca"
+  },
+  {
+   "seq": 5,
+   "op": [
+    "ACCEPT_INTENT",
+    "a-1d7825264931129a"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-1d7825264931129a",
+      "verify:b3be258bca77dd34ead7dd69",
+      "CONSUMED",
+      "n-62a2f4359efc882893ab735394fc85e4883db19e",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "d0698dd6e0dd191ed0e578f22cc72e91baf7f6fc06b773095410f43201370eca",
+   "hash": "1b2c0a5b568bccaa4260f85b60497b393d3f7ea68180ca888f220c4da7fd1897"
+  },
+  {
+   "seq": 6,
+   "op": [
+    "RECEIPT",
+    "a-1d7825264931129a"
+   ],
+   "kind": "APPLIED",
+   "code": "RECEIPT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-1d7825264931129a",
+      "verify:b3be258bca77dd34ead7dd69",
+      "CONSUMED",
+      "n-62a2f4359efc882893ab735394fc85e4883db19e",
+      true,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "1b2c0a5b568bccaa4260f85b60497b393d3f7ea68180ca888f220c4da7fd1897",
+   "hash": "a7a420c7a7d5eb898e5fb4138265bb0dd9ab41d7044dfe46a7cc95a6ecf8c749"
+  },
+  {
+   "seq": 7,
+   "op": [
+    "CROSS",
+    "a-1d7825264931129a"
+   ],
+   "kind": "APPLIED",
+   "code": "CROSSED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-1d7825264931129a",
+      "verify:b3be258bca77dd34ead7dd69",
+      "CONSUMED",
+      "n-62a2f4359efc882893ab735394fc85e4883db19e",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "a7a420c7a7d5eb898e5fb4138265bb0dd9ab41d7044dfe46a7cc95a6ecf8c749",
+   "hash": "bf2ebc62c146ac8e4f1ae60e0cd1f0ee2ce333ba31bddb41a8818327e063b4d2"
+  },
+  {
+   "seq": 8,
+   "op": [
+    "RECONCILE",
+    "a-1d7825264931129a",
+    "EFFECT",
+    "AUTHORISED"
+   ],
+   "kind": "APPLIED",
+   "code": "VERDICT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-1d7825264931129a",
+      "verify:b3be258bca77dd34ead7dd69",
+      "EFFECT",
+      "n-62a2f4359efc882893ab735394fc85e4883db19e",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "bf2ebc62c146ac8e4f1ae60e0cd1f0ee2ce333ba31bddb41a8818327e063b4d2",
+   "hash": "c94ddd64d9ca43e1d1d6773f92aeae59f350411a6b6ded5613f5263542fccb5e"
+  }
+ ],
+ "attempts": [
+  {
+   "aid": "a-1d7825264931129a",
+   "request_key": "verify:b3be258bca77dd34ead7dd69",
+   "arguments": {
+    "baseline_sha256": "adeb3c06a6949a5d121cb852d663197197b9e3ca1194c637364ae2b1858b67c6",
+    "design": {
+     "size_mm2": 95,
+     "install": "buried",
+     "breaker_A": 125
+    }
+   },
+   "phase": "EFFECT",
+   "nonce": "n-62a2f4359efc882893ab735394fc85e4883db19e",
+   "outcome": "FAIL",
+   "receipts": {
+    "ACCEPT_RESERVATION": {
+     "op": [
+      "ACCEPT_RESERVATION",
+      "a-1d7825264931129a"
+     ],
+     "aid": "a-1d7825264931129a",
+     "seq": 2,
+     "code": "RESERVATION_ACCEPTED",
+     "hash": "12844f6f0f532daffd8c06edae099ed72c78b9c81205fb542e16538d01089def",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/adeb3c06a6949a5d121cb852d6631971",
+     "signer": "cb38e4e22113379288c7ead1211d6a93df5eac9a51cb11dc77472d4354d82232",
+     "binding": null,
+     "signature": "d4cbdc0811978b7a6913e7386c52c405243921f6bb18ceb880249d0bdea58a5942b3bca32950d0e3573fb0dc97088a2dc03c45d2e8be766ac533296129eef50a"
+    },
+    "ACCEPT_INTENT": {
+     "op": [
+      "ACCEPT_INTENT",
+      "a-1d7825264931129a"
+     ],
+     "aid": "a-1d7825264931129a",
+     "seq": 5,
+     "code": "INTENT_ACCEPTED",
+     "hash": "1b2c0a5b568bccaa4260f85b60497b393d3f7ea68180ca888f220c4da7fd1897",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/adeb3c06a6949a5d121cb852d6631971",
+     "signer": "cb38e4e22113379288c7ead1211d6a93df5eac9a51cb11dc77472d4354d82232",
+     "binding": "n-62a2f4359efc882893ab735394fc85e4883db19e",
+     "signature": "4036e3cf7f85b4151112ed4e8978198524622f9eb583f99ca1802b1999321b4aed571879dafe94e5de1da7fb34a1ffa53d65741d7c60b5fb4730f47fe8912706"
+    },
+    "CROSS": {
+     "op": [
+      "CROSS",
+      "a-1d7825264931129a"
+     ],
+     "aid": "a-1d7825264931129a",
+     "seq": 7,
+     "code": "CROSSED",
+     "hash": "bf2ebc62c146ac8e4f1ae60e0cd1f0ee2ce333ba31bddb41a8818327e063b4d2",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/adeb3c06a6949a5d121cb852d6631971",
+     "signer": "cb38e4e22113379288c7ead1211d6a93df5eac9a51cb11dc77472d4354d82232",
+     "binding": "n-62a2f4359efc882893ab735394fc85e4883db19e",
+     "signature": "8354fcdfe4c651913fdcb020393a0c4ed2ddafe1ea24bf8b171ab512dac0d6f388070f0de6e1727db83fe3ac2606d227b7430a98127e4ff7c668eb9409c0da00"
+    }
+   },
+   "evidence": [
+    {
+     "seq": 8,
+     "evidence": {
+      "aid": "a-1d7825264931129a",
+      "kind": "EFFECT_REPORT",
+      "root": "REQ-EL-021/A/adeb3c06a6949a5d121cb852d6631971",
+      "claim": "EFFECT",
+      "nonce": "n-62a2f4359efc882893ab735394fc85e4883db19e",
+      "signer": "b3aecea0075b22f9b37a2f6e0c12b96ec0951cd806056ca4977adb9084e33bb6",
+      "signature": "6f916bf6db5d4bf340b077e261c3af5f4866f3e9a283239e7f4a1e1f5d8141c71ac5c4b67d5ce8688fb03bfd6d56407c22b71a8834a3fd740b82e2cd6c337f0c",
+      "result_digest": "1737b36fcae7679394873a5185c446540107af47bd84f76eb3fc801941919cd1"
+     }
+    }
+   ],
+   "result": {
+    "basis": "95 mm2 buried: 5.74 % total drop (4.54 % = 18.2 V in this cable at 45 C over 400 m, plus 1.20 % elsewhere); Ib 120 A, In 125 A, Iz 276 A (ambient factor 0.920).",
+    "check": {
+     "id": "CHK-EL-SUBMAIN",
+     "sha256": "561976e80c0db1d315d2d827c1350b312da8f760d1b186c151fe19dd25b03922",
+     "version": "1"
+    },
+    "design": {
+     "install": "buried",
+     "size_mm2": 95,
+     "breaker_A": 125
+    },
+    "detail": "",
+    "format": "verification-verdict/1",
+    "verdict": "FAIL",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "met": false,
+      "limit": "5.0",
+      "units": "% of 400 V",
+      "margin": "-0.74",
+      "achieved": "5.74",
+      "quantity": "total voltage drop, point of supply to pump-station terminals",
+      "comparison": "<="
+     },
+     {
+      "id": "coordination",
+      "met": true,
+      "limit": "1.0",
+      "units": "(ratio)",
+      "margin": "0.04",
+      "achieved": "0.96",
+      "quantity": "coordination utilisation, the larger of Ib/In and In/Iz",
+      "comparison": "<="
+     }
+    ],
+    "revision": "A",
+    "reason_code": "LIMIT_NOT_MET",
+    "design_sha256": "58fca62e72e86c8c4422fadb7c7904bda34a7f3d0773982ae61b3c62e558fd31",
+    "requirement_id": "REQ-EL-021",
+    "baseline_sha256": "adeb3c06a6949a5d121cb852d663197197b9e3ca1194c637364ae2b1858b67c6"
+   }
+  }
+ ],
+ "acknowledgements": [],
+ "as_of": {
+  "time": "2026-11-11T02:51:22Z",
+  "seq": 8,
+  "head": "c94ddd64d9ca43e1d1d6773f92aeae59f350411a6b6ded5613f5263542fccb5e"
+ },
+ "signature": {
+  "signer": "24b6e11fa1b21f333f652a71c78a4680d6c0bfdc1db5c56cdba5793dda98661c",
+  "signature": "1ff498569ec871710c2f1de3d9af1ac59673e0d8e0b43607bc2e47068b55cdf7ad9a3175ad5dc7b9441a517b343c9dd7ac57c1c1de53877f20ada2616dc3c000"
+ }
+}
