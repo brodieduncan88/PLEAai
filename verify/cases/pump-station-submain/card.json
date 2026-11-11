@@ -1,0 +1,39 @@
+{
+ "requirement": {
+  "id": "REQ-EL-021", "revision": "A",
+  "title": "Pump station sub-main: voltage drop and breaker/cable coordination",
+  "statement": "The 400 V sub-main to the remote pump station shall keep the total voltage drop from the point of supply to the pump-station terminals within 5 % of 400 V at the design current of 120 A, and the breaker and cable shall be coordinated (Ib <= In <= Iz, with Iz corrected for site ambient temperature).",
+  "source": "Site electrical design basis EDB-07, section 3; wiring-rules voltage-drop limit for a supply from the distributor's shared low-voltage network"
+ },
+ "criteria": [
+  {"id": "voltage_drop", "quantity": "total voltage drop, point of supply to pump-station terminals", "comparison": "<=", "limit": "5.0", "units": "% of 400 V",
+   "plausible": {"min": "1.3", "max": "60"}},
+  {"id": "coordination", "quantity": "coordination utilisation, the larger of Ib/In and In/Iz", "comparison": "<=", "limit": "1.0", "units": "(ratio)",
+   "plausible": {"min": "0.2", "max": "5"}}
+ ],
+ "load_case": "Balanced three-phase, 400 V, 50 Hz. Design current 120 A per phase (assessed maximum demand 100 A plus the site's 20 % spare allowance) at 0.85 lagging power factor. Installed route length 400 m. 1.2 % of voltage drop is already used elsewhere between the point of supply and the load. Site ambient: 50 C shaded air, 35 C soil at 0.5 m.",
+ "design_space": {
+  "size_mm2": {"choice": [25, 35, 50, 70, 95]},
+  "install": {"choice": ["air", "buried", "duct"]},
+  "breaker_A": {"choice": [100, 125, 160, 200, 250]}
+ },
+ "check": {
+  "id": "CHK-EL-SUBMAIN", "version": "1", "file": "check.py", "author": "R. Tan", "reviewed_by": "P. Moreau",
+  "stated_limits": [
+   "earth-fault loop impedance and disconnection time at the far end",
+   "short-circuit withstand of the cable and breaking capacity of the breaker",
+   "motor-starting voltage dip",
+   "the overload tripping condition I2 <= 1.45 Iz and breaker settings",
+   "grouping with other circuits, solar gain, and soil other than 1.2 K.m/W at 0.5 m",
+   "harmonics, unbalance and neutral current",
+   "whether the maximum demand, the route length and the 1.2 % used elsewhere are themselves right"
+  ]
+ },
+ "inputs": [{"file": "cables.csv"}, {"file": "site.json"}],
+ "controls": [
+  {"name": "50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)", "design": {"size_mm2": 50, "install": "air", "breaker_A": 125}, "expect": "FAIL"},
+  {"name": "150 mm2 buried, 100 A breaker: coordination must fail (Ib 120 A above In 100 A)", "design": {"size_mm2": 150, "install": "buried", "breaker_A": 100}, "expect": "FAIL"},
+  {"name": "150 mm2 buried, 125 A: both must pass (a size outside the approved list, used only to show the check can pass)", "design": {"size_mm2": 150, "install": "buried", "breaker_A": 125}, "expect": "PASS"}
+ ],
+ "responsible_engineer": {"name": "K. Dalton"}
+}

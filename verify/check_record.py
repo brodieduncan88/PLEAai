@@ -121,7 +121,7 @@ def in_design_space(card, design) -> bool:
     for name, rule in space.items():
         v = design[name]
         if 'choice' in rule:
-            if not isinstance(v, str) or v not in rule['choice']:
+            if isinstance(v, bool) or not isinstance(v, (str, int)) or not any(type(v) is type(c) and v == c for c in rule['choice']):
                 return False
         else:
             d = dec(v)

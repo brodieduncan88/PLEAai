@@ -32,17 +32,26 @@ LOCAL_DSN = os.environ.get('PLEA_LOCAL_DSN', 'postgresql://plea_local:local@127.
 
 
 class Services:
-    def __init__(self, directory, witness_port: int = 8971, host_port: int = 8972):
+    def __init__(self, directory, witness_port: int = 8971, host_port: int = 8972, attach: bool = False):
+        """attach=True: use a deployment another process is running in `directory` (its engineer's key, its public keys,
+        its home), to baseline, write client configurations, build records and read the inbox.  It starts nothing."""
         self.dir = pathlib.Path(directory)
+        self.home = self.dir / 'home'
+        self.procs = {}
+        self.host_stopped_at = None
+        if attach:
+            state = json.loads((self.dir / 'state.json').read_text())
+            self.ports, self.pki, self.keys = state['ports'], state['pki'], state['keys']
+            self.engineer = verify_ctl.load_key(self.dir / 'engineer.key')
+            return
         shutil.rmtree(self.dir, ignore_errors=True); self.dir.mkdir(parents=True)
-        self.home = self.dir / 'home'; (self.home / 'baselines').mkdir(parents=True); (self.home / 'inbox').mkdir()
+        (self.home / 'baselines').mkdir(parents=True); (self.home / 'inbox').mkdir()
         self.ports = {'witness': witness_port, 'host': host_port}
         self.pki = TLS.init_pki(self.dir / 'pki', servers=('witness', 'host'), clients=('governor',), ca_name='verification-demo-ca', days=3)
         self.witness, self.gate = Signer(), GateSigner()
         self.engineer = verify_ctl.keygen(self.dir / 'engineer.key')
         self.keys = {'witness': self.witness.public_hex, 'gate': self.gate.public_hex, 'engineer': self.engineer.public_hex}
-        self.procs = {}
-        self.host_stopped_at = None
+        (self.dir / 'state.json').write_text(json.dumps({'ports': self.ports, 'pki': self.pki, 'keys': self.keys}, indent=1) + '\n')   # public keys and paths only
 
     def _tls(self, name) -> list:
         return ['--tls-cert', self.pki[name][0], '--tls-key', self.pki[name][1], '--tls-ca', self.pki['ca'], '--tls-allow', 'governor']
@@ -101,8 +110,8 @@ class Services:
         """Write WORKSPACE/.verify/ (config, baseline copy, journal) and return the config path."""
         d = pathlib.Path(workspace) / '.verify'; d.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(self.home / 'baselines' / baseline_hash / 'baseline.json', d / 'baseline.json')
-        cfg = {'local_dsn': LOCAL_DSN, 'witness_url': f'https://127.0.0.1:{self.ports["witness"]}', 'witness_keys': [self.witness.public_hex],
-               'gate_url': f'https://127.0.0.1:{self.ports["host"]}', 'gate_key': self.gate.public_hex, 'engineer_key': self.engineer.public_hex,
+        cfg = {'local_dsn': LOCAL_DSN, 'witness_url': f'https://127.0.0.1:{self.ports["witness"]}', 'witness_keys': [self.keys['witness']],
+               'gate_url': f'https://127.0.0.1:{self.ports["host"]}', 'gate_key': self.keys['gate'], 'engineer_key': self.keys['engineer'],
                'tls': {'ca': self.pki['ca'], 'cert': self.pki['governor'][0], 'key': self.pki['governor'][1]}, 'baseline': 'baseline.json', 'journal': 'submissions.jsonl'}
         (d / 'config.json').write_text(json.dumps(cfg, indent=1) + '\n')
         return d / 'config.json'

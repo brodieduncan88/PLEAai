@@ -1,0 +1,13 @@
+{
+ "V_nominal": 400,
+ "maximum_demand_A": 100,
+ "spare_factor": 1.20,
+ "power_factor": 0.85,
+ "route_length_m": 400,
+ "drop_used_elsewhere_pct": 1.2,
+ "T_air": 50,
+ "T_soil": 35,
+ "T_max": 90,
+ "alpha20_per_K": 0.00393,
+ "cables_per_phase": 1
+}

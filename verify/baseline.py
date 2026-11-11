@@ -123,7 +123,8 @@ def validate_card(card: dict) -> None:
     need(isinstance(space, dict) and space, 'design_space needs at least one parameter')
     for name, rule in space.items():
         if 'choice' in rule:
-            need(isinstance(rule['choice'], list) and rule['choice'] and all(isinstance(x, str) for x in rule['choice']), f'design_space.{name}: choice must be a list of names')
+            need(isinstance(rule['choice'], list) and rule['choice'] and all(isinstance(x, (str, int)) and not isinstance(x, bool) for x in rule['choice']),
+                 f'design_space.{name}: choice must be a list of names or whole numbers')
         else:
             lo, hi = dec(rule.get('min')), dec(rule.get('max'))
             need(lo is not None and hi is not None and lo <= hi, f'design_space.{name}: needs "choice" or numeric "min" and "max"')
@@ -154,8 +155,8 @@ def in_design_space(card: dict, design) -> tuple[bool, str]:
     for name, rule in space.items():
         v = design[name]
         if 'choice' in rule:
-            if not isinstance(v, str) or v not in rule['choice']:
-                return False, f'{name} = {v!r} is not on the approved list ({", ".join(rule["choice"])})'
+            if isinstance(v, bool) or not isinstance(v, (str, int)) or not any(type(v) is type(c) and v == c for c in rule['choice']):
+                return False, f'{name} = {v!r} is not on the approved list ({", ".join(map(str, rule["choice"]))})'
         else:
             d = dec(v)
             if d is None or isinstance(v, str):
