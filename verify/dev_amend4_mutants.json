@@ -1,0 +1,1583 @@
+{
+ "first_pass_on_the_repair_before_the_review": {
+  "C0": {
+   "defect": "no change at all: the control, which must not be caught",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [],
+   "failed_checks": {}
+  },
+  "C1": {
+   "defect": "the notice says \"Nothing was changed ... exactly as baselined\" for every reason, as before",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's Verdict row states its verdict",
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row",
+     "for the failure, the notice and the answer say the check's files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words"
+    ]
+   }
+  },
+  "C2": {
+   "defect": "the notice says the check's files matched for every reason",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C3": {
+   "defect": "the notice of a changed check says its files matched",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row"
+    ]
+   }
+  },
+  "C4": {
+   "defect": "the Verdict row does not state the verdict, as before",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's Verdict row states its verdict",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row",
+     "for the failure, the notice and the answer say the check's files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words"
+    ]
+   }
+  },
+  "C5": {
+   "defect": "the Verdict row states FAIL whatever the verdict",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's Verdict row states its verdict",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row"
+    ]
+   }
+  },
+  "C6": {
+   "defect": "an UNKNOWN notice still says only the engineer can \"accept a failure\"",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's Verdict row states its verdict",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the failure, the notice and the answer say the check's files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words"
+    ]
+   }
+  },
+  "C7": {
+   "defect": "the notice of a changed check offers a different design, as before, and says nothing of restoring the files",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says what the declared check returned against the limits only when its numbers were compared; the notice of a changed check says the files must be restored and does not offer a different design",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row"
+    ]
+   }
+  },
+  "C8": {
+   "defect": "every notice says it gives what the declared check returned against the limits",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says what the declared check returned against the limits only when its numbers were compared; the notice of a changed check says the files must be restored and does not offer a different design",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C9": {
+   "defect": "an implausible result is not said to have run on matching files",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C10": {
+   "defect": "a check that stopped with an error is said to have run on matching files, which the verdict does not show",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C11": {
+   "defect": "the record's banner gives only how many did not meet the requirement, as before",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes"
+    ],
+    "F21": [
+     "the new record's print gives the same counts, and both records verify"
+    ]
+   }
+  },
+  "C12": {
+   "defect": "the record's banner swaps the met and unknown counts",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes"
+    ],
+    "F21": [
+     "the new record's print gives the same counts, and both records verify"
+    ]
+   }
+  },
+  "C13": {
+   "defect": "the requirement the front door shows gives only the failures, as before",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21"
+   ],
+   "failed_checks": {
+    "F21": [
+     "after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced: 4 runs, 1 not met, 2 unknown, 1 met"
+    ]
+   }
+  },
+  "C14": {
+   "defect": "the requirement the first client shows gives only the failures, as before",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes"
+    ]
+   }
+  },
+  "C15": {
+   "defect": "the front door reads the unknown count from the wrong field",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21"
+   ],
+   "failed_checks": {
+    "F21": [
+     "after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced: 4 runs, 1 not met, 2 unknown, 1 met"
+    ]
+   }
+  },
+  "C16": {
+   "defect": "an implausible result is said to be compared with the limits",
+   "tests_run": [
+    "R10",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says what the declared check returned against the limits only when its numbers were compared; the notice of a changed check says the files must be restored and does not offer a different design",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), what face() writes keeps the same rules"
+    ]
+   }
+  }
+ },
+ "second_pass_after_the_first_two_reviews_stopped_when_the_tests_were_to_change": {
+  "C0": {
+   "defect": "no change at all: the control, which must not be caught",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [],
+   "failed_checks": {}
+  },
+  "C1": {
+   "defect": "the notice says \"Nothing was changed ... exactly as baselined\" for every reason, as before",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were",
+     "a notice says what the declared check returned against the limits only when its numbers were compared; the notice of a changed check says the files must be restored and does not offer a different design",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the failure, the notice and the answer say the check's files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words"
+    ]
+   }
+  },
+  "C2": {
+   "defect": "the notice says the check's files matched for every reason",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C3": {
+   "defect": "the notice of a changed check says its files matched",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row"
+    ]
+   }
+  },
+  "C4": {
+   "defect": "the Verdict row does not state the verdict, as before",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were",
+     "the seven answers given to the caller say the same, the pass among them",
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row",
+     "for the failure, the notice and the answer say the check's files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words"
+    ]
+   }
+  },
+  "C5": {
+   "defect": "the Verdict row states FAIL whatever the verdict",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were",
+     "the seven answers given to the caller say the same, the pass among them",
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row"
+    ]
+   }
+  },
+  "C6": {
+   "defect": "an UNKNOWN notice still says only the engineer can \"accept a failure\"",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were",
+     "the seven answers given to the caller say the same, the pass among them",
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the failure, the notice and the answer say the check's files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words"
+    ]
+   }
+  },
+  "C7": {
+   "defect": "the notice of a changed check offers a different design, as before, and says nothing of restoring the files",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says what the declared check returned against the limits only when its numbers were compared; the notice of a changed check says the files must be restored and does not offer a different design",
+     "the seven answers given to the caller say the same, the pass among them",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row"
+    ]
+   }
+  }
+ },
+ "third_pass_on_the_code_declared_here": {
+  "C0": {
+   "defect": "no change at all: the control, which must not be caught",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [],
+   "failed_checks": {}
+  },
+  "C1": {
+   "defect": "the notice says \"Nothing was changed ... exactly as baselined\" for every reason, as before",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were",
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the failure, the notice and the answer say the check's files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words"
+    ]
+   }
+  },
+  "C2": {
+   "defect": "the notice says the check's files matched for every reason",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C3": {
+   "defect": "the notice of a changed check says its files matched",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row"
+    ]
+   }
+  },
+  "C4": {
+   "defect": "the Verdict row does not state the verdict, as before",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were",
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row",
+     "for the failure, the notice and the answer say the check's files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words"
+    ]
+   }
+  },
+  "C5": {
+   "defect": "the Verdict row states FAIL whatever the verdict",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were",
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row"
+    ]
+   }
+  },
+  "C6": {
+   "defect": "an UNKNOWN notice still says only the engineer can \"accept a failure\"",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were",
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the failure, the notice and the answer say the check's files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words"
+    ]
+   }
+  },
+  "C7": {
+   "defect": "the notice of a changed check offers a different design, as before, and says nothing of restoring the files",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row"
+    ]
+   }
+  },
+  "C8": {
+   "defect": "every notice says it gives what the declared check returned against the limits",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C9": {
+   "defect": "an implausible result is not said to have run on matching files",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C10": {
+   "defect": "a check that stopped with an error is said to have run on matching files, which the verdict does not show",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not",
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C11": {
+   "defect": "the record's banner gives only how many did not meet the requirement, as before",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes"
+    ],
+    "F21": [
+     "the new record's print gives the same counts and the engineer's reason, and both records verify"
+    ]
+   }
+  },
+  "C12": {
+   "defect": "the record's banner swaps the met and unknown counts",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes"
+    ],
+    "F21": [
+     "the new record's print gives the same counts and the engineer's reason, and both records verify"
+    ]
+   }
+  },
+  "C13": {
+   "defect": "the requirement the front door shows gives only the failures, as before",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21"
+   ],
+   "failed_checks": {
+    "F21": [
+     "after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced (4 runs, 1 not met, 2 unknown, 1 met) and the engineer's reason, also while the baseline is on hold; in process, other counts, none equal, are each put in their place"
+    ]
+   }
+  },
+  "C14": {
+   "defect": "the requirement the first client shows gives only the failures, as before",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes"
+    ]
+   }
+  },
+  "C15": {
+   "defect": "the front door reads the unknown count from the wrong field",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21"
+   ],
+   "failed_checks": {
+    "F21": [
+     "after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced (4 runs, 1 not met, 2 unknown, 1 met) and the engineer's reason, also while the baseline is on hold; in process, other counts, none equal, are each put in their place"
+    ]
+   }
+  },
+  "C16": {
+   "defect": "an implausible result is said to be compared with the limits",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were",
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C17": {
+   "defect": "when the gate holds no usable card, the first client's answer begins as if the check or its data had changed, as before",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R14",
+    "R18"
+   ],
+   "failed_checks": {
+    "R14": [
+     "each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass"
+    ],
+    "R18": [
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C18": {
+   "defect": "when the gate holds no usable card, the answer says the requirement is as baselined and the check or its data changed",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C19": {
+   "defect": "the requirement line calls the baseline unchanged even when the gate holds no usable copy of it",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C20": {
+   "defect": "when the gate holds no usable card, the next step is to restore the check's files and a different design is offered",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C21": {
+   "defect": "the Verdict row of an UNKNOWN says no number from the check was compared with the limits, which is false when a result was compared and then set aside",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were",
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C22": {
+   "defect": "the notice of a changed check says to restore the files from a signed copy, which does not exist",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ],
+    "F21": [
+     "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row"
+    ]
+   }
+  },
+  "C23": {
+   "defect": "the no-card headline is the one for a changed check",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R14",
+    "R18"
+   ],
+   "failed_checks": {
+    "R14": [
+     "each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass"
+    ],
+    "R18": [
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "C24": {
+   "defect": "held is read from the wrong field, so no answer is ever treated as a refusal",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R14",
+    "R18"
+   ],
+   "failed_checks": {
+    "R14": [
+     "each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass"
+    ],
+    "R18": [
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "W02": {
+   "defect": "every reason with no entry of its own says the check and its data are as baselined (a design outside the space, a crash, garbage output)",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "W03": {
+   "defect": "a design outside the design space is said to have run on unchanged files, in other words than the matched sentence",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "W04": {
+   "defect": "the standing line keeps the old claim in other words (\"Nothing else has been changed\"), also in the notice of a changed check",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "W05": {
+   "defect": "an UNKNOWN notice says only the engineer can accept \"the failure\" (the old claim in other words: not \"accept a failure\")",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "W06": {
+   "defect": "\"Until then no design inside the design space can be verified\" is printed for every held non-pass, not only for a changed check",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "W07": {
+   "defect": "a verdict with no comparison closes by saying what the check returned against the limits, in other words than the old line",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "W08": {
+   "defect": "the notice of a changed check offers another design, in other words than \"a different design inside\"",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "W09": {
+   "defect": "the front door swaps the met and not-met counts",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F11",
+    "F21"
+   ],
+   "failed_checks": {
+    "F11": [
+     "after the move the requirement shown says what it replaced, what had failed and why"
+    ],
+    "F21": [
+     "after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced (4 runs, 1 not met, 2 unknown, 1 met) and the engineer's reason, also while the baseline is on hold; in process, other counts, none equal, are each put in their place"
+    ]
+   }
+  },
+  "W10": {
+   "defect": "the front door reads the met count from the not-met field",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21"
+   ],
+   "failed_checks": {
+    "F21": [
+     "after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced (4 runs, 1 not met, 2 unknown, 1 met) and the engineer's reason, also while the baseline is on hold; in process, other counts, none equal, are each put in their place"
+    ]
+   }
+  },
+  "W11": {
+   "defect": "the front door reads the not-met count from the met field",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F11",
+    "F21"
+   ],
+   "failed_checks": {
+    "F11": [
+     "after the move the requirement shown says what it replaced, what had failed and why"
+    ],
+    "F21": [
+     "after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced (4 runs, 1 not met, 2 unknown, 1 met) and the engineer's reason, also while the baseline is on hold; in process, other counts, none equal, are each put in their place"
+    ]
+   }
+  },
+  "W13": {
+   "defect": "the record's print drops the engineer's reason from the banner",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21",
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes"
+    ],
+    "F21": [
+     "the new record's print gives the same counts and the engineer's reason, and both records verify"
+    ]
+   }
+  },
+  "W14": {
+   "defect": "the first client's requirement drops the engineer's reason from the banner",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes"
+    ]
+   }
+  },
+  "W15": {
+   "defect": "the front door's requirement drops the engineer's reason from the banner",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F11",
+    "F21"
+   ],
+   "failed_checks": {
+    "F11": [
+     "after the move the requirement shown says what it replaced, what had failed and why"
+    ],
+    "F21": [
+     "after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced (4 runs, 1 not met, 2 unknown, 1 met) and the engineer's reason, also while the baseline is on hold; in process, other counts, none equal, are each put in their place"
+    ]
+   }
+  },
+  "W16": {
+   "defect": "the record's banner prints 0 for a count the superseded baseline does not give",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes"
+    ]
+   }
+  },
+  "W17": {
+   "defect": "the first client's banner prints 0 for the met and unknown counts when they are not given",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes"
+    ]
+   }
+  },
+  "W25": {
+   "defect": "when the gate holds no usable card, the answer offers another design, in other words than \"a different design inside\"",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "W27": {
+   "defect": "the answer's Official runs row swaps the not-met and unknown counts (a count from the wrong field, outside the four banners)",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown"
+    ]
+   }
+  },
+  "W28": {
+   "defect": "the no-card answer says its card is \"unchanged as this client holds it\" (the word, without the full stop the test looks for)",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "R18"
+   ],
+   "failed_checks": {
+    "R18": [
+     "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+     "in process, for every verdict on two cards (the fixture and the pump station), and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+    ]
+   }
+  },
+  "W45": {
+   "defect": "the front door shows the banner only while the new baseline is open (not when it is held)",
+   "tests_run": [
+    "R10",
+    "R14",
+    "R17",
+    "R18",
+    "F11",
+    "F20",
+    "F21"
+   ],
+   "caught_by": [
+    "F21"
+   ],
+   "failed_checks": {
+    "F21": [
+     "after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced (4 runs, 1 not met, 2 unknown, 1 met) and the engineer's reason, also while the baseline is on hold; in process, other counts, none equal, are each put in their place"
+    ]
+   }
+  }
+ }
+}

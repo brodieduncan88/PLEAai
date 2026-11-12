@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Declared tests F1-F16 for the front door and the MCP server (verify/DECLARED_FRONT.md states the expected outcomes),
 and F17 to F19, added by Amendment 2 (verify/DECLARED_AMEND2.md), which also restates two checks of F15,
-and F20, added by Amendment 3 (verify/DECLARED_AMEND3.md).
+and F20, added by Amendment 3 (verify/DECLARED_AMEND3.md), and F21, added by Amendment 4 (verify/DECLARED_AMEND4.md).
 
-    verify_front_tests.py [F1 F6 ...]     all twenty by default; writes outputs/verify_front_tests.json; exits 1 if any test fails
+    verify_front_tests.py [F1 F6 ...]     all twenty-one by default; writes outputs/verify_front_tests.json; exits 1 if any test fails
 
 F1 and F2 run the first plug-in as it was released, with no front door, and show the two defects this work is for.
 F3 to F16 make a fresh deployment with a front door (verify/deploy_front.py: new keys; the released witness service
@@ -968,7 +968,64 @@ def f20():
     return checks, e
 
 
-TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20}
+NOTICE_OLD = ('Nothing was changed', 'exactly as baselined', 'accept a failure')
+
+
+def f21():
+    """Through the front door, a notice and the tool's answer say only what is so for their run: a changed data file is said to be changed and nothing is said to be unchanged, the Verdict row states the verdict, and the requirement shown after a revision gives every count of the runs it replaced."""
+    r = Run('F21'); e = {}
+    try:
+        s = r.s
+        d = s.home / 'baselines' / r.h; data = d / 'materials.csv'; original = data.read_text()
+        failed = r.submit(BAD)
+        passed = r.submit(GOOD)
+        data.write_text(original.replace('PA66-GF30,180', 'PA66-GF30,260'))
+        by_tool = r.submit({'material': 'PA66-GF30', 'wall_mm': 2.5, 'mode': 'normal'})
+        by_address = raw(r.job, 'POST', '/submit', json.dumps({'design': {'material': 'PA66-GF30', 'wall_mm': 3.5, 'mode': 'normal'}}).encode())
+        data.write_text(original)
+        notices = [p.read_text() for p in sorted((s.home / 'inbox' / r.h[:16]).glob('*.txt'))]
+        changed = [t for t in notices if 'NO LONGER MATCHES THE BASELINE' in t] + [text_of(by_tool), str(by_address[1].get('text'))]
+        failing = [t for t in notices if 'FAIL: REQUIREMENT NOT MET' in t] + [text_of(failed)]
+        verdict_rows = lambda t: [l for l in t.splitlines() if l.startswith('Verdict ')]
+        ok_a, why_a, s_a = r.checked()
+        src = case_b('F21')
+        req = dict(json.loads((CASE / 'card.json').read_text())['requirement'], revision='B', statement='The housing shall withstand continuous operation at 170 C.')
+        env_b = verify_ctl.revise(s.home, src, relaxed(requirement=req), s.engineer, r.h, 'Customer lowered the operating temperature (CR-21).')
+        hb = env_b['baseline_sha256']; s.rebind('job-a', hb)
+        shown = r.mcp().call('plea_show_requirement'); on_b = r.submit(BAD)
+        ok_b, checks_b, s_b = check_record.verify(s.record(hb), s.keys)
+        printed_b = check_record.render(ok_b, checks_b, s_b)
+        # in process: the front door's own line for other counts, so that no two of them are equal, and while the new baseline is on hold
+        other = dict(env_b['card'], supersedes=dict(env_b['card']['supersedes'], official_runs=7, met=1, not_met=2, unknown=4))
+        distinct = [l.strip() for l in front_door.requirement_text(other, hb).splitlines() if 'SUPERSEDES' in l]
+        on_hold = [l.strip() for l in front_door.requirement_text(env_b['card'], hb, 'HELD').splitlines() if 'SUPERSEDES' in l]
+        e.update(heads=[head(text_of(failed)), head(text_of(passed)), head(text_of(by_tool)), head(str(by_address[1].get('text')))], notices=len(notices), changed=len(changed), failing=len(failing),
+                 old_words=sum(w in t for t in changed + failing for w in NOTICE_OLD),
+                 changed_said=[('The check or its data is not as baselined' in t, 'restores the check and its data to the files whose hashes the baseline holds' in t, 'a different design inside' in t,
+                                [l[:30] for l in verdict_rows(t)]) for t in changed],
+                 failing_said=[('matched their baselined hashes when it ran' in t, 'says what the declared check returned' in t, [l[:30] for l in verdict_rows(t)]) for t in failing],
+                 counts_a=(s_a.get('official_runs'), s_a.get('met'), s_a.get('not_met'), s_a.get('unknown')),
+                 shown=[l.strip() for l in text_of(shown).splitlines() if 'SUPERSEDES' in l], printed=[l.strip() for l in printed_b.splitlines() if 'CHANGED AFTER THE EVENT' in l],
+                 distinct=distinct, on_hold=on_hold, on_b=head(text_of(on_b)), record_a=(ok_a, why_a), record_b=ok_b)
+        checks = {'a design that fails, one that passes, and two sent while a data file of the baseline is changed (by tool and by address) are answered FAIL, met, UNKNOWN and UNKNOWN; three notices are written':
+                      e['heads'] == [FAILED, MET, 'UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE', 'UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE'] and len(notices) == 3,
+                  'for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row':
+                      e['changed'] == 4 and e['changed_said'] == [(True, True, False, ['Verdict       UNKNOWN.  Decide'])] * 4,
+                  'for the failure, the notice and the answer say the check\'s files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words':
+                      e['failing'] == 2 and e['failing_said'] == [(True, True, ['Verdict       FAIL.  Computed '])] * 2 and e['old_words'] == 0,
+                  'after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced (4 runs, 1 not met, 2 unknown, 1 met) and the engineer\'s reason, also while the baseline is on hold; in process, other counts, none equal, are each put in their place':
+                      e['counts_a'] == (4, 1, 1, 2) and len(e['shown']) == 1 and '(4 official runs, 1 not met); 2 unknown, 1 met.' in e['shown'][0]
+                      and e['shown'][0].endswith('Reason given: Customer lowered the operating temperature (CR-21).') and e['on_hold'] == e['shown']
+                      and len(e['distinct']) == 1 and '(7 official runs, 2 not met); 4 unknown, 1 met.' in e['distinct'][0],
+                  'the new record\'s print gives the same counts and the engineer\'s reason, and both records verify': len(e['printed']) == 1 and 'after 4 official runs on it: 1 met, 1 not met, 2 unknown.' in e['printed'][0]
+                      and e['printed'][0].endswith('Reason given by the engineer: Customer lowered the operating temperature (CR-21).')
+                      and ok_a and ok_b and e['on_b'] == MET}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21}
 
 
 def main():

@@ -453,7 +453,7 @@ def render(ok: bool, checks: list, s: dict) -> str:
     if s['supersedes']:
         sp = s['supersedes']
         L.append(f"  CHANGED AFTER THE EVENT: this baseline replaced {sp.get('baseline_sha256', '')[:16]}… (rev {sp.get('revision', '?')}) after {sp.get('official_runs', '?')} official runs "
-                 f"on it, of which {sp.get('not_met', '?')} did not meet the requirement.  Reason given by the engineer: {sp.get('reason')}")
+                 f"on it: {sp.get('met', '?')} met, {sp.get('not_met', '?')} not met, {sp.get('unknown', '?')} unknown.  Reason given by the engineer: {sp.get('reason')}")   # Amendment 4: all three counts
     for c in s['criteria']:
         L.append(f"  limit: {c['quantity']} {'at most' if c['comparison'] == '<=' else 'at least'} {c['limit']} {c['units']}")
     L += ['', f"  Official runs through the service: {s['official_runs']}.  Met {s['met']}, not met {s['not_met']}, unknown {s['unknown']}.  Awaiting the engineer's disposition: {s['open']}."]

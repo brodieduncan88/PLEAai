@@ -356,13 +356,23 @@ HEADLINE = {'MET': 'DECLARED CHECK MET', 'LIMIT_NOT_MET': 'FAIL: REQUIREMENT NOT
             'CHECK_OUTPUT_INVALID': 'UNKNOWN: THE CHECK GAVE NO USABLE RESULT', 'RESULT_IMPLAUSIBLE': 'UNKNOWN: THE RESULT IS NOT PLAUSIBLE'}
 
 
+# Amendment 4: what a notice says of the check's files, by reason.  Only these reasons come only from evaluate(), so only for
+# them is it known whether the files were checked.  Any other reason says nothing of them.
+_CHECK_FILES = {'BASELINE_MISMATCH': 'The check or its data is not as baselined (the reason above), so the check was not run.',
+                'LIMIT_NOT_MET': 'The check and its data matched their baselined hashes when it ran.',
+                'RESULT_IMPLAUSIBLE': 'The check and its data matched their baselined hashes when it ran.'}
+NO_CARD_HEADLINE = 'UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE'
+
+
 def face(card: dict, verdict: dict, runs: dict | None = None, aid: str | None = None) -> str:
     """The verdict as an engineer reads it.  The same text goes to the assistant and to the engineer's inbox."""
     req, eng, chk = card['requirement'], card['responsible_engineer'], card['check']
-    L = [HEADLINE[verdict['reason_code']], '']
+    held = verdict.get('check') is not None             # Amendment 4: False only for the gate's refusal when it holds no usable copy of the card
+    L = [HEADLINE[verdict['reason_code']] if held else NO_CARD_HEADLINE, '']
     L.append(f"Requirement   {req['id']} rev {req['revision']}: {req['title']}")
     L.append(f"              \"{req['statement']}\"")
-    L.append(f"              baselined {card.get('baselined_at', '?')} by {eng['name']}, responsible engineer.  Baseline {card_hash(card)[:16]}…, unchanged.")
+    L.append(f"              baselined {card.get('baselined_at', '?')} by {eng['name']}, responsible engineer.  Baseline {card_hash(card)[:16]}…, "
+             + ('unchanged.' if held else 'as this client holds it.'))
     L.append(f"Load case     {card['load_case']}")
     L += design_lines(card['design_space'], verdict['design'])
     L.append(f"              design hash {verdict['design_sha256'][:16]}…")
@@ -384,15 +394,37 @@ def face(card: dict, verdict: dict, runs: dict | None = None, aid: str | None = 
     if verdict['basis']:
         L.append(f"Basis         As reported by the declared check (not verified by this tool): \"{verdict['basis']}\"")
     L.append(f"Check         {chk['id']} v{chk['version']}, written by {chk['author']}, reviewed by {chk['reviewed_by']}.  Hash {chk['sha256'][:16]}…")
-    L.append('Verdict       Computed by the verification service from the check\'s output and the baselined limits.  Not stated by the assistant.')
+    compared = verdict['reason_code'] in ('MET', 'LIMIT_NOT_MET')          # Amendment 4: only then were the check's numbers compared with the limits
+    L.append(f"Verdict       {verdict['verdict']}.  " + ("Computed by the verification service from the check's output and the baselined limits." if compared else
+                                                         'Decided by the verification service, not by comparing the check\'s numbers with the limits.') + '  Not stated by the assistant.')
     if runs:
         L.append(f"Official runs {runs['total']} through the service on this baseline: {runs['PASS']} met, {runs['FAIL']} not met, {runs['UNKNOWN']} unknown." + (f"  This run: {aid}." if aid else ''))
     L.append('')
     if verdict['verdict'] != 'PASS':
-        L.append('Nothing was changed.  The requirement, the limits, the load case and the check are exactly as baselined.')
-        L.append(f"{eng['name']} has been sent this result directly.  Only {eng['name']} can accept a failure or issue a revised baseline; the assistant cannot.")
-        L.append('What can happen next:  a different design inside the baselined design space (a new official run; this result stays on the record),')
-        L.append(f"                       or a decision by {eng['name']}: redesign, a revised baseline with a reason, or a recorded concession.")
-    L.append('This result says what the declared check returned against the baselined limits.  It does not say the check is correct.')
+        # Amendment 4 (12 November 2026).  This line used to say "Nothing was changed.  The requirement, the limits, the load
+        # case and the check are exactly as baselined." for every reason, so the notice of an UNKNOWN given because the check
+        # or its data was changed said the opposite of its own reason.  It now says only what is so for this verdict: the
+        # card was checked (its hash and the engineer's signature) before it was used; the check's files were checked only
+        # when the check ran, and were found changed for BASELINE_MISMATCH.  When the gate held no usable copy of the card
+        # (only the first client then prints this text, from its own copy), it says that and nothing else.
+        if not held:
+            L.append('The verification service could not use its stored copy of this baseline (the reason above), so nothing was checked against it.')
+        else:
+            L.append('The requirement, the limits and the load case are as baselined.')
+            if verdict['reason_code'] in _CHECK_FILES:
+                L.append(_CHECK_FILES[verdict['reason_code']])
+        L.append(f"{eng['name']} has been sent this result directly.  Only {eng['name']} can accept this result or issue a revised baseline; the assistant cannot.")
+        if not held:
+            L.append(f"What can happen next:  {eng['name']} restores the stored baseline, or issues a revised baseline with a reason.")
+            L.append('                       Until then no design can be verified against this baseline.')
+        elif verdict['reason_code'] == 'BASELINE_MISMATCH':
+            L.append(f"What can happen next:  {eng['name']} restores the check and its data to the files whose hashes the baseline holds,")
+            L.append('                       or issues a revised baseline with a reason.')
+            L.append('                       Until then no design inside the design space can be verified against this baseline.')
+        else:
+            L.append('What can happen next:  a different design inside the baselined design space (a new official run; this result stays on the record),')
+            L.append(f"                       or a decision by {eng['name']}: redesign, a revised baseline with a reason, or a recorded concession.")
+    L.append('This result says what the declared check returned against the baselined limits.  It does not say the check is correct.' if compared else
+             'This result gives no number from the check against the limits.  It does not say the check is correct.')
     L.append('The check does not cover: ' + '; '.join(chk['stated_limits']) + '.')
     return '\n'.join(L)

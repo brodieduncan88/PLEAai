@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Declared tests R1-R13 for the verification-record plug-in (verify/DECLARED_VERIFY.md states the expected outcomes),
-and R14 to R16, added by Amendment 2 (verify/DECLARED_AMEND2.md), and R17, added by Amendment 3 (verify/DECLARED_AMEND3.md).
+and R14 to R16, added by Amendment 2 (verify/DECLARED_AMEND2.md), R17, added by Amendment 3 (verify/DECLARED_AMEND3.md),
+and R18, added by Amendment 4 (verify/DECLARED_AMEND4.md).
 R1 to R13 are as they were declared.
 
-    verify_tests.py [R1 R5 ...]       all seventeen by default; writes outputs/verify_tests.json; exits 1 if any test fails
+    verify_tests.py [R1 R5 ...]       all eighteen by default; writes outputs/verify_tests.json; exits 1 if any test fails
 
 Each test makes a fresh deployment (verify/deploy.py: new keys, the released witness service and gate host under mutual
 TLS, the gate host loading verify_tools), baselines the self-test fixture in tests/verify_case/ as the responsible
@@ -522,7 +523,8 @@ def r14():
                  quoted_from_the_file=sum(mark in t for t in [o for _, o in got.values()] + [str(x.get('detail')) for x in runs] + notices),
                  service_path_shown=sum(str(r.s.home)[:30] in t for t in [o for _, o in got.values()] + [str(x.get('detail')) for x in runs] + notices),
                  reasons_given=sorted({x['detail'].split(': ', 1)[-1] for x in runs if 'is not a baseline card' in x['detail']}), status=s.get('status'), met=s.get('met'), unknown=s.get('unknown'), record_verifies=ok, why=why)
-        unknown = 'UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE'
+        unknown = 'UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE'     # Amendment 4: the first client's first line when the gate holds no usable copy of
+        # the card.  It was 'UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE', which is not what had happened.
         checks = {'each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass': len(got) == 14 and all(c == 3 and head(o) == unknown for c, o in got.values()),
                   'the tool returned a verdict every time and the gate host kept running': e['verdict_lines'] == e['tool_calls'] == 16 and host_alive,
                   'the record holds fourteen UNKNOWNs with the reason BASELINE_MISMATCH, and no run without a verdict': e['outcomes'].count(('UNKNOWN', 'BASELINE_MISMATCH')) == 14 and len(runs) == 16
@@ -851,7 +853,154 @@ def r17():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17}
+NOTICE_OLD = ('Nothing was changed', 'exactly as baselined', 'accept a failure')
+SAYS_MATCHED, SAYS_CHANGED = 'matched their baselined hashes when it ran', 'The check or its data is not as baselined'
+SAYS_COMPARED, SAYS_REDESIGN = 'says what the declared check returned', 'a different design inside'
+SAYS_RESTORE, SAYS_RESTORE_CARD = 'restores the check and its data to the files whose hashes the baseline holds', 'restores the stored baseline'
+SAYS_NO_CARD, SAYS_AS_BASELINED = 'could not use its stored copy of this baseline', 'The requirement, the limits and the load case are as baselined.'
+NO_CARD_NOTICE = 'UNKNOWN: A VERIFICATION RUN WAS ASKED FOR AND NO USABLE BASELINE IS HELD'
+NO_CARD_ANSWER = 'UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE'
+SAYS_RAN = 'The check and its data matched their baselined hashes when it ran.'
+CLAIMS = {'BASELINE_MISMATCH': [SAYS_AS_BASELINED, 'The check or its data is not as baselined (the reason above), so the check was not run.'],
+          'LIMIT_NOT_MET': [SAYS_AS_BASELINED, SAYS_RAN], 'RESULT_IMPLAUSIBLE': [SAYS_AS_BASELINED, SAYS_RAN]}
+NO_CARD_LINE = 'The verification service could not use its stored copy of this baseline (the reason above), so nothing was checked against it.'
+
+
+def verdict_row(code: str) -> str:
+    compared = code in ('MET', 'LIMIT_NOT_MET')
+    return (f'Verdict       {B.REASONS[code]}.  ' + ("Computed by the verification service from the check's output and the baselined limits." if compared else
+                                                    "Decided by the verification service, not by comparing the check's numbers with the limits.") + '  Not stated by the assistant.')
+
+
+def text_claims(t: str, code: str, held: bool = True) -> dict:
+    """What a notice or an answer says about its own run, against what the run was.  held is False when the gate held no
+    usable copy of the card, which only the first client's answer then sets out from its own copy.  (Amendment 4.)"""
+    lines = t.splitlines()
+    return {'old_words': sum(w in t for w in NOTICE_OLD),
+            'headline_fits': (B.HEADLINE[code] if held else NO_CARD_ANSWER) in lines,
+            'verdict_row_states_it': [l for l in lines if l.startswith('Verdict ')] == [verdict_row(code)],
+            'card_said_unchanged_only_when_held': ('unchanged' in t) == held,
+            'claims_are_the_allowed_lines': [l for l in lines if re.search(r'as baselined|matched|unchanged|[Nn]othing|intact', l) and not l.startswith(('              baselined ', B.SENT_MARK))]
+                                            == ([] if code == 'MET' else [NO_CARD_LINE] if not held else CLAIMS.get(code, [SAYS_AS_BASELINED])),
+            'accept_fits': code == 'MET' or 'can accept this result or issue a revised baseline; the assistant cannot.' in t,
+            'closing_fits': ('This result gives no number from the check against the limits.' in t) == (code not in ('MET', 'LIMIT_NOT_MET')),
+            'as_baselined_said_only_when_so': (SAYS_AS_BASELINED in t) == (held and code != 'MET'),
+            'files_matched_said_when_so': (SAYS_MATCHED in t) == (held and code in ('LIMIT_NOT_MET', 'RESULT_IMPLAUSIBLE')),
+            'files_changed_said_when_so': (SAYS_CHANGED in t) == (held and code == 'BASELINE_MISMATCH'),
+            'no_card_said_when_so': (SAYS_NO_CARD in t) == (not held),
+            'comparison_claimed_only_when_made': (SAYS_COMPARED in t) == (code in ('MET', 'LIMIT_NOT_MET')),
+            'next_step_fits': code == 'MET' or ((SAYS_RESTORE in t) == (held and code == 'BASELINE_MISMATCH') and (SAYS_RESTORE_CARD in t) == (not held)
+                                                and (SAYS_REDESIGN in t) == (held and code != 'BASELINE_MISMATCH')
+                                                and ('Until then no design inside the design space' in t) == (held and code == 'BASELINE_MISMATCH')
+                                                and (code != 'BASELINE_MISMATCH' or not re.search(r'(different|another|other|new) design', t)))}
+
+
+def r18():
+    """A notice and an answer say only what is so for their own run: each states its verdict, says the check's files matched only when the check ran on files that did, never says that nothing was changed, says so when the service held no usable copy of the card, and a revised baseline gives every count of the runs it replaced."""
+    r = Run('R18'); e = {}
+    try:
+        d = r.s.home / 'baselines' / r.h; card = r.env['card']
+        wanted = [(card['check']['file'], card['check']['sha256'])] + [(i['file'], i['sha256']) for i in card['inputs']]
+        files_match = lambda: all(B.sha256_hex((d / name).read_bytes()) == want for name, want in wanted)
+        runs = {}
+
+        def send(code, design):
+            runs[code] = {'files_matched': files_match(), 'answer': r.submit(design)}
+        send('LIMIT_NOT_MET', BAD)
+        send('DESIGN_OUTSIDE_BASELINE', {'material': 'PEEK', 'wall_mm': 3, 'mode': 'normal'})
+        for mode, code in (('crash', 'CHECK_ERROR'), ('garbage', 'CHECK_OUTPUT_INVALID'), ('huge', 'RESULT_IMPLAUSIBLE')):
+            send(code, {'material': 'PPS-GF40', 'wall_mm': 3, 'mode': mode})
+        data = d / 'materials.csv'; original = data.read_text()
+        data.write_text(original.replace('PA66-GF30,180', 'PA66-GF30,260'))
+        send('BASELINE_MISMATCH', {'material': 'PA66-GF30', 'wall_mm': 2.5, 'mode': 'normal'})
+        data.write_text(original)
+        stored = d / 'baseline.json'; good = stored.read_text()
+        stored.write_text(json.dumps({'card': 'not a card'}))                                          # the gate's own copy of the card is unusable
+        no_card = r.submit({'material': 'PA66-GF30', 'wall_mm': 2.6, 'mode': 'normal'})
+        stored.write_text(good)
+        send('MET', GOOD)
+        heads = {v: k for k, v in B.HEADLINE.items()}; heads[NO_CARD_NOTICE] = 'NO_CARD'
+        box = r.s.home / 'inbox' / r.h[:16]
+        notices = {}
+        for p in sorted(box.glob('*.txt')):
+            t = p.read_text(); code = next((heads[l] for l in t.splitlines() if l in heads), None); notices[code] = t
+        answers = {code: x['answer'][1] for code, x in runs.items()}
+        runs_row = [l for l in answers['MET'].splitlines() if l.startswith('Official runs ')]
+        in_notices = {code: text_claims(t, code) for code, t in notices.items() if code != 'NO_CARD'}
+        in_answers = {code: text_claims(t, code) for code, t in answers.items()}
+        no_card_answer = text_claims(no_card[1], 'BASELINE_MISMATCH', held=False)
+        truth = {code: x['files_matched'] for code, x in runs.items()}
+        # in process, every reason on two cards, and the gate's refusal when it holds no usable card: the same rules hold for the words face() writes
+        pump = json.loads((HERE.parent / 'verify' / 'cases' / 'pump-station-submain' / 'card.json').read_text())
+        pump['check'] = dict(pump['check'], sha256=pump['check'].get('sha256', '0' * 64))           # a draft card: no check hash until it is baselined
+        os.environ['VERIFY_HOME'] = str(OUT / 'R18' / 'tools_home')                                 # read by verify_tools when it is imported; nothing is written there
+        try:
+            import verify_tools
+        finally:
+            del os.environ['VERIFY_HOME']
+        in_process = {}
+        for c in [card, pump]:
+            for code in B.REASONS:
+                crit = B._blank(c)
+                if code in ('MET', 'LIMIT_NOT_MET'):
+                    crit = [dict(x, achieved='1', margin='0' if code == 'MET' else '-1', met=code == 'MET') for x in crit]
+                v = B._verdict(c, {}, code, crit, detail='a reason')
+                in_process[(c['requirement']['id'], code)] = text_claims(B.face(c, v), code)
+            refusal = verify_tools._refusal('0' * 64, {}, 'no signed baseline with this hash is held by the verification service: the stored file is not a baseline card')
+            in_process[(c['requirement']['id'], 'no usable card')] = text_claims(B.face(c, refusal), 'BASELINE_MISMATCH', held=False)
+        ok_a, why_a, s_a = r.checked()
+        rev = draft(); rev['requirement'] = dict(rev['requirement'], revision='B')
+        env_b = verify_ctl.revise(r.s.home, CASE, rev, r.s.engineer, r.h, 'Revision B, for R18 (CR-18).')
+        hb = env_b['baseline_sha256']; sup = env_b['card']['supersedes']
+        ws_b = OUT / 'R18' / 'workspace_b'; cfg_b = r.s.client_config(ws_b, hb)
+        on_b = r.s.submit(cfg_b, BAD)
+        shown = subprocess.run([PY, '-B', str(deploy.HERE / 'verify_client.py'), '--config', str(cfg_b), 'show'], capture_output=True, text=True, timeout=120).stdout
+        ok_b, checks_b, s_b = check_record.verify(r.s.record(hb, [ws_b / '.verify' / 'submissions.jsonl']), r.s.keys)
+        printed_b = check_record.render(ok_b, checks_b, s_b)
+        # in process: a supersedes block without the met and unknown counts, which revise() always writes and a card signed some other way might not, shows them as not known, never as 0
+        import verify_client
+        partial = {k: v for k, v in sup.items() if k not in ('met', 'unknown')}
+        client = verify_client.Client.__new__(verify_client.Client); client.card = dict(env_b['card'], supersedes=partial); client.baseline = hb
+        missing = [l for l in check_record.render(ok_b, checks_b, dict(s_b, supersedes=partial)).splitlines() if 'CHANGED AFTER THE EVENT' in l] + [l for l in client.show().splitlines() if 'SUPERSEDES' in l]
+        missing_counts = [x for x, l in zip(['? met, 2 not met, ? unknown.', '(8 official runs, 2 not met); ? unknown, ? met.'], missing) if x in l] if len(missing) == 2 else missing
+        counts = (s_a.get('official_runs'), s_a.get('met'), s_a.get('not_met'), s_a.get('unknown'))
+        e.update(exits=dict({code: x['answer'][0] for code, x in runs.items()}, NO_CARD=no_card[0]), notices=sorted(notices, key=str), in_notices=in_notices, in_answers=in_answers,
+                 no_card_answer=no_card_answer, no_card_head=head(no_card[1]), no_card_notice_old_words=sum(w in notices.get('NO_CARD', '') for w in NOTICE_OLD), files_matched=truth,
+                 in_process={f'{a} {b}': v for (a, b), v in in_process.items() if not all(v[k] for k in v if k != 'old_words') or v['old_words']},
+                 runs_row=runs_row, missing_counts=missing_counts, counts_a=counts, supersedes={k: sup.get(k) for k in ('official_runs', 'met', 'not_met', 'unknown')},
+                 banner_print=[l.strip() for l in printed_b.splitlines() if 'CHANGED AFTER THE EVENT' in l], banner_shown=[l.strip() for l in shown.splitlines() if 'SUPERSEDES' in l],
+                 on_b=(on_b[0], head(on_b[1])), record_a=(ok_a, why_a), record_b=(ok_b, [f'{n} {t}: {x}' for n, t, g, x in checks_b if not g]))
+        clean = lambda found: all(v['old_words'] == 0 and all(v[k] for k in v if k != 'old_words') for v in found.values())
+        checks = {'eight runs, one for each verdict the gate gives (MET, LIMIT_NOT_MET, DESIGN_OUTSIDE_BASELINE, CHECK_ERROR, CHECK_OUTPUT_INVALID, RESULT_IMPLAUSIBLE, BASELINE_MISMATCH) and one while the gate holds no usable copy of the card, are answered with the exit status of their verdict; the seven that are not a pass each have a notice':
+                      e['exits'] == {'LIMIT_NOT_MET': 2, 'DESIGN_OUTSIDE_BASELINE': 2, 'CHECK_ERROR': 3, 'CHECK_OUTPUT_INVALID': 3, 'RESULT_IMPLAUSIBLE': 3, 'BASELINE_MISMATCH': 3, 'MET': 0, 'NO_CARD': 3}
+                      and set(notices) == set(B.REASONS) - {'MET'} | {'NO_CARD'},
+                  'no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice\'s first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were':
+                      all(v['old_words'] == 0 and v['headline_fits'] and v['verdict_row_states_it'] for v in in_notices.values()) and e['no_card_notice_old_words'] == 0,
+                  'a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not':
+                      all(v['files_matched_said_when_so'] and v['files_changed_said_when_so'] for v in in_notices.values())
+                      and truth['LIMIT_NOT_MET'] is True and truth['RESULT_IMPLAUSIBLE'] is True and truth['BASELINE_MISMATCH'] is False,
+                  'every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design':
+                      clean(in_notices) and len(in_notices) == 6,
+                  'the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown':
+                      len(in_answers) == 7 and clean(in_answers) and len(e['runs_row']) == 1 and e['runs_row'][0].startswith('Official runs 8 through the service on this baseline: 1 met, 2 not met, 5 unknown.'),
+                  'while the gate holds no usable copy of the card, the first client\'s answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored':
+                      e['no_card_head'] == NO_CARD_ANSWER and clean({'no card': no_card_answer}),
+                  'in process, for every verdict on two cards (the fixture and the pump station), and for the gate\'s refusal when it holds no usable card, what face() writes keeps the same rules':
+                      len(in_process) == 16 and clean(in_process),
+                  'the revised baseline counts every run on the one it replaced, and the counts are the old record\'s: 8 runs, 1 met, 2 not met, 5 unknown':
+                      e['supersedes'] == {'official_runs': 8, 'met': 1, 'not_met': 2, 'unknown': 5} and counts == (8, 1, 2, 5) and ok_a,
+                  'the new record\'s print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes':
+                      len(e['banner_print']) == 1 and 'after 8 official runs on it: 1 met, 2 not met, 5 unknown.' in e['banner_print'][0]
+                      and len(e['banner_shown']) == 1 and '(8 official runs, 2 not met); 5 unknown, 1 met.' in e['banner_shown'][0]
+                      and e['banner_print'][0].endswith('Reason given by the engineer: Revision B, for R18 (CR-18).') and e['banner_shown'][0].endswith('Reason given: Revision B, for R18 (CR-18).')
+                      and e['missing_counts'] == ['? met, 2 not met, ? unknown.', '(8 official runs, 2 not met); ? unknown, ? met.'],
+                  'the new record verifies': ok_b and on_b[0] == 2}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18}
 
 
 def main():

@@ -178,7 +178,8 @@ def requirement_text(card: dict, baseline_hash: str, state: str = 'OPEN') -> str
         L.append(f"  RUNS ON THIS BASELINE ARE ON HOLD by {eng['name']}.")
     if card.get('supersedes'):
         s = card['supersedes']
-        L.append(f"  THIS BASELINE SUPERSEDES {s['baseline_sha256'][:16]}… ({s.get('official_runs', '?')} official runs, {s.get('not_met', '?')} not met).  Reason given: {s['reason']}")
+        L.append(f"  THIS BASELINE SUPERSEDES {s['baseline_sha256'][:16]}… ({s.get('official_runs', '?')} official runs, {s.get('not_met', '?')} not met); "
+                 f"{s.get('unknown', '?')} unknown, {s.get('met', '?')} met.  Reason given: {s['reason']}")     # Amendment 4: the unknown and met counts too
     L += [f"  \"{req['statement']}\"", f"  Source: {req['source']}",
           f"  Baselined {card.get('baselined_at', '?')} by {eng['name']}, responsible engineer.  Baseline hash {baseline_hash}", '', 'ACCEPTANCE LIMITS']
     for k in card['criteria']:

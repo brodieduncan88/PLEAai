@@ -1,0 +1,3806 @@
+{
+ "format": "verification-record/1",
+ "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+ "baseline": {
+  "card": {
+   "requirement": {
+    "id": "REQ-EL-021",
+    "revision": "A",
+    "title": "Pump station sub-main: voltage drop and breaker/cable coordination",
+    "statement": "The 400 V sub-main to the remote pump station shall keep the total voltage drop from the point of supply to the pump-station terminals within 5 % of 400 V at the design current of 120 A, and the breaker and cable shall be coordinated (Ib <= In <= Iz, with Iz corrected for site ambient temperature).",
+    "source": "Site electrical design basis EDB-07, section 3; wiring-rules voltage-drop limit for a supply from the distributor's shared low-voltage network"
+   },
+   "criteria": [
+    {
+     "id": "voltage_drop",
+     "quantity": "total voltage drop, point of supply to pump-station terminals",
+     "comparison": "<=",
+     "limit": "5.0",
+     "units": "% of 400 V",
+     "plausible": {
+      "min": "1.3",
+      "max": "60"
+     }
+    },
+    {
+     "id": "coordination",
+     "quantity": "coordination utilisation, the larger of Ib/In and In/Iz",
+     "comparison": "<=",
+     "limit": "1.0",
+     "units": "(ratio)",
+     "plausible": {
+      "min": "0.2",
+      "max": "5"
+     }
+    }
+   ],
+   "load_case": "Balanced three-phase, 400 V, 50 Hz. Design current 120 A per phase (assessed maximum demand 100 A plus the site's 20 % spare allowance) at 0.85 lagging power factor. Installed route length 400 m. 1.2 % of voltage drop is already used elsewhere between the point of supply and the load. Site ambient: 50 C shaded air, 35 C soil at 0.5 m.",
+   "design_space": {
+    "size_mm2": {
+     "choice": [
+      25,
+      35,
+      50,
+      70,
+      95
+     ]
+    },
+    "install": {
+     "choice": [
+      "air",
+      "buried",
+      "duct"
+     ]
+    },
+    "breaker_A": {
+     "choice": [
+      100,
+      125,
+      160,
+      200,
+      250
+     ]
+    }
+   },
+   "check": {
+    "id": "CHK-EL-SUBMAIN",
+    "version": "1",
+    "file": "check.py",
+    "author": "R. Tan",
+    "reviewed_by": "P. Moreau",
+    "stated_limits": [
+     "earth-fault loop impedance and disconnection time at the far end",
+     "short-circuit withstand of the cable and breaking capacity of the breaker",
+     "motor-starting voltage dip",
+     "the overload tripping condition I2 <= 1.45 Iz and breaker settings",
+     "grouping with other circuits, solar gain, and soil other than 1.2 K.m/W at 0.5 m",
+     "harmonics, unbalance and neutral current",
+     "whether the maximum demand, the route length and the 1.2 % used elsewhere are themselves right"
+    ],
+    "sha256": "561976e80c0db1d315d2d827c1350b312da8f760d1b186c151fe19dd25b03922"
+   },
+   "inputs": [
+    {
+     "file": "cables.csv",
+     "sha256": "562eef8362567e507135ef6b1a60d2058d4f4858f753d47eb1596353a4da5cc9"
+    },
+    {
+     "file": "site.json",
+     "sha256": "ee53ddd714cada6f743fa8986d42b9c2ef211349cdc4fd766241dd2620c66f48"
+    }
+   ],
+   "controls": [
+    {
+     "name": "50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)",
+     "design": {
+      "size_mm2": 50,
+      "install": "air",
+      "breaker_A": 125
+     },
+     "expect": "FAIL"
+    },
+    {
+     "name": "150 mm2 buried, 100 A breaker: coordination must fail (Ib 120 A above In 100 A)",
+     "design": {
+      "size_mm2": 150,
+      "install": "buried",
+      "breaker_A": 100
+     },
+     "expect": "FAIL"
+    },
+    {
+     "name": "150 mm2 buried, 125 A: both must pass (a size outside the approved list, used only to show the check can pass)",
+     "design": {
+      "size_mm2": 150,
+      "install": "buried",
+      "breaker_A": 125
+     },
+     "expect": "PASS"
+    }
+   ],
+   "responsible_engineer": {
+    "name": "K. Dalton",
+    "key": "135549bfa440773ba1011f0aa238f295a0219a7a9f7e0e6874bc4e32b31fa1b4"
+   },
+   "format": "verification-baseline/1",
+   "supersedes": null,
+   "baselined_at": "2026-11-12T21:28:42Z"
+  },
+  "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a",
+  "controls_run": [
+   {
+    "name": "50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)",
+    "expect": "FAIL",
+    "verdict": "FAIL",
+    "reason_code": "LIMIT_NOT_MET",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "achieved": "10.26",
+      "limit": "5.0",
+      "met": false
+     },
+     {
+      "id": "coordination",
+      "achieved": "0.96",
+      "limit": "1.0",
+      "met": true
+     }
+    ]
+   },
+   {
+    "name": "150 mm2 buried, 100 A breaker: coordination must fail (Ib 120 A above In 100 A)",
+    "expect": "FAIL",
+    "verdict": "FAIL",
+    "reason_code": "LIMIT_NOT_MET",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "achieved": "4.36",
+      "limit": "5.0",
+      "met": true
+     },
+     {
+      "id": "coordination",
+      "achieved": "1.2",
+      "limit": "1.0",
+      "met": false
+     }
+    ]
+   },
+   {
+    "name": "150 mm2 buried, 125 A: both must pass (a size outside the approved list, used only to show the check can pass)",
+    "expect": "PASS",
+    "verdict": "PASS",
+    "reason_code": "MET",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "achieved": "4.36",
+      "limit": "5.0",
+      "met": true
+     },
+     {
+      "id": "coordination",
+      "achieved": "0.96",
+      "limit": "1.0",
+      "met": true
+     }
+    ]
+   }
+  ],
+  "signature": {
+   "signer": "135549bfa440773ba1011f0aa238f295a0219a7a9f7e0e6874bc4e32b31fa1b4",
+   "signature": "073c9ef092275d17fcfcd320d9010939453fa1cd0fe92f41dec7ed4ed80bc20666cf5469363b9e7c056d367ff0a920dede1ea0341d29549010645c1790923f08"
+  }
+ },
+ "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a",
+ "keys": {
+  "witness": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+  "gate": "2538c96d6f0a99bfd8c251c4eebe19d6acb439af025f29633ca3ce6d082657f2",
+  "engineer": "135549bfa440773ba1011f0aa238f295a0219a7a9f7e0e6874bc4e32b31fa1b4"
+ },
+ "provisioning": {
+  "record": "PROVISION",
+  "seq": 3619,
+  "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+  "k": 1000,
+  "m": 0,
+  "issuer": "plea_control",
+  "contract": "attempt-budget contract v3.1",
+  "release": "plea-gateway v1.2",
+  "created_at": "2026-11-12T21:28:42.608041Z",
+  "prev_hash": "5c84512f8979693ede043594215c21c471055252761fecaed552ce0f47f9a16a",
+  "hash": "6cc853d7b86dadfbb6f20590d78a6f03b42ab4055412f4897f584570d1fedc02"
+ },
+ "audit": [
+  {
+   "seq": 1,
+   "op": [
+    "RESERVE",
+    "a-3210cb5875deb371",
+    "verify:52654a1403dee8c39e3d7f1a"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_COMMITTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     0,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "RESERVING",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "6cc853d7b86dadfbb6f20590d78a6f03b42ab4055412f4897f584570d1fedc02",
+   "hash": "c99bc56d6777b65abd2bef85aef8277a3277fd8a9777091d6623f449e4f3d13a"
+  },
+  {
+   "seq": 2,
+   "op": [
+    "ACCEPT_RESERVATION",
+    "a-3210cb5875deb371"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     0,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "RESERVED",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "c99bc56d6777b65abd2bef85aef8277a3277fd8a9777091d6623f449e4f3d13a",
+   "hash": "0446a078ecbebe8e8112a8a3af76d8ff7a134c41291df01bf72ea89c934f5f11"
+  },
+  {
+   "seq": 3,
+   "op": [
+    "TOKEN",
+    "a-3210cb5875deb371"
+   ],
+   "kind": "APPLIED",
+   "code": "TOKEN_RELEASED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     0,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "TOKEN",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "0446a078ecbebe8e8112a8a3af76d8ff7a134c41291df01bf72ea89c934f5f11",
+   "hash": "4ab47b7a7e45fe56d645a563a73547c1d00efb7f8c4a0efa01aa597d4a29822d"
+  },
+  {
+   "seq": 4,
+   "op": [
+    "START",
+    "a-3210cb5875deb371",
+    "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_COMMITTED_LOCALLY",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     0,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "INTENT_PENDING",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "4ab47b7a7e45fe56d645a563a73547c1d00efb7f8c4a0efa01aa597d4a29822d",
+   "hash": "fd6db4e99e121b3730b13ae96846423b945834fcf69279b7752215efaeb9e59c"
+  },
+  {
+   "seq": 5,
+   "op": [
+    "ACCEPT_INTENT",
+    "a-3210cb5875deb371"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "CONSUMED",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "fd6db4e99e121b3730b13ae96846423b945834fcf69279b7752215efaeb9e59c",
+   "hash": "a6bdf60cd47590e6f8aed8912c3b2e1293779583b98a3004326c30f25a8b2c30"
+  },
+  {
+   "seq": 6,
+   "op": [
+    "RECEIPT",
+    "a-3210cb5875deb371"
+   ],
+   "kind": "APPLIED",
+   "code": "RECEIPT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "CONSUMED",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "a6bdf60cd47590e6f8aed8912c3b2e1293779583b98a3004326c30f25a8b2c30",
+   "hash": "f70e68cd0aa36546fec14e07f6e9766b8b21684f9d1897b57c0c0940b8c926b9"
+  },
+  {
+   "seq": 7,
+   "op": [
+    "CROSS",
+    "a-3210cb5875deb371"
+   ],
+   "kind": "APPLIED",
+   "code": "CROSSED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "CONSUMED",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "f70e68cd0aa36546fec14e07f6e9766b8b21684f9d1897b57c0c0940b8c926b9",
+   "hash": "99329ff312fed455d6e7c72266aaa031a3daa435b6f627cd2058f6679403a6a4"
+  },
+  {
+   "seq": 8,
+   "op": [
+    "RECONCILE",
+    "a-3210cb5875deb371",
+    "EFFECT",
+    "AUTHORISED"
+   ],
+   "kind": "APPLIED",
+   "code": "VERDICT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "99329ff312fed455d6e7c72266aaa031a3daa435b6f627cd2058f6679403a6a4",
+   "hash": "1f30334672d6c8aa0be23e10db5cbee601461bc32aa4777feb7ae4815b11a5b1"
+  },
+  {
+   "seq": 9,
+   "op": [
+    "RESERVE",
+    "a-affdb4c58dfcb038",
+    "verify:061257dea4148bf48513bcca"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_COMMITTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "RESERVING",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "1f30334672d6c8aa0be23e10db5cbee601461bc32aa4777feb7ae4815b11a5b1",
+   "hash": "15403fe3d12fdb7b0aafd5e03fdd9c776624a22d471a4fa623dd6b3546b15f4f"
+  },
+  {
+   "seq": 10,
+   "op": [
+    "ACCEPT_RESERVATION",
+    "a-affdb4c58dfcb038"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "RESERVED",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "15403fe3d12fdb7b0aafd5e03fdd9c776624a22d471a4fa623dd6b3546b15f4f",
+   "hash": "4cfcdcce5ff68f595c01c8eb8bc1b6f9dbee1b35b7841eaf5249a9334dbb241d"
+  },
+  {
+   "seq": 11,
+   "op": [
+    "TOKEN",
+    "a-affdb4c58dfcb038"
+   ],
+   "kind": "APPLIED",
+   "code": "TOKEN_RELEASED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     1,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "TOKEN",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "4cfcdcce5ff68f595c01c8eb8bc1b6f9dbee1b35b7841eaf5249a9334dbb241d",
+   "hash": "2a6f70f0c4bb2cb538e8a9a100678c47c6177c6d3f600cb684760e159b9bd78f"
+  },
+  {
+   "seq": 12,
+   "op": [
+    "START",
+    "a-affdb4c58dfcb038",
+    "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_COMMITTED_LOCALLY",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     1,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "INTENT_PENDING",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "2a6f70f0c4bb2cb538e8a9a100678c47c6177c6d3f600cb684760e159b9bd78f",
+   "hash": "97d109e9ca361b1f366d4cc6d267b978b485abc7c7a166a2cf39406ec82c7872"
+  },
+  {
+   "seq": 13,
+   "op": [
+    "ACCEPT_INTENT",
+    "a-affdb4c58dfcb038"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "CONSUMED",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "97d109e9ca361b1f366d4cc6d267b978b485abc7c7a166a2cf39406ec82c7872",
+   "hash": "44002363a8aee4733b9f4791ba053e7a82cabe144dce9724ec0ed950d3d58670"
+  },
+  {
+   "seq": 14,
+   "op": [
+    "RECEIPT",
+    "a-affdb4c58dfcb038"
+   ],
+   "kind": "APPLIED",
+   "code": "RECEIPT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "CONSUMED",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "44002363a8aee4733b9f4791ba053e7a82cabe144dce9724ec0ed950d3d58670",
+   "hash": "1b572367287d4d144ef74d69680e97c5aa5e60a91d0892b52a8d529b8f392e38"
+  },
+  {
+   "seq": 15,
+   "op": [
+    "CROSS",
+    "a-affdb4c58dfcb038"
+   ],
+   "kind": "APPLIED",
+   "code": "CROSSED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "CONSUMED",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "1b572367287d4d144ef74d69680e97c5aa5e60a91d0892b52a8d529b8f392e38",
+   "hash": "c983e60f1f26ccb28a59e0071106f9bdaa0b9c5667520f315ad6b315c074e616"
+  },
+  {
+   "seq": 16,
+   "op": [
+    "RECONCILE",
+    "a-affdb4c58dfcb038",
+    "EFFECT",
+    "AUTHORISED"
+   ],
+   "kind": "APPLIED",
+   "code": "VERDICT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "c983e60f1f26ccb28a59e0071106f9bdaa0b9c5667520f315ad6b315c074e616",
+   "hash": "a55d86aaf9bc0283051c296ecca268dcb587d60ab42741d3913c6e32ac0fa4fd"
+  },
+  {
+   "seq": 17,
+   "op": [
+    "RESERVE",
+    "a-93cd0f4b59d0d4e3",
+    "verify:9ec47b4b392ab49e71df7c0a"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_COMMITTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "RESERVING",
+      null,
+      false,
+      false
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "a55d86aaf9bc0283051c296ecca268dcb587d60ab42741d3913c6e32ac0fa4fd",
+   "hash": "ea3717cf6bddc7d26dcd88f02fe3319938b2fcff877a2825587882cb6da603f5"
+  },
+  {
+   "seq": 18,
+   "op": [
+    "ACCEPT_RESERVATION",
+    "a-93cd0f4b59d0d4e3"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "RESERVED",
+      null,
+      false,
+      false
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "ea3717cf6bddc7d26dcd88f02fe3319938b2fcff877a2825587882cb6da603f5",
+   "hash": "6919b5ad5d23bcb871f3e145ac06044ac568738a2b4c1750d2910a2b7832297a"
+  },
+  {
+   "seq": 19,
+   "op": [
+    "TOKEN",
+    "a-93cd0f4b59d0d4e3"
+   ],
+   "kind": "APPLIED",
+   "code": "TOKEN_RELEASED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     2,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "TOKEN",
+      null,
+      false,
+      false
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "6919b5ad5d23bcb871f3e145ac06044ac568738a2b4c1750d2910a2b7832297a",
+   "hash": "7f40ff69e8593ddb480d7bf4669a920a4f41acf2653c7f307e25a81520cdec13"
+  },
+  {
+   "seq": 20,
+   "op": [
+    "START",
+    "a-93cd0f4b59d0d4e3",
+    "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_COMMITTED_LOCALLY",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     2,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "INTENT_PENDING",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      false,
+      false
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "7f40ff69e8593ddb480d7bf4669a920a4f41acf2653c7f307e25a81520cdec13",
+   "hash": "e4d5aabe08c29e67a483b161bb972efb2a3826d21df0f19ab738ce4da9bcf283"
+  },
+  {
+   "seq": 21,
+   "op": [
+    "ACCEPT_INTENT",
+    "a-93cd0f4b59d0d4e3"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "CONSUMED",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      false,
+      false
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "e4d5aabe08c29e67a483b161bb972efb2a3826d21df0f19ab738ce4da9bcf283",
+   "hash": "612dfbcf93df09534d803518d6b665fa28515a2b188390c3564833f37a7c274b"
+  },
+  {
+   "seq": 22,
+   "op": [
+    "RECEIPT",
+    "a-93cd0f4b59d0d4e3"
+   ],
+   "kind": "APPLIED",
+   "code": "RECEIPT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "CONSUMED",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      false
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "612dfbcf93df09534d803518d6b665fa28515a2b188390c3564833f37a7c274b",
+   "hash": "b481354f4b5e007959ae9319502b129ae57312c53a5f72cd5c6e0442f3d4b96d"
+  },
+  {
+   "seq": 23,
+   "op": [
+    "CROSS",
+    "a-93cd0f4b59d0d4e3"
+   ],
+   "kind": "APPLIED",
+   "code": "CROSSED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "CONSUMED",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "b481354f4b5e007959ae9319502b129ae57312c53a5f72cd5c6e0442f3d4b96d",
+   "hash": "ff4609abc114236e2d302ccee53034c41e6f4e040af717a0be1526c5ffc106e4"
+  },
+  {
+   "seq": 24,
+   "op": [
+    "RECONCILE",
+    "a-93cd0f4b59d0d4e3",
+    "EFFECT",
+    "AUTHORISED"
+   ],
+   "kind": "APPLIED",
+   "code": "VERDICT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "ff4609abc114236e2d302ccee53034c41e6f4e040af717a0be1526c5ffc106e4",
+   "hash": "2bac8ae00a6b9c4544684bad9f2436b04d38edf908ac7a4499c619697b0267f5"
+  },
+  {
+   "seq": 25,
+   "op": [
+    "RESERVE",
+    "a-e2f86891cd05d9f0",
+    "verify:9438479e72b7ac8c02ba6f86"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_COMMITTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "RESERVING",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "2bac8ae00a6b9c4544684bad9f2436b04d38edf908ac7a4499c619697b0267f5",
+   "hash": "af31a489224f88d2c95b48d2485764770dfa46d5253f5db252b7e849349a2931"
+  },
+  {
+   "seq": 26,
+   "op": [
+    "ACCEPT_RESERVATION",
+    "a-e2f86891cd05d9f0"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "RESERVED",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "af31a489224f88d2c95b48d2485764770dfa46d5253f5db252b7e849349a2931",
+   "hash": "3168821e72dbef12c5b30b74e070a82d017518f0b7632597fc4b24e0eccd19f8"
+  },
+  {
+   "seq": 27,
+   "op": [
+    "TOKEN",
+    "a-e2f86891cd05d9f0"
+   ],
+   "kind": "APPLIED",
+   "code": "TOKEN_RELEASED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     3,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "TOKEN",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "3168821e72dbef12c5b30b74e070a82d017518f0b7632597fc4b24e0eccd19f8",
+   "hash": "ef0b2b9b158c041a433089f2d26a76f11b6c3421cf9d45121383f788c3470ba9"
+  },
+  {
+   "seq": 28,
+   "op": [
+    "START",
+    "a-e2f86891cd05d9f0",
+    "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_COMMITTED_LOCALLY",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     4,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     3,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "INTENT_PENDING",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "ef0b2b9b158c041a433089f2d26a76f11b6c3421cf9d45121383f788c3470ba9",
+   "hash": "6efbef0c3d854f8859330eb05a389933f017b36c8752274d7cb8ee2183eb6a12"
+  },
+  {
+   "seq": 29,
+   "op": [
+    "ACCEPT_INTENT",
+    "a-e2f86891cd05d9f0"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     4,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     4,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "CONSUMED",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "6efbef0c3d854f8859330eb05a389933f017b36c8752274d7cb8ee2183eb6a12",
+   "hash": "5f22a755b3706792e26defe75f525a1ebcce7ae69f7ba0df769339584ea571a6"
+  },
+  {
+   "seq": 30,
+   "op": [
+    "RECEIPT",
+    "a-e2f86891cd05d9f0"
+   ],
+   "kind": "APPLIED",
+   "code": "RECEIPT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     4,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     4,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "CONSUMED",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "5f22a755b3706792e26defe75f525a1ebcce7ae69f7ba0df769339584ea571a6",
+   "hash": "c5ed371ef0bf1a9edbecd8d7e0327e31483a8ec2ec8a2c27efa7eaaa77e96a2d"
+  },
+  {
+   "seq": 31,
+   "op": [
+    "CROSS",
+    "a-e2f86891cd05d9f0"
+   ],
+   "kind": "APPLIED",
+   "code": "CROSSED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     4,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     4,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "CONSUMED",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "c5ed371ef0bf1a9edbecd8d7e0327e31483a8ec2ec8a2c27efa7eaaa77e96a2d",
+   "hash": "b47048a82b1b3dd5e5b9439691c6e465a43b560f19f7da0725e8075c6665528f"
+  },
+  {
+   "seq": 32,
+   "op": [
+    "RECONCILE",
+    "a-e2f86891cd05d9f0",
+    "EFFECT",
+    "AUTHORISED"
+   ],
+   "kind": "APPLIED",
+   "code": "VERDICT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     4,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     4,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "b47048a82b1b3dd5e5b9439691c6e465a43b560f19f7da0725e8075c6665528f",
+   "hash": "4a5fe107536ae467185d2932ff7f6c4a1798ff7af597e3045ec7046cddf31ba0"
+  },
+  {
+   "seq": 33,
+   "op": [
+    "RESERVE",
+    "a-bd8e3f544d258a16",
+    "verify:9fe59e97b3ba7f21443ffefc"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_COMMITTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     4,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     4,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "RESERVING",
+      null,
+      false,
+      false
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "4a5fe107536ae467185d2932ff7f6c4a1798ff7af597e3045ec7046cddf31ba0",
+   "hash": "6b26ac5d0b6c0dd69eb251734692eba27ff59e6aa0214fe5840c3fe18eafdda1"
+  },
+  {
+   "seq": 34,
+   "op": [
+    "ACCEPT_RESERVATION",
+    "a-bd8e3f544d258a16"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     4,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     4,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "RESERVED",
+      null,
+      false,
+      false
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "6b26ac5d0b6c0dd69eb251734692eba27ff59e6aa0214fe5840c3fe18eafdda1",
+   "hash": "77d1af97d518abfac04dc289b6b04f41488d733590d57be7d7a1a5b1b2862665"
+  },
+  {
+   "seq": 35,
+   "op": [
+    "TOKEN",
+    "a-bd8e3f544d258a16"
+   ],
+   "kind": "APPLIED",
+   "code": "TOKEN_RELEASED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     4,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     4,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "TOKEN",
+      null,
+      false,
+      false
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "77d1af97d518abfac04dc289b6b04f41488d733590d57be7d7a1a5b1b2862665",
+   "hash": "750260ed95ce8555ce13b2d48bb23c94d93e68588e36ea97bbe84266653fbc30"
+  },
+  {
+   "seq": 36,
+   "op": [
+    "START",
+    "a-bd8e3f544d258a16",
+    "n-23e196e68590cc01b808c116f71cd41e03b04fde"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_COMMITTED_LOCALLY",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     5,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     4,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "INTENT_PENDING",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      false,
+      false
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "750260ed95ce8555ce13b2d48bb23c94d93e68588e36ea97bbe84266653fbc30",
+   "hash": "44786b1dbb6c320cc84a5ce2e1efe0b81d1e37dcd7366c289b7e37ef1266ce0e"
+  },
+  {
+   "seq": 37,
+   "op": [
+    "ACCEPT_INTENT",
+    "a-bd8e3f544d258a16"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     5,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     5,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "CONSUMED",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      false,
+      false
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "44786b1dbb6c320cc84a5ce2e1efe0b81d1e37dcd7366c289b7e37ef1266ce0e",
+   "hash": "e906adb9c68dd09711f88b83176189ce47154f988ed57de6d8d2f6957a9da3e0"
+  },
+  {
+   "seq": 38,
+   "op": [
+    "RECEIPT",
+    "a-bd8e3f544d258a16"
+   ],
+   "kind": "APPLIED",
+   "code": "RECEIPT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     5,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     5,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "CONSUMED",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      false
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "e906adb9c68dd09711f88b83176189ce47154f988ed57de6d8d2f6957a9da3e0",
+   "hash": "94aafb80c14ef94c9463196d9f7e88c7d88ca4f0363aa488fcc77b804318caec"
+  },
+  {
+   "seq": 39,
+   "op": [
+    "CROSS",
+    "a-bd8e3f544d258a16"
+   ],
+   "kind": "APPLIED",
+   "code": "CROSSED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     5,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     5,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "CONSUMED",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "94aafb80c14ef94c9463196d9f7e88c7d88ca4f0363aa488fcc77b804318caec",
+   "hash": "bac2ec4ef3ced30ee79ddcdcccacf3fe7e4d179f53ff6fa9fbd18e145cf4f2ec"
+  },
+  {
+   "seq": 40,
+   "op": [
+    "RECONCILE",
+    "a-bd8e3f544d258a16",
+    "EFFECT",
+    "AUTHORISED"
+   ],
+   "kind": "APPLIED",
+   "code": "VERDICT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     5,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     5,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "EFFECT",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "bac2ec4ef3ced30ee79ddcdcccacf3fe7e4d179f53ff6fa9fbd18e145cf4f2ec",
+   "hash": "4e3a9b653fe19efddb29515aa770b4e8601e344f477bbb1f895d24ff16479a7f"
+  },
+  {
+   "seq": 41,
+   "op": [
+    "RESERVE",
+    "a-ffa53d199ae75338",
+    "verify:3c1164b967758cb0c6356328"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_COMMITTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     5,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     5,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "EFFECT",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ],
+     [
+      "a-ffa53d199ae75338",
+      "verify:3c1164b967758cb0c6356328",
+      "RESERVING",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "4e3a9b653fe19efddb29515aa770b4e8601e344f477bbb1f895d24ff16479a7f",
+   "hash": "fbd972ab3ee720fafb8ff68c2ddc013e1f30a12b733bdd5a9f17d80a627f4c23"
+  },
+  {
+   "seq": 42,
+   "op": [
+    "ACCEPT_RESERVATION",
+    "a-ffa53d199ae75338"
+   ],
+   "kind": "APPLIED",
+   "code": "RESERVATION_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     5,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     5,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "EFFECT",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ],
+     [
+      "a-ffa53d199ae75338",
+      "verify:3c1164b967758cb0c6356328",
+      "RESERVED",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "fbd972ab3ee720fafb8ff68c2ddc013e1f30a12b733bdd5a9f17d80a627f4c23",
+   "hash": "7e14f6c3708b800043a7548521940a90107952ebc52c8e46d75d33b460410b81"
+  },
+  {
+   "seq": 43,
+   "op": [
+    "TOKEN",
+    "a-ffa53d199ae75338"
+   ],
+   "kind": "APPLIED",
+   "code": "TOKEN_RELEASED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     1,
+     5,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     5,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "EFFECT",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ],
+     [
+      "a-ffa53d199ae75338",
+      "verify:3c1164b967758cb0c6356328",
+      "TOKEN",
+      null,
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "7e14f6c3708b800043a7548521940a90107952ebc52c8e46d75d33b460410b81",
+   "hash": "985c57028d2cfe7eb9fe1457b1db8c52543c3027a6f281f58c5c7cc8c1039866"
+  },
+  {
+   "seq": 44,
+   "op": [
+    "START",
+    "a-ffa53d199ae75338",
+    "n-8c1190b2f1e8ab15876d42d708db3d1a5020feec"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_COMMITTED_LOCALLY",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     6,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     1,
+     5,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "EFFECT",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ],
+     [
+      "a-ffa53d199ae75338",
+      "verify:3c1164b967758cb0c6356328",
+      "INTENT_PENDING",
+      "n-8c1190b2f1e8ab15876d42d708db3d1a5020feec",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "985c57028d2cfe7eb9fe1457b1db8c52543c3027a6f281f58c5c7cc8c1039866",
+   "hash": "897cabf52568ca77ade0dde893480f1bc0d27d5f8d3bebbeba1d56567e1a519c"
+  },
+  {
+   "seq": 45,
+   "op": [
+    "ACCEPT_INTENT",
+    "a-ffa53d199ae75338"
+   ],
+   "kind": "APPLIED",
+   "code": "INTENT_ACCEPTED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     6,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     6,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "EFFECT",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ],
+     [
+      "a-ffa53d199ae75338",
+      "verify:3c1164b967758cb0c6356328",
+      "CONSUMED",
+      "n-8c1190b2f1e8ab15876d42d708db3d1a5020feec",
+      false,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "897cabf52568ca77ade0dde893480f1bc0d27d5f8d3bebbeba1d56567e1a519c",
+   "hash": "c4c2bf7b2033126e48b9633cf23a23214d52a011ab47f19a24d176fe07be3da5"
+  },
+  {
+   "seq": 46,
+   "op": [
+    "RECEIPT",
+    "a-ffa53d199ae75338"
+   ],
+   "kind": "APPLIED",
+   "code": "RECEIPT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     6,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     6,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "EFFECT",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ],
+     [
+      "a-ffa53d199ae75338",
+      "verify:3c1164b967758cb0c6356328",
+      "CONSUMED",
+      "n-8c1190b2f1e8ab15876d42d708db3d1a5020feec",
+      true,
+      false
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "c4c2bf7b2033126e48b9633cf23a23214d52a011ab47f19a24d176fe07be3da5",
+   "hash": "c6838381249be735ed32ae59bf1bfc96baf14eeda09fa4002b667fb23ea1ece7"
+  },
+  {
+   "seq": 47,
+   "op": [
+    "CROSS",
+    "a-ffa53d199ae75338"
+   ],
+   "kind": "APPLIED",
+   "code": "CROSSED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     6,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     6,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "EFFECT",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ],
+     [
+      "a-ffa53d199ae75338",
+      "verify:3c1164b967758cb0c6356328",
+      "CONSUMED",
+      "n-8c1190b2f1e8ab15876d42d708db3d1a5020feec",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "c6838381249be735ed32ae59bf1bfc96baf14eeda09fa4002b667fb23ea1ece7",
+   "hash": "17ad90c44cbba65171007c14708c0f31c440c955274f2d334b9f6a7d34547f81"
+  },
+  {
+   "seq": 48,
+   "op": [
+    "RECONCILE",
+    "a-ffa53d199ae75338",
+    "EFFECT",
+    "AUTHORISED"
+   ],
+   "kind": "APPLIED",
+   "code": "VERDICT_RECORDED",
+   "observation": {
+    "k": 1000,
+    "m": 0,
+    "live": [
+     0,
+     6,
+     0
+    ],
+    "credit": 0,
+    "witness": "ACTIVE",
+    "accepted": [
+     0,
+     6,
+     0
+    ],
+    "attempts": [
+     [
+      "a-3210cb5875deb371",
+      "verify:52654a1403dee8c39e3d7f1a",
+      "EFFECT",
+      "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      true,
+      true
+     ],
+     [
+      "a-93cd0f4b59d0d4e3",
+      "verify:9ec47b4b392ab49e71df7c0a",
+      "EFFECT",
+      "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      true,
+      true
+     ],
+     [
+      "a-affdb4c58dfcb038",
+      "verify:061257dea4148bf48513bcca",
+      "EFFECT",
+      "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      true,
+      true
+     ],
+     [
+      "a-bd8e3f544d258a16",
+      "verify:9fe59e97b3ba7f21443ffefc",
+      "EFFECT",
+      "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      true,
+      true
+     ],
+     [
+      "a-e2f86891cd05d9f0",
+      "verify:9438479e72b7ac8c02ba6f86",
+      "EFFECT",
+      "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      true,
+      true
+     ],
+     [
+      "a-ffa53d199ae75338",
+      "verify:3c1164b967758cb0c6356328",
+      "EFFECT",
+      "n-8c1190b2f1e8ab15876d42d708db3d1a5020feec",
+      true,
+      true
+     ]
+    ],
+    "business": "OPEN",
+    "reregistered": false
+   },
+   "prev_hash": "17ad90c44cbba65171007c14708c0f31c440c955274f2d334b9f6a7d34547f81",
+   "hash": "abe8fb974001d66522b094878492ccf6b06047f433c728b490b3d731c117362a"
+  }
+ ],
+ "attempts": [
+  {
+   "aid": "a-3210cb5875deb371",
+   "request_key": "verify:52654a1403dee8c39e3d7f1a",
+   "arguments": {
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a",
+    "design": {
+     "size_mm2": 120,
+     "install": "buried",
+     "breaker_A": 125
+    }
+   },
+   "phase": "EFFECT",
+   "nonce": "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+   "outcome": "FAIL",
+   "receipts": {
+    "ACCEPT_RESERVATION": {
+     "op": [
+      "ACCEPT_RESERVATION",
+      "a-3210cb5875deb371"
+     ],
+     "aid": "a-3210cb5875deb371",
+     "seq": 2,
+     "code": "RESERVATION_ACCEPTED",
+     "hash": "0446a078ecbebe8e8112a8a3af76d8ff7a134c41291df01bf72ea89c934f5f11",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": null,
+     "signature": "9442b118be017c4da1139ab231804683790c254cd5a4dbcc0d7d9cd0d10fb278239f2a48292ad457c56759933de61d3f320c8204d77782aaeeb350aaf64b3e00"
+    },
+    "ACCEPT_INTENT": {
+     "op": [
+      "ACCEPT_INTENT",
+      "a-3210cb5875deb371"
+     ],
+     "aid": "a-3210cb5875deb371",
+     "seq": 5,
+     "code": "INTENT_ACCEPTED",
+     "hash": "a6bdf60cd47590e6f8aed8912c3b2e1293779583b98a3004326c30f25a8b2c30",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+     "signature": "7af8db02089c807fd28b69a9a55c70aca6945156a3eac81ad6582bd015e18789ecd07c2888f24b0aa406f0ca189ac87aa562cbd80311dca16fa5b1b4396e4801"
+    },
+    "CROSS": {
+     "op": [
+      "CROSS",
+      "a-3210cb5875deb371"
+     ],
+     "aid": "a-3210cb5875deb371",
+     "seq": 7,
+     "code": "CROSSED",
+     "hash": "99329ff312fed455d6e7c72266aaa031a3daa435b6f627cd2058f6679403a6a4",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+     "signature": "92734824b53f197c46bdcd9223bd789c5e8ade143bce91c759ce1e6589acdab6a9750edcc8e880fb2b70869213970c74733389123a59b292acd7d518f689ae01"
+    }
+   },
+   "evidence": [
+    {
+     "seq": 8,
+     "evidence": {
+      "aid": "a-3210cb5875deb371",
+      "kind": "EFFECT_REPORT",
+      "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+      "claim": "EFFECT",
+      "nonce": "n-b7970ff977d2aec7e89befd28727d9f3a14e67a5",
+      "signer": "2538c96d6f0a99bfd8c251c4eebe19d6acb439af025f29633ca3ce6d082657f2",
+      "signature": "134d1eb71f54ba8df38cb8a87b16be74a4e6d5d0b8a20e713c7a93835c13e8f3209de23fa5a10468cf55cff9d0de65977a002ea05624adf9a09dbabd2ff56e05",
+      "result_digest": "92f8f9f353199161c033bb5eb28e132c575a37251c52fbb240fe83e0ec877203"
+     }
+    }
+   ],
+   "result": {
+    "basis": "",
+    "check": {
+     "id": "CHK-EL-SUBMAIN",
+     "sha256": "561976e80c0db1d315d2d827c1350b312da8f760d1b186c151fe19dd25b03922",
+     "version": "1"
+    },
+    "design": {
+     "install": "buried",
+     "size_mm2": 120,
+     "breaker_A": 125
+    },
+    "detail": "size_mm2 = 120 is not on the approved list (25, 35, 50, 70, 95).  The check was not run.",
+    "format": "verification-verdict/1",
+    "verdict": "FAIL",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "met": null,
+      "limit": "5.0",
+      "units": "% of 400 V",
+      "margin": null,
+      "achieved": null,
+      "quantity": "total voltage drop, point of supply to pump-station terminals",
+      "comparison": "<="
+     },
+     {
+      "id": "coordination",
+      "met": null,
+      "limit": "1.0",
+      "units": "(ratio)",
+      "margin": null,
+      "achieved": null,
+      "quantity": "coordination utilisation, the larger of Ib/In and In/Iz",
+      "comparison": "<="
+     }
+    ],
+    "revision": "A",
+    "reason_code": "DESIGN_OUTSIDE_BASELINE",
+    "design_sha256": "f1ecf5b83aee1454270dbaa339e983e98c988f393aa32b41e2ed634a1fc3f51c",
+    "requirement_id": "REQ-EL-021",
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a"
+   }
+  },
+  {
+   "aid": "a-93cd0f4b59d0d4e3",
+   "request_key": "verify:9ec47b4b392ab49e71df7c0a",
+   "arguments": {
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a",
+    "design": {
+     "size_mm2": 95,
+     "install": "buried",
+     "breaker_A": 100
+    }
+   },
+   "phase": "EFFECT",
+   "nonce": "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+   "outcome": "FAIL",
+   "receipts": {
+    "ACCEPT_RESERVATION": {
+     "op": [
+      "ACCEPT_RESERVATION",
+      "a-93cd0f4b59d0d4e3"
+     ],
+     "aid": "a-93cd0f4b59d0d4e3",
+     "seq": 18,
+     "code": "RESERVATION_ACCEPTED",
+     "hash": "6919b5ad5d23bcb871f3e145ac06044ac568738a2b4c1750d2910a2b7832297a",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": null,
+     "signature": "c286d77edc90201dae77d078db1ba553d6aa9849d144622768de2825ca312a1d134093bb20f3db257008a92fafec7db50f5ff4906a2ffd2d8074c861607d4005"
+    },
+    "ACCEPT_INTENT": {
+     "op": [
+      "ACCEPT_INTENT",
+      "a-93cd0f4b59d0d4e3"
+     ],
+     "aid": "a-93cd0f4b59d0d4e3",
+     "seq": 21,
+     "code": "INTENT_ACCEPTED",
+     "hash": "612dfbcf93df09534d803518d6b665fa28515a2b188390c3564833f37a7c274b",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+     "signature": "c713378197e29d65d98d722eb2a25593d2240eef955cd7e701fcc127d788f16e7f8202dc8d8056a6a3163dc5c7bf0ef173803574da2498f713dd1f4837ac9006"
+    },
+    "CROSS": {
+     "op": [
+      "CROSS",
+      "a-93cd0f4b59d0d4e3"
+     ],
+     "aid": "a-93cd0f4b59d0d4e3",
+     "seq": 23,
+     "code": "CROSSED",
+     "hash": "ff4609abc114236e2d302ccee53034c41e6f4e040af717a0be1526c5ffc106e4",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+     "signature": "2e8d8b47f2c74a984931928b5d2afac2ccfb7d03df10add39860c75171ae395c6dc46258ae99d5718a0e3c70e56ce36e64c36cce2af8b088e89e243cd6e23f02"
+    }
+   },
+   "evidence": [
+    {
+     "seq": 24,
+     "evidence": {
+      "aid": "a-93cd0f4b59d0d4e3",
+      "kind": "EFFECT_REPORT",
+      "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+      "claim": "EFFECT",
+      "nonce": "n-225435a3f80954b63c8fbd552fbeb8e3cf056c1b",
+      "signer": "2538c96d6f0a99bfd8c251c4eebe19d6acb439af025f29633ca3ce6d082657f2",
+      "signature": "4f3ce6ea821b4cbe86a7718ea696f1a19f4bacd538e4485aee5ab1d274cac5ef543af86334d60fd5a11a06b9918883a44e9c8646446b434967dd24f8c6829605",
+      "result_digest": "aeb3e96d98fc029e6383bb0a1096957e8083d70ccc7e4c70f6292a80580ff666"
+     }
+    }
+   ],
+   "result": {
+    "basis": "95 mm2 buried: 5.74 % total drop (4.54 % = 18.2 V in this cable at 45 C over 400 m, plus 1.20 % elsewhere); Ib 120 A, In 100 A, Iz 276 A (ambient factor 0.920).",
+    "check": {
+     "id": "CHK-EL-SUBMAIN",
+     "sha256": "561976e80c0db1d315d2d827c1350b312da8f760d1b186c151fe19dd25b03922",
+     "version": "1"
+    },
+    "design": {
+     "install": "buried",
+     "size_mm2": 95,
+     "breaker_A": 100
+    },
+    "detail": "",
+    "format": "verification-verdict/1",
+    "verdict": "FAIL",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "met": false,
+      "limit": "5.0",
+      "units": "% of 400 V",
+      "margin": "-0.74",
+      "achieved": "5.74",
+      "quantity": "total voltage drop, point of supply to pump-station terminals",
+      "comparison": "<="
+     },
+     {
+      "id": "coordination",
+      "met": false,
+      "limit": "1.0",
+      "units": "(ratio)",
+      "margin": "-0.2",
+      "achieved": "1.2",
+      "quantity": "coordination utilisation, the larger of Ib/In and In/Iz",
+      "comparison": "<="
+     }
+    ],
+    "revision": "A",
+    "reason_code": "LIMIT_NOT_MET",
+    "design_sha256": "a09abf7340d04653daca1140a19764718678cf1e1bb8093ee720fd23c6bdbb15",
+    "requirement_id": "REQ-EL-021",
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a"
+   }
+  },
+  {
+   "aid": "a-affdb4c58dfcb038",
+   "request_key": "verify:061257dea4148bf48513bcca",
+   "arguments": {
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a",
+    "design": {
+     "size_mm2": 95,
+     "install": "buried",
+     "breaker_A": 125
+    }
+   },
+   "phase": "EFFECT",
+   "nonce": "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+   "outcome": "FAIL",
+   "receipts": {
+    "ACCEPT_RESERVATION": {
+     "op": [
+      "ACCEPT_RESERVATION",
+      "a-affdb4c58dfcb038"
+     ],
+     "aid": "a-affdb4c58dfcb038",
+     "seq": 10,
+     "code": "RESERVATION_ACCEPTED",
+     "hash": "4cfcdcce5ff68f595c01c8eb8bc1b6f9dbee1b35b7841eaf5249a9334dbb241d",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": null,
+     "signature": "04a6216ed5406b82b938f2686995ea8d4b3aa1474b9c1b0376870f313772337d175ac5dc66bf99efdc4da4c8d680f3fee57608a08e7d01a8189ba8000d7e7d0e"
+    },
+    "ACCEPT_INTENT": {
+     "op": [
+      "ACCEPT_INTENT",
+      "a-affdb4c58dfcb038"
+     ],
+     "aid": "a-affdb4c58dfcb038",
+     "seq": 13,
+     "code": "INTENT_ACCEPTED",
+     "hash": "44002363a8aee4733b9f4791ba053e7a82cabe144dce9724ec0ed950d3d58670",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+     "signature": "93f0af5519be95c2a4e6a49ed783886f65087d28817d979693466e04efb0b76859658090707762692c749dc81569df6a39c082aee38000bf1bf4a357d293a30b"
+    },
+    "CROSS": {
+     "op": [
+      "CROSS",
+      "a-affdb4c58dfcb038"
+     ],
+     "aid": "a-affdb4c58dfcb038",
+     "seq": 15,
+     "code": "CROSSED",
+     "hash": "c983e60f1f26ccb28a59e0071106f9bdaa0b9c5667520f315ad6b315c074e616",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+     "signature": "67e27c45bd77427eca68bbb4f67285a06a84ca63770cb6ae206d23ba90da5c8965025c7d8374629af16b21268e13878b5f7f150c4ced1a4486049a5d18d2f30c"
+    }
+   },
+   "evidence": [
+    {
+     "seq": 16,
+     "evidence": {
+      "aid": "a-affdb4c58dfcb038",
+      "kind": "EFFECT_REPORT",
+      "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+      "claim": "EFFECT",
+      "nonce": "n-32eecaba6acf1c6d391643aaf2f710ceaccfbe0b",
+      "signer": "2538c96d6f0a99bfd8c251c4eebe19d6acb439af025f29633ca3ce6d082657f2",
+      "signature": "7ff66ca41c8329bbd06b0403295533e781d1768c08b7d22aa8ba2feccd8edfa7e059a62d0971a38ca5f812fe3fb9b83cc6b9dd6c81eab92db8ac2f7d7f87af04",
+      "result_digest": "17ca3ab1a6c40be908d17a000561b6e34840959feb5b84cce9f543a82724c5f5"
+     }
+    }
+   ],
+   "result": {
+    "basis": "95 mm2 buried: 5.74 % total drop (4.54 % = 18.2 V in this cable at 45 C over 400 m, plus 1.20 % elsewhere); Ib 120 A, In 125 A, Iz 276 A (ambient factor 0.920).",
+    "check": {
+     "id": "CHK-EL-SUBMAIN",
+     "sha256": "561976e80c0db1d315d2d827c1350b312da8f760d1b186c151fe19dd25b03922",
+     "version": "1"
+    },
+    "design": {
+     "install": "buried",
+     "size_mm2": 95,
+     "breaker_A": 125
+    },
+    "detail": "",
+    "format": "verification-verdict/1",
+    "verdict": "FAIL",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "met": false,
+      "limit": "5.0",
+      "units": "% of 400 V",
+      "margin": "-0.74",
+      "achieved": "5.74",
+      "quantity": "total voltage drop, point of supply to pump-station terminals",
+      "comparison": "<="
+     },
+     {
+      "id": "coordination",
+      "met": true,
+      "limit": "1.0",
+      "units": "(ratio)",
+      "margin": "0.04",
+      "achieved": "0.96",
+      "quantity": "coordination utilisation, the larger of Ib/In and In/Iz",
+      "comparison": "<="
+     }
+    ],
+    "revision": "A",
+    "reason_code": "LIMIT_NOT_MET",
+    "design_sha256": "58fca62e72e86c8c4422fadb7c7904bda34a7f3d0773982ae61b3c62e558fd31",
+    "requirement_id": "REQ-EL-021",
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a"
+   }
+  },
+  {
+   "aid": "a-bd8e3f544d258a16",
+   "request_key": "verify:9fe59e97b3ba7f21443ffefc",
+   "arguments": {
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a",
+    "design": {
+     "size_mm2": 95,
+     "install": "buried",
+     "breaker_A": 200
+    }
+   },
+   "phase": "EFFECT",
+   "nonce": "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+   "outcome": "UNKNOWN",
+   "receipts": {
+    "ACCEPT_RESERVATION": {
+     "op": [
+      "ACCEPT_RESERVATION",
+      "a-bd8e3f544d258a16"
+     ],
+     "aid": "a-bd8e3f544d258a16",
+     "seq": 34,
+     "code": "RESERVATION_ACCEPTED",
+     "hash": "77d1af97d518abfac04dc289b6b04f41488d733590d57be7d7a1a5b1b2862665",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": null,
+     "signature": "43b89b37af8dd5e6f5f50928d51854448f73cb8fbfe3a2fa01f29198c545c97ad4ffbb2ab4f90503cc3c20d965cbcd068a77d0b72a8700199c0713f2b0794802"
+    },
+    "ACCEPT_INTENT": {
+     "op": [
+      "ACCEPT_INTENT",
+      "a-bd8e3f544d258a16"
+     ],
+     "aid": "a-bd8e3f544d258a16",
+     "seq": 37,
+     "code": "INTENT_ACCEPTED",
+     "hash": "e906adb9c68dd09711f88b83176189ce47154f988ed57de6d8d2f6957a9da3e0",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+     "signature": "87d3c733498e843df9a4b7c7589109af493410ef7fe05aa65133d49451dd49db27d3fa37b5a2b5d4e4f13af48aba3d3ee69d00f62c234f0a0b71b2d4ddb3aa0e"
+    },
+    "CROSS": {
+     "op": [
+      "CROSS",
+      "a-bd8e3f544d258a16"
+     ],
+     "aid": "a-bd8e3f544d258a16",
+     "seq": 39,
+     "code": "CROSSED",
+     "hash": "bac2ec4ef3ced30ee79ddcdcccacf3fe7e4d179f53ff6fa9fbd18e145cf4f2ec",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+     "signature": "9e6bf77f246fc2541a3d82bdec0c176072d7c45ee03f8d40e6c5455875d17b338662b7a8b10f5f7847c490e5042f6c379a6f058bf93ba54ebba611de5082ad0f"
+    }
+   },
+   "evidence": [
+    {
+     "seq": 40,
+     "evidence": {
+      "aid": "a-bd8e3f544d258a16",
+      "kind": "EFFECT_REPORT",
+      "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+      "claim": "EFFECT",
+      "nonce": "n-23e196e68590cc01b808c116f71cd41e03b04fde",
+      "signer": "2538c96d6f0a99bfd8c251c4eebe19d6acb439af025f29633ca3ce6d082657f2",
+      "signature": "1a72b587f00ec150813e876d357e1e28b144bfc0ed9d913fbe6d835016dc4b941f9a2abbdf7c79f34e84c6115f071033bf3b9c646f9bf02eaece094f49c5030d",
+      "result_digest": "22fa55adc5faff2bac73e9f595e92a127b3dc8db347fd9534320be3ca9627c11"
+     }
+    }
+   ],
+   "result": {
+    "basis": "",
+    "check": {
+     "id": "CHK-EL-SUBMAIN",
+     "sha256": "561976e80c0db1d315d2d827c1350b312da8f760d1b186c151fe19dd25b03922",
+     "version": "1"
+    },
+    "design": {
+     "install": "buried",
+     "size_mm2": 95,
+     "breaker_A": 200
+    },
+    "detail": "cables.csv no longer matches the baseline (it was changed after baselining)",
+    "format": "verification-verdict/1",
+    "verdict": "UNKNOWN",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "met": null,
+      "limit": "5.0",
+      "units": "% of 400 V",
+      "margin": null,
+      "achieved": null,
+      "quantity": "total voltage drop, point of supply to pump-station terminals",
+      "comparison": "<="
+     },
+     {
+      "id": "coordination",
+      "met": null,
+      "limit": "1.0",
+      "units": "(ratio)",
+      "margin": null,
+      "achieved": null,
+      "quantity": "coordination utilisation, the larger of Ib/In and In/Iz",
+      "comparison": "<="
+     }
+    ],
+    "revision": "A",
+    "reason_code": "BASELINE_MISMATCH",
+    "design_sha256": "f231bb0d5f12f000eb529c2361360c371ee7a2ad8dec0d0610e81f50bf652fe6",
+    "requirement_id": "REQ-EL-021",
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a"
+   }
+  },
+  {
+   "aid": "a-e2f86891cd05d9f0",
+   "request_key": "verify:9438479e72b7ac8c02ba6f86",
+   "arguments": {
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a",
+    "design": {
+     "size_mm2": 95,
+     "install": "buried",
+     "breaker_A": 160
+    }
+   },
+   "phase": "EFFECT",
+   "nonce": "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+   "outcome": "UNKNOWN",
+   "receipts": {
+    "ACCEPT_RESERVATION": {
+     "op": [
+      "ACCEPT_RESERVATION",
+      "a-e2f86891cd05d9f0"
+     ],
+     "aid": "a-e2f86891cd05d9f0",
+     "seq": 26,
+     "code": "RESERVATION_ACCEPTED",
+     "hash": "3168821e72dbef12c5b30b74e070a82d017518f0b7632597fc4b24e0eccd19f8",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": null,
+     "signature": "17e82fa88a8960070280f8907c8125c0d23d7e5935453e3234c5b4de19687c2fca26bf95793912e8061a65fbf6da33a6c78b369d62996a778939e3647c1f8d08"
+    },
+    "ACCEPT_INTENT": {
+     "op": [
+      "ACCEPT_INTENT",
+      "a-e2f86891cd05d9f0"
+     ],
+     "aid": "a-e2f86891cd05d9f0",
+     "seq": 29,
+     "code": "INTENT_ACCEPTED",
+     "hash": "5f22a755b3706792e26defe75f525a1ebcce7ae69f7ba0df769339584ea571a6",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+     "signature": "7b519800a13ba60c3d60addfa3bcb2ad8bf7d05fbcf1a95f3cc700a83e65946c431bc4874565fbc685f77422c46fbd0bb49cacc08bc3263915db5b55b5f3cb03"
+    },
+    "CROSS": {
+     "op": [
+      "CROSS",
+      "a-e2f86891cd05d9f0"
+     ],
+     "aid": "a-e2f86891cd05d9f0",
+     "seq": 31,
+     "code": "CROSSED",
+     "hash": "b47048a82b1b3dd5e5b9439691c6e465a43b560f19f7da0725e8075c6665528f",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+     "signature": "6c2ddbc90145612401891dac1fe7368098bc66581899d0666e81b2dec4aa920f41135b46cfe1204a39e8a52a256fe4e22d99ffdfa4aa00e65f2eb5944af10409"
+    }
+   },
+   "evidence": [
+    {
+     "seq": 32,
+     "evidence": {
+      "aid": "a-e2f86891cd05d9f0",
+      "kind": "EFFECT_REPORT",
+      "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+      "claim": "EFFECT",
+      "nonce": "n-87e545b9eafb30d7bf23e7738ba2efcd22d99924",
+      "signer": "2538c96d6f0a99bfd8c251c4eebe19d6acb439af025f29633ca3ce6d082657f2",
+      "signature": "800db12f1a5188a23f61b345524114560ca5c1491aa62a178bdbb9cf858432d8967c6a679247cfee5d203357ae919d74904422f837e190837247217a80b62a0c",
+      "result_digest": "0061b3993a55397c16a719f08c297d556c14194e5191c916a4faae7b3f0e87c3"
+     }
+    }
+   ],
+   "result": {
+    "basis": "",
+    "check": {
+     "id": "CHK-EL-SUBMAIN",
+     "sha256": "561976e80c0db1d315d2d827c1350b312da8f760d1b186c151fe19dd25b03922",
+     "version": "1"
+    },
+    "design": {
+     "install": "buried",
+     "size_mm2": 95,
+     "breaker_A": 160
+    },
+    "detail": "site.json no longer matches the baseline (it was changed after baselining)",
+    "format": "verification-verdict/1",
+    "verdict": "UNKNOWN",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "met": null,
+      "limit": "5.0",
+      "units": "% of 400 V",
+      "margin": null,
+      "achieved": null,
+      "quantity": "total voltage drop, point of supply to pump-station terminals",
+      "comparison": "<="
+     },
+     {
+      "id": "coordination",
+      "met": null,
+      "limit": "1.0",
+      "units": "(ratio)",
+      "margin": null,
+      "achieved": null,
+      "quantity": "coordination utilisation, the larger of Ib/In and In/Iz",
+      "comparison": "<="
+     }
+    ],
+    "revision": "A",
+    "reason_code": "BASELINE_MISMATCH",
+    "design_sha256": "f7a19b98d2e4dfc338c9f555c268ca2d24828f6062714ebcd9cd8d81a26c1872",
+    "requirement_id": "REQ-EL-021",
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a"
+   }
+  },
+  {
+   "aid": "a-ffa53d199ae75338",
+   "request_key": "verify:3c1164b967758cb0c6356328",
+   "arguments": {
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a",
+    "design": {
+     "size_mm2": 95,
+     "install": "buried",
+     "breaker_A": 250
+    }
+   },
+   "phase": "EFFECT",
+   "nonce": "n-8c1190b2f1e8ab15876d42d708db3d1a5020feec",
+   "outcome": "UNKNOWN",
+   "receipts": {
+    "ACCEPT_RESERVATION": {
+     "op": [
+      "ACCEPT_RESERVATION",
+      "a-ffa53d199ae75338"
+     ],
+     "aid": "a-ffa53d199ae75338",
+     "seq": 42,
+     "code": "RESERVATION_ACCEPTED",
+     "hash": "7e14f6c3708b800043a7548521940a90107952ebc52c8e46d75d33b460410b81",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": null,
+     "signature": "0c871efedd40b76e5f4f1ac87201f3e3d55ba680d2b0e30b531970e07db4f9ba1394ed1a6721564ce97fa01e43b79e6dd5432572767a0584a8867a3ea06b2305"
+    },
+    "ACCEPT_INTENT": {
+     "op": [
+      "ACCEPT_INTENT",
+      "a-ffa53d199ae75338"
+     ],
+     "aid": "a-ffa53d199ae75338",
+     "seq": 45,
+     "code": "INTENT_ACCEPTED",
+     "hash": "c4c2bf7b2033126e48b9633cf23a23214d52a011ab47f19a24d176fe07be3da5",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-8c1190b2f1e8ab15876d42d708db3d1a5020feec",
+     "signature": "42764ad7d94686d30568913af494c1d0cc132ee8ceaad502d9e8db1d55f837b0b3fa9261ee4d509adfe581c341b7352e7ac8b3ce908c3f0d3b848b25cb839108"
+    },
+    "CROSS": {
+     "op": [
+      "CROSS",
+      "a-ffa53d199ae75338"
+     ],
+     "aid": "a-ffa53d199ae75338",
+     "seq": 47,
+     "code": "CROSSED",
+     "hash": "17ad90c44cbba65171007c14708c0f31c440c955274f2d334b9f6a7d34547f81",
+     "kind": "APPLIED",
+     "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+     "signer": "badd2abd72c8f4d661341e86e2e7ce3b7f9f4ad5efa94f5bb524a7bad92a5999",
+     "binding": "n-8c1190b2f1e8ab15876d42d708db3d1a5020feec",
+     "signature": "d5df47f737073ae12f4e285b3d26059cf228695e74342a601fd3668db4a682e51a5da0218821bb890af8e8a67b9415ee7269ebc1cbb126b84cc1b4f54b71b40e"
+    }
+   },
+   "evidence": [
+    {
+     "seq": 48,
+     "evidence": {
+      "aid": "a-ffa53d199ae75338",
+      "kind": "EFFECT_REPORT",
+      "root": "REQ-EL-021/A/832eaca1ec446a7405041cebbc65dc32",
+      "claim": "EFFECT",
+      "nonce": "n-8c1190b2f1e8ab15876d42d708db3d1a5020feec",
+      "signer": "2538c96d6f0a99bfd8c251c4eebe19d6acb439af025f29633ca3ce6d082657f2",
+      "signature": "111f9628539c44b5a06528c782045e1583c0ede7ff21825feec177cdad0b7deea44ae2fa120ed4c454e71d79ae7fae1a10e1ea6d72c012cc8ff8814c6e828607",
+      "result_digest": "974f4349586ccb345dcf3f69469f0329ac7f239720aa3cf7c5dc62c9eedab995"
+     }
+    }
+   ],
+   "result": {
+    "basis": "",
+    "check": {
+     "id": "CHK-EL-SUBMAIN",
+     "sha256": "561976e80c0db1d315d2d827c1350b312da8f760d1b186c151fe19dd25b03922",
+     "version": "1"
+    },
+    "design": {
+     "install": "buried",
+     "size_mm2": 95,
+     "breaker_A": 250
+    },
+    "detail": "check.py no longer matches the baseline (it was changed after baselining)",
+    "format": "verification-verdict/1",
+    "verdict": "UNKNOWN",
+    "criteria": [
+     {
+      "id": "voltage_drop",
+      "met": null,
+      "limit": "5.0",
+      "units": "% of 400 V",
+      "margin": null,
+      "achieved": null,
+      "quantity": "total voltage drop, point of supply to pump-station terminals",
+      "comparison": "<="
+     },
+     {
+      "id": "coordination",
+      "met": null,
+      "limit": "1.0",
+      "units": "(ratio)",
+      "margin": null,
+      "achieved": null,
+      "quantity": "coordination utilisation, the larger of Ib/In and In/Iz",
+      "comparison": "<="
+     }
+    ],
+    "revision": "A",
+    "reason_code": "BASELINE_MISMATCH",
+    "design_sha256": "26f3e6b49d6e84c28a2378c1257120afefc4b28755b7d339c0a2a4107527503e",
+    "requirement_id": "REQ-EL-021",
+    "baseline_sha256": "832eaca1ec446a7405041cebbc65dc321ce751a72835bba7717f8fed31b5f52a"
+   }
+  }
+ ],
+ "acknowledgements": [],
+ "as_of": {
+  "time": "2026-11-12T21:28:49Z",
+  "seq": 48,
+  "head": "abe8fb974001d66522b094878492ccf6b06047f433c728b490b3d731c117362a"
+ },
+ "signature": {
+  "signer": "135549bfa440773ba1011f0aa238f295a0219a7a9f7e0e6874bc4e32b31fa1b4",
+  "signature": "c60e4f8f865d7967bab0ef6c5be71eb010740599fec811f7bcd15d99c7aee51a30e6ce3f6fc4217dd9d1fab04b4a6f03f20569cea175295d987799e697c9410a"
+ }
+}

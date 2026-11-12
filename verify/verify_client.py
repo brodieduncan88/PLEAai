@@ -114,7 +114,8 @@ class Client:
               'The requirement, the limits, the load case, the design space and the check cannot be changed from here.',
               f"Only {c['responsible_engineer']['name']} can issue a revised baseline or accept a failure."]
         if c.get('supersedes'):
-            s = c['supersedes']; L.insert(1, f"  THIS BASELINE SUPERSEDES {s['baseline_sha256'][:16]}… ({s.get('official_runs', '?')} official runs, {s.get('not_met', '?')} not met).  Reason given: {s['reason']}")
+            s = c['supersedes']; L.insert(1, f"  THIS BASELINE SUPERSEDES {s['baseline_sha256'][:16]}… ({s.get('official_runs', '?')} official runs, {s.get('not_met', '?')} not met); "
+                                            f"{s.get('unknown', '?')} unknown, {s.get('met', '?')} met.  Reason given: {s['reason']}")     # Amendment 4
         return '\n'.join(L)
 
     def status(self) -> str:
