@@ -31,6 +31,10 @@ that prints something unreadable. The second of these means "the front door clos
 defect: until that amendment, a design holding one kind of number got through the front door and spoiled its record.
 `DECLARED_AMEND2.md` lists what is still open.
 
+**Second note of 12 November 2026.** `AMENDMENT_3_2026-11-12.md` repairs the first thing that list held: a design's own names
+and text could be read, in a notice and in a printed record, as words of the service. `DECLARED_AMEND3.md` has the list
+as it now stands.
+
 ## The pieces
 
 | file | what it does |
