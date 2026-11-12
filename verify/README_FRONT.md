@@ -35,6 +35,10 @@ defect: until that amendment, a design holding one kind of number got through th
 and text could be read, in a notice and in a printed record, as words of the service. `DECLARED_AMEND3.md` has the list
 as it now stands.
 
+**Third note of 12 November 2026.** `AMENDMENT_4_2026-11-12.md` repairs the record's eighth defect: a notice said that
+nothing was changed whatever the reason, so the notice of a changed check said the opposite of its reason. It also
+repairs the Verdict row and the banner of a revised baseline. `DECLARED_AMEND4.md` has the list as it now stands.
+
 ## The pieces
 
 | file | what it does |
