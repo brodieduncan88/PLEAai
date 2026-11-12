@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Declared tests F1-F16 for the front door and the MCP server (verify/DECLARED_FRONT.md states the expected outcomes).
+"""Declared tests F1-F16 for the front door and the MCP server (verify/DECLARED_FRONT.md states the expected outcomes),
+and F17 to F19, added by Amendment 2 (verify/DECLARED_AMEND2.md), which also restates two checks of F15.
 
-    verify_front_tests.py [F1 F6 ...]     all sixteen by default; writes outputs/verify_front_tests.json; exits 1 if any test fails
+    verify_front_tests.py [F1 F6 ...]     all nineteen by default; writes outputs/verify_front_tests.json; exits 1 if any test fails
 
 F1 and F2 run the first plug-in as it was released, with no front door, and show the two defects this work is for.
 F3 to F16 make a fresh deployment with a front door (verify/deploy_front.py: new keys; the released witness service
@@ -689,13 +690,17 @@ def f15():
         restored = r.submit(design(2.8)); shown_again = raw(r.job, 'GET', '/requirement')
         notices_before = r.notices()
         env = json.loads(good); del env['card']['load_case']; stored.write_text(json.dumps(env))                              # no longer a card at all
-        not_a_card = r.submit(design(2.9)); stored.write_text(good)
+        shown_not_a_card = raw(r.job, 'GET', '/requirement'); not_a_card = r.submit(design(2.9))
+        stored.write_text('{"card": ' + '[' * 100000 + ']' * 100000 + '}')                                                   # nested too deep to be read at all
+        shown_deep = raw(r.job, 'GET', '/requirement'); too_deep = r.submit(design(3.1)); stored.write_text(good)
         ok, why, s = r.checked()
         sc = lambda x: x.get('structuredContent') or {}
         e.update(shown=(shown[0], shown[1].get('refused')), given=(given[0], given[1].get('refused')), by_tool=(by_tool.get('isError'), text_of(by_tool)[:60]),
                  relaxed_card=(relaxed_card.get('isError'), head(text_of(relaxed_card)), sc(relaxed_card).get('outcome'), (sc(relaxed_card).get('verdict') or {}).get('reason_code')),
                  forged=(head(text_of(forged)), sc(forged).get('outcome')), status_meanwhile=(status_meanwhile[0], (status_meanwhile[1].get('runs') or {}).get('total')), restored=head(text_of(restored)), shown_again=shown_again[0],
-                 not_a_card=(not_a_card.get('isError'), head(text_of(not_a_card)), sc(not_a_card).get('outcome'), sc(not_a_card).get('met'), 'could not be read as the one the responsible engineer signed' in text_of(not_a_card)),
+                 not_a_card=(not_a_card.get('isError'), head(text_of(not_a_card)), sc(not_a_card).get('outcome'), sc(not_a_card).get('met'), (sc(not_a_card).get('verdict') or {}).get('reason_code')),
+                 too_deep=(too_deep.get('isError'), head(text_of(too_deep)), sc(too_deep).get('outcome'), sc(too_deep).get('met'), (sc(too_deep).get('verdict') or {}).get('reason_code')),
+                 shown_not_a_card=(shown_not_a_card[0], shown_not_a_card[1].get('refused')), shown_deep=(shown_deep[0], shown_deep[1].get('refused')),
                  notices_before=notices_before, notices=r.notices(), outcomes=sorted(x['outcome'] for x in s.get('runs', [])), status=s.get('status'), met=s.get('met'), record_verifies=ok, why=why)
         no_baseline = 'UNKNOWN: NO USABLE BASELINE IS HELD FOR THIS JOB'
         checks = {'the changed baseline is not shown, by address or by tool': e['shown'] == (500, 'BASELINE_UNAVAILABLE') and e['given'] == (500, 'BASELINE_UNAVAILABLE') and by_tool.get('isError') is True,
@@ -703,9 +708,10 @@ def f15():
                   'so is one sent against a relaxed card properly signed by another key, and the runs are counted': e['forged'] == (no_baseline, 'UNKNOWN') and e['status_meanwhile'] == (200, 2),
                   'with the file restored the requirement is shown again and still fails': shown_again[0] == 200 and e['restored'] == FAILED,
                   'all three results were sent to the engineer': notices_before == 3,
-                  'known gap, not closed here: a stored card that is no longer a card gives a counted run with no verdict, not a pass, and no notice': e['not_a_card'] == (False, 'UNKNOWN: THE RUN WAS INTERRUPTED', 'INTERRUPTED', False, True)
-                      and e['notices'] == 3,
-                  'no run met the check, the record verifies and the status is NOT VERIFIED': ok and s.get('met') == 0 and s.get('status') == 'NOT VERIFIED' and e['outcomes'] == ['FAIL', 'INTERRUPTED', 'UNKNOWN', 'UNKNOWN']}
+                  'a stored file that is no longer a card at all, or is nested too deep to read, is not shown, and a design sent is decided UNKNOWN by the gate in the same way and sent to the engineer (Amendment 2)':
+                      e['not_a_card'] == (False, no_baseline, 'UNKNOWN', False, 'BASELINE_MISMATCH') and e['too_deep'] == (False, no_baseline, 'UNKNOWN', False, 'BASELINE_MISMATCH')
+                      and e['shown_not_a_card'] == (500, 'BASELINE_UNAVAILABLE') and e['shown_deep'] == (500, 'BASELINE_UNAVAILABLE') and e['notices'] == 5,
+                  'no run met the check, the record verifies and the status is NOT VERIFIED': ok and s.get('met') == 0 and s.get('status') == 'NOT VERIFIED' and e['outcomes'] == ['FAIL', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN', 'UNKNOWN']}
     finally:
         r.stop()
     return checks, e
@@ -739,7 +745,142 @@ def f16():
     return checks, e
 
 
-TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16}
+def _clashing_pairs(n: int) -> list:
+    """Pairs of designs inside the fixture's design space, both failing at 200 C, whose design hashes share their first eight hex digits."""
+    seen, pairs, i = {}, [], 0
+    while len(pairs) < n and i < 1900000:
+        d = {'material': 'PA66-GF30', 'wall_mm': round(2 + i / 1000000, 6), 'mode': 'normal'}; i += 1
+        k = B.design_hash(d)[:8]
+        if k in seen:
+            pairs.append((seen[k], d))
+        else:
+            seen[k] = d
+    return pairs
+
+
+def f17():
+    """Two failures whose notices would once have had the same file name both reach the engineer: a notice is never written over another."""
+    r = Run('F17'); e = {}
+    try:
+        tried, clash = [], None
+        for a, b in _clashing_pairs(6):
+            time.sleep(1.03 - time.time() % 1)                                           # begin just after a second starts, so that both runs fall inside it
+            ra = raw(r.job, 'POST', '/submit', json.dumps({'design': a}).encode()); rb = raw(r.job, 'POST', '/submit', json.dumps({'design': b}).encode())
+            names = [x.get('notice') for x in r.s.ledger('verdict')][-2:]
+            stems = ['_'.join(str(n)[:-4].split('_')[:3]) for n in names]              # time to the second, verdict, first eight digits of the design hash
+            tried.append((ra[1].get('outcome'), rb[1].get('outcome'), names, stems[0] == stems[-1]))
+            if len(names) == 2 and stems[0] == stems[1]:
+                clash = (a, b, names); break
+        box = r.s.home / 'inbox' / r.h[:16]
+        files = sorted(p.name for p in box.glob('*.txt')) if box.exists() else []
+        a, b, names = clash or ({}, {}, [])
+        texts = [(box / n).read_text() if n and (box / n).exists() else '' for n in names]
+        ok, why, s = r.checked()
+        e.update(tried=tried, pair=(a, b), same_hash_start=bool(clash) and B.design_hash(a)[:8] == B.design_hash(b)[:8], names=names, files=len(files), failures=2 * len(tried),
+                 own_text=[f"wall_mm = {d.get('wall_mm')}" in t for d, t in zip((a, b), texts)], sizes=[len(t) for t in texts], record_verifies=ok, why=why, not_met=s.get('not_met'), status=s.get('status'))
+        checks = {'two designs inside the design space whose hashes begin with the same eight digits both fail in the same second': bool(clash) and e['same_hash_start'] and all(x[0] == x[1] == 'FAIL' for x in tried),
+                  'each has its own notice: two files with different names, neither empty, each naming its own design': bool(clash) and len(set(names)) == 2 and e['own_text'] == [True, True] and all(n > 200 for n in e['sizes']),
+                  'the inbox holds one notice for every failure, and the record verifies with all of them': e['files'] == e['failures'] and ok and s.get('not_met') == e['failures'] and s.get('status') == 'NOT VERIFIED'}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def _number_sample() -> list:
+    """Numbers of many sizes and both signs, as a design might hold them: 864 with a decimal point or an exponent, and 8 whole numbers."""
+    out = [sign * m * 10.0 ** x for m in (1.0, 1.5, 2.25, 9.999999999999998, 3.141592653589793, 1.0000000000000002, 7.0) for x in range(-30, 31) for sign in (1, -1)]
+    out += [0.0, -0.0, 1e16, -1e16, 9999999999999998.0, -9999999999999998.0, 1e308, 5e-324, 2.5, 3.0]
+    out += [0, -1, 3, 10 ** 16, -10 ** 16, 10 ** 22, 12345678901234567890, 10 ** 300]
+    return out
+
+
+def f18():
+    """A number the database would hand back changed is refused before anything happens, so it cannot leave a record unable to verify."""
+    r = Run('F18'); e = {}
+    try:
+        def body(text: str) -> bytes:
+            return ('{"design": {"material": "PPS-GF40", "wall_mm": ' + text + ', "mode": "normal"}}').encode()
+        changed = ['1e22', '-0.0', '1e16', '1.5e16', '1e308', '-1e16', '-0e0', '-1e-400', '10000000000000000.0']
+        refused = {t: raw(r.job, 'POST', '/submit', body(t)) for t in changed}
+        nested = {t: raw(r.job, 'POST', '/submit', ('{"design": {"material": "PPS-GF40", "wall_mm": 3, "mode": "normal", "note": ' + t + '}}').encode())
+                  for t in ('{"sizes": [1, [1e22]]}', '{"sizes": [1, [-0.0]]}', '[-1e16]')}
+        by_tool = r.submit(dict(BAD, wall_mm=1e22)); by_cli = r.s.cli(r.job, 'submit', dict(BAD, wall_mm=-0.0))      # two designs not sent before in this test
+        after_refused = (r.calls(), r.audit_rows(), r.notices())
+        kept = ['9999999999999998.0', '-9999999999999998.0', '12345678901234567890', '-0', '0.00001', '1E-7', '5e-324']     # every one outside the fixture's design space
+        decided = {t: raw(r.job, 'POST', '/submit', body(t)) for t in kept}
+        again = {t: raw(r.job, 'POST', '/submit', body(t)) for t in kept}
+
+        def short(answer):
+            st, p = answer
+            v = p.get('verdict') if isinstance(p.get('verdict'), dict) else {}
+            return (st, p.get('outcome'), v.get('reason_code'), v.get('design_sha256'))
+        after_decided = (r.calls(), r.notices())
+        good = r.submit(GOOD)
+        ok, why, s = r.checked(design=GOOD)
+        # the rule itself, against the database: what the front door accepts is what the database hands back as written
+        sample = _number_sample(); accepted = []
+        for v in sample:
+            try:
+                front_door.parse_design(json.dumps({'design': {'x': v}}).encode()); accepted.append(True)
+            except front_door.BadRequest:
+                accepted.append(False)
+        with Store(deploy.LOCAL_DSN).connect() as conn:
+            back = conn.execute('SELECT %s::jsonb', (json.dumps(sample),)).fetchone()[0]
+        as_written = [B.canonical(a) == B.canonical(b) for a, b in zip(sample, back)]
+        differ = [repr(v) for v, a, w in zip(sample, accepted, as_written) if a != w]
+        e.update(refused={t: (st, p.get('refused') or p.get('outcome') or p.get('unreachable')) for t, (st, p) in refused.items()}, nested={t: (st, p.get('refused') or p.get('outcome') or p.get('unreachable')) for t, (st, p) in nested.items()},
+                 by_tool=(by_tool.get('isError'), text_of(by_tool)[:120]), by_cli=(by_cli[0], head(by_cli[1])[:120]), after_refused=after_refused,
+                 decided={t: short(a)[:3] for t, a in decided.items()}, same_again=all(short(decided[t]) == short(again[t]) for t in kept), after_decided=after_decided,
+                 good=head(text_of(good)), record_verifies=ok, why=why, status=s.get('status'), official_runs=s.get('official_runs'), released=s.get('released'),
+                 sample=len(sample), accepted=sum(accepted), handed_back_as_written=sum(as_written), rule_and_database_differ_on=differ[:12])
+        checks = {'each of nine numbers the database would hand back changed is refused (400), and so are three nested inside the design, a negative zero among them':
+                      all(st == 400 and p.get('refused') == 'BAD_REQUEST' for st, p in refused.values()) and len(refused) == 9
+                      and len(nested) == 3 and all(st == 400 and p.get('refused') == 'BAD_REQUEST' for st, p in nested.values()),
+                  'through the tool and the command line such a number in a design not sent before is refused, and each answer says nothing was recorded': by_tool.get('isError') is True
+                      and 'Nothing was run and nothing was recorded' in text_of(by_tool) and by_cli[0] == 4 and 'REFUSED' in by_cli[1] and 'Nothing was run and nothing was recorded' in by_cli[1],
+                  'nothing happened: no run of the check, no audit row, no notice': after_refused == (0, 0, 0),
+                  'seven numbers beside them are decided: each a signed FAIL for a design outside the baseline, sent to the engineer, and the same answer when sent again':
+                      all(short(a)[:3] == (200, 'FAIL', 'DESIGN_OUTSIDE_BASELINE') for a in decided.values()) and len(decided) == 7 and e['same_again'] and after_decided == (7, 7),
+                  'a good design then meets the check, and the record verifies: eight runs, DECLARED CHECK MET': head(text_of(good)) == MET and ok and s.get('official_runs') == 8
+                      and s.get('status') == MET and (s.get('released') or {}).get('met') is True,
+                  'the rule matches the database: of 872 numbers, the front door accepts a number exactly when the database hands it back as written, and some of each kind are in the sample':
+                      len(sample) == 872 and not differ and 0 < sum(accepted) < len(sample)}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def f19():
+    """Known limit, not closed: when the engineer's inbox cannot be written, a run is counted with no verdict and no notice.  It is never a pass, and the record verifies."""
+    r = Run('F19'); e = {}
+    try:
+        def design(wall): return {'material': 'PA66-GF30', 'wall_mm': wall, 'mode': 'normal'}
+        sc = lambda x: x.get('structuredContent') or {}
+        first = r.submit(design(2.5))                                                       # a FAIL: the inbox folder now exists and holds one notice
+        box = r.s.home / 'inbox' / r.h[:16]; aside = box.with_name(box.name + '.aside')
+        box.rename(aside); box.write_text('a file where the inbox folder should be\n')
+        blocked = r.submit(design(2.6)); again = r.submit(design(2.6))
+        box.unlink(); aside.rename(box)
+        after = r.submit(design(2.7))
+        ok, why, s = r.checked()
+        e.update(first=(head(text_of(first)), sc(first).get('outcome')), blocked=(blocked.get('isError'), head(text_of(blocked)), sc(blocked).get('outcome'), sc(blocked).get('met')),
+                 again=(head(text_of(again)), sc(again).get('outcome')), after=(head(text_of(after)), sc(after).get('outcome')), tool_calls=r.calls(), verdict_lines=len(r.s.ledger('verdict')), notices=r.notices(),
+                 outcomes=sorted(x['outcome'] for x in s.get('runs', [])), status=s.get('status'), met=s.get('met'), record_verifies=ok, why=why)
+        interrupted = 'UNKNOWN: THE RUN WAS INTERRUPTED'
+        checks = {'with the inbox in place a failing design is FAIL': e['first'] == (FAILED, 'FAIL'),
+                  'with a file where the inbox folder should be, the next failing design is answered UNKNOWN: THE RUN WAS INTERRUPTED: counted, not met, and not marked as a tool error':
+                      e['blocked'] == (False, interrupted, 'INTERRUPTED', False),
+                  'the same design sent again is the same interrupted run, and the check is not run a second time': e['again'] == (interrupted, 'INTERRUPTED') and e['tool_calls'] == 3,
+                  'no verdict was returned for that run and no notice was written for it: this is the limit': e['verdict_lines'] == 2 and e['notices'] == 2,
+                  'with the inbox put back the next failing design is FAIL and is sent to the engineer': e['after'] == (FAILED, 'FAIL'),
+                  'no run met the check, the record verifies with the interrupted run in it, and the status is NOT VERIFIED': ok and s.get('met') == 0 and s.get('status') == 'NOT VERIFIED'
+                      and e['outcomes'] == ['FAIL', 'FAIL', 'INTERRUPTED']}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19}
 
 
 def main():

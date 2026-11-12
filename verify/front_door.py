@@ -35,7 +35,8 @@ What the caller holds: a certificate for its job, and this service's address.  N
 signs anything, no copy of the check.
 
 A request that is not a design is refused before anything else happens.  "Not a design" is decided here from the bytes
-alone: over 16 KiB, not strict JSON (a repeated key, NaN, an infinite number), a name or a text value holding a
+alone: over 16 KiB, not strict JSON (a repeated key, NaN, an infinite number), a number the database would hand back
+changed (Amendment 2: 1e16 or more in size with a decimal point or an exponent, or negative zero), a name or a text value holding a
 character that is not printable (a control character, a line separator, half a surrogate pair), not exactly
 {"design": object}, or nested more than four deep.  Such a request could not be stored, or could put a line of its
 own into the notice the engineer reads.  Everything else, including a design outside the baselined design space, goes
@@ -60,7 +61,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from plea_gateway import (BudgetExhausted, GateRefusedRun, GovernedError, Held, InProgress, OutcomeInvalid, ReceiptInvalid,   # noqa: E402
                           RequestKeyReused, Store, Stopped, TransportError, UnknownRoot, WitnessUnavailable)
 from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args, wrap_server   # noqa: E402
-from baseline import HEADLINE, BaselineInvalid, canonical, face, root_for   # noqa: E402
+from baseline import HEADLINE, canonical, face, root_for   # noqa: E402
 from verify_client import Client                                     # noqa: E402
 from verify_record import arguments_for, load_envelope, request_key, signed_by   # noqa: E402
 
@@ -138,6 +139,12 @@ def parse_design(raw: bytes):
         v = float(text)
         if v != v or v in (float('inf'), float('-inf')):
             raise BadRequest('a number is not finite')
+        # Amendment 2.  The database holds a number as a decimal.  A number written with a decimal point or an exponent
+        # whose size is 1e16 or more comes back from it as a whole number, and negative zero comes back as zero.  The gate
+        # signs the design as it was sent, the stored copy would then differ from what was signed, and the record of
+        # the baseline could not verify again.  Such a number is refused here, before anything is run or recorded.
+        if abs(v) >= 1e16 or repr(v) == '-0.0':
+            raise BadRequest('a number cannot be kept as written: with a decimal point or an exponent its size must be below 1e16, and it must not be negative zero')
         return v
 
     def constant(name):
@@ -287,8 +294,12 @@ class Front:
             envelope = load_envelope(self.home / 'baselines' / h / 'baseline.json', self.engineer_keys)
             if envelope['baseline_sha256'] != h or root_for(envelope['card']) != binding['root']:
                 envelope = None
-        except (OSError, ValueError, KeyError, TypeError, AttributeError, BaselineInvalid):
-            envelope = None
+        except Exception as exc:                             # Amendment 2: any way of being unusable, a file nested too deep to read included;
+            envelope = None                                  # nothing is shown from it, and a design sent still goes to the gate, which decides
+            try:
+                print(f'front door: the stored baseline of job {binding["job"]} could not be read ({type(exc).__name__})', file=sys.stderr, flush=True)
+            except OSError:                                  # a log that cannot be written must not stop the design reaching the gate
+                pass
         return ServiceClient(self, binding, envelope)
 
     NO_BASELINE = (500, refusal('BASELINE_UNAVAILABLE', 'The baseline held by the verification service for this job is not the one the responsible engineer signed.  '

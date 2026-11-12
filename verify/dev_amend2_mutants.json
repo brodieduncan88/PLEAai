@@ -1,0 +1,770 @@
+{
+ "A1": {
+  "defect": "the repair is taken out: the tool again names only four kinds of error",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F15",
+   "R14",
+   "R16"
+  ],
+  "failed_checks": {
+   "R14": [
+    "each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass",
+    "the tool returned a verdict every time and the gate host kept running",
+    "the record holds fourteen UNKNOWNs with the reason BASELINE_MISMATCH, and no run without a verdict",
+    "every one of them was sent to the engineer, in a notice that is not empty",
+    "no notice carries a line of its own from the changed file; and no word of the file, and no path of the service's own folder, is in an answer, in the record or in a notice"
+   ],
+   "R16": [
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own"
+   ],
+   "F15": [
+    "a stored file that is no longer a card at all, or is nested too deep to read, is not shown, and a design sent is decided UNKNOWN by the gate in the same way and sent to the engineer (Amendment 2)",
+    "no run met the check, the record verifies and the status is NOT VERIFIED"
+   ]
+  }
+ },
+ "A2": {
+  "defect": "the repair names only a card that fails its own rules (BaselineInvalid), not a part of the wrong kind or a file nested too deep",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F15",
+   "R14",
+   "R16"
+  ],
+  "failed_checks": {
+   "R14": [
+    "each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass",
+    "the tool returned a verdict every time and the gate host kept running",
+    "the record holds fourteen UNKNOWNs with the reason BASELINE_MISMATCH, and no run without a verdict",
+    "every one of them was sent to the engineer, in a notice that is not empty",
+    "no notice carries a line of its own from the changed file; and no word of the file, and no path of the service's own folder, is in an answer, in the record or in a notice"
+   ],
+   "R16": [
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own"
+   ],
+   "F15": [
+    "a stored file that is no longer a card at all, or is nested too deep to read, is not shown, and a design sent is decided UNKNOWN by the gate in the same way and sent to the engineer (Amendment 2)",
+    "no run met the check, the record verifies and the status is NOT VERIFIED"
+   ]
+  }
+ },
+ "A3": {
+  "defect": "the repair puts the exception's own words, which can quote the changed file, into the verdict and the notice",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R14",
+   "R16"
+  ],
+  "failed_checks": {
+   "R14": [
+    "each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass",
+    "the tool returned a verdict every time and the gate host kept running",
+    "the record holds fourteen UNKNOWNs with the reason BASELINE_MISMATCH, and no run without a verdict",
+    "every one of them was sent to the engineer, in a notice that is not empty",
+    "no notice carries a line of its own from the changed file; and no word of the file, and no path of the service's own folder, is in an answer, in the record or in a notice",
+    "the record verifies: fourteen unknown, one not met, one met, and met for that design only"
+   ],
+   "R16": [
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own"
+   ]
+  }
+ },
+ "A4": {
+  "defect": "a notice is written over an earlier one of the same name, as before",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F17",
+   "R16"
+  ],
+  "failed_checks": {
+   "R16": [
+    "five results of one name in one second give five notices, named in turn, each holding its own text"
+   ],
+   "F17": [
+    "each has its own notice: two files with different names, neither empty, each naming its own design",
+    "the inbox holds one notice for every failure, and the record verifies with all of them"
+   ]
+  }
+ },
+ "A5": {
+  "defect": "when two notices would share a name the second is not written",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F17",
+   "R16"
+  ],
+  "failed_checks": {
+   "R16": [
+    "five results of one name in one second give five notices, named in turn, each holding its own text"
+   ],
+   "F17": [
+    "each has its own notice: two files with different names, neither empty, each naming its own design",
+    "the inbox holds one notice for every failure, and the record verifies with all of them"
+   ]
+  }
+ },
+ "A6": {
+  "defect": "the front door's own reading of the stored file names six kinds of error, as before",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F15"
+  ],
+  "failed_checks": {
+   "F15": [
+    "a stored file that is no longer a card at all, or is nested too deep to read, is not shown, and a design sent is decided UNKNOWN by the gate in the same way and sent to the engineer (Amendment 2)",
+    "no run met the check, the record verifies and the status is NOT VERIFIED"
+   ]
+  }
+ },
+ "A7": {
+  "defect": "no notice is sent when no usable baseline is held",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F15",
+   "R5",
+   "R14",
+   "R16"
+  ],
+  "failed_checks": {
+   "R5": [
+    "all five results were sent to the engineer"
+   ],
+   "R14": [
+    "every one of them was sent to the engineer, in a notice that is not empty"
+   ],
+   "R16": [
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own"
+   ],
+   "F15": [
+    "all three results were sent to the engineer",
+    "a stored file that is no longer a card at all, or is nested too deep to read, is not shown, and a design sent is decided UNKNOWN by the gate in the same way and sent to the engineer (Amendment 2)"
+   ]
+  }
+ },
+ "A8": {
+  "defect": "an unusable stored file is answered as a design outside the baseline (FAIL), not as UNKNOWN",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F15",
+   "R14",
+   "R16"
+  ],
+  "failed_checks": {
+   "R14": [
+    "each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass",
+    "the record holds fourteen UNKNOWNs with the reason BASELINE_MISMATCH, and no run without a verdict",
+    "no notice carries a line of its own from the changed file; and no word of the file, and no path of the service's own folder, is in an answer, in the record or in a notice",
+    "the record verifies: fourteen unknown, one not met, one met, and met for that design only"
+   ],
+   "R16": [
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own"
+   ],
+   "F15": [
+    "a stored file that is no longer a card at all, or is nested too deep to read, is not shown, and a design sent is decided UNKNOWN by the gate in the same way and sent to the engineer (Amendment 2)",
+    "no run met the check, the record verifies and the status is NOT VERIFIED"
+   ]
+  }
+ },
+ "A9": {
+  "defect": "the front door accepts any finite number, as before",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F18"
+  ],
+  "failed_checks": {
+   "F18": [
+    "each of nine numbers the database would hand back changed is refused (400), and so are three nested inside the design, a negative zero among them",
+    "through the tool and the command line such a number in a design not sent before is refused, and each answer says nothing was recorded",
+    "nothing happened: no run of the check, no audit row, no notice",
+    "seven numbers beside them are decided: each a signed FAIL for a design outside the baseline, sent to the engineer, and the same answer when sent again",
+    "a good design then meets the check, and the record verifies: eight runs, DECLARED CHECK MET",
+    "the rule matches the database: of 872 numbers, the front door accepts a number exactly when the database hands it back as written, and some of each kind are in the sample"
+   ]
+  }
+ },
+ "A10": {
+  "defect": "the front door refuses a large number but lets negative zero through",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F18"
+  ],
+  "failed_checks": {
+   "F18": [
+    "each of nine numbers the database would hand back changed is refused (400), and so are three nested inside the design, a negative zero among them",
+    "through the tool and the command line such a number in a design not sent before is refused, and each answer says nothing was recorded",
+    "nothing happened: no run of the check, no audit row, no notice",
+    "seven numbers beside them are decided: each a signed FAIL for a design outside the baseline, sent to the engineer, and the same answer when sent again",
+    "a good design then meets the check, and the record verifies: eight runs, DECLARED CHECK MET",
+    "the rule matches the database: of 872 numbers, the front door accepts a number exactly when the database hands it back as written, and some of each kind are in the sample"
+   ]
+  }
+ },
+ "A11": {
+  "defect": "the front door's limit for a number is ten times too high (1e17)",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F18"
+  ],
+  "failed_checks": {
+   "F18": [
+    "each of nine numbers the database would hand back changed is refused (400), and so are three nested inside the design, a negative zero among them",
+    "nothing happened: no run of the check, no audit row, no notice",
+    "seven numbers beside them are decided: each a signed FAIL for a design outside the baseline, sent to the engineer, and the same answer when sent again",
+    "a good design then meets the check, and the record verifies: eight runs, DECLARED CHECK MET",
+    "the rule matches the database: of 872 numbers, the front door accepts a number exactly when the database hands it back as written, and some of each kind are in the sample"
+   ]
+  }
+ },
+ "A12": {
+  "defect": "the front door refuses every number written with an exponent, though most of them can be kept as written",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F18"
+  ],
+  "failed_checks": {
+   "F18": [
+    "seven numbers beside them are decided: each a signed FAIL for a design outside the baseline, sent to the engineer, and the same answer when sent again",
+    "a good design then meets the check, and the record verifies: eight runs, DECLARED CHECK MET",
+    "the rule matches the database: of 872 numbers, the front door accepts a number exactly when the database hands it back as written, and some of each kind are in the sample"
+   ]
+  }
+ },
+ "A13": {
+  "defect": "the guard round the check is taken out: a check whose output cannot be read leaves the tool by an exception",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R15",
+   "R16"
+  ],
+  "failed_checks": {
+   "R15": [
+    "a check whose output cannot be read at all is answered UNKNOWN: THE CHECK DID NOT RUN TO A RESULT (exit status 3), not an interrupted run",
+    "the tool returned a verdict every time and the gate host kept running",
+    "each FAIL and UNKNOWN was sent to the engineer: nine notices, none empty, none with a line of the check's own or a character that is not printable",
+    "the record verifies: four unknown (three CHECK_ERROR, one CHECK_OUTPUT_INVALID), five not met, one met, and nothing unprintable is kept in it"
+   ],
+   "R16": [
+    "the same error while the check is run is UNKNOWN / CHECK_ERROR with a notice, naming the kind of error and not its words; for a design outside the design space it is FAIL / DESIGN_OUTSIDE_BASELINE, the only answer the record's checker accepts for one"
+   ]
+  }
+ },
+ "A14": {
+  "defect": "text the check supplies is kept as it came, unprintable characters and line breaks included",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R15"
+  ],
+  "failed_checks": {
+   "R15": [
+    "a check that stops with unprintable bytes in its last message is UNKNOWN in the same way",
+    "a check that prints a NUL, half a surrogate pair, line breaks of three kinds, a direction mark or DEL in its basis still gets its verdict: FAIL for the failing design, DECLARED CHECK MET for the good one",
+    "the tool returned a verdict every time and the gate host kept running",
+    "each FAIL and UNKNOWN was sent to the engineer: nine notices, none empty, none with a line of the check's own or a character that is not printable",
+    "what the check said is kept, in the record and in the five notices of a FAIL: each character that is not printable written as its escape, a no-break space as a plain space, and a degree sign as it is",
+    "the record verifies: four unknown (three CHECK_ERROR, one CHECK_OUTPUT_INVALID), five not met, one met, and nothing unprintable is kept in it"
+   ]
+  }
+ },
+ "A15": {
+  "defect": "text the check supplies keeps its line breaks; only other unprintable characters are written as escapes",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R15"
+  ],
+  "failed_checks": {
+   "R15": [
+    "each FAIL and UNKNOWN was sent to the engineer: nine notices, none empty, none with a line of the check's own or a character that is not printable",
+    "what the check said is kept, in the record and in the five notices of a FAIL: each character that is not printable written as its escape, a no-break space as a plain space, and a degree sign as it is",
+    "the record verifies: four unknown (three CHECK_ERROR, one CHECK_OUTPUT_INVALID), five not met, one met, and nothing unprintable is kept in it"
+   ]
+  }
+ },
+ "A16": {
+  "defect": "the repair names a broken rule and a wrong kind of value, not a file nested too deep",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F15",
+   "R14",
+   "R16"
+  ],
+  "failed_checks": {
+   "R14": [
+    "each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass",
+    "the tool returned a verdict every time and the gate host kept running",
+    "the record holds fourteen UNKNOWNs with the reason BASELINE_MISMATCH, and no run without a verdict",
+    "every one of them was sent to the engineer, in a notice that is not empty",
+    "no notice carries a line of its own from the changed file; and no word of the file, and no path of the service's own folder, is in an answer, in the record or in a notice"
+   ],
+   "R16": [
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own"
+   ],
+   "F15": [
+    "a stored file that is no longer a card at all, or is nested too deep to read, is not shown, and a design sent is decided UNKNOWN by the gate in the same way and sent to the engineer (Amendment 2)",
+    "no run met the check, the record verifies and the status is NOT VERIFIED"
+   ]
+  }
+ },
+ "A17": {
+  "defect": "the repair quotes the changed file after all, made printable and kept on one line",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R14",
+   "R16"
+  ],
+  "failed_checks": {
+   "R14": [
+    "no notice carries a line of its own from the changed file; and no word of the file, and no path of the service's own folder, is in an answer, in the record or in a notice"
+   ],
+   "R16": [
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own"
+   ]
+  }
+ },
+ "A18": {
+  "defect": "the new refusal does not name the baseline it was asked for",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F15",
+   "R14",
+   "R16"
+  ],
+  "failed_checks": {
+   "R14": [
+    "every one of them was sent to the engineer, in a notice that is not empty",
+    "the record verifies: fourteen unknown, one not met, one met, and met for that design only"
+   ],
+   "R16": [
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own"
+   ],
+   "F15": [
+    "a stored file that is no longer a card at all, or is nested too deep to read, is not shown, and a design sent is decided UNKNOWN by the gate in the same way and sent to the engineer (Amendment 2)",
+    "no run met the check, the record verifies and the status is NOT VERIFIED"
+   ]
+  }
+ },
+ "A19": {
+  "defect": "the tool does not put its verdict to the record's checker before it answers",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R15",
+   "R16"
+  ],
+  "failed_checks": {
+   "R15": [
+    "a check that gives a value to 38 significant digits, which cannot be written exactly, is UNKNOWN: THE CHECK GAVE NO USABLE RESULT, not a FAIL the record's checker would reject",
+    "the record verifies: four unknown (three CHECK_ERROR, one CHECK_OUTPUT_INVALID), five not met, one met, and nothing unprintable is kept in it"
+   ],
+   "R16": [
+    "a verdict the record's checker would reject (a margin that does not recompute) is not returned: UNKNOWN / CHECK_OUTPUT_INVALID with a notice"
+   ]
+  }
+ },
+ "A20": {
+  "defect": "a stored file that cannot be opened is answered in the error's own words, the path of the service's folder among them",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R14"
+  ],
+  "failed_checks": {
+   "R14": [
+    "no notice carries a line of its own from the changed file; and no word of the file, and no path of the service's own folder, is in an answer, in the record or in a notice"
+   ]
+  }
+ },
+ "A21": {
+  "defect": "a space that is not the plain one is written as an escape, and so is every character outside ASCII",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R15"
+  ],
+  "failed_checks": {
+   "R15": [
+    "what the check said is kept, in the record and in the five notices of a FAIL: each character that is not printable written as its escape, a no-break space as a plain space, and a degree sign as it is"
+   ]
+  }
+ },
+ "A22": {
+  "defect": "only characters below a space and half surrogate pairs are written as escapes: other line breaks, direction marks and DEL are let through",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R15"
+  ],
+  "failed_checks": {
+   "R15": [
+    "each FAIL and UNKNOWN was sent to the engineer: nine notices, none empty, none with a line of the check's own or a character that is not printable",
+    "what the check said is kept, in the record and in the five notices of a FAIL: each character that is not printable written as its escape, a no-break space as a plain space, and a degree sign as it is",
+    "the record verifies: four unknown (three CHECK_ERROR, one CHECK_OUTPUT_INVALID), five not met, one met, and nothing unprintable is kept in it"
+   ]
+  }
+ },
+ "A23": {
+  "defect": "the text a check supplies is thrown away, not made printable",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R15"
+  ],
+  "failed_checks": {
+   "R15": [
+    "what the check said is kept, in the record and in the five notices of a FAIL: each character that is not printable written as its escape, a no-break space as a plain space, and a degree sign as it is"
+   ]
+  }
+ },
+ "A24": {
+  "defect": "the front door looks for negative zero only among the design's own values, not inside them",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "F18"
+  ],
+  "failed_checks": {
+   "F18": [
+    "each of nine numbers the database would hand back changed is refused (400), and so are three nested inside the design, a negative zero among them",
+    "nothing happened: no run of the check, no audit row, no notice",
+    "seven numbers beside them are decided: each a signed FAIL for a design outside the baseline, sent to the engineer, and the same answer when sent again",
+    "a good design then meets the check, and the record verifies: eight runs, DECLARED CHECK MET"
+   ]
+  }
+ },
+ "A25": {
+  "defect": "a third notice of the same name is written over the second",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R16"
+  ],
+  "failed_checks": {
+   "R16": [
+    "five results of one name in one second give five notices, named in turn, each holding its own text"
+   ]
+  }
+ },
+ "A26": {
+  "defect": "the repair names exactly the three kinds of error the stored-file tests make, not any error",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R16"
+  ],
+  "failed_checks": {
+   "R16": [
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own"
+   ]
+  }
+ },
+ "A27": {
+  "defect": "the guard round the check names exactly the two kinds of error the check tests make, not any error",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R16"
+  ],
+  "failed_checks": {
+   "R16": [
+    "the same error while the check is run is UNKNOWN / CHECK_ERROR with a notice, naming the kind of error and not its words; for a design outside the design space it is FAIL / DESIGN_OUTSIDE_BASELINE, the only answer the record's checker accepts for one"
+   ]
+  }
+ },
+ "A28": {
+  "defect": "the guard round the check repeats the error's own words",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R16"
+  ],
+  "failed_checks": {
+   "R16": [
+    "the same error while the check is run is UNKNOWN / CHECK_ERROR with a notice, naming the kind of error and not its words; for a design outside the design space it is FAIL / DESIGN_OUTSIDE_BASELINE, the only answer the record's checker accepts for one"
+   ]
+  }
+ },
+ "A29": {
+  "defect": "a notice is written in the encoding of the locale, as before",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R16"
+  ],
+  "failed_checks": {
+   "R16": [
+    "under a locale that is not UTF-8 the notice of a FAIL, which holds text outside ASCII, is still written"
+   ]
+  }
+ },
+ "A30": {
+  "defect": "when the check cannot be run for a design outside the design space the answer is CHECK_ERROR, which the record's checker rejects",
+  "tests_run": [
+   "R5",
+   "R14",
+   "R15",
+   "R16",
+   "F7",
+   "F15",
+   "F17",
+   "F18"
+  ],
+  "caught_by": [
+   "R16"
+  ],
+  "failed_checks": {
+   "R16": [
+    "the same error while the check is run is UNKNOWN / CHECK_ERROR with a notice, naming the kind of error and not its words; for a design outside the design space it is FAIL / DESIGN_OUTSIDE_BASELINE, the only answer the record's checker accepts for one"
+   ]
+  }
+ }
+}
