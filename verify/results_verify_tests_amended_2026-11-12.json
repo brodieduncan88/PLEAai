@@ -1,0 +1,871 @@
+{
+ "tests": {
+  "R1": {
+   "title": "A design that does not meet the requirement gets a signed FAIL with the reason, kept on the record and sent to the engineer.",
+   "ok": true,
+   "checks": {
+    "the assistant is told FAIL, with the required and achieved values (exit status 2)": true,
+    "the record holds the FAIL with reason LIMIT_NOT_MET, 180 against 200, margin -20": true,
+    "the record verifies offline and its status is NOT VERIFIED": true,
+    "one notice is in the engineer's inbox, from the service, naming the failure": true
+   },
+   "evidence": {
+    "exit": 2,
+    "first_line": "FAIL: REQUIREMENT NOT MET",
+    "says_values": true,
+    "record_verifies": true,
+    "why": [],
+    "status": "NOT VERIFIED",
+    "run": {
+     "outcome": "FAIL",
+     "reason": "LIMIT_NOT_MET",
+     "criteria": [
+      {
+       "id": "service_temperature",
+       "met": false,
+       "limit": "200",
+       "units": "C",
+       "margin": "-20",
+       "achieved": "180",
+       "quantity": "continuous service temperature",
+       "comparison": ">="
+      }
+     ]
+    },
+    "notices": [
+     "20261112T030645Z_FAIL_3a94e4be.txt"
+    ],
+    "notice_head": [
+     "To: D. Marsh",
+     "From: the verification service (not the assistant)",
+     "",
+     "FAIL: REQUIREMENT NOT MET"
+    ]
+   },
+   "seconds": 1.8
+  },
+  "R2": {
+   "title": "The same design sent again returns the same verdict: one run, one notice.",
+   "ok": true,
+   "checks": {
+    "both answers are the same FAIL": true,
+    "the check ran once and one notice was sent": true,
+    "the record shows one official run": true
+   },
+   "evidence": {
+    "first": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "second": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "tool_calls": 1,
+    "notices": 1,
+    "official_runs": 1,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 2.1
+  },
+  "R3": {
+   "title": "A design outside the baselined design space is a FAIL, and the check is not run on it.",
+   "ok": true,
+   "checks": {
+    "each is answered FAIL: DESIGN OUTSIDE THE BASELINE (exit status 2)": true,
+    "the record holds four FAILs with that reason and no achieved value": true,
+    "each was sent to the engineer and the status is NOT VERIFIED": true
+   },
+   "evidence": {
+    "answers": {
+     "material off the approved list": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "number outside its bounds": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "an extra parameter": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a parameter left out": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ]
+    },
+    "reasons": [
+     "DESIGN_OUTSIDE_BASELINE",
+     "DESIGN_OUTSIDE_BASELINE",
+     "DESIGN_OUTSIDE_BASELINE",
+     "DESIGN_OUTSIDE_BASELINE"
+    ],
+    "achieved": [
+     [
+      null
+     ],
+     [
+      null
+     ],
+     [
+      null
+     ],
+     [
+      null
+     ]
+    ],
+    "notices": 4,
+    "status": "NOT VERIFIED",
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 4.0
+  },
+  "R4": {
+   "title": "A design that meets the check after two that did not: met for that design only, and the failures stay on the record.",
+   "ok": true,
+   "checks": {
+    "the three runs answer FAIL, FAIL, met (exit 2, 2, 0)": true,
+    "the status is DECLARED CHECK MET with both failures still counted": true,
+    "it is met for that exact design only": true,
+    "the two failures were sent to the engineer and are still open": true
+   },
+   "evidence": {
+    "exits": [
+     2,
+     2,
+     0
+    ],
+    "status": "DECLARED CHECK MET",
+    "counts": [
+     3,
+     1,
+     2
+    ],
+    "open": 2,
+    "released_good": {
+     "design_sha256": "3d052bbd639f6e6ef2e6994aaf59c480fae29d84702895123feecb15b625dc34",
+     "met": true,
+     "seen": true
+    },
+    "released_other": {
+     "design_sha256": "eab444043649c1ab07c2ac59b5de8ae06de44d719e9dc4d9598be7006bb569ba",
+     "met": false,
+     "seen": false
+    },
+    "released_failed": {
+     "design_sha256": "3a94e4bee21282fdcad24b5fd7bbd593c47e864c747dda8bd5123abcb7c04e46",
+     "met": false,
+     "seen": true
+    },
+    "record_verifies": true,
+    "why": [],
+    "notices": 2
+   },
+   "seconds": 3.7
+  },
+  "R5": {
+   "title": "A check, a data file or a card changed after baselining gives UNKNOWN, never a pass.",
+   "ok": true,
+   "checks": {
+    "changed data gives UNKNOWN (exit status 3), not a pass": true,
+    "a changed check gives UNKNOWN": true,
+    "a stored card with a relaxed limit is not used": true,
+    "with the files restored the same requirement still fails": true,
+    "no run met the check, the record verifies and the status is NOT VERIFIED": true,
+    "all five results were sent to the engineer": true
+   },
+   "evidence": {
+    "data": [
+     3,
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+    ],
+    "check": [
+     3,
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+    ],
+    "card": [
+     3,
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+    ],
+    "forged": [
+     3,
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+    ],
+    "restored": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "outcomes": [
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ]
+    ],
+    "status": "NOT VERIFIED",
+    "record_verifies": true,
+    "why": [],
+    "notices": 5
+   },
+   "seconds": 5.0
+  },
+  "R6": {
+   "title": "A check that crashes, prints rubbish, returns not-a-number, zero or an absurd value, or hangs, gives UNKNOWN with its reason.",
+   "ok": true,
+   "checks": {
+    "each answers UNKNOWN (exit status 3)": true,
+    "the record gives each its reason": true,
+    "a check that hangs is stopped and is UNKNOWN": true,
+    "a material that would have passed is not a pass when the check misbehaves": true,
+    "every UNKNOWN was sent to the engineer": true
+   },
+   "evidence": {
+    "exits": {
+     "crash": 3,
+     "garbage": 3,
+     "nan": 3,
+     "zero": 3,
+     "huge": 3
+    },
+    "reasons": {
+     "nan": [
+      "UNKNOWN",
+      "CHECK_OUTPUT_INVALID"
+     ],
+     "garbage": [
+      "UNKNOWN",
+      "CHECK_OUTPUT_INVALID"
+     ],
+     "huge": [
+      "UNKNOWN",
+      "RESULT_IMPLAUSIBLE"
+     ],
+     "zero": [
+      "UNKNOWN",
+      "RESULT_IMPLAUSIBLE"
+     ],
+     "crash": [
+      "UNKNOWN",
+      "CHECK_ERROR"
+     ]
+    },
+    "hang": [
+     "UNKNOWN",
+     "CHECK_ERROR",
+     1.0
+    ],
+    "status": "NOT VERIFIED",
+    "notices": 5,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 6.0
+  },
+  "R7": {
+   "title": "The service dying part-way through a run leaves it counted, without a verdict, and never run again.",
+   "ok": true,
+   "checks": {
+    "the host died during the run (exit 137) and the assistant was not told it passed": true,
+    "asked again, twice, the answer is UNKNOWN: interrupted (exit status 3)": true,
+    "the check was started once for that design and never produced a verdict": true,
+    "the record shows it INTERRUPTED and counted, and that design is not verified": true,
+    "a different design can still be verified": true
+   },
+   "evidence": {
+    "during": [
+     4,
+     "The verification service could not be reached (RemoteDisconnected).  NOT VERIFIED.  The run may be pending; ask again."
+    ],
+    "host_exit": 137,
+    "again": [
+     3,
+     "UNKNOWN: THE RUN WAS INTERRUPTED"
+    ],
+    "again2": 3,
+    "tool_calls_for_design": 1,
+    "verdicts_for_design": 0,
+    "outcomes": [
+     "INTERRUPTED",
+     "PASS"
+    ],
+    "released": {
+     "design_sha256": "3d052bbd639f6e6ef2e6994aaf59c480fae29d84702895123feecb15b625dc34",
+     "met": false,
+     "seen": true
+    },
+    "other": 0,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 5.6
+  },
+  "R8": {
+   "title": "A baseline is refused unless its check is seen to fail a bad design and pass a good one.",
+   "ok": true,
+   "checks": {
+    "seven defective baselines are refused, each with its reason": true,
+    "the sound one is baselined, and only it is stored": true
+   },
+   "evidence": {
+    "got": {
+     "no failing control": "controls need at least one design that must FAIL and one that must PASS: a check nobody has seen fail is not a check",
+     "no passing control": "controls need at least one design that must FAIL and one that must PASS: a check nobody has seen fail is not a check",
+     "must-fail control passes": "control case \"PA66 must fail at 200 C\" was expected to FAIL and gave PASS (MET): not baselined",
+     "must-pass control fails": "control case \"PEEK must pass at 200 C (outside the design space on purpose)\" was expected to PASS and gave FAIL (LIMIT_NOT_MET): not baselined",
+     "limit so loose nothing fails": "control case \"PA66 must fail at 200 C\" was expected to FAIL and gave PASS (MET): not baselined",
+     "no stated limits of the check": "check.stated_limits is needed: say what the check does not cover",
+     "no plausible range": "criterion service_temperature: a plausible range (min < max) is needed, so that zero or a unit slip is not read as a result",
+     "the fixture as written": "baselined"
+    },
+    "baselines_stored": 1
+   },
+   "seconds": 0.4
+  },
+  "R9": {
+   "title": "The record verifies offline; an edited one does not, even when re-signed with the engineer's key.",
+   "ok": true,
+   "checks": {
+    "the record verifies, by library and by command line": true,
+    "without keys given it says consistent, not verified": true,
+    "every single-value edit fails": true,
+    "a wrong engineer key fails": true,
+    "re-signed with the engineer's key, edits verify only where the engineer alone is the source": true
+   },
+   "evidence": {
+    "verifies": true,
+    "cli_exit": 0,
+    "cli_says": [
+     "RECORD VERIFIED against the keys given.",
+     "STATUS: DECLARED CHECK MET, for design 3d052bbd639f6e6e\u2026 only, after 4 official runs (2 not met, 1 unknown)."
+    ],
+    "unpinned_exit": 0,
+    "unpinned_says": [
+     "RECORD CONSISTENT, but the keys were rea"
+    ],
+    "values": 1496,
+    "edits_that_still_verify": [],
+    "resigned_edits_that_verify": [
+     "as_of.time",
+     "baseline.controls_run.criteria.achieved"
+    ],
+    "outcomes": [
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "UNKNOWN"
+    ],
+    "open": 2
+   },
+   "seconds": 18.8
+  },
+  "R10": {
+   "title": "A requirement changes only as a new, signed baseline that says what it replaced and what had failed.",
+   "ok": true,
+   "checks": {
+    "a revision with no reason is refused": true,
+    "the old baseline takes no further runs (exit status 4, nothing run)": true,
+    "the new card says what it replaced and what had failed, counted by the console": true,
+    "the design that failed on A meets the check on B, and B's record is headed CHANGED AFTER THE EVENT": true,
+    "the old record still verifies and still shows the failure": true
+   },
+   "evidence": {
+    "first": 2,
+    "no_reason": "a revision needs a reason",
+    "weak_control": "control case \"PEEK-free control: an unlisted material fails the lookup\" was expe",
+    "on_old": [
+     4,
+     "REFUSED: this baseline has been stopped (it was superseded or closed by the responsible engineer).  Nothing was run."
+    ],
+    "on_new": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "supersedes": {
+     "baseline_sha256": "0ffa7cf2d36ea5fb4a997aefa19eec71784dd8c9ea88324aeb9989caed0faf84",
+     "revision": "A",
+     "reason": "Customer lowered the operating temperature (CR-17).",
+     "official_runs": 1,
+     "met": 0,
+     "not_met": 1,
+     "unknown": 0
+    },
+    "rev_a": {
+     "verifies": true,
+     "status": "NOT VERIFIED",
+     "not_met": 1
+    },
+    "rev_b": {
+     "verifies": true,
+     "status": "DECLARED CHECK MET"
+    },
+    "headline": [
+     "CHANGED AFTER THE EVENT: this baseline replaced 0ffa7cf2d36ea5fb\u2026 (rev A) after 1 official runs on i"
+    ]
+   },
+   "seconds": 3.1
+  },
+  "R11": {
+   "title": "What the assistant's side holds cannot do the engineer's part.",
+   "ok": true,
+   "checks": {
+    "the gateway credential cannot provision a budget or stop one": true,
+    "a relaxed baseline signed by another key is not accepted by the client": true,
+    "even trusting that key, nothing is run: no budget exists for a baseline the engineer did not provision": true,
+    "the real record is unchanged: one run, NOT VERIFIED": true,
+    "even with a budget provisioned for it, a baseline the pinned engineer did not sign gets UNKNOWN, not a pass": true
+   },
+   "evidence": {
+    "forged_baseline_with_a_budget": [
+     3,
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+    ],
+    "provision_with_gateway_credential": "refused",
+    "stop_with_gateway_credential": "refused",
+    "still_runs": 2,
+    "forged_copy": [
+     4,
+     "The verification client is not configured correctly: the baseline is n"
+    ],
+    "forged_copy_own_key": [
+     4,
+     "REFUSED: this baseline has no budget at the control plane.  It was not"
+    ],
+    "tool_calls": 1,
+    "official_runs": 1,
+    "status": "NOT VERIFIED",
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 2.9
+  },
+  "R12": {
+   "title": "The engineer's disposition of a failure is signed, shown on the record, and cannot be made by anyone else.",
+   "ok": true,
+   "checks": {
+    "before the disposition the failure is open; after it, acknowledged": true,
+    "a run that met the check takes no disposition": true,
+    "a disposition signed by another key makes the record fail": true
+   },
+   "evidence": {
+    "open_before": 1,
+    "open_after": 0,
+    "acknowledged": [
+     true
+    ],
+    "on_pass": "a run that met the declared check needs no disposition",
+    "verifies": true,
+    "why": [],
+    "with_forged_acknowledgement": false,
+    "forged_why": [
+     "8 acknowledgements: a-2f0752d89dd43a32: not signed by the engineer's key"
+    ],
+    "ack_signer_is_engineer": true
+   },
+   "seconds": 3.3
+  },
+  "R13": {
+   "title": "A verdict that does not follow from its own numbers is rejected, even when the gate and the engineer have both signed it.",
+   "ok": true,
+   "checks": {
+    "the honest record verifies": true,
+    "the altered verdict, signed by the gate key and the engineer key, fails, and only at the re-derived verdict": true,
+    "its status is NOT VERIFIED": true
+   },
+   "evidence": {
+    "honest_record_verifies": true,
+    "forged_record_verifies": false,
+    "failed": [
+     "6 gate reports and re-derived verdicts: a-65eb506c480ec484: service_temperature: recorded as met, but 180 >= 200 is False; a-65eb506c480ec484: reason MET does not follow from the comparisons"
+    ],
+    "status": "NOT VERIFIED"
+   },
+   "seconds": 1.9
+  },
+  "R14": {
+   "title": "A stored baseline that is no longer a card at all gives a signed UNKNOWN and a notice, like any other changed baseline: never an interrupted run, never a pass.",
+   "ok": true,
+   "checks": {
+    "each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass": true,
+    "the tool returned a verdict every time and the gate host kept running": true,
+    "the record holds fourteen UNKNOWNs with the reason BASELINE_MISMATCH, and no run without a verdict": true,
+    "every one of them was sent to the engineer, in a notice that is not empty": true,
+    "no notice carries a line of its own from the changed file; and no word of the file, and no path of the service's own folder, is in an answer, in the record or in a notice": true,
+    "with the file restored a failing design fails and a good design meets the check": true,
+    "the record verifies: fourteen unknown, one not met, one met, and met for that design only": true
+   },
+   "evidence": {
+    "answers": {
+     "a required field removed": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "the requirement turned into a list": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "a criterion turned into text": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "a design-space rule turned into text": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "the signature turned into text": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "a file nested a hundred thousand deep": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "a name holding half a surrogate pair": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "a repeated name holding a NUL": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "a name holding line breaks and a headline": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "a repeated name that the broken rule would quote": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "an empty file": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "text that is not JSON": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "a JSON list": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ],
+     "the file removed": [
+      3,
+      "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+     ]
+    },
+    "host_alive": true,
+    "restored": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "passes": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "outcomes": [
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "PASS",
+      "MET"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ]
+    ],
+    "notices": 14,
+    "empty_notices": 0,
+    "forged_lines": 0,
+    "tool_calls": 16,
+    "verdict_lines": 16,
+    "quoted_from_the_file": 0,
+    "service_path_shown": 0,
+    "reasons_given": [
+     "the stored file is not a baseline card (a part of it is missing or is not as a card needs it)",
+     "the stored file is not a baseline card (a part of it is the wrong kind of value)",
+     "the stored file is not a baseline card (it is nested too deeply to read)"
+    ],
+    "status": "DECLARED CHECK MET",
+    "met": 1,
+    "unknown": 14,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 18.6
+  },
+  "R15": {
+   "title": "Whatever a baselined check prints, the answer is a signed verdict that can be kept and checked again, and a notice: never an interrupted run, never a record left unable to verify.",
+   "ok": true,
+   "checks": {
+    "a check whose output cannot be read at all is answered UNKNOWN: THE CHECK DID NOT RUN TO A RESULT (exit status 3), not an interrupted run": true,
+    "a check that stops with unprintable bytes in its last message is UNKNOWN in the same way": true,
+    "a check that gives a value to 38 significant digits, which cannot be written exactly, is UNKNOWN: THE CHECK GAVE NO USABLE RESULT, not a FAIL the record's checker would reject": true,
+    "a check that prints a NUL, half a surrogate pair, line breaks of three kinds, a direction mark or DEL in its basis still gets its verdict: FAIL for the failing design, DECLARED CHECK MET for the good one": true,
+    "the tool returned a verdict every time and the gate host kept running": true,
+    "each FAIL and UNKNOWN was sent to the engineer: nine notices, none empty, none with a line of the check's own or a character that is not printable": true,
+    "what the check said is kept, in the record and in the five notices of a FAIL: each character that is not printable written as its escape, a no-break space as a plain space, and a degree sign as it is": true,
+    "the record verifies: four unknown (three CHECK_ERROR, one CHECK_OUTPUT_INVALID), five not met, one met, and nothing unprintable is kept in it": true
+   },
+   "evidence": {
+    "unreadable": {
+     "output nested a hundred thousand deep": [
+      3,
+      "UNKNOWN: THE CHECK DID NOT RUN TO A RESULT"
+     ],
+     "a number written with an exponent of a million": [
+      3,
+      "UNKNOWN: THE CHECK DID NOT RUN TO A RESULT"
+     ]
+    },
+    "noise": [
+     3,
+     "UNKNOWN: THE CHECK DID NOT RUN TO A RESULT"
+    ],
+    "digits": [
+     3,
+     "UNKNOWN: THE CHECK GAVE NO USABLE RESULT"
+    ],
+    "failing": {
+     "a NUL in its basis": [
+      2,
+      "FAIL: REQUIREMENT NOT MET"
+     ],
+     "half a surrogate pair in its basis": [
+      2,
+      "FAIL: REQUIREMENT NOT MET"
+     ],
+     "lines of its own in its basis": [
+      2,
+      "FAIL: REQUIREMENT NOT MET"
+     ],
+     "other line breaks, a direction mark and DEL in its basis": [
+      2,
+      "FAIL: REQUIREMENT NOT MET"
+     ]
+    },
+    "passing": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "plain": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "host_alive": true,
+    "tool_calls": 10,
+    "verdict_lines": 10,
+    "outcomes": [
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "PASS",
+      "MET"
+     ],
+     [
+      "UNKNOWN",
+      "CHECK_ERROR"
+     ],
+     [
+      "UNKNOWN",
+      "CHECK_ERROR"
+     ],
+     [
+      "UNKNOWN",
+      "CHECK_ERROR"
+     ],
+     [
+      "UNKNOWN",
+      "CHECK_OUTPUT_INVALID"
+     ]
+    ],
+    "notices": 9,
+    "empty_notices": 0,
+    "forged_lines": 0,
+    "unprintable_in_notices": 0,
+    "unprintable_in_record": 0,
+    "kept": {
+     "the NUL": true,
+     "half a surrogate pair": true,
+     "the lines": true,
+     "the other marks": true,
+     "the last message of the check that stopped": true
+    },
+    "notices_giving_the_basis": 5,
+    "record_verifies": true,
+    "why": [],
+    "status": "DECLARED CHECK MET",
+    "met": 1,
+    "not_met": 5,
+    "unknown": 4
+   },
+   "seconds": 10.8
+  },
+  "R16": {
+   "title": "From the inside, the tool called directly with no services: its guards take an error of any kind, a verdict the record's checker would reject is not returned, notices of one name are each kept, and a notice is written under a locale that is not UTF-8.",
+   "ok": true,
+   "checks": {
+    "the tool called directly decides the plain failing design as the services do: FAIL, LIMIT_NOT_MET, one notice": true,
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own": true,
+    "the same error while the check is run is UNKNOWN / CHECK_ERROR with a notice, naming the kind of error and not its words; for a design outside the design space it is FAIL / DESIGN_OUTSIDE_BASELINE, the only answer the record's checker accepts for one": true,
+    "a verdict the record's checker would reject (a margin that does not recompute) is not returned: UNKNOWN / CHECK_OUTPUT_INVALID with a notice": true,
+    "five results of one name in one second give five notices, named in turn, each holding its own text": true,
+    "under a locale that is not UTF-8 the notice of a FAIL, which holds text outside ASCII, is still written": true
+   },
+   "evidence": {
+    "got": {
+     "encoding": "UTF-8",
+     "plain": [
+      "FAIL",
+      "LIMIT_NOT_MET",
+      "",
+      1
+     ],
+     "notice_holds_text_outside_ascii": true,
+     "reading": [
+      "UNKNOWN",
+      "BASELINE_MISMATCH",
+      "no signed baseline with this hash is held by the verification service: the stored file is not a baseline card (it could not be read)",
+      1
+     ],
+     "check_inside": [
+      "UNKNOWN",
+      "CHECK_ERROR",
+      "the check could not be run to a result: the verification service met an error it did not expect while running the check or reading what it printed (an error of the kind LookupError)",
+      1
+     ],
+     "check_outside": [
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE",
+      "the design could not be shown to be inside the baselined design space, so no result of the check is given for it",
+      1
+     ],
+     "not_as_checked": [
+      "UNKNOWN",
+      "CHECK_OUTPUT_INVALID",
+      "the numbers the check printed could not be written in a form that can be checked again (for example a value given to more than 28 significant digits)",
+      1
+     ],
+     "names": [
+      "20261112T030813Z_UNKNOWN_8f68eec4.txt",
+      "20261112T030813Z_UNKNOWN_8f68eec4_2.txt",
+      "20261112T030813Z_UNKNOWN_8f68eec4_3.txt",
+      "20261112T030813Z_UNKNOWN_8f68eec4_4.txt",
+      "20261112T030813Z_UNKNOWN_8f68eec4_5.txt"
+     ],
+     "own_text": [
+      true,
+      true,
+      true,
+      true,
+      true
+     ]
+    },
+    "other_locale": {
+     "encoding": "ANSI_X3.4-1968",
+     "plain": [
+      "FAIL",
+      "LIMIT_NOT_MET",
+      "",
+      1
+     ],
+     "notice_holds_text_outside_ascii": true
+    }
+   },
+   "seconds": 1.3
+  }
+ },
+ "passed": 16,
+ "of": 16,
+ "seconds": 89.5,
+ "PASS": true
+}

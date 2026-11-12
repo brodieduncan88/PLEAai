@@ -25,6 +25,12 @@ The front door closes both. No request names a baseline: the service knows the j
 and the baseline from a binding the engineer signed. A request that is not a design is refused before anything
 happens. A third, smaller defect is recorded in the amendment and is not closed here.
 
+**Note of 12 November 2026.** `AMENDMENT_2026-11-12.md` repairs that third defect and three more found while looking: a notice
+that could be written over another, a number in a design that could leave a record unable to verify, and a check
+that prints something unreadable. The second of these means "the front door closes both" was too strong for the second
+defect: until that amendment, a design holding one kind of number got through the front door and spoiled its record.
+`DECLARED_AMEND2.md` lists what is still open.
+
 ## The pieces
 
 | file | what it does |
