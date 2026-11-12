@@ -28,7 +28,7 @@ import unicodedata
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from plea_gateway.faults import crash_point            # noqa: E402
-from baseline import REASONS, VERDICT_FORMAT, _blank, _verdict, design_hash, evaluate, face   # noqa: E402
+from baseline import REASONS, VERDICT_FORMAT, _blank, _verdict, design_hash, design_lines, evaluate, face   # noqa: E402
 from check_record import in_design_space as inside_as_checked, rederive   # noqa: E402  (Amendment 2: the record's checker is asked before a verdict is returned)
 from verify_record import load_envelope                # noqa: E402
 
@@ -101,7 +101,8 @@ def _notify(card, baseline_sha256: str, verdict: dict) -> str:
     else:
         body = (f"To: the responsible engineer for baseline {baseline_sha256}\nFrom: the verification service (not the assistant)\n\n"
                 f"UNKNOWN: A VERIFICATION RUN WAS ASKED FOR AND NO USABLE BASELINE IS HELD\n\nReason        {verdict['detail']}\n"
-                f"Design        {json.dumps(verdict['design'], sort_keys=True)}\n\nNo check was run.  This is not a pass.  The stored baseline should be inspected.")
+                + '\n'.join(design_lines(None, verdict['design']))          # Amendment 3: marked as sent, in quotes and cut; no baseline is held to set it against
+                + "\n\nNo check was run.  This is not a pass.  The stored baseline should be inspected.")
     # Amendment 2.  The name is the time to the second, the verdict and eight digits of the design's hash, so two results
     # could share it, and the second was written over the first.  A notice is now created, never replaced: a second
     # result with the same name gets a number after it.  It is written as UTF-8 whatever the process's locale.

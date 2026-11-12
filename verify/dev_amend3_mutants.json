@@ -1,0 +1,2159 @@
+{
+ "first_pass_on_the_copy_before_the_review": {
+  "B1": {
+   "defect": "the reason lists the names that are not in the baseline, as sent, as before",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the reason that is signed repeats no name and no text from a design: none of the senders' words is in any recorded reason",
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words"
+    ],
+    "F20": [
+     "the reason that is signed, in each answer and in the record, repeats no name and no text from a design",
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the checker's print of the record holds no word a sender wrote and gives each reason that was signed; the record verifies: five not met, one unknown"
+    ]
+   }
+  },
+  "B2": {
+   "defect": "the reason repeats a text value that is not on the approved list, as before",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the reason that is signed repeats no name and no text from a design: none of the senders' words is in any recorded reason",
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words"
+    ],
+    "F20": [
+     "the reason that is signed, in each answer and in the record, repeats no name and no text from a design",
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "the checker's print of the record holds no word a sender wrote and gives each reason that was signed; the record verifies: five not met, one unknown"
+    ]
+   }
+  },
+  "B3": {
+   "defect": "the reason repeats a number of any length",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words"
+    ]
+   }
+  },
+  "B4": {
+   "defect": "the notice and the answer write the design on one line as sent, as before",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   }
+  },
+  "B5": {
+   "defect": "what was sent is shown in quotes but is not cut",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   }
+  },
+  "B6": {
+   "defect": "what was sent is cut at 60 characters, so a line of it can be longer than 78",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   }
+  },
+  "B7": {
+   "defect": "a space that follows a space is written as a space",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way",
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way"
+    ]
+   }
+  },
+  "B8": {
+   "defect": "a character outside ASCII is written as it is",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way",
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way"
+    ]
+   }
+  },
+  "B9": {
+   "defect": "a double quote inside what was sent is not escaped",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ]
+   }
+  },
+  "B10": {
+   "defect": "what was sent is written without quotes",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   }
+  },
+  "B11": {
+   "defect": "a text value for a parameter of the baseline is written plainly even when it is not on the approved list",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way"
+    ]
+   }
+  },
+  "B12": {
+   "defect": "a name that is not in the baseline is written plainly when it has no space in it",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   }
+  },
+  "B13": {
+   "defect": "the lines of what was sent are not set apart: they start at the left like the service's own",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way"
+    ]
+   }
+  },
+  "B14": {
+   "defect": "when no usable baseline is held the notice writes the design on one line as sent, as before",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   }
+  },
+  "B15": {
+   "defect": "the checker prints the record's own reason for a design outside the baseline, as before",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [],
+   "failed_checks": {}
+  },
+  "B16": {
+   "defect": "the checker's own reason lists the names that are not in the baseline",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words"
+    ],
+    "F20": [
+     "the checker's print of the record holds no word a sender wrote and gives each reason that was signed; the record verifies: five not met, one unknown"
+    ]
+   }
+  },
+  "B17": {
+   "defect": "the checker's own reason repeats a text value",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words"
+    ],
+    "F20": [
+     "the checker's print of the record holds no word a sender wrote and gives each reason that was signed; the record verifies: five not met, one unknown"
+    ]
+   }
+  },
+  "B18": {
+   "defect": "the checker's own reason is worded differently from the one the service signs",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words"
+    ]
+   }
+  },
+  "B19": {
+   "defect": "a list or an object in a design is shown as sent",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the ten notices, what a sender supplied is only on lines marked as sent, inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the nine answers given to the caller set it out the same way"
+    ]
+   }
+  },
+  "B20": {
+   "defect": "the count of what was left out is wrong by one",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ]
+   }
+  }
+ },
+ "second_pass_before_the_review_of_the_tests": {
+  "B1": {
+   "defect": "the reason lists the names that are not in the baseline, as sent, as before",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the reason that is signed repeats no name and no text from a design: none of the senders' words is in any recorded reason",
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "in process, for 15,792 designs made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, and no line of what was sent is longer than 78 characters or holds a character outside ASCII"
+    ],
+    "F20": [
+     "the reason that is signed, in each answer and in the record, repeats no name and no text from a design",
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the checker's print of the record holds no word a sender wrote and gives each reason that was signed; the record verifies: five not met, one unknown"
+    ]
+   }
+  },
+  "B2": {
+   "defect": "the reason repeats a text value that is not on the approved list, as before",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the reason that is signed repeats no name and no text from a design: none of the senders' words is in any recorded reason",
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "in process, for 15,792 designs made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, and no line of what was sent is longer than 78 characters or holds a character outside ASCII"
+    ],
+    "F20": [
+     "the reason that is signed, in each answer and in the record, repeats no name and no text from a design",
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "the checker's print of the record holds no word a sender wrote and gives each reason that was signed; the record verifies: five not met, one unknown"
+    ]
+   }
+  },
+  "B3": {
+   "defect": "the reason repeats a number of any length",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "in process, for 15,792 designs made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, and no line of what was sent is longer than 78 characters or holds a character outside ASCII"
+    ]
+   }
+  },
+  "B4": {
+   "defect": "the notice and the answer write the design on one line as sent, as before",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out",
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   }
+  },
+  "B5": {
+   "defect": "what was sent is shown in quotes but is not cut",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out",
+     "in process, for 15,792 designs made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, and no line of what was sent is longer than 78 characters or holds a character outside ASCII"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   }
+  },
+  "B6": {
+   "defect": "what was sent is cut at 60 characters, so a line of it can be longer than 78",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out",
+     "in process, for 15,792 designs made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, and no line of what was sent is longer than 78 characters or holds a character outside ASCII"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   }
+  },
+  "B7": {
+   "defect": "a space that follows a space is written as a space",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way"
+    ]
+   }
+  },
+  "B8": {
+   "defect": "a character outside ASCII is written as it is",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way"
+    ]
+   }
+  },
+  "B9": {
+   "defect": "a double quote inside what was sent is not escaped",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ]
+   }
+  },
+  "B10": {
+   "defect": "what was sent is written without quotes",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out",
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way"
+    ]
+   }
+  },
+  "B11": {
+   "defect": "a text value for a parameter of the baseline is written plainly even when it is not on the approved list",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way"
+    ]
+   }
+  },
+  "B12": {
+   "defect": "a name that is not in the baseline is written plainly when it has no space in it",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way"
+    ]
+   }
+  },
+  "B13": {
+   "defect": "the lines of what was sent carry no mark of their own: sixteen spaces, like some of the service's own",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out",
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the five answers given for a design decided against the job's baseline set it out the same way"
+    ]
+   }
+  },
+  "B14": {
+   "defect": "when no usable baseline is held the notice writes the design on one line as sent, as before",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ],
+    "F20": [
+     "in the six notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   }
+  },
+  "B15": {
+   "defect": "the checker prints the record's own reason for a design outside the baseline, as before",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason"
+    ]
+   }
+  },
+  "B16": {
+   "defect": "the checker's own reason lists the names that are not in the baseline",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason",
+     "in process, for 15,792 designs made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, and no line of what was sent is longer than 78 characters or holds a character outside ASCII"
+    ],
+    "F20": [
+     "the checker's print of the record holds no word a sender wrote and gives each reason that was signed; the record verifies: five not met, one unknown"
+    ]
+   }
+  },
+  "B17": {
+   "defect": "the checker's own reason repeats a text value",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason",
+     "in process, for 15,792 designs made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, and no line of what was sent is longer than 78 characters or holds a character outside ASCII"
+    ],
+    "F20": [
+     "the checker's print of the record holds no word a sender wrote and gives each reason that was signed; the record verifies: five not met, one unknown"
+    ]
+   }
+  },
+  "B18": {
+   "defect": "the checker's own reason is worded differently from the one the service signs",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "in process, for 15,792 designs made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, and no line of what was sent is longer than 78 characters or holds a character outside ASCII"
+    ]
+   }
+  },
+  "B19": {
+   "defect": "a list or an object in a design is shown as sent",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way"
+    ]
+   }
+  },
+  "B20": {
+   "defect": "the count of what was left out is wrong by one",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the rule itself, for 4,504 texts of every kind: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out"
+    ]
+   }
+  },
+  "B21": {
+   "defect": "every line of what was sent is shown, however many there are",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out"
+    ]
+   }
+  },
+  "B22": {
+   "defect": "a number longer than 24 characters is shown in part, so that it reads as another number",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere"
+    ]
+   }
+  },
+  "B23": {
+   "defect": "what was sent for the baseline's own parameters is left out with the rest when a design has more than twelve names of its own",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the twelve notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; nothing after the twentieth character of a name or a text is shown, and no letter of full width",
+     "the eleven answers given to the caller set it out the same way",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out"
+    ]
+   }
+  },
+  "B25": {
+   "defect": "the checker stops with an error on a whole number too long to be written, where the service answers",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in process, for 15,792 designs made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, and no line of what was sent is longer than 78 characters or holds a character outside ASCII"
+    ]
+   }
+  },
+  "B26": {
+   "defect": "a long number is described in more words, so a line of what was sent can be longer than 78 characters",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere",
+     "in process, for 15,792 designs made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, and no line of what was sent is longer than 78 characters or holds a character outside ASCII"
+    ]
+   }
+  },
+  "B27": {
+   "defect": "an empty design is set out as it was before: a design line with nothing on it",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "an ordinary design is set out on one line as it always was, and an empty one is said to be empty"
+    ]
+   }
+  },
+  "B24": {
+   "defect": "a number of up to 24 characters is not written whole on the first line: the limit for a number is 20",
+   "tests_run": [
+    "R1",
+    "R3",
+    "R5",
+    "R17",
+    "F3",
+    "F7",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere"
+    ]
+   }
+  }
+ },
+ "third_pass_on_the_code_declared_here": {
+  "B0": {
+   "defect": "no change at all: the control, which must not be caught",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [],
+   "failed_checks": {},
+   "errors": {}
+  },
+  "B1": {
+   "defect": "the reason lists the names that are not in the baseline, as sent, as before",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the reason that is signed repeats no name and no text from a design: none of the senders' words is in any recorded reason",
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ],
+    "F20": [
+     "the reason that is signed, in each answer and in the record, repeats no name and no text from a design",
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the checker's print of the record holds no word a sender wrote and prints, for each design outside the baseline, a reason equal to the one signed; the record verifies: seven not met, one unknown"
+    ]
+   },
+   "errors": {}
+  },
+  "B2": {
+   "defect": "the reason repeats a text value that is not on the approved list, as before",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the reason that is signed repeats no name and no text from a design: none of the senders' words is in any recorded reason",
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ],
+    "F20": [
+     "the reason that is signed, in each answer and in the record, repeats no name and no text from a design",
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the checker's print of the record holds no word a sender wrote and prints, for each design outside the baseline, a reason equal to the one signed; the record verifies: seven not met, one unknown"
+    ]
+   },
+   "errors": {}
+  },
+  "B3": {
+   "defect": "the reason repeats a number of any length",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ]
+   },
+   "errors": {}
+  },
+  "B4": {
+   "defect": "the notice and the answer write the design on one line as sent, as before",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out",
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ],
+    "F20": [
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   },
+   "errors": {}
+  },
+  "B5": {
+   "defect": "what was sent is shown in quotes but is not cut",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ],
+    "F20": [
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   },
+   "errors": {}
+  },
+  "B6": {
+   "defect": "what was sent is cut at 60 characters, so a line of it can be longer than 78",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ],
+    "F20": [
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   },
+   "errors": {}
+  },
+  "B7": {
+   "defect": "a space that follows a space is written as a space",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one"
+    ],
+    "F20": [
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way"
+    ]
+   },
+   "errors": {}
+  },
+  "B8": {
+   "defect": "a character outside ASCII is written as it is",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one"
+    ],
+    "F20": [
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way"
+    ]
+   },
+   "errors": {}
+  },
+  "B9": {
+   "defect": "a double quote inside what was sent is not escaped",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one"
+    ]
+   },
+   "errors": {}
+  },
+  "B10": {
+   "defect": "what was sent is written without quotes",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out",
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design",
+     "an ordinary design is set out on one line as it always was, an empty one is said to be empty, and a name of the baseline's own longer than 26 characters is cut on a line of what was sent"
+    ],
+    "F20": [
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way"
+    ]
+   },
+   "errors": {}
+  },
+  "B11": {
+   "defect": "a text value for a parameter of the baseline is written plainly even when it is not on the approved list",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design",
+     "an ordinary design is set out on one line as it always was, an empty one is said to be empty, and a name of the baseline's own longer than 26 characters is cut on a line of what was sent"
+    ],
+    "F20": [
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   },
+   "errors": {}
+  },
+  "B12": {
+   "defect": "a name that is not in the baseline is written plainly when it has no space in it",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line"
+    ]
+   },
+   "errors": {}
+  },
+  "B13": {
+   "defect": "the lines of what was sent carry no mark of their own: sixteen spaces, like some of the service's own",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out",
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere",
+     "an ordinary design is set out on one line as it always was, an empty one is said to be empty, and a name of the baseline's own longer than 26 characters is cut on a line of what was sent"
+    ],
+    "F20": [
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way"
+    ]
+   },
+   "errors": {}
+  },
+  "B14": {
+   "defect": "when no usable baseline is held the notice writes the design on one line as sent, as before",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ],
+    "F20": [
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   },
+   "errors": {}
+  },
+  "B15": {
+   "defect": "the checker prints the record's own reason for a design outside the baseline, as before",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason"
+    ]
+   },
+   "errors": {}
+  },
+  "B16": {
+   "defect": "the checker's own reason lists the names that are not in the baseline",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ],
+    "F20": [
+     "the checker's print of the record holds no word a sender wrote and prints, for each design outside the baseline, a reason equal to the one signed; the record verifies: seven not met, one unknown"
+    ]
+   },
+   "errors": {}
+  },
+  "B17": {
+   "defect": "the checker's own reason repeats a text value",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ],
+    "F20": [
+     "the checker's print of the record holds no word a sender wrote and prints, for each design outside the baseline, a reason equal to the one signed; the record verifies: seven not met, one unknown"
+    ]
+   },
+   "errors": {}
+  },
+  "B18": {
+   "defect": "the checker's own reason is worded differently from the one the service signs",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ],
+    "F20": [
+     "the checker's print of the record holds no word a sender wrote and prints, for each design outside the baseline, a reason equal to the one signed; the record verifies: seven not met, one unknown"
+    ]
+   },
+   "errors": {}
+  },
+  "B19": {
+   "defect": "a list or an object in a design is shown as sent",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line"
+    ]
+   },
+   "errors": {}
+  },
+  "B20": {
+   "defect": "the count of what was left out is wrong by one",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one"
+    ]
+   },
+   "errors": {}
+  },
+  "B21": {
+   "defect": "every line of what was sent is shown, however many there are",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out"
+    ]
+   },
+   "errors": {}
+  },
+  "B22": {
+   "defect": "a number longer than 24 characters is shown in part, so that it reads as another number",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere"
+    ]
+   },
+   "errors": {}
+  },
+  "B23": {
+   "defect": "what was sent for the baseline's own parameters is left out with the rest when a design has more than twelve names of its own",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out"
+    ]
+   },
+   "errors": {}
+  },
+  "B25": {
+   "defect": "the checker stops with an error on a whole number too long to be written, where the service answers",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ]
+   },
+   "errors": {}
+  },
+  "B26": {
+   "defect": "a long number is described in more words, so a line of what was sent can be longer than 78 characters",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ]
+   },
+   "errors": {}
+  },
+  "B27": {
+   "defect": "an empty design is set out as it was before: a design line with nothing on it",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "an ordinary design is set out on one line as it always was, an empty one is said to be empty, and a name of the baseline's own longer than 26 characters is cut on a line of what was sent"
+    ]
+   },
+   "errors": {}
+  },
+  "B24": {
+   "defect": "a number of up to 24 characters is not written whole on the first line: the limit for a number is 20",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere"
+    ]
+   },
+   "errors": {}
+  },
+  "W1b": {
+   "defect": "W1 in the service AND in the checker's own reason",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the reason that is signed repeats no name and no text from a design: none of the senders' words is in any recorded reason",
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ],
+    "F20": [
+     "the reason that is signed, in each answer and in the record, repeats no name and no text from a design",
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way",
+     "the checker's print of the record holds no word a sender wrote and prints, for each design outside the baseline, a reason equal to the one signed; the record verifies: seven not met, one unknown"
+    ]
+   },
+   "errors": {}
+  },
+  "W2c": {
+   "defect": "reason, service AND checker: a text with no plain space in it sent for a parameter with an approved list is repeated, whatever its length or letters",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the reason that is signed repeats no name and no text from a design: none of the senders' words is in any recorded reason",
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number",
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words",
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ],
+    "F20": [
+     "the reason that is signed, in each answer and in the record, repeats no name and no text from a design",
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "the checker's print of the record holds no word a sender wrote and prints, for each design outside the baseline, a reason equal to the one signed; the record verifies: seven not met, one unknown"
+    ]
+   },
+   "errors": {}
+  },
+  "W3b": {
+   "defect": "reason, service AND checker: a number of any length sent for a parameter with an approved list is repeated",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ]
+   },
+   "errors": {}
+  },
+  "W4c": {
+   "defect": "reason, service AND checker: a number outside its range is repeated when it has up to 39 characters, not 24",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ]
+   },
+   "errors": {}
+  },
+  "W5": {
+   "defect": "sent(): carriage return, escape and backspace are written as they are",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one"
+    ]
+   },
+   "errors": {}
+  },
+  "W5b": {
+   "defect": "sent(): every ASCII control character but NUL, tab and line feed is written as it is",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one"
+    ]
+   },
+   "errors": {}
+  },
+  "W6": {
+   "defect": "sent(): characters U+0080 to U+009F (the C1 controls) and U+00A1 to U+00FF are written as they are",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one"
+    ]
+   },
+   "errors": {}
+  },
+  "W7": {
+   "defect": "sent(): an object is shown as sent",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line"
+    ]
+   },
+   "errors": {}
+  },
+  "W8": {
+   "defect": "sent(): a number of 25 to 39 characters is shown whole",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ]
+   },
+   "errors": {}
+  },
+  "W9": {
+   "defect": "sent(): a text is cut at 19, not 20",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one"
+    ]
+   },
+   "errors": {}
+  },
+  "W10": {
+   "defect": "design_lines: a text with no plain space in it, sent for one of the baseline's parameters, is written plainly on the first line (any length, any letters)",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "F20",
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ],
+    "F20": [
+     "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   },
+   "errors": {}
+  },
+  "W12": {
+   "defect": "design_lines: the heading \"From the caller, not the service ...\" is left out",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width"
+    ]
+   },
+   "errors": {}
+  },
+  "W13": {
+   "defect": "design_lines: a design that is not an object is written as sent",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass",
+     "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design"
+    ]
+   },
+   "errors": {}
+  },
+  "W14": {
+   "defect": "design_lines: a name that is not the baseline's is written plainly when it is all lower-case letters",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line"
+    ]
+   },
+   "errors": {}
+  },
+  "W15": {
+   "defect": "design_lines: a name that is not the baseline's but sorts after all of the baseline's is put on the first line",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line"
+    ]
+   },
+   "errors": {}
+  },
+  "W16": {
+   "defect": "design_lines: when no usable baseline is held, only names that hold a space are quoted",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line"
+    ]
+   },
+   "errors": {}
+  },
+  "W19": {
+   "defect": "render: other recorded reasons are printed as the record gives them: not cut, not made printable",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason"
+    ]
+   },
+   "errors": {}
+  },
+  "W20": {
+   "defect": "render: the checker gives its own reason only when the recorded one begins \"the design must give exactly\"; otherwise it prints the record's",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason"
+    ]
+   },
+   "errors": {}
+  },
+  "W21": {
+   "defect": "render: the checker gives its own reason only when the recorded one is longer than 100 characters; a shorter one is printed as recorded",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason"
+    ]
+   },
+   "errors": {}
+  },
+  "W27": {
+   "defect": "face(): for a verdict that is not DESIGN_OUTSIDE_BASELINE the design is written on one line as sent, as before (the first client's answer when the service holds no usable baseline)",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way",
+     "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line",
+     "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass"
+    ]
+   },
+   "errors": {}
+  },
+  "W28": {
+   "defect": "reason, service AND checker: the names that are not the baseline's are listed, each cut at 12 characters, when there are at most 3 of them and none begins with a capital",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number"
+    ]
+   },
+   "errors": {}
+  },
+  "W35": {
+   "defect": "a name of the baseline's own longer than 26 characters is not cut (control: the fixture has none)",
+   "tests_run": [
+    "R17",
+    "F20"
+   ],
+   "caught_by": [
+    "R17"
+   ],
+   "failed_checks": {
+    "R17": [
+     "an ordinary design is set out on one line as it always was, an empty one is said to be empty, and a name of the baseline's own longer than 26 characters is cut on a line of what was sent"
+    ]
+   },
+   "errors": {}
+  }
+ }
+}

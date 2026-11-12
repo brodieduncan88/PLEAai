@@ -15,7 +15,10 @@ The card's hash (sha256 of its canonical JSON) names the baseline everywhere: in
 plane, in every attempt's arguments, and in every signed verdict.  Nothing here edits a card.  A change is a new card
 that says which one it supersedes (verify_ctl.py revise).
 
-evaluate() is the whole decision, and it is the same code for a control case and for a governed attempt:
+evaluate() is the decision, and it is the same code for a control case and for a governed attempt.  For a governed
+attempt the gate's tool then holds it to its word (verify_tools._decide, Amendment 2): a verdict that cannot be produced,
+or that the record's checker would reject, becomes UNKNOWN there, or FAIL / DESIGN_OUTSIDE_BASELINE if the design cannot
+be shown to be inside the design space.
 
   1  the design must be inside the design space, or the verdict is FAIL / DESIGN_OUTSIDE_BASELINE and the check is not run;
   2  the check and every input must hash to the card's values, or the verdict is UNKNOWN / BASELINE_MISMATCH;
@@ -96,6 +99,108 @@ def text(d) -> str:
     return s
 
 
+# ---------------------------------------------------------------------------------------------------- what a sender supplied, shown to a person
+SENT_KEEP = 20          # how many characters of a name or a text that a sender supplied are shown to a person
+SENT_NUMBER = 24        # a number is shown whole if it is no longer than this (every float is), and is not shown at all if it is longer
+SENT_LINES = 12         # how many names that are not the baseline's are shown, each on a line; the rest are counted
+SENT_MARK = '          sent: '      # what begins every line that shows something a sender supplied
+
+
+def sent(value) -> str:
+    """Something a design supplied, as it is written wherever a person reads it.  (Amendment 3, 12 November 2026.)
+
+    The sender of a design chooses its names and its text.  Written as sent, a name could be a sentence that reads like
+    the service's own, and padded with spaces it could fall at the start of a row on the reader's screen.  So a text is
+    written in double quotes and in ASCII: every other character is written as its escape, and so is a space that
+    follows a space.  At most SENT_KEEP characters are shown, and "+N" after the quotes says that N more were sent.  A
+    number is written whole if it has at most SENT_NUMBER characters, as every float has; a longer one is not shown,
+    because part of a number reads as another number.  A list or an object is counted, not shown.  Nothing returned
+    here is longer than 30 characters, so no line that design_lines() makes of it is longer than 78.  The whole design
+    is in the signed verdict; this is only how it is shown."""
+    if value is None or isinstance(value, bool):
+        return json.dumps(value)
+    if isinstance(value, (int, float)):
+        digits = _digits(value)
+        if digits is None:
+            return 'a number, not shown'
+        return digits if len(digits) <= SENT_NUMBER else f'a number of {len(digits)} characters'
+    if isinstance(value, str):
+        out, used, shown = [], 0, 0
+        for i, ch in enumerate(value):
+            o = ord(ch)
+            if ch in '"\\':
+                piece = '\\' + ch
+            elif ch == ' ' and i and value[i - 1] == ' ':
+                piece = '\\u0020'
+            elif 32 <= o < 127:
+                piece = ch
+            elif o > 0xFFFF:
+                piece = f'\\u{0xD800 + ((o - 0x10000) >> 10):04x}\\u{0xDC00 + ((o - 0x10000) & 0x3FF):04x}'
+            else:
+                piece = f'\\u{o:04x}'
+            if used + len(piece) > SENT_KEEP:
+                break
+            out.append(piece); used += len(piece); shown += 1
+        more = len(value) - shown
+        return '"' + ''.join(out) + '"' + ('' if not more else f'+{more}' if more < 100000 else '+99999+')
+    count = str(len(value)) if isinstance(value, (list, dict)) and len(value) < 100000 else '99999+'
+    if isinstance(value, list):
+        return f'a list of {count}, not shown'
+    if isinstance(value, dict):
+        return f'an object of {count}, not shown'
+    return 'a value of another kind'
+
+
+def _digits(v):
+    """A finite number as it is written, or None if the value is not one or is too long to be written at all."""
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v or v in (float('inf'), float('-inf')):
+        return None
+    try:
+        return json.dumps(v)
+    except ValueError:
+        return None
+
+
+def _plain_number(v) -> bool:
+    """A number short enough to be written whole in the service's own sentence: digits, a sign, a point and an exponent, and nothing else."""
+    digits = _digits(v)
+    return digits is not None and len(digits) <= SENT_NUMBER
+
+
+def design_lines(space, design) -> list:
+    """The design as a person reads it, in a notice or an answer.  (Amendment 3.)
+
+    What is the baseline's own, a parameter it names with a value on its approved list or a number of at most
+    SENT_NUMBER characters, is written plainly on the first line, as before.  Anything else was chosen by the sender.
+    It is set out underneath, one parameter to a line, each line beginning SENT_MARK, through sent().  First come the
+    baseline's own parameters for which something else was sent: all of them.  Then the names that are not the
+    baseline's: at most SENT_LINES of them, and a count of the rest, so that a design of hundreds of names cannot push
+    the service's own lines out of sight or choose which lines are shown.  No such line is longer than 78 characters,
+    so in a window of 80 columns or more no row begins with a sender's words.  `space` is the card's design space, or
+    None when no usable baseline is held: then all of it is the sender's."""
+    held, space = isinstance(space, dict), (space if isinstance(space, dict) else {})
+    if not isinstance(design, dict):
+        return ['Design        not an object; as sent: ' + sent(design)]
+    if not design:
+        return ['Design        no parameters were sent']
+    own, named, other = [], [], []
+    for k in sorted(design, key=str):
+        v, rule = design[k], (space.get(k) if isinstance(k, str) else None)
+        if rule is not None and (_plain_number(v) or ('choice' in rule and not isinstance(v, bool) and isinstance(v, (str, int)) and any(type(v) is type(c) and v == c for c in rule['choice']))):
+            own.append(f'{k} = {v}')
+        elif rule is not None:
+            named.append(SENT_MARK + (k if len(k) <= 26 else k[:23] + '...') + ' = ' + sent(v))
+        else:
+            other.append(SENT_MARK + sent(k) + ' = ' + sent(v))
+    L = ['Design        ' + (', '.join(own) if own else ('nothing in it is in the baseline\'s own words' if held else 'no usable baseline is held to set it against'))]
+    if named or other:
+        L.append('              From the caller, not the service (quoted; cut at 20, +N more):')
+        L += named + other[:SENT_LINES]
+        if len(other) > SENT_LINES:
+            L.append(f'                and {len(other) - SENT_LINES} more names that are not the baseline\'s, not shown')
+    return L
+
+
 # ---------------------------------------------------------------------------------------------------- the card
 def validate_card(card: dict) -> None:
     def need(cond, msg):
@@ -146,23 +251,29 @@ def validate_card(card: dict) -> None:
 
 
 def in_design_space(card: dict, design) -> tuple[bool, str]:
+    """Whether a design is inside the baselined design space and, if it is not, why.  The reason goes into the signed
+    verdict and is read by people.  Since Amendment 3 it is the service's own words throughout: it names the baseline's
+    parameters, counts the names that are not the baseline's, and repeats from the design only a number of at most
+    SENT_NUMBER characters.  A name or a text from the design is never repeated here; face() shows it, marked as sent."""
     space = card['design_space']
     if not isinstance(design, dict):
         return False, 'the design must be an object of parameters'
     if set(design) != set(space):
-        extra, missing = sorted(set(design) - set(space)), sorted(set(space) - set(design))
-        return False, 'the design must give exactly the baselined parameters' + (f'; not in the baseline: {", ".join(extra)}' if extra else '') + (f'; missing: {", ".join(missing)}' if missing else '')
+        extra, missing = set(design) - set(space), sorted(set(space) - set(design))
+        return False, ('the design must give exactly the baselined parameters' + (f'; {len(extra)} of the names sent {"is" if len(extra) == 1 else "are"} not in the baseline' if extra else '')
+                       + (f'; missing: {", ".join(missing)}' if missing else ''))
     for name, rule in space.items():
         v = design[name]
         if 'choice' in rule:
             if isinstance(v, bool) or not isinstance(v, (str, int)) or not any(type(v) is type(c) and v == c for c in rule['choice']):
-                return False, f'{name} = {v!r} is not on the approved list ({", ".join(map(str, rule["choice"]))})'
+                return False, (f'{name} = {v!r}' if _plain_number(v) else f'the value sent for {name}') + f' is not on the approved list ({", ".join(map(str, rule["choice"]))})'
         else:
             d = dec(v)
             if d is None or isinstance(v, str):
-                return False, f'{name} = {v!r} is not a number'
+                return False, f'the value sent for {name} is not a number'
             if not D(rule['min']) <= d <= D(rule['max']):
-                return False, f'{name} = {text(d)} is outside the baselined range {rule["min"]} to {rule["max"]}'
+                shown = text(d) if len(text(d)) <= SENT_NUMBER else (_digits(v) if _plain_number(v) else None)     # as before when that is short; else as it was written; else not at all
+                return False, (f'{name} = {shown}' if shown is not None else f'the value sent for {name}') + f' is outside the baselined range {rule["min"]} to {rule["max"]}'
     return True, ''
 
 
@@ -253,7 +364,7 @@ def face(card: dict, verdict: dict, runs: dict | None = None, aid: str | None = 
     L.append(f"              \"{req['statement']}\"")
     L.append(f"              baselined {card.get('baselined_at', '?')} by {eng['name']}, responsible engineer.  Baseline {card_hash(card)[:16]}…, unchanged.")
     L.append(f"Load case     {card['load_case']}")
-    L.append('Design        ' + ', '.join(f'{k} = {v}' for k, v in sorted(verdict['design'].items())) if isinstance(verdict['design'], dict) else f"Design        {verdict['design']!r}")
+    L += design_lines(card['design_space'], verdict['design'])
     L.append(f"              design hash {verdict['design_sha256'][:16]}…")
     L.append('')
     for c in verdict['criteria']:

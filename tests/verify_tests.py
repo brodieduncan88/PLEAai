@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Declared tests R1-R13 for the verification-record plug-in (verify/DECLARED_VERIFY.md states the expected outcomes),
-and R14 to R16, added by Amendment 2 (verify/DECLARED_AMEND2.md).  R1 to R13 are as they were declared.
+and R14 to R16, added by Amendment 2 (verify/DECLARED_AMEND2.md), and R17, added by Amendment 3 (verify/DECLARED_AMEND3.md).
+R1 to R13 are as they were declared.
 
-    verify_tests.py [R1 R5 ...]       all sixteen by default; writes outputs/verify_tests.json; exits 1 if any test fails
+    verify_tests.py [R1 R5 ...]       all seventeen by default; writes outputs/verify_tests.json; exits 1 if any test fails
 
 Each test makes a fresh deployment (verify/deploy.py: new keys, the released witness service and gate host under mutual
 TLS, the gate host loading verify_tools), baselines the self-test fixture in tests/verify_case/ as the responsible
@@ -11,9 +12,11 @@ independent measures are the gate tool's ledger and the engineer's inbox, both o
 
 A test passes only if every named check in it is true.  A harness or service error is a failed test.
 """
+import itertools
 import json
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -671,7 +674,184 @@ def r16():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16}
+SENDERS_WORDS = ('ZZQ', 'CORRECTION', 'C-114', 'superseded', 'No action', 'no action')             # only a sender wrote these: the service writes none of them
+WIDE = 'ＶＥＲＤＩＣＴㅤ⠀ＭＥＴ'                # VERDICT MET in letters of full width, joined by two characters that look blank
+QUOTED = re.compile(r'"(?:[^"\\]|\\.)*"')
+
+
+def folded(text: str, width: int) -> list:
+    """The rows a reader sees when each line is cut at `width` columns and carried on, as a terminal does."""
+    return [line[i:i + width] for line in text.splitlines() for i in range(0, max(len(line), 1), width)]
+
+
+def as_sent(texts: list) -> dict:
+    """What a set of notices or answers does with what senders supplied.  Each sender's text in the tests begins QS."""
+    lines = [l for t in texts for l in t.splitlines()]
+    holding = [l for l in lines if 'QS' in l]
+    return {'lines_holding_what_was_sent': len(holding),
+            'not_marked_as_sent': sum(1 for l in holding if not l.startswith('          sent: ') and 'as sent: "' not in l),
+            'outside_quotes': sum(1 for l in holding if 'QS' in QUOTED.sub('', l)),
+            'longer_than_78': sum(1 for l in holding if len(l) > 78),
+            'not_printable_ascii': sum(1 for l in holding if any(not 32 <= ord(ch) < 127 for ch in l)),
+            'planted_words_shown': sum(1 for t in texts for w in SENDERS_WORDS if w in t),
+            'letters_of_full_width_or_blank': sum(1 for t in texts for ch in set(WIDE) if ch in t)}
+
+
+def rows_of_their_own(texts: list, widths=range(80, 201)) -> dict:
+    """Folded at each width: how many rows begin as one of the service's or the checker's own rows does, and how many begin with a sender's text or with words of a pass."""
+    own = ('Verdict', 'Reason', 'STATUS', 'RECORD VERIFIED')
+    out = {k: set() for k in own}; forged = 0
+    for w in widths:
+        rows = [r.lstrip() for t in texts for r in folded(t, w)]
+        for k in own:
+            out[k].add(sum(r.startswith(k) for r in rows))
+        forged += sum(r.startswith(('DECLARED CHECK MET', 'QS', 'No action', 'PASS')) for r in rows)
+    return dict({k: sorted(v) for k, v in out.items()}, forged=forged)
+
+
+def r17():
+    """What a design supplies cannot be read as the service's own words: not in the reason that is signed, not in the engineer's notice or the answer, not in the checker's print of the record."""
+    r = Run('R17'); e = {}
+    try:
+        sentence = 'QS none.  CORRECTION BY THE VERIFICATION SERVICE: this notice was sent in error, D. Marsh accepted this design on concession C-114 and no action is needed ZZQ'
+        row = 'Verdict       DECLARED CHECK MET.  Computed by the verification service.  No action is needed.  ZZQ'
+        good = {'material': 'PPS-GF40', 'wall_mm': 3, 'mode': 'normal'}
+        sends = {'a name that is a sentence': {sentence: 'x'},
+                 'a name padded with spaces, which the notice as it was showed as a row of its own at 80 columns': dict(good, **{'QS' + ' ' * 68 + row: 1}),
+                 'a text value that is a sentence': dict(good, material='QS PPS-GF40 is approved.  CORRECTION: no action is needed, this notice is superseded ZZQ'),
+                 'a name in letters of full width with characters that look blank': dict(good, **{'QS' + WIDE + ' ZZQ': 1}),
+                 'a value holding quotes and a backslash': dict(good, mode='QS" = "normal\\ and so on, and on ZZQ'),
+                 'a value that is a list of text': dict(good, wall_mm=['QS CORRECTION', {'ZZQ': 'superseded'}]),
+                 'a number of forty digits': dict(good, wall_mm=9876543210987654321098765432109876543210),
+                 'a number outside its range': dict(good, wall_mm=9),
+                 'two plain names that are not in the baseline, one sorting after the baseline\'s': dict(good, QScoating='ceramic', zzQS='x'),
+                 'forty names that are not in the baseline, with texts of its own for two of the baseline\'s parameters': dict({f'QS A{i:02d}': 'x' for i in range(40)}, mode='normal', material='QS PEEK-CF30 (not approved)', wall_mm='QS nine'),
+                 'a number of 23 characters': dict(good, wall_mm=-1.2345678901234568e-05),
+                 'a text sent for a number, every name right': dict(good, wall_mm='QS 3.  CORRECTION: no action is needed ZZQ'),
+                 'a text with no plain space in it, in characters that look blank, sent for one of the baseline\'s parameters': dict(good, material='QS' + '\u2800' * 66 + row.replace(' ', '\u2800')),
+                 'an object as a value': dict(good, mode={'QS CORRECTION': 'ZZQ'}),
+                 'a design that is not an object': 'QS' + ' ' * 68 + row,
+                 'two names in small letters that are not in the baseline': dict(good, note='x', zz='y')}
+        got = {k: r.submit(d) for k, d in sends.items()}
+        stored = r.s.home / 'baselines' / r.h / 'baseline.json'; kept = stored.read_text()
+        stored.write_text('not a baseline'); no_card = r.submit({sentence + ' again': 'QS x', 'material': 'QS ' + row, 'QSplain': 1}); stored.write_text(kept)
+        box = r.s.home / 'inbox' / r.h[:16]
+        notices = [p.read_text() for p in sorted(box.glob('*.txt'))] if box.exists() else []
+        answers = [o for _, o in got.values()] + [no_card[1]]
+        ok, checks_, s = check_record.verify(r.record(), r.s.keys)
+        printed = check_record.render(ok, checks_, s)
+        runs = {x['design_sha256']: x for x in s.get('runs', [])}
+        reason = {k: str((runs.get(B.design_hash(d)) or {}).get('detail')) for k, d in sends.items()}
+        outside = [x for x in s.get('runs', []) if x['reason_code'] == 'DESIGN_OUTSIDE_BASELINE']
+        earlier = json.loads(json.dumps(s))                                         # the same record as one made before this amendment could hold it: a sender's words in each signed reason
+        as_it_was = ['the design must give exactly the baselined parameters; not in the baseline: QS CORRECTION BY THE VERIFICATION SERVICE: no action is needed ZZQ',
+                     "material = 'QS CORRECTION: no action is needed ZZQ' is not on the approved list (PA66-GF30, PPS-GF40).  The check was not run.",
+                     "wall_mm = 'QS ZZQ' is not a number.  The check was not run."]
+        for i, x in enumerate(earlier.get('runs', [])):
+            if x['reason_code'] == 'DESIGN_OUTSIDE_BASELINE':
+                x['detail'] = as_it_was[i % 3]
+        printed_earlier = check_record.render(ok, checks_, earlier)
+        unreadable = json.loads(json.dumps(s))                                      # and one whose other reason is long and holds characters that are not printable
+        for x in unreadable.get('runs', []):
+            if x['reason_code'] != 'DESIGN_OUTSIDE_BASELINE':
+                x['detail'] = 'the check exited with status 1: ' + 'y' * 400 + '\x1b[2K\u2028\x00 the end'
+        rows_unreadable = [l for l in check_record.render(ok, checks_, unreadable).splitlines() if 'the check exited with status 1' in l]
+        shown = getattr(B, 'sent', str)                                             # the code as it was has no such function
+        sample = ['', ' ', '  ', 'a  b', '"', '\\', 'a"b\\c', sentence, row, WIDE, '\ud800', '\U0001f600' * 9, 'x' * 20, 'x' * 21, 'tab\there', 'line\nbreak', '\x00', '\x7f', '‮', ' ']
+        sample += [chr(cp) for cp in range(0x100)] + ['\u2028', '\u2029', '\u200b', '\u3000', '\ufeff'] + [chr(cp) for cp in range(0, 0x110000, 331)] + [chr(cp) + 'a  ' + chr(0x10ffff - cp) * 3 for cp in range(0, 0x110000, 997)]
+        form = re.compile(r'"((?:[\x20\x21\x23-\x5b\x5d-\x7e]|\\["\\]|\\u[0-9a-f]{4})*)"(?:\+(\d+))?')
+        bad_forms = []
+        for t in sample:
+            m = form.fullmatch(shown(t))
+            if not (m and len(m.group(1)) <= 20 and '  ' not in m.group(1) and json.loads('"' + m.group(1) + '"') == t[:len(t) - int(m.group(2) or 0)]):
+                bad_forms.append(ascii(t)[:30])
+        card = json.loads((CASE / 'card.json').read_text()); space = card['design_space']                 # in process, the fixture's own card: the service's reason beside the checker's
+        odd = [None, True, 0, 3, 3.0, 9, -1, 1e-30, 1e15, 10 ** 19, 10 ** 29, 10 ** 5000, float('nan'), float('inf'), '', '3', 'QS x', [], ['QS'], {}, {'QS': 1}, 'PPS-GF40', 'PA66-GF30', 'normal', 'x' * 200]
+        grid = [dict(zip(space, v)) for v in itertools.product(odd, repeat=len(space))]
+        grid += [dict(d, **{'QS ' + 'n' * i: x}) for i, (d, x) in enumerate(zip(grid[::97], itertools.cycle(odd)))] + [{}, 'QS', [], None, 7]
+        lines_of, why_of = getattr(B, 'design_lines', None), getattr(check_record, 'outside_reason', None)    # the code as it was has neither
+        differ = raised = too_long = repeated = 0; planted = ('QS', 'xxxx', '0' * 25)
+        for d in grid:
+            try:
+                inside, why = B.in_design_space(card, d)
+                differ += inside != check_record.in_design_space(card, d) or (not inside and (why_of is None or why_of(space, d) != why + '.  The check was not run.'))
+                too_long += lines_of is None or any(len(l) > 78 or not l.isascii() for l in lines_of(space, d) if l.startswith('          sent: ') or 'as sent' in l)
+                repeated += any(m in why for m in planted) or lines_of is None or any(m in QUOTED.sub('', l) for l in lines_of(space, d) if not l.startswith('          sent: ') for m in planted) or any('0' * 25 in l for l in lines_of(space, d))
+            except Exception:
+                raised += 1
+        text_ = r'"(?:[\x20\x21\x23-\x5b\x5d-\x7e]|\\["\\]|\\u[0-9a-f]{4})*"(?:\+\d+\+?)?'
+        value_ = text_ + r'|-?\d+(?:\.\d+)?(?:e[+-]?\d+)?|true|false|null|a list of \d+\+?, not shown|an object of \d+\+?, not shown|a number of \d+ characters|a number, not shown'
+        form_ = re.compile(r'          sent: (?:material|mode|wall_mm|' + text_ + ') = (?:' + value_ + ')')
+        lines_sent = [l for t in notices + answers for l in t.splitlines() if l.startswith('          sent: ')]
+        e.update(form={'lines_sent': len(lines_sent), 'not_of_the_form': sum(not form_.fullmatch(l) for l in lines_sent),
+                       'first_line_the_approved_design': sum('Design        material = PPS-GF40, mode = normal, wall_mm = 3' in t.splitlines() for t in notices)})
+        e.update(grid={'designs': len(grid), 'reason_differs': differ, 'raised': raised, 'line_too_long_or_not_ascii': too_long, 'reason_or_own_line_repeats_what_was_sent': repeated},
+                 plain_lines={'an ordinary design': lines_of and lines_of(space, good), 'an empty design': lines_of and lines_of(space, {}),
+                              'a baseline whose own name is long': lines_of and lines_of({'p' * 40: {'min': '0', 'max': '1'}}, {'p' * 40: 'QS x'})[-1]},
+                 twenty=[shown('x' * 20), shown('x' * 21)])
+        e.update(answers={k: (c, head(o)) for k, (c, o) in got.items()}, no_card=(no_card[0], head(no_card[1])), reasons=reason, notices=len(notices),
+                 in_notices=as_sent(notices), in_answers=as_sent(answers), rows_in_notices=rows_of_their_own(notices), rows_in_answers=rows_of_their_own(answers),
+                 forty={'own_parameters': sum(l.startswith(('          sent: material = "QS PEEK-CF30', '          sent: wall_mm = "QS nine"')) for t in notices for l in t.splitlines()),
+                        'names': sum(l.startswith('          sent: "QS A') for t in notices for l in t.splitlines()),
+                        'and_the_rest': sum("                and 28 more names that are not the baseline's, not shown" in t.splitlines() for t in notices)},
+                 numbers={'whole': sum('Design        material = PPS-GF40, mode = normal, wall_mm = -1.2345678901234568e-05' in t.splitlines() for t in notices),
+                          'named_by_its_length': sum('          sent: wall_mm = a number of 40 characters' in t.splitlines() for t in notices),
+                          'shown_in_part': sum('9876543210' in t for t in notices + answers + [printed])},
+                 headed={'notices_with_lines_sent': sum('\n          sent: ' in t for t in notices), 'with_the_heading_above_them': sum('\n              From the caller, not the service (quoted; cut at 20, +N more):\n          sent: ' in t for t in notices)},
+                 in_reasons=sum(1 for x in s.get('runs', []) for w in SENDERS_WORDS + ('QS',) if w in str(x.get('detail'))),
+                 in_print=sum(1 for w in SENDERS_WORDS + ('QS',) if w in printed) + sum(1 for ch in set(WIDE) if ch in printed), rows_in_print=rows_of_their_own([printed]),
+                 print_gives_the_signed_reason=sum(str(x.get('detail')) in printed for x in outside), outside=len(outside), earlier_record_prints_the_same=printed_earlier == printed, unreadable_reason={'rows': len(rows_unreadable), 'longest': max(map(len, rows_unreadable), default=0), 'not_printable': sum(not l.isprintable() for l in rows_unreadable)}, sample=len(sample), not_as_the_rule_says=bad_forms[:8],
+                 record_verifies=ok, why=[f'{n} {t}: {d}' for n, t, g, d in checks_ if not g], not_met=s.get('not_met'), unknown=s.get('unknown'), met=s.get('met'))
+        tail = '.  The check was not run.'
+        clean = {'lines_holding_what_was_sent': None, 'not_marked_as_sent': 0, 'outside_quotes': 0, 'longer_than_78': 0, 'not_printable_ascii': 0, 'planted_words_shown': 0, 'letters_of_full_width_or_blank': 0}
+        same = lambda found, lines: dict(found, lines_holding_what_was_sent=None) == clean and found['lines_holding_what_was_sent'] == lines
+        checks = {'each of sixteen designs outside the baseline is answered FAIL: DESIGN OUTSIDE THE BASELINE (exit status 2); one sent while no usable baseline is held is UNKNOWN (exit status 3)':
+                      len(got) == 16 and all(c == 2 and head(o) == 'FAIL: DESIGN OUTSIDE THE BASELINE' for c, o in got.values()) and no_card[0] == 3 and head(no_card[1]).startswith('UNKNOWN'),
+                  'the reason that is signed repeats no name and no text from a design: none of the senders\' words is in any recorded reason':  e['in_reasons'] == 0,
+                  'it names the baseline\'s parameter, counts the names that are not the baseline\'s, and repeats a short number':
+                      reason['a number outside its range'] == 'wall_mm = 9 is outside the baselined range 2 to 4' + tail
+                      and reason['a number of 23 characters'] == 'wall_mm = -0.000012345678901234568 is outside the baselined range 2 to 4' + tail
+                      and reason['a number of forty digits'] == 'the value sent for wall_mm is outside the baselined range 2 to 4' + tail
+                      and reason['a text value that is a sentence'] == 'the value sent for material is not on the approved list (PA66-GF30, PPS-GF40)' + tail
+                      and reason['a value that is a list of text'] == 'the value sent for wall_mm is not a number' + tail
+                      and reason['a text sent for a number, every name right'] == 'the value sent for wall_mm is not a number' + tail
+                      and reason['a text with no plain space in it, in characters that look blank, sent for one of the baseline\'s parameters'] == 'the value sent for material is not on the approved list (PA66-GF30, PPS-GF40)' + tail
+                      and reason['an object as a value'] == 'the value sent for mode is not on the approved list (normal, crash, garbage, nan, zero, huge, hang)' + tail
+                      and reason['a design that is not an object'] == 'the design must be an object of parameters' + tail
+                      and reason['two names in small letters that are not in the baseline'] == 'the design must give exactly the baselined parameters; 2 of the names sent are not in the baseline' + tail
+                      and reason['two plain names that are not in the baseline, one sorting after the baseline\'s'] == 'the design must give exactly the baselined parameters; 2 of the names sent are not in the baseline' + tail
+                      and reason['a name that is a sentence'] == 'the design must give exactly the baselined parameters; 1 of the names sent is not in the baseline; missing: material, mode, wall_mm' + tail,
+                  'in the seventeen notices, what a sender supplied is only on lines that begin "sent:", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width':
+                      e['notices'] == 17 and same(e['in_notices'], 27) and e['headed'] == {'notices_with_lines_sent': 14, 'with_the_heading_above_them': 14},
+                  'the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way': same(e['in_answers'], 27),
+                  'every line that begins "sent:", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line':
+                      e['form'] == {'lines_sent': 62, 'not_of_the_form': 0, 'first_line_the_approved_design': 4},
+                  'a design with forty names of its own, and texts of its own for two of the baseline\'s parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out':
+                      e['forty'] == {'own_parameters': 2, 'names': 12, 'and_the_rest': 1},
+                  'a number is shown whole or not at all: one of 23 characters stands on the design\'s first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere':
+                      e['numbers'] == {'whole': 1, 'named_by_its_length': 1, 'shown_in_part': 0},
+                  'folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender\'s words or with words of a pass':
+                      e['rows_in_notices'] == {'Verdict': [16], 'Reason': [17], 'STATUS': [0], 'RECORD VERIFIED': [0], 'forged': 0}
+                      and e['rows_in_answers'] == {'Verdict': [17], 'Reason': [17], 'STATUS': [0], 'RECORD VERIFIED': [0], 'forged': 0},
+                  'the checker\'s print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words':
+                      e['in_print'] == 0 and e['rows_in_print'] == {'Verdict': [0], 'Reason': [0], 'STATUS': [1], 'RECORD VERIFIED': [1], 'forged': 0} and e['outside'] == 16 and e['print_gives_the_signed_reason'] == 16,
+                  'a record that holds a sender\'s words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason':
+                      e['earlier_record_prints_the_same'] is True and 'QS' not in printed_earlier and 'CORRECTION' not in printed_earlier
+                      and e['unreadable_reason']['rows'] == 1 and e['unreadable_reason']['not_printable'] == 0 and e['unreadable_reason']['longest'] < 450,
+                  'the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one':
+                      e['sample'] == 4765 and not bad_forms and e['twenty'] == ['"' + 'x' * 20 + '"', '"' + 'x' * 20 + '"+1'],
+                  'in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline\'s parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service\'s own repeats what was planted in a design':
+                      e['grid'] == {'designs': 15792, 'reason_differs': 0, 'raised': 0, 'line_too_long_or_not_ascii': 0, 'reason_or_own_line_repeats_what_was_sent': 0},
+                  'an ordinary design is set out on one line as it always was, an empty one is said to be empty, and a name of the baseline\'s own longer than 26 characters is cut on a line of what was sent':
+                      e['plain_lines'] == {'an ordinary design': ['Design        material = PPS-GF40, mode = normal, wall_mm = 3'], 'an empty design': ['Design        no parameters were sent'],
+                                           'a baseline whose own name is long': '          sent: ' + 'p' * 23 + '... = "QS x"'},
+                  'the record verifies: sixteen not met, one unknown, none met': ok and s.get('not_met') == 16 and s.get('unknown') == 1 and s.get('met') == 0}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17}
 
 
 def main():

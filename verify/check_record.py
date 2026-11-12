@@ -130,6 +130,47 @@ def in_design_space(card, design) -> bool:
     return True
 
 
+def outside_reason(space, design) -> str:
+    """Why a design is outside the baselined design space, in the checker's own words, worked out from the card and the
+    design in the record.  (Amendment 3, 12 November 2026.)  The print of a record used to repeat the record's own
+    reason, which before that date could hold a name or a text chosen by whoever sent the design.  The wording is the
+    one baseline.py now signs: it names the baseline's parameters, counts the names that are not the baseline's, and
+    repeats from the design only a number of at most 24 characters."""
+    tail = '.  The check was not run.'
+    if not isinstance(space, dict):
+        return 'the design is outside the baselined design space' + tail
+    if not isinstance(design, dict):
+        return 'the design must be an object of parameters' + tail
+    if set(design) != set(space):
+        extra, missing = set(design) - set(space), sorted(set(space) - set(design))
+        return ('the design must give exactly the baselined parameters' + (f'; {len(extra)} of the names sent {"is" if len(extra) == 1 else "are"} not in the baseline' if extra else '')
+                + (f'; missing: {", ".join(missing)}' if missing else '') + tail)
+    for name, rule in space.items():
+        v = design[name]
+        try:
+            written = json.dumps(v) if not isinstance(v, bool) and isinstance(v, (int, float)) and v == v and v not in (float('inf'), float('-inf')) else None
+        except ValueError:                                   # a whole number too long to be written at all
+            written = None
+        short = written is not None and len(written) <= 24
+        if 'choice' in rule:
+            if isinstance(v, bool) or not isinstance(v, (str, int)) or not any(type(v) is type(c) and v == c for c in rule['choice']):
+                return (f'{name} = {v!r}' if short else f'the value sent for {name}') + f' is not on the approved list ({", ".join(map(str, rule["choice"]))})' + tail
+        else:
+            d = dec(v)
+            if d is None or isinstance(v, str):
+                return f'the value sent for {name} is not a number' + tail
+            if not D(rule['min']) <= d <= D(rule['max']):
+                shown = text(d) if len(text(d)) <= 24 else (written if short else None)
+                return (f'{name} = {shown}' if shown is not None else f'the value sent for {name}') + f' is outside the baselined range {rule["min"]} to {rule["max"]}' + tail
+    return 'the record says the design is outside the baselined design space' + tail
+
+
+def recorded(words, limit: int = 300) -> str:
+    """A reason as the record gives it, made fit to print on one line: the service's or the check's wording, cut."""
+    words = '' if words is None else str(words)
+    return ''.join(ch if ch.isprintable() else ' ' for ch in words[:limit]) + (f' (+{len(words) - limit} more characters)' if len(words) > limit else '')
+
+
 def rederive(card, result, design) -> list:
     """Problems with a signed verdict, re-deriving it from the card.  Empty when the verdict is exactly what the card implies."""
     out = []
@@ -394,7 +435,7 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
         h = sha(canonical(design))
         released = {'design_sha256': h, 'met': any(r['design_sha256'] == h for r in met), 'seen': any(r['design_sha256'] == h for r in rows_out)}
     summary = {'requirement': req, 'engineer': (card.get('responsible_engineer') or {}).get('name'), 'baseline_sha256': b_hash, 'baselined_at': card.get('baselined_at'),
-               'criteria': card['criteria'], 'load_case': card.get('load_case'), 'check': card['check'], 'supersedes': card.get('supersedes'),
+               'criteria': card['criteria'], 'load_case': card.get('load_case'), 'check': card['check'], 'supersedes': card.get('supersedes'), 'design_space': card.get('design_space'),
                'runs': rows_out, 'official_runs': len(rows_out), 'met': len(met), 'not_met': sum(r['outcome'] == 'FAIL' for r in rows_out),
                'unknown': sum(r['outcome'] not in ('PASS', 'FAIL') for r in rows_out), 'open': sum(1 for r in rows_out if r['outcome'] != 'PASS' and not r['acknowledged']),
                'status': 'DECLARED CHECK MET' if ok and met else 'NOT VERIFIED', 'met_designs': [r['design_sha256'] for r in met], 'released': released,
@@ -417,7 +458,8 @@ def render(ok: bool, checks: list, s: dict) -> str:
         L.append(f"  limit: {c['quantity']} {'at most' if c['comparison'] == '<=' else 'at least'} {c['limit']} {c['units']}")
     L += ['', f"  Official runs through the service: {s['official_runs']}.  Met {s['met']}, not met {s['not_met']}, unknown {s['unknown']}.  Awaiting the engineer's disposition: {s['open']}."]
     for r in s['runs']:
-        what = '; '.join(f"{c['id']} {c['achieved']} vs limit {c['limit']} {c['units']}" for c in r['criteria'] if c.get('achieved') is not None) or r['detail']
+        what = ('; '.join(f"{c['id']} {c['achieved']} vs limit {c['limit']} {c['units']}" for c in r['criteria'] if c.get('achieved') is not None)
+                or (outside_reason(s.get('design_space'), r.get('design')) if r['reason_code'] == 'DESIGN_OUTSIDE_BASELINE' else recorded(r['detail'])))
         tail = '' if r['outcome'] == 'PASS' else ('   acknowledged' if r['acknowledged'] else '   OPEN')
         L.append(f"    {r['aid']}  design {str(r['design_sha256'])[:10]}…  {r['outcome']:<11} {r['reason_code'] or '':<24} {what}{tail}")
     L.append('')
