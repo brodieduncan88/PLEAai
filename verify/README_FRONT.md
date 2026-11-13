@@ -39,6 +39,11 @@ as it now stands.
 nothing was changed whatever the reason, so the notice of a changed check said the opposite of its reason. It also
 repairs the Verdict row and the banner of a revised baseline. `DECLARED_AMEND4.md` has the list as it now stands.
 
+**Note of 13 November 2026.** `AMENDMENT_5_2026-11-13.md` repairs what Amendment 4 left of the eighth defect: the
+requirement line of a notice no longer calls the baseline "unchanged", the Check line says "Baselined hash", a pass
+says what is so of the card, and the front door's own text, when it cannot read the card, names the gate's reason and
+sets the design out as sent. `DECLARED_AMEND5.md` has the list as it now stands.
+
 ## The pieces
 
 | file | what it does |
