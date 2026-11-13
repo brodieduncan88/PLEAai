@@ -968,7 +968,34 @@ def f20():
     return checks, e
 
 
-NOTICE_OLD = ('Nothing was changed', 'exactly as baselined', 'accept a failure')
+NOTICE_OLD = ('Nothing was changed', 'exactly as baselined', 'accept a failure', 'unchanged')     # 'unchanged' added by Amendment 5; counted in any case, outside a sender's quoted lines
+FRONT_NO_CARD = 'UNKNOWN: NO USABLE BASELINE IS HELD FOR THIS JOB'
+HEADLINES = {'MET': 'DECLARED CHECK MET', 'LIMIT_NOT_MET': 'FAIL: REQUIREMENT NOT MET', 'DESIGN_OUTSIDE_BASELINE': 'FAIL: DESIGN OUTSIDE THE BASELINE',
+             'BASELINE_MISMATCH': 'UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE', 'CHECK_ERROR': 'UNKNOWN: THE CHECK DID NOT RUN TO A RESULT',
+             'CHECK_OUTPUT_INVALID': 'UNKNOWN: THE CHECK GAVE NO USABLE RESULT', 'RESULT_IMPLAUSIBLE': 'UNKNOWN: THE RESULT IS NOT PLAUSIBLE'}   # Amendment 5: as written here, not as the code under test has them
+OWN_TEXT_DESIGNS = [({'material': 'PA66-GF30', 'wall_mm': 2.5, 'mode': 'normal', 'note': 'nothing was changed'},
+                     ['Design        the front door holds no usable baseline to set it against', '              From the caller, not the service (quoted; cut at 20, +N more):',
+                      '          sent: "material" = "PA66-GF30"', '          sent: "mode" = "normal"', '          sent: "note" = "nothing was changed"', '          sent: "wall_mm" = 2.5']),
+                    (dict({f'k{i:02d}': i for i in range(12)}, material='PA66-GF30', mode='normal', wall_mm=3),
+                     ['Design        the front door holds no usable baseline to set it against', '              From the caller, not the service (quoted; cut at 20, +N more):']
+                     + [f'          sent: "k{i:02d}" = {i}' for i in range(12)] + ['                and 3 more names, not shown']),
+                    ({}, ['Design        no parameters were sent'])]                    # Amendment 5: three designs, and how each is to be set out
+
+
+def own_text_lines(v: dict, runs: dict, aid: str, design_rows: list) -> list:
+    """Amendment 5.  The front door's own text, for when it holds no usable card, line for line: the gate's reason when the
+    gate decided with its card, and "no usable baseline is held" only when the gate held none either; the design set out as
+    sent, as the gate's notice does when it holds no usable card, under a line that says it is the front door that holds no
+    usable baseline (design_rows, as written in OWN_TEXT_DESIGNS); and a last line that says which of the two it was."""
+    gate_held = v['check'] is not None
+    L = [HEADLINES[v['reason_code']] if gate_held else FRONT_NO_CARD, '', f"Reason        {v['detail'] or v['reason_code']}"] + design_rows
+    L += [f"Official runs {runs['total']} through the service on this baseline: {runs['PASS']} met, {runs['FAIL']} not met, {runs['UNKNOWN']} unknown.  This run: {aid}.", '']
+    if v['verdict'] != 'PASS':
+        L.append('This is not a pass.  The run is counted and kept, and the responsible engineer has been sent this result directly by the verification service.')
+    L.append('The front door could not read the stored baseline for this job as the one the responsible engineer signed, so the requirement is not printed here.  '
+             'The gate read it as signed and decided this result.' if gate_held else
+             'The baseline held by the service for this job could not be read as the one the responsible engineer signed, so the requirement is not printed here.')
+    return L
 
 
 def f21():
@@ -999,8 +1026,24 @@ def f21():
         other = dict(env_b['card'], supersedes=dict(env_b['card']['supersedes'], official_runs=7, met=1, not_met=2, unknown=4))
         distinct = [l.strip() for l in front_door.requirement_text(other, hb).splitlines() if 'SUPERSEDES' in l]
         on_hold = [l.strip() for l in front_door.requirement_text(env_b['card'], hb, 'HELD').splitlines() if 'SUPERSEDES' in l]
+        # in process (Amendment 5): the front door's own text, for when it holds no usable card, line for line, for every reason the gate gives with its card, then a
+        # missing data file, a design of many names and an empty design, and for the gate's refusal
+        own_runs = {'total': 4, 'PASS': 1, 'FAIL': 0, 'UNKNOWN': 3}; held_card = json.loads((s.home / 'baselines' / r.h / 'baseline.json').read_text())['card']
+        (one, one_rows), (many, many_rows), (empty, empty_rows) = OWN_TEXT_DESIGNS
+        details = {'DESIGN_OUTSIDE_BASELINE': 'note is not a parameter of the baseline.  The check was not run.', 'BASELINE_MISMATCH': 'materials.csv no longer matches the baseline (it was changed after baselining)',
+                   'CHECK_ERROR': 'the check exited with status 1', 'CHECK_OUTPUT_INVALID': 'the check did not print one JSON object', 'RESULT_IMPLAUSIBLE': 'the result is outside the plausible range'}
+        crit = lambda code: ([dict(c, achieved='240' if code == 'MET' else '180', margin='40' if code == 'MET' else '-20', met=code == 'MET') for c in B._blank(held_card)]
+                             if code in ('MET', 'LIMIT_NOT_MET') else B._blank(held_card))
+        cases = [(B._verdict(held_card, one, code, crit(code), detail=details.get(code, '')), one_rows) for code in HEADLINES]
+        cases += [(B._verdict(held_card, one, 'BASELINE_MISMATCH', B._blank(held_card), detail='materials.csv is missing from the baseline directory'), one_rows),
+                  (B._verdict(held_card, many, 'DESIGN_OUTSIDE_BASELINE', B._blank(held_card), detail='12 names are not parameters of the baseline.  The check was not run.'), many_rows),
+                  (B._verdict(held_card, empty, 'CHECK_ERROR', B._blank(held_card), detail='the check exited with status 2'), empty_rows),
+                  (dict(B._verdict(held_card, one, 'BASELINE_MISMATCH', [], detail='no signed baseline with this hash is held by the verification service'), check=None), one_rows)]
+        own_texts = [(v, rows, front_door.plain_text(v, own_runs, 'aid-1')) for v, rows in cases]
         e.update(heads=[head(text_of(failed)), head(text_of(passed)), head(text_of(by_tool)), head(str(by_address[1].get('text')))], notices=len(notices), changed=len(changed), failing=len(failing),
-                 old_words=sum(w in t for t in changed + failing for w in NOTICE_OLD),
+                 old_words=sum(w.lower() in '\n'.join(l for l in t.splitlines() if not l.startswith(B.SENT_MARK)).lower() for t in changed + failing + [text_of(passed)] for w in NOTICE_OLD),
+                 own_text_heads=[head(t) for v, rows, t in own_texts], own_text_known=[t.splitlines() == own_text_lines(v, own_runs, 'aid-1', rows) for v, rows, t in own_texts],
+                 own_text_old_words=sum(w.lower() in '\n'.join(l for l in t.splitlines() if not l.startswith('          sent: ')).lower() for v, rows, t in own_texts for w in NOTICE_OLD),
                  changed_said=[('The check or its data is not as baselined' in t, 'restores the check and its data to the files whose hashes the baseline holds' in t, 'a different design inside' in t,
                                 [l[:30] for l in verdict_rows(t)]) for t in changed],
                  failing_said=[('matched their baselined hashes when it ran' in t, 'says what the declared check returned' in t, [l[:30] for l in verdict_rows(t)]) for t in failing],
@@ -1011,7 +1054,7 @@ def f21():
                       e['heads'] == [FAILED, MET, 'UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE', 'UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE'] and len(notices) == 3,
                   'for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row':
                       e['changed'] == 4 and e['changed_said'] == [(True, True, False, ['Verdict       UNKNOWN.  Decide'])] * 4,
-                  'for the failure, the notice and the answer say the check\'s files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer has the old words':
+                  'for the failure, the notice and the answer say the check\'s files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer, the pass\'s among them, has the old words, in any case':
                       e['failing'] == 2 and e['failing_said'] == [(True, True, ['Verdict       FAIL.  Computed '])] * 2 and e['old_words'] == 0,
                   'after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced (4 runs, 1 not met, 2 unknown, 1 met) and the engineer\'s reason, also while the baseline is on hold; in process, other counts, none equal, are each put in their place':
                       e['counts_a'] == (4, 1, 1, 2) and len(e['shown']) == 1 and '(4 official runs, 1 not met); 2 unknown, 1 met.' in e['shown'][0]
@@ -1019,7 +1062,10 @@ def f21():
                       and len(e['distinct']) == 1 and '(7 official runs, 2 not met); 4 unknown, 1 met.' in e['distinct'][0],
                   'the new record\'s print gives the same counts and the engineer\'s reason, and both records verify': len(e['printed']) == 1 and 'after 4 official runs on it: 1 met, 1 not met, 2 unknown.' in e['printed'][0]
                       and e['printed'][0].endswith('Reason given by the engineer: Customer lowered the operating temperature (CR-21).')
-                      and ok_a and ok_b and e['on_b'] == MET}
+                      and ok_a and ok_b and e['on_b'] == MET,
+                  'in process, the front door\'s own text for when it holds no usable card is, line for line, what is so: for every reason the gate gives with its card, a missing data file, a design of many names and an empty design among them, it begins with the gate\'s reason, and it says no usable baseline is held only for the gate\'s refusal; it sets the design out as sent and has no old words':
+                      e['own_text_heads'] == [HEADLINES[c] for c in HEADLINES] + [HEADLINES['BASELINE_MISMATCH'], HEADLINES['DESIGN_OUTSIDE_BASELINE'], HEADLINES['CHECK_ERROR'], FRONT_NO_CARD]
+                      and e['own_text_known'] == [True] * 11 and e['own_text_old_words'] == 0}
     finally:
         r.stop()
     return checks, e

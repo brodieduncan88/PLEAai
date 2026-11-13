@@ -197,7 +197,8 @@ def design_lines(space, design) -> list:
         L.append('              From the caller, not the service (quoted; cut at 20, +N more):')
         L += named + other[:SENT_LINES]
         if len(other) > SENT_LINES:
-            L.append(f'                and {len(other) - SENT_LINES} more names that are not the baseline\'s, not shown')
+            # Amendment 5: with no baseline to set it against (held False), it is not known whose names these are
+            L.append(f'                and {len(other) - SENT_LINES} more names' + (" that are not the baseline's" if held else '') + ', not shown')
     return L
 
 
@@ -359,6 +360,7 @@ HEADLINE = {'MET': 'DECLARED CHECK MET', 'LIMIT_NOT_MET': 'FAIL: REQUIREMENT NOT
 # Amendment 4: what a notice says of the check's files, by reason.  Only these reasons come only from evaluate(), so only for
 # them is it known whether the files were checked.  Any other reason says nothing of them.
 _CHECK_FILES = {'BASELINE_MISMATCH': 'The check or its data is not as baselined (the reason above), so the check was not run.',
+                'MET': 'The check and its data matched their baselined hashes when it ran.',              # Amendment 5: a pass says it too
                 'LIMIT_NOT_MET': 'The check and its data matched their baselined hashes when it ran.',
                 'RESULT_IMPLAUSIBLE': 'The check and its data matched their baselined hashes when it ran.'}
 NO_CARD_HEADLINE = 'UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE'
@@ -371,8 +373,13 @@ def face(card: dict, verdict: dict, runs: dict | None = None, aid: str | None = 
     L = [HEADLINE[verdict['reason_code']] if held else NO_CARD_HEADLINE, '']
     L.append(f"Requirement   {req['id']} rev {req['revision']}: {req['title']}")
     L.append(f"              \"{req['statement']}\"")
-    L.append(f"              baselined {card.get('baselined_at', '?')} by {eng['name']}, responsible engineer.  Baseline {card_hash(card)[:16]}…, "
-             + ('unchanged.' if held else 'as this client holds it.'))
+    # Amendment 5 (13 November 2026): this line ended "unchanged." for a usable card, which is so of the signed card but sat
+    # under the first line of a changed check, where it could be read as saying the check was unchanged; and "as this
+    # client holds it." when no usable card was held, which is not so when the front door prints it.  It now ends at the
+    # hash, or says the card is the copy read for this answer; the lines after the Verdict row say what is so of the card
+    # and of the check's files.
+    L.append(f"              baselined {card.get('baselined_at', '?')} by {eng['name']}, responsible engineer.  Baseline {card_hash(card)[:16]}…"
+             + ('' if held else ', as read for this answer.'))
     L.append(f"Load case     {card['load_case']}")
     L += design_lines(card['design_space'], verdict['design'])
     L.append(f"              design hash {verdict['design_sha256'][:16]}…")
@@ -393,26 +400,26 @@ def face(card: dict, verdict: dict, runs: dict | None = None, aid: str | None = 
         L.append(f"Reason        {verdict['detail']}")
     if verdict['basis']:
         L.append(f"Basis         As reported by the declared check (not verified by this tool): \"{verdict['basis']}\"")
-    L.append(f"Check         {chk['id']} v{chk['version']}, written by {chk['author']}, reviewed by {chk['reviewed_by']}.  Hash {chk['sha256'][:16]}…")
+    L.append(f"Check         {chk['id']} v{chk['version']}, written by {chk['author']}, reviewed by {chk['reviewed_by']}.  Baselined hash {chk['sha256'][:16]}…")     # Amendment 5: "Baselined", not the file's hash now
     compared = verdict['reason_code'] in ('MET', 'LIMIT_NOT_MET')          # Amendment 4: only then were the check's numbers compared with the limits
     L.append(f"Verdict       {verdict['verdict']}.  " + ("Computed by the verification service from the check's output and the baselined limits." if compared else
                                                          'Decided by the verification service, not by comparing the check\'s numbers with the limits.') + '  Not stated by the assistant.')
     if runs:
         L.append(f"Official runs {runs['total']} through the service on this baseline: {runs['PASS']} met, {runs['FAIL']} not met, {runs['UNKNOWN']} unknown." + (f"  This run: {aid}." if aid else ''))
     L.append('')
+    # Amendment 4 (12 November 2026).  This used to say "Nothing was changed.  The requirement, the limits, the load case and
+    # the check are exactly as baselined." for every FAIL and UNKNOWN, so the notice of an UNKNOWN given because the check or
+    # its data was changed said the opposite of its own reason.  It says only what is so for this verdict: the card was
+    # checked (its hash and the engineer's signature) before it was used; the check's files were checked only when the check
+    # ran, and were found changed for BASELINE_MISMATCH.  When the gate held no usable copy of the card, it says that and
+    # nothing else.  Amendment 5: a pass says it too, where it used to say only "unchanged" on the requirement line.
+    if not held:
+        L.append('The verification service could not use its stored copy of this baseline (the reason above), so nothing was checked against it.')
+    else:
+        L.append('The requirement, the limits and the load case are as baselined.')
+        if verdict['reason_code'] in _CHECK_FILES:
+            L.append(_CHECK_FILES[verdict['reason_code']])
     if verdict['verdict'] != 'PASS':
-        # Amendment 4 (12 November 2026).  This line used to say "Nothing was changed.  The requirement, the limits, the load
-        # case and the check are exactly as baselined." for every reason, so the notice of an UNKNOWN given because the check
-        # or its data was changed said the opposite of its own reason.  It now says only what is so for this verdict: the
-        # card was checked (its hash and the engineer's signature) before it was used; the check's files were checked only
-        # when the check ran, and were found changed for BASELINE_MISMATCH.  When the gate held no usable copy of the card
-        # (only the first client then prints this text, from its own copy), it says that and nothing else.
-        if not held:
-            L.append('The verification service could not use its stored copy of this baseline (the reason above), so nothing was checked against it.')
-        else:
-            L.append('The requirement, the limits and the load case are as baselined.')
-            if verdict['reason_code'] in _CHECK_FILES:
-                L.append(_CHECK_FILES[verdict['reason_code']])
         L.append(f"{eng['name']} has been sent this result directly.  Only {eng['name']} can accept this result or issue a revised baseline; the assistant cannot.")
         if not held:
             L.append(f"What can happen next:  {eng['name']} restores the stored baseline, or issues a revised baseline with a reason.")

@@ -853,7 +853,7 @@ def r17():
     return checks, e
 
 
-NOTICE_OLD = ('Nothing was changed', 'exactly as baselined', 'accept a failure')
+NOTICE_OLD = ('Nothing was changed', 'exactly as baselined', 'accept a failure', 'unchanged')     # 'unchanged' added by Amendment 5; counted in any case, outside a sender's quoted lines
 SAYS_MATCHED, SAYS_CHANGED = 'matched their baselined hashes when it ran', 'The check or its data is not as baselined'
 SAYS_COMPARED, SAYS_REDESIGN = 'says what the declared check returned', 'a different design inside'
 SAYS_RESTORE, SAYS_RESTORE_CARD = 'restores the check and its data to the files whose hashes the baseline holds', 'restores the stored baseline'
@@ -862,7 +862,7 @@ NO_CARD_NOTICE = 'UNKNOWN: A VERIFICATION RUN WAS ASKED FOR AND NO USABLE BASELI
 NO_CARD_ANSWER = 'UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE'
 SAYS_RAN = 'The check and its data matched their baselined hashes when it ran.'
 CLAIMS = {'BASELINE_MISMATCH': [SAYS_AS_BASELINED, 'The check or its data is not as baselined (the reason above), so the check was not run.'],
-          'LIMIT_NOT_MET': [SAYS_AS_BASELINED, SAYS_RAN], 'RESULT_IMPLAUSIBLE': [SAYS_AS_BASELINED, SAYS_RAN]}
+          'LIMIT_NOT_MET': [SAYS_AS_BASELINED, SAYS_RAN], 'RESULT_IMPLAUSIBLE': [SAYS_AS_BASELINED, SAYS_RAN], 'MET': [SAYS_AS_BASELINED, SAYS_RAN]}   # MET: Amendment 5
 NO_CARD_LINE = 'The verification service could not use its stored copy of this baseline (the reason above), so nothing was checked against it.'
 
 
@@ -872,27 +872,185 @@ def verdict_row(code: str) -> str:
                                                     "Decided by the verification service, not by comparing the check's numbers with the limits.") + '  Not stated by the assistant.')
 
 
-def text_claims(t: str, code: str, held: bool = True) -> dict:
-    """What a notice or an answer says about its own run, against what the run was.  held is False when the gate held no
-    usable copy of the card, which only the first client's answer then sets out from its own copy.  (Amendment 4.)"""
+HEADLINES = {'MET': 'DECLARED CHECK MET', 'LIMIT_NOT_MET': 'FAIL: REQUIREMENT NOT MET', 'DESIGN_OUTSIDE_BASELINE': 'FAIL: DESIGN OUTSIDE THE BASELINE',
+             'BASELINE_MISMATCH': 'UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE', 'CHECK_ERROR': 'UNKNOWN: THE CHECK DID NOT RUN TO A RESULT',
+             'CHECK_OUTPUT_INVALID': 'UNKNOWN: THE CHECK GAVE NO USABLE RESULT', 'RESULT_IMPLAUSIBLE': 'UNKNOWN: THE RESULT IS NOT PLAUSIBLE'}   # Amendment 5: as written here, not as the code under test has them
+SENT_LINE_MARK = '          sent: '                                                                            # Amendment 5: likewise
+
+
+def rows_in_order(lines: list, steps: list) -> bool:
+    """Amendment 5.  True if the lines are, in order, the rows the steps allow, and nothing else.  Each step is a pattern and how
+    many lines in a row may match it: at least, and at most (None for no limit)."""
+    i = 0
+    for pattern, least, most in steps:
+        n = 0
+        while (most is None or n < most) and i < len(lines) and re.fullmatch(pattern, lines[i]):
+            i += 1; n += 1
+        if n < least:
+            return False
+    return i == len(lines)
+
+
+def sent_patterns(space) -> tuple:
+    """Amendment 5.  The forms in which design_lines() (Amendment 3) sets out what a sender chose: a value as sent() writes it, and
+    a line of the sender's, which is the mark, a name in quotes or one of the baseline's own names (cut at 26), " = " and a value."""
+    E = re.escape
+    quoted = r'"(?:[ !#-\[\]-~]|\\["\\]|\\u[0-9a-f]{4})*"(?:\+\d+|\+99999\+)?'
+    value = (r'(?:null|true|false|-?[0-9][-+.0-9eE]*|a number, not shown|a number of \d+ characters|' + quoted
+             + r'|an? (?:list|object) of (?:\d+|99999\+), not shown|a value of another kind)')
+    names = [E(k if len(k) <= 26 else k[:23] + '...') for k in (space or {})]
+    return value, E(SENT_LINE_MARK) + '(?:' + '|'.join(names + [quoted]) + ') = ' + value
+
+
+def rows_known(t: str, code: str, held: bool, card: dict, design=..., verdict=None) -> bool:
+    """Amendment 5.  Every line of a notice or an answer is one of the rows face() writes, in face()'s order and number: those set
+    out from the card made from the card's own fields; the criteria one to a criterion and agreeing with the verdict (each met
+    for a pass, at least one not met for a limit not met, none evaluated for any other reason); the baseline's hash and the
+    check's the card's own, and the design's hash the design's when the design is given; a sender's lines only where
+    design_lines() puts them, and only in its forms; a Basis row only for a reason for which the check printed one; no
+    Official runs row in a notice.  After the Verdict row (or the Official runs row) come, line for line, exactly the sentences
+    for this verdict.  Each criterion row agrees with itself (its margin is its achieved value against its limit, it is met
+    when the margin is not below zero, and its percentage is the margin's share of the limit); the Reason row of a limit
+    not met names exactly the rows not met, with their values; and when the design is given, the Design row gives exactly
+    the parameters of it that are the baseline's own.  When the verdict is given (in process), the Reason row of any other
+    reason is its detail and the Basis row its basis; otherwise those two rows are free text, which text_claims() reads for
+    words that claim what is so."""
+    eng, chk, req = card['responsible_engineer']['name'], card['check'], card['requirement']
+    E = re.escape; N = r'[0-9.]+(?:[eE][-+]?[0-9]+)?'; alt = lambda xs: '(?:' + '|'.join(xs) + ')'
     lines = t.splitlines()
-    return {'old_words': sum(w in t for w in NOTICE_OLD),
-            'headline_fits': (B.HEADLINE[code] if held else NO_CARD_ANSWER) in lines,
+    notice = lines[:3] == [f'To: {eng}', 'From: the verification service (not the assistant)', '']
+    if notice:
+        lines = lines[3:]                                           # a notice: To:, From: and a blank line before the text
+    value, sent_line = sent_patterns(card['design_space'])
+    item = alt(E(k) + ' = ' + alt([E(str(x)) for x in r.get('choice', [])] + ['-?' + N]) for k, r in card['design_space'].items())
+    lead = lambda c: E(f"  {c['quantity']}: required {'at most' if c['comparison'] == '<=' else 'at least'} {c['limit']} {c['units']}; ")
+    met_row = lambda c: lead(c) + f"achieved -?{N} {E(c['units'])}; margin {N} {E(c['units'])}" + r'(?: \(\d+% inside the limit\))?  -> met'
+    not_met_row = lambda c: lead(c) + f"achieved -?{N} {E(c['units'])}; margin -{N} {E(c['units'])}" + r'(?: \(\d+% beyond the limit\))?  -> NOT MET'
+    crit = [] if not held else [(met_row(c) if code == 'MET' else alt([met_row(c), not_met_row(c)]) if code == 'LIMIT_NOT_MET' else lead(c) + 'not evaluated', 1, 1)
+                                for c in card['criteria']]
+    short = alt(E(f"{c['quantity']} is ") + '-?' + N + E(f" {c['units']}, the limit is {c['limit']} {c['units']}") for c in card['criteria'])
+    reason = (E('Reason        Every baselined limit was met by the number the declared check returned.') if code == 'MET' else
+              'Reason        ' + short + '(?:; ' + short + r')*\.' if code == 'LIMIT_NOT_MET' else
+              E('Reason        ' + str(verdict['detail'])) if verdict is not None else r'Reason        .+')
+    space = card['design_space']
+
+    def own(k, x):                                                  # as design_lines() decides it: a baseline's name with a plain number or an approved value
+        r = space.get(k) if isinstance(k, str) else None
+        if r is None or isinstance(x, bool):
+            return False
+        if isinstance(x, (int, float)) and x == x and x not in (float('inf'), float('-inf')):
+            try:
+                return len(json.dumps(x)) <= 24 or ('choice' in r and any(type(x) is type(c) and x == c for c in r['choice']))
+            except (ValueError, OverflowError):
+                return False
+        return 'choice' in r and isinstance(x, str) and any(type(x) is type(c) and x == c for c in r['choice'])
+    if design is ...:
+        design_row = 'Design        ' + alt(['no parameters were sent', E("nothing in it is in the baseline's own words"), 'not an object; as sent: ' + value, item + '(?:, ' + item + ')*'])
+    elif not isinstance(design, dict):
+        design_row = 'Design        not an object; as sent: ' + value
+    else:
+        mine = [f'{k} = {design[k]}' for k in sorted(design, key=str) if own(k, design[k])]
+        design_row = E('Design        ' + (', '.join(mine) if mine else "nothing in it is in the baseline's own words" if design else 'no parameters were sent'))
+    basis = (E('Basis         As reported by the declared check (not verified by this tool): "' + str(verdict['basis']) + '"') if verdict is not None else
+             E('Basis         As reported by the declared check (not verified by this tool): "') + '.*"')
+    basis_most = (1 if verdict['basis'] else 0) if verdict is not None else 1 if held and code in ('MET', 'LIMIT_NOT_MET', 'RESULT_IMPLAUSIBLE', 'CHECK_OUTPUT_INVALID') else 0
+    steps = [(E(HEADLINES[code] if held else NO_CARD_ANSWER), 1, 1), ('', 1, 1),
+             (E(f"Requirement   {req['id']} rev {req['revision']}: {req['title']}"), 1, 1), (E(f'              "{req["statement"]}"'), 1, 1),
+             (E(f"              baselined {card.get('baselined_at', '?')} by {eng}, responsible engineer.  Baseline {B.card_hash(card)[:16]}…" + ('' if held else ', as read for this answer.')), 1, 1),
+             (E(f"Load case     {card['load_case']}"), 1, 1),
+             (design_row, 1, 1),
+             (E('              From the caller, not the service (quoted; cut at 20, +N more):'), 0, 1), (sent_line, 0, None),
+             (r" {16}and \d+ more names that are not the baseline's, not shown", 0, 1),
+             (E(f"              design hash {B.design_hash(design)[:16]}…") if design is not ... else r' {14}design hash [0-9a-f]{16}…', 1, 1), ('', 1, 1)] + crit + [
+             ('', 1, 1), (reason, 1, 1),
+             (basis, 1 if verdict is not None and verdict['basis'] else 0, basis_most),
+             (E(f"Check         {chk['id']} v{chk['version']}, written by {chk['author']}, reviewed by {chk['reviewed_by']}.  Baselined hash {chk['sha256'][:16]}…"), 1, 1),
+             (E(verdict_row(code)), 1, 1), (r'Official runs \d+ through the service on this baseline: \d+ met, \d+ not met, \d+ unknown\.(?:  This run: \S+\.)?', 0, 0 if notice else 1)]
+    v = [i for i, l in enumerate(lines) if l.startswith(('Verdict ', 'Official runs '))]
+    if not v:
+        return False
+    head, tail = lines[:v[-1] + 1], lines[v[-1] + 1:]
+    want = ['', NO_CARD_LINE] if not held else ['', SAYS_AS_BASELINED] + ([CLAIMS[code][1]] if code in CLAIMS else [])
+    if code != 'MET' or not held:
+        want.append(f"{eng} has been sent this result directly.  Only {eng} can accept this result or issue a revised baseline; the assistant cannot.")
+        if not held:
+            want += [f"What can happen next:  {eng} restores the stored baseline, or issues a revised baseline with a reason.", '                       Until then no design can be verified against this baseline.']
+        elif code == 'BASELINE_MISMATCH':
+            want += [f"What can happen next:  {eng} restores the check and its data to the files whose hashes the baseline holds,", '                       or issues a revised baseline with a reason.',
+                     '                       Until then no design inside the design space can be verified against this baseline.']
+        else:
+            want += ['What can happen next:  a different design inside the baselined design space (a new official run; this result stays on the record),',
+                     f"                       or a decision by {eng}: redesign, a revised baseline with a reason, or a recorded concession."]
+    want.append('This result says what the declared check returned against the baselined limits.  It does not say the check is correct.' if code in ('MET', 'LIMIT_NOT_MET') and held else
+                'This result gives no number from the check against the limits.  It does not say the check is correct.')
+    want.append('The check does not cover: ' + '; '.join(chk['stated_limits']) + '.')
+    if not (rows_in_order(head, steps) and tail == want):
+        return False
+    if held and code in ('MET', 'LIMIT_NOT_MET'):                  # each criterion row agrees with itself, and a limit not met names exactly the rows not met
+        from decimal import Decimal
+        named = []
+        for c in card['criteria']:
+            row = next(l for l in head if l.startswith(f"  {c['quantity']}: "))
+            m = re.fullmatch(lead(c) + f"achieved (-?{N}) {E(c['units'])}; margin (-?{N}) {E(c['units'])}" + r'(?: \((\d+)% (inside|beyond) the limit\))?  -> (met|NOT MET)', row)
+            try:
+                achieved, margin, lim = Decimal(m[1]), Decimal(m[2]), Decimal(c['limit'])
+            except ArithmeticError:                                 # a number the pattern lets through but that is not one, such as 1.2.3
+                return False
+            ok = margin == (lim - achieved if c['comparison'] == '<=' else achieved - lim) and (m[5] == 'met') == (margin >= 0)
+            ok = ok and ((m[3] is None) if lim == 0 else (m[3] == f"{abs(margin) / abs(lim) * 100:.0f}" and (m[4] == 'inside') == (margin >= 0)))
+            if not ok:
+                return False
+            if m[5] == 'NOT MET':
+                named.append(f"{c['quantity']} is {m[1]} {c['units']}, the limit is {c['limit']} {c['units']}")
+        reason_row = next(l for l in head if l.startswith('Reason '))
+        if code == 'LIMIT_NOT_MET' and (not named or reason_row != 'Reason        ' + '; '.join(named) + '.'):
+            return False
+    return True
+
+
+def no_card_notice_known(t: str, baseline_sha256: str) -> bool:
+    """Amendment 5.  The gate's own notice when it holds no usable card has only its own rows, in order: the address, the
+    headline, the reason, the design as design_lines() sets it out with no baseline to set it against, and the last line."""
+    E = re.escape; value, sent_line = sent_patterns(None)
+    return rows_in_order(t.splitlines(), [(E(f'To: the responsible engineer for baseline {baseline_sha256}'), 1, 1), (E('From: the verification service (not the assistant)'), 1, 1),
+                                          ('', 1, 1), (E(NO_CARD_NOTICE), 1, 1), ('', 1, 1), (r'Reason        .+', 1, 1),
+                                          ('Design        (?:no usable baseline is held to set it against|no parameters were sent|not an object; as sent: ' + value + ')', 1, 1),
+                                          (E('              From the caller, not the service (quoted; cut at 20, +N more):'), 0, 1), (sent_line, 0, None),
+                                          (r' {16}and \d+ more names, not shown', 0, 1), ('', 1, 1),
+                                          (E('No check was run.  This is not a pass.  The stored baseline should be inspected.'), 1, 1)])
+
+
+def text_claims(t: str, code: str, card: dict, held: bool = True, design=..., verdict=None) -> dict:
+    """What a notice or an answer says about its own run, against what the run was.  held is False when the gate held no
+    usable copy of the card, which only the first client's answer then sets out from its own copy.  (Amendment 4.  Restated by
+    Amendment 5: every line is held to the rows face() writes, by rows_known(); a pass says what is so of the card and of the
+    check's files; the old words are looked for in any case in every line of the service's own, and the words of a claim
+    in those of its lines that are not set out from the card, the design or the check's own words.)"""
+    lines = t.splitlines(); eng = card['responsible_engineer']['name']
+    from_card = ('Design ', 'Requirement   ', '              "', '              baselined ', 'Load case     ', 'Check         ', 'The check does not cover: ',
+                 'Basis         ') + tuple(f"  {c['quantity']}: " for c in card['criteria'])      # the Basis row is the check's words, in quotes
+    own = [l for l in lines if not l.startswith((B.SENT_MARK, SENT_LINE_MARK))]                       # the service's own lines: not a sender's
+    mine = [l for l in own if not l.startswith(from_card)]                                            # and of them, those not set out from the card, the design or the check
+    return {'old_words': sum(w.lower() in '\n'.join(own).lower() for w in NOTICE_OLD),
+            'rows_are_known': rows_known(t, code, held, card, design, verdict),
+            'headline_fits': (HEADLINES[code] if held else NO_CARD_ANSWER) in lines,
             'verdict_row_states_it': [l for l in lines if l.startswith('Verdict ')] == [verdict_row(code)],
-            'card_said_unchanged_only_when_held': ('unchanged' in t) == held,
-            'claims_are_the_allowed_lines': [l for l in lines if re.search(r'as baselined|matched|unchanged|[Nn]othing|intact', l) and not l.startswith(('              baselined ', B.SENT_MARK))]
-                                            == ([] if code == 'MET' else [NO_CARD_LINE] if not held else CLAIMS.get(code, [SAYS_AS_BASELINED])),
+            'card_line_ends_at_the_hash': [bool(re.fullmatch(' {14}baselined ' + re.escape(f"{card.get('baselined_at', '?')} by {eng}") + r', responsible engineer\.  Baseline [0-9a-f]{16}…'
+                                                             + ('' if held else re.escape(', as read for this answer.')), l)) for l in lines if l.startswith('              baselined ')] == [True],
+            'check_line_ends_at_the_hash': [bool(re.fullmatch(r'Check {9}.+\.  Baselined hash [0-9a-f]{16}…', l)) for l in lines if l.startswith('Check ')] == [True],
+            'claims_are_the_allowed_lines': [l for l in mine if re.search(r'as baselined|matched|unchanged|nothing|intact', l, re.I)]
+                                            == ([NO_CARD_LINE] if not held else CLAIMS.get(code, [SAYS_AS_BASELINED])),
             'accept_fits': code == 'MET' or 'can accept this result or issue a revised baseline; the assistant cannot.' in t,
             'closing_fits': ('This result gives no number from the check against the limits.' in t) == (code not in ('MET', 'LIMIT_NOT_MET')),
-            'as_baselined_said_only_when_so': (SAYS_AS_BASELINED in t) == (held and code != 'MET'),
-            'files_matched_said_when_so': (SAYS_MATCHED in t) == (held and code in ('LIMIT_NOT_MET', 'RESULT_IMPLAUSIBLE')),
+            'as_baselined_said_only_when_so': (SAYS_AS_BASELINED in t) == held,
+            'files_matched_said_when_so': (SAYS_MATCHED in t) == (held and code in ('MET', 'LIMIT_NOT_MET', 'RESULT_IMPLAUSIBLE')),
             'files_changed_said_when_so': (SAYS_CHANGED in t) == (held and code == 'BASELINE_MISMATCH'),
             'no_card_said_when_so': (SAYS_NO_CARD in t) == (not held),
             'comparison_claimed_only_when_made': (SAYS_COMPARED in t) == (code in ('MET', 'LIMIT_NOT_MET')),
             'next_step_fits': code == 'MET' or ((SAYS_RESTORE in t) == (held and code == 'BASELINE_MISMATCH') and (SAYS_RESTORE_CARD in t) == (not held)
                                                 and (SAYS_REDESIGN in t) == (held and code != 'BASELINE_MISMATCH')
                                                 and ('Until then no design inside the design space' in t) == (held and code == 'BASELINE_MISMATCH')
-                                                and (code != 'BASELINE_MISMATCH' or not re.search(r'(different|another|other|new) design', t)))}
+                                                and (code != 'BASELINE_MISMATCH' or not re.search(r'(different|another|other|new|fresh) design', '\n'.join(mine), re.I)))}
 
 
 def r18():
@@ -905,7 +1063,7 @@ def r18():
         runs = {}
 
         def send(code, design):
-            runs[code] = {'files_matched': files_match(), 'answer': r.submit(design)}
+            runs[code] = {'files_matched': files_match(), 'answer': r.submit(design), 'design': design}
         send('LIMIT_NOT_MET', BAD)
         send('DESIGN_OUTSIDE_BASELINE', {'material': 'PEEK', 'wall_mm': 3, 'mode': 'normal'})
         for mode, code in (('crash', 'CHECK_ERROR'), ('garbage', 'CHECK_OUTPUT_INVALID'), ('huge', 'RESULT_IMPLAUSIBLE')):
@@ -916,19 +1074,19 @@ def r18():
         data.write_text(original)
         stored = d / 'baseline.json'; good = stored.read_text()
         stored.write_text(json.dumps({'card': 'not a card'}))                                          # the gate's own copy of the card is unusable
-        no_card = r.submit({'material': 'PA66-GF30', 'wall_mm': 2.6, 'mode': 'normal'})
+        no_card_design = {'material': 'PA66-GF30', 'wall_mm': 2.6, 'mode': 'normal'}; no_card = r.submit(no_card_design)
         stored.write_text(good)
         send('MET', GOOD)
-        heads = {v: k for k, v in B.HEADLINE.items()}; heads[NO_CARD_NOTICE] = 'NO_CARD'
+        heads = {v: k for k, v in HEADLINES.items()}; heads[NO_CARD_NOTICE] = 'NO_CARD'
         box = r.s.home / 'inbox' / r.h[:16]
         notices = {}
         for p in sorted(box.glob('*.txt')):
             t = p.read_text(); code = next((heads[l] for l in t.splitlines() if l in heads), None); notices[code] = t
         answers = {code: x['answer'][1] for code, x in runs.items()}
         runs_row = [l for l in answers['MET'].splitlines() if l.startswith('Official runs ')]
-        in_notices = {code: text_claims(t, code) for code, t in notices.items() if code != 'NO_CARD'}
-        in_answers = {code: text_claims(t, code) for code, t in answers.items()}
-        no_card_answer = text_claims(no_card[1], 'BASELINE_MISMATCH', held=False)
+        in_notices = {code: text_claims(t, code, card, design=runs[code]['design']) for code, t in notices.items() if code in runs}   # a notice under a headline R18 does not know fails the first check by name
+        in_answers = {code: text_claims(t, code, card, design=runs[code]['design']) for code, t in answers.items()}
+        no_card_answer = text_claims(no_card[1], 'BASELINE_MISMATCH', card, held=False, design=no_card_design)
         truth = {code: x['files_matched'] for code, x in runs.items()}
         # in process, every reason on two cards, and the gate's refusal when it holds no usable card: the same rules hold for the words face() writes
         pump = json.loads((HERE.parent / 'verify' / 'cases' / 'pump-station-submain' / 'card.json').read_text())
@@ -939,15 +1097,20 @@ def r18():
         finally:
             del os.environ['VERIFY_HOME']
         in_process = {}
+        designs = [{}, GOOD, [1, 2], {'x': 1, 'y': 'two'}, {f'k{i:02d}': i for i in range(15)}]                     # Amendment 5: five kinds of design
+        import decimal
+        at = lambda x, met: str(decimal.Decimal(x['limit']) + (0 if met else 1 if x['comparison'] == '<=' else -1))   # met at the limit, or one beyond it
         for c in [card, pump]:
             for code in B.REASONS:
-                crit = B._blank(c)
-                if code in ('MET', 'LIMIT_NOT_MET'):
-                    crit = [dict(x, achieved='1', margin='0' if code == 'MET' else '-1', met=code == 'MET') for x in crit]
-                v = B._verdict(c, {}, code, crit, detail='a reason')
-                in_process[(c['requirement']['id'], code)] = text_claims(B.face(c, v), code)
-            refusal = verify_tools._refusal('0' * 64, {}, 'no signed baseline with this hash is held by the verification service: the stored file is not a baseline card')
-            in_process[(c['requirement']['id'], 'no usable card')] = text_claims(B.face(c, refusal), 'BASELINE_MISMATCH', held=False)
+                for n, design in enumerate(designs):
+                    crit = B._blank(c)
+                    if code in ('MET', 'LIMIT_NOT_MET'):                                                        # Amendment 5: for a limit not met, every criterion but the last is met
+                        crit = [dict(x, achieved=at(x, met), margin='0' if met else '-1', met=met) for i, x in enumerate(crit) for met in [code == 'MET' or i < len(crit) - 1]]
+                    v = B._verdict(c, design, code, crit, basis='as the check reports it' if code in ('MET', 'LIMIT_NOT_MET', 'RESULT_IMPLAUSIBLE', 'CHECK_OUTPUT_INVALID') else '', detail='a reason')
+                    in_process[(c['requirement']['id'], code, n)] = text_claims(B.face(c, v), code, c, design=design, verdict=v)
+            for n, design in enumerate(designs):
+                refusal = verify_tools._refusal('0' * 64, design, 'no signed baseline with this hash is held by the verification service: the stored file is not a baseline card')
+                in_process[(c['requirement']['id'], 'no usable card', n)] = text_claims(B.face(c, refusal), 'BASELINE_MISMATCH', c, held=False, design=design, verdict=refusal)
         ok_a, why_a, s_a = r.checked()
         rev = draft(); rev['requirement'] = dict(rev['requirement'], revision='B')
         env_b = verify_ctl.revise(r.s.home, CASE, rev, r.s.engineer, r.h, 'Revision B, for R18 (CR-18).')
@@ -965,8 +1128,9 @@ def r18():
         missing_counts = [x for x, l in zip(['? met, 2 not met, ? unknown.', '(8 official runs, 2 not met); ? unknown, ? met.'], missing) if x in l] if len(missing) == 2 else missing
         counts = (s_a.get('official_runs'), s_a.get('met'), s_a.get('not_met'), s_a.get('unknown'))
         e.update(exits=dict({code: x['answer'][0] for code, x in runs.items()}, NO_CARD=no_card[0]), notices=sorted(notices, key=str), in_notices=in_notices, in_answers=in_answers,
-                 no_card_answer=no_card_answer, no_card_head=head(no_card[1]), no_card_notice_old_words=sum(w in notices.get('NO_CARD', '') for w in NOTICE_OLD), files_matched=truth,
-                 in_process={f'{a} {b}': v for (a, b), v in in_process.items() if not all(v[k] for k in v if k != 'old_words') or v['old_words']},
+                 no_card_answer=no_card_answer, no_card_head=head(no_card[1]), no_card_notice_old_words=sum(w.lower() in notices.get('NO_CARD', '').lower() for w in NOTICE_OLD), files_matched=truth,
+                 no_card_notice_known=no_card_notice_known(notices.get('NO_CARD', ''), r.h),
+                 in_process={f'{a} {b} {n}': v for (a, b, n), v in in_process.items() if not all(v[k] for k in v if k != 'old_words') or v['old_words']},
                  runs_row=runs_row, missing_counts=missing_counts, counts_a=counts, supersedes={k: sup.get(k) for k in ('official_runs', 'met', 'not_met', 'unknown')},
                  banner_print=[l.strip() for l in printed_b.splitlines() if 'CHANGED AFTER THE EVENT' in l], banner_shown=[l.strip() for l in shown.splitlines() if 'SUPERSEDES' in l],
                  on_b=(on_b[0], head(on_b[1])), record_a=(ok_a, why_a), record_b=(ok_b, [f'{n} {t}: {x}' for n, t, g, x in checks_b if not g]))
@@ -974,8 +1138,8 @@ def r18():
         checks = {'eight runs, one for each verdict the gate gives (MET, LIMIT_NOT_MET, DESIGN_OUTSIDE_BASELINE, CHECK_ERROR, CHECK_OUTPUT_INVALID, RESULT_IMPLAUSIBLE, BASELINE_MISMATCH) and one while the gate holds no usable copy of the card, are answered with the exit status of their verdict; the seven that are not a pass each have a notice':
                       e['exits'] == {'LIMIT_NOT_MET': 2, 'DESIGN_OUTSIDE_BASELINE': 2, 'CHECK_ERROR': 3, 'CHECK_OUTPUT_INVALID': 3, 'RESULT_IMPLAUSIBLE': 3, 'BASELINE_MISMATCH': 3, 'MET': 0, 'NO_CARD': 3}
                       and set(notices) == set(B.REASONS) - {'MET'} | {'NO_CARD'},
-                  'no notice says that nothing was changed, that the check is exactly as baselined, or that a failure is to be accepted when the result is UNKNOWN; each notice\'s first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were':
-                      all(v['old_words'] == 0 and v['headline_fits'] and v['verdict_row_states_it'] for v in in_notices.values()) and e['no_card_notice_old_words'] == 0,
+                  'no notice says that nothing was changed, that the check is exactly as baselined, that anything is unchanged, or that a failure is to be accepted when the result is UNKNOWN; each notice\'s first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were; the notice written while the gate holds no usable card has only its own rows':
+                      all(v['old_words'] == 0 and v['headline_fits'] and v['verdict_row_states_it'] for v in in_notices.values()) and e['no_card_notice_old_words'] == 0 and e['no_card_notice_known'],
                   'a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not':
                       all(v['files_matched_said_when_so'] and v['files_changed_said_when_so'] for v in in_notices.values())
                       and truth['LIMIT_NOT_MET'] is True and truth['RESULT_IMPLAUSIBLE'] is True and truth['BASELINE_MISMATCH'] is False,
@@ -985,8 +1149,8 @@ def r18():
                       len(in_answers) == 7 and clean(in_answers) and len(e['runs_row']) == 1 and e['runs_row'][0].startswith('Official runs 8 through the service on this baseline: 1 met, 2 not met, 5 unknown.'),
                   'while the gate holds no usable copy of the card, the first client\'s answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored':
                       e['no_card_head'] == NO_CARD_ANSWER and clean({'no card': no_card_answer}),
-                  'in process, for every verdict on two cards (the fixture and the pump station), and for the gate\'s refusal when it holds no usable card, what face() writes keeps the same rules':
-                      len(in_process) == 16 and clean(in_process),
+                  'in process, for every verdict on two cards (the fixture and the pump station), each with five kinds of design, and for the gate\'s refusal when it holds no usable card, what face() writes keeps the same rules':
+                      len(in_process) == 80 and clean(in_process),
                   'the revised baseline counts every run on the one it replaced, and the counts are the old record\'s: 8 runs, 1 met, 2 not met, 5 unknown':
                       e['supersedes'] == {'official_runs': 8, 'met': 1, 'not_met': 2, 'unknown': 5} and counts == (8, 1, 2, 5) and ok_a,
                   'the new record\'s print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes':

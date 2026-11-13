@@ -61,7 +61,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from plea_gateway import (BudgetExhausted, GateRefusedRun, GovernedError, Held, InProgress, OutcomeInvalid, ReceiptInvalid,   # noqa: E402
                           RequestKeyReused, Store, Stopped, TransportError, UnknownRoot, WitnessUnavailable)
 from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args, wrap_server   # noqa: E402
-from baseline import HEADLINE, canonical, face, root_for   # noqa: E402
+from baseline import HEADLINE, canonical, design_lines, face, root_for   # noqa: E402
 from verify_client import Client                                     # noqa: E402
 from verify_record import arguments_for, load_envelope, request_key, signed_by   # noqa: E402
 
@@ -215,13 +215,24 @@ def refusal(code: str, text: str) -> dict:
 
 def plain_text(verdict: dict, runs: dict, aid) -> str:
     """A verdict in words when the front door holds no usable card to print it against (the stored baseline was changed)."""
-    L = [HEADLINE.get(verdict.get('reason_code'), 'UNKNOWN') if verdict.get('verdict') != 'UNKNOWN' else 'UNKNOWN: NO USABLE BASELINE IS HELD FOR THIS JOB', '',
-         f"Reason        {verdict.get('detail') or verdict.get('reason_code')}",
-         'Design        ' + json.dumps(verdict.get('design'), sort_keys=True),
-         f"Official runs {runs['total']} through the service on this baseline: {runs['PASS']} met, {runs['FAIL']} not met, {runs['UNKNOWN']} unknown." + (f"  This run: {aid}." if aid else ''), '']
+    # Amendment 5 (13 November 2026).  A verdict the gate decided with its card (it read the baseline as signed, though the
+    # front door could not) is named by its own reason, and the last line says so; "no usable baseline is held" only when
+    # the gate held none either.  The design is set out as sent, as the gate's own notice does when it holds no usable
+    # card, but the first line says it is the front door that holds no usable baseline, which is so whether the gate held one
+    # or not; it was printed whole, as JSON, with the sender's names and text in it.
+    gate_held = verdict.get('verdict') != 'UNKNOWN' or verdict.get('check') is not None
+    L = [HEADLINE.get(verdict.get('reason_code'), 'UNKNOWN') if gate_held else 'UNKNOWN: NO USABLE BASELINE IS HELD FOR THIS JOB', '',
+         f"Reason        {verdict.get('detail') or verdict.get('reason_code')}"]
+    D = design_lines(None, verdict.get('design'))
+    if D[0] == 'Design        no usable baseline is held to set it against':
+        D[0] = 'Design        the front door holds no usable baseline to set it against'
+    L += D
+    L += [f"Official runs {runs['total']} through the service on this baseline: {runs['PASS']} met, {runs['FAIL']} not met, {runs['UNKNOWN']} unknown." + (f"  This run: {aid}." if aid else ''), '']
     if verdict.get('verdict') != 'PASS':
         L.append('This is not a pass.  The run is counted and kept, and the responsible engineer has been sent this result directly by the verification service.')
-    L.append('The baseline held by the service for this job could not be read as the one the responsible engineer signed, so the requirement is not printed here.')
+    L.append('The front door could not read the stored baseline for this job as the one the responsible engineer signed, so the requirement is not printed here.  '
+             'The gate read it as signed and decided this result.' if gate_held else
+             'The baseline held by the service for this job could not be read as the one the responsible engineer signed, so the requirement is not printed here.')
     return '\n'.join(L)
 
 
