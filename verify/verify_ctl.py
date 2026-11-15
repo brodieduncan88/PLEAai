@@ -84,6 +84,28 @@ def make_baseline(home, source, draft: dict, key: Key, runs: int = 1000, superse
         Store(control_dsn).new_root(root_for(card), runs, 0)          # replacement allowance 0: no run is ever refunded
     except RootExists:
         raise BaselineInvalid('this exact baseline is already provisioned')
+    # Amendment 6 (15 November 2026): the engineer's inbox is made with the baseline and holds its full hash, its claim, so
+    # that a notice about this baseline still reaches its engineer if the baseline's folder is later taken away.  A notice
+    # about a made-up hash is kept out of the inbox because the service holds no folder for it (verify_tools._inbox).  A
+    # claim already there is kept.  The claim is written whole or not at all.  If it cannot be written here, the gate's
+    # tool writes it when it starts.
+    box = home / 'inbox' / envelope['baseline_sha256'][:16]
+    try:
+        box.mkdir(parents=True, exist_ok=True)
+        part = box / '.baseline_sha256.console'
+        try:
+            part.write_text(envelope['baseline_sha256'] + '\n', encoding='utf-8')
+            try:
+                os.link(part, box / 'baseline_sha256')
+            except FileExistsError:
+                pass
+            except OSError:                                # a file system that makes no hard links
+                if not (box / 'baseline_sha256').exists():
+                    os.replace(part, box / 'baseline_sha256')
+        finally:
+            part.unlink(missing_ok=True)
+    except OSError:
+        pass
     return envelope
 
 

@@ -1,0 +1,683 @@
+{
+ "pass_on_the_code_declared_here": {
+  "E0": {
+   "defect": "no change at all: the control, which must not be caught",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [],
+   "failed_checks": {}
+  },
+  "E1": {
+   "defect": "every notice goes to the inbox named by the first 64 bits, as before",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox"
+    ]
+   }
+  },
+  "E2": {
+   "defect": "the hash an inbox holds is compared by its first 64 bits only",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines"
+    ]
+   }
+  },
+  "E3": {
+   "defect": "the console makes the inbox but writes no hash in it",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "when a baseline is made, its engineer's inbox is made with it, holds no notice, and holds the baseline's full hash; when the gate's tool starts, a baseline with no inbox, or with one that holds notices and no hash, as for a baseline made before this amendment, is given an inbox that holds it"
+    ]
+   }
+  },
+  "E4": {
+   "defect": "the gate's tool, starting, gives no hash to an inbox that holds none",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "when a baseline is made, its engineer's inbox is made with it, holds no notice, and holds the baseline's full hash; when the gate's tool starts, a baseline with no inbox, or with one that holds notices and no hash, as for a baseline made before this amendment, is given an inbox that holds it"
+    ]
+   }
+  },
+  "E5": {
+   "defect": "notices for a made-up hash are kept under its first 64 bits",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox"
+    ]
+   }
+  },
+  "E6": {
+   "defect": "a baseline folder is looked for by the first 64 bits of the hash",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox",
+     "with the baseline's folder taken away, a run on its hash is answered UNKNOWN, saying none is stored, and its notice still goes to its engineer, by the hash its inbox holds, saying the baseline should be restored"
+    ]
+   }
+  },
+  "E7": {
+   "defect": "the console writes the hash under another name",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "when a baseline is made, its engineer's inbox is made with it, holds no notice, and holds the baseline's full hash; when the gate's tool starts, a baseline with no inbox, or with one that holds notices and no hash, as for a baseline made before this amendment, is given an inbox that holds it",
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox",
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "E8": {
+   "defect": "all made-up hashes share one folder",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox"
+    ]
+   }
+  },
+  "E9": {
+   "defect": "no notice at all is written for a made-up hash",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox"
+    ]
+   }
+  },
+  "E10": {
+   "defect": "the console writes only the first 64 bits of the hash",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "when a baseline is made, its engineer's inbox is made with it, holds no notice, and holds the baseline's full hash; when the gate's tool starts, a baseline with no inbox, or with one that holds notices and no hash, as for a baseline made before this amendment, is given an inbox that holds it"
+    ]
+   }
+  },
+  "E11": {
+   "defect": "a hash an inbox holds is replaced by that of any baseline run later",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "an inbox that holds another baseline's hash, as two baselines sharing their first 64 bits would share one, still takes the notices of a baseline whose folder the gate holds, and its hash is not replaced"
+    ]
+   }
+  },
+  "E12": {
+   "defect": "an error in looking for the baseline folder is not caught",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "E13": {
+   "defect": "an empty hash file is not written again",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox",
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "E14": {
+   "defect": "a run on a baseline the service holds does not write a missing hash",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox",
+     "with the baseline's folder taken away, a run on its hash is answered UNKNOWN, saying none is stored, and its notice still goes to its engineer, by the hash its inbox holds, saying the baseline should be restored",
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "E15": {
+   "defect": "a kept notice is addressed to the responsible engineer, as before",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox"
+    ]
+   }
+  },
+  "E16": {
+   "defect": "the reason given for a hash with nothing stored is the old one",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox",
+     "with the baseline's folder taken away, a run on its hash is answered UNKNOWN, saying none is stored, and its notice still goes to its engineer, by the hash its inbox holds, saying the baseline should be restored"
+    ]
+   }
+  },
+  "E17": {
+   "defect": "where the file system makes no hard links, no hash is written",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox"
+    ]
+   }
+  },
+  "E18": {
+   "defect": "the temporary file the hash is written to is left in the inbox",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox",
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "E19": {
+   "defect": "a kept notice says the service holds no baseline with that hash, as the second form did",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox"
+    ]
+   }
+  },
+  "E20": {
+   "defect": "the engineer's notice for a hash with nothing stored says the stored baseline should be inspected",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "with the baseline's folder taken away, a run on its hash is answered UNKNOWN, saying none is stored, and its notice still goes to its engineer, by the hash its inbox holds, saying the baseline should be restored"
+    ]
+   }
+  },
+  "M1": {
+   "defect": "an error in looking for the baseline folder counts as holding it",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines"
+    ]
+   }
+  },
+  "M2": {
+   "defect": "any error but a missing file in opening the card is said to mean nothing is stored",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "M3": {
+   "defect": "a hash file that is not text stops the tool",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "M4": {
+   "defect": "any text in the hash file is taken as a hash",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "M6": {
+   "defect": "the gate's tool writes a hash only in an inbox that is already there",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "when a baseline is made, its engineer's inbox is made with it, holds no notice, and holds the baseline's full hash; when the gate's tool starts, a baseline with no inbox, or with one that holds notices and no hash, as for a baseline made before this amendment, is given an inbox that holds it"
+    ]
+   }
+  },
+  "M7": {
+   "defect": "whether anything is stored is judged by the folder alone",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "N1": {
+   "defect": "the gate's tool, starting, gives no hash to an inbox that is already there",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "when a baseline is made, its engineer's inbox is made with it, holds no notice, and holds the baseline's full hash; when the gate's tool starts, a baseline with no inbox, or with one that holds notices and no hash, as for a baseline made before this amendment, is given an inbox that holds it"
+    ]
+   }
+  },
+  "N2": {
+   "defect": "the temporary file is removed only when nothing fails",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox",
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "N5": {
+   "defect": "the engineer's notice says nothing is stored whenever the folder is not found, whatever the reason says",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  },
+  "W1": {
+   "defect": "the hash an inbox holds is compared by its first 17 digits",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines"
+    ]
+   }
+  },
+  "W2": {
+   "defect": "a baseline folder is looked for by the first 17 digits of the hash",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines",
+     "with the baseline's folder taken away, a run on its hash is answered UNKNOWN, saying none is stored, and its notice still goes to its engineer, by the hash its inbox holds, saying the baseline should be restored"
+    ]
+   }
+  },
+  "W3": {
+   "defect": "an inbox that holds no hash takes any hash that shares its name",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox"
+    ]
+   }
+  },
+  "W4": {
+   "defect": "the hash an inbox holds decides before the baseline folder does",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "an inbox that holds another baseline's hash, as two baselines sharing their first 64 bits would share one, still takes the notices of a baseline whose folder the gate holds, and its hash is not replaced"
+    ]
+   }
+  },
+  "W5": {
+   "defect": "a baseline is taken as held only if its stored card is there",
+   "tests_run": [
+    "R1",
+    "R14",
+    "R16",
+    "R18",
+    "R19",
+    "F19"
+   ],
+   "caught_by": [
+    "R19"
+   ],
+   "failed_checks": {
+    "R19": [
+     "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left"
+    ]
+   }
+  }
+ }
+}

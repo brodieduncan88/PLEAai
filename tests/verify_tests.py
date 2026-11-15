@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Declared tests R1-R13 for the verification-record plug-in (verify/DECLARED_VERIFY.md states the expected outcomes),
 and R14 to R16, added by Amendment 2 (verify/DECLARED_AMEND2.md), R17, added by Amendment 3 (verify/DECLARED_AMEND3.md),
-and R18, added by Amendment 4 (verify/DECLARED_AMEND4.md).
+R18, added by Amendment 4 (verify/DECLARED_AMEND4.md), and R19, added by Amendment 6 (verify/DECLARED_AMEND6.md).
 R1 to R13 are as they were declared.
 
-    verify_tests.py [R1 R5 ...]       all eighteen by default; writes outputs/verify_tests.json; exits 1 if any test fails
+    verify_tests.py [R1 R5 ...]       all nineteen by default; writes outputs/verify_tests.json; exits 1 if any test fails
 
 Each test makes a fresh deployment (verify/deploy.py: new keys, the released witness service and gate host under mutual
 TLS, the gate host loading verify_tools), baselines the self-test fixture in tests/verify_case/ as the responsible
@@ -1164,7 +1164,137 @@ def r18():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18}
+INSIDE19 = r"""
+import importlib, json, os, pathlib, sys
+sys.path[:0] = [sys.argv[1], str(pathlib.Path(sys.argv[1]) / 'verify')]
+import verify_tools as V                                                   # the tool starts here, as the gate host starts it
+h = sys.argv[2]; out = {}
+BAD, GOOD = {'material': 'PA66-GF30', 'wall_mm': 3, 'mode': 'normal'}, {'material': 'PPS-GF40', 'wall_mm': 3, 'mode': 'normal'}
+inbox = V.HOME / 'inbox'; box = inbox / h[:16]; claim = box / 'baseline_sha256'
+txt = lambda d: sorted(p.name for p in d.glob('*.txt')) if d.is_dir() else []
+flip = lambda c: '0' if c != '0' else '1'
+made = h[:16] + flip(h[16]) + h[17:]                                       # shares the first 64 bits of the real hash
+last = h[:63] + flip(h[63])                                                 # differs from it only in its last digit
+other = ''.join('0123456789abcdef'[(int(c, 16) + 8) % 16] for c in h)       # shares nothing with it
+held = lambda: claim.read_bytes().decode('utf-8', 'replace').strip() if claim.exists() else None
+
+
+def call(hh, design):
+    places = {'real': box, 'unclaimed': inbox / 'unclaimed' / hh, 'own': inbox / hh[:16]}
+    if hh[:16] == h[:16]:
+        places.pop('own')                                                   # the same folder as the real engineer's inbox
+    before = {k: set(txt(d)) for k, d in places.items()}
+    try:
+        v = V.verify(hh, design)
+    except Exception as exc:
+        return {'raised': type(exc).__name__}
+    after = {k: set(txt(d)) for k, d in places.items()}
+    added = {k: len(after[k] - before[k]) for k in after}                    # by name: notices of one second sort by verdict, not by time
+    new = [(places[k] / n).read_text(encoding='utf-8') for k in places for n in sorted(after[k] - before[k])]
+    return {'verdict': [v['verdict'], v['reason_code'], v['detail']], 'added': added, 'own_inbox_made': (inbox / hh[:16]).exists() if hh[:16] != h[:16] else None,
+            'notices': [[t.splitlines()[0], t.splitlines()[-1]] for t in new]}
+
+
+out['claim_after_start'] = held()
+for k, hh in (('made', made), ('last', last), ('other', other)):
+    out[k] = call(hh, BAD)
+out['real'] = call(h, dict(BAD, wall_mm=3.2))
+claim.unlink(missing_ok=True); importlib.reload(V); out['claim_after_restart'] = held()   # started again, with an inbox that holds notices and no hash
+claim.unlink(missing_ok=True); out['made_with_no_claim'] = call(made, dict(BAD, wall_mm=3.25)); out['claim_after_made'] = held()
+out['pass_with_no_claim'] = call(h, GOOD); out['claim_after_pass'] = held()
+d = V.HOME / 'baselines' / h; aside = d.with_name(d.name + '.aside'); d.rename(aside)
+out['folder_gone'] = call(h, dict(BAD, wall_mm=3.3)); aside.rename(d)
+claim.write_text(made + '\n'); out['foreign_claim'] = call(h, dict(BAD, wall_mm=3.35)); out['claim_after_foreign'] = held()
+claim.unlink(missing_ok=True); card = d / 'baseline.json'; card_aside = d / 'baseline.json.aside'; card.rename(card_aside)
+out['card_gone_no_claim'] = call(h, dict(BAD, wall_mm=3.4)); card_aside.rename(card); out['claim_after_card_gone'] = held()
+real_is_dir, real_read_text = pathlib.Path.is_dir, pathlib.Path.read_text
+under = lambda p: p.parent == V.HOME / 'baselines'                        # as when the folder of baselines cannot be searched
+
+
+def refusing(self):
+    if under(self):
+        raise PermissionError('the folder of baselines cannot be searched')
+    return real_is_dir(self)
+
+
+def unreadable(self, *a, **k):
+    if under(self.parent):
+        raise PermissionError('the folder of baselines cannot be searched')
+    return real_read_text(self, *a, **k)
+pathlib.Path.is_dir, pathlib.Path.read_text = refusing, unreadable
+out['baselines_unsearchable'] = call(h, dict(BAD, wall_mm=3.45)); out['made_unsearchable'] = call(made, dict(BAD, wall_mm=3.47))
+pathlib.Path.is_dir, pathlib.Path.read_text = real_is_dir, real_read_text
+claim.write_text(''); out['empty_claim'] = call(h, dict(BAD, wall_mm=3.5)); out['claim_after_empty'] = held()
+claim.write_bytes(b'\xff\xfe\n'); out['bad_claim'] = call(h, dict(BAD, wall_mm=3.55)); out['claim_after_bad'] = held()
+claim.write_text('not a hash\n'); out['garbage_claim'] = call(h, dict(BAD, wall_mm=3.6)); out['claim_after_garbage'] = held()
+claim.unlink(missing_ok=True); claim.mkdir(); out['claim_folder'] = call(h, dict(BAD, wall_mm=3.62))       # a folder where the hash file should be
+out['left_with_claim_folder'] = sorted(p.name for p in box.iterdir() if not p.name.endswith('.txt')); claim.rmdir()
+real_link = os.link
+
+
+def no_links(*a, **k):
+    raise PermissionError('this file system makes no hard links')
+claim.unlink(missing_ok=True); os.link = no_links; out['no_links'] = call(h, dict(BAD, wall_mm=3.65)); os.link = real_link
+out['claim_after_no_links'] = held(); out['left_in_inbox'] = sorted(p.name for p in box.iterdir() if not p.name.endswith('.txt'))
+out['h'], out['made_h'], out['last_h'], out['other_h'] = h, made, last, other
+print(json.dumps(out))
+"""
+
+
+def r19():
+    """A notice reaches an engineer's inbox only for that engineer's own baseline: a request naming a hash the service holds no baseline for, even one that shares all but one digit of a real baseline's, is answered UNKNOWN and its notice is kept apart, addressed to no engineer; and a notice about a real baseline still reaches its engineer while the service can find its folder or read its full hash in its inbox.  (Amendment 6.)"""
+    s = deploy.Services(OUT / 'R19'); e = {}
+    try:
+        env = s.baseline(CASE, draft()); h = env['baseline_sha256']
+        box = s.home / 'inbox' / h[:16]; claim = box / 'baseline_sha256'
+        e['inbox_at_baselining'] = sorted(p.name for p in box.iterdir()) if box.is_dir() else None
+        e['claim_at_baselining'] = claim.read_text().strip() if claim.exists() else None
+        if claim.exists():
+            claim.unlink()                                                  # as for a baseline made before Amendment 6: the tool, starting, must claim it
+        if box.is_dir() and not any(box.iterdir()):
+            box.rmdir()                                                     # and with no inbox at all, as before its first notice
+        script = OUT / 'R19' / 'inside.py'; script.write_text(INSIDE19)
+        base = dict(os.environ, VERIFY_HOME=str(s.home), VERIFY_ENGINEER_KEYS=s.engineer.public_hex); base.pop('PLEA_CRASH_AT', None)
+        out = subprocess.run([PY, '-B', str(script), str(GATEWAY), h], capture_output=True, text=True, timeout=120, env=base)
+        got = json.loads(out.stdout) if out.returncode == 0 and out.stdout.strip() else {'failed': (out.stdout + out.stderr)[-300:].replace(str(GATEWAY), '<tree>')}
+        e['got'] = got
+        g = lambda k: got.get(k) or {}
+        none_stored = 'no signed baseline with this hash is held by the verification service (none is stored under this hash)'
+        not_opened = 'no signed baseline with this hash is held by the verification service (the stored file could not be opened)'
+        nobody = lambda hh: [f'To: no engineer: the verification service found no baseline folder for the hash {hh}, and read it in no inbox',
+                             'No check was run.  This is not a pass.  This notice is kept by the service and sent to nobody.']
+        kept = lambda r, hh: r.get('verdict') == ['UNKNOWN', 'BASELINE_MISMATCH', none_stored] and r.get('notices') == [nobody(hh)]
+        to_engineer = lambda r, verdict: r.get('verdict', [None, None])[:2] == verdict and r.get('added', {}).get('real') == 1 and r.get('added', {}).get('unclaimed') == 0
+        checks = {'when a baseline is made, its engineer\'s inbox is made with it, holds no notice, and holds the baseline\'s full hash; when the gate\'s tool starts, a baseline with no inbox, or with one that holds notices and no hash, as for a baseline made before this amendment, is given an inbox that holds it':
+                      e['inbox_at_baselining'] == ['baseline_sha256'] and e['claim_at_baselining'] == h and got.get('claim_after_start') == h and got.get('claim_after_restart') == h,
+                  'requests naming hashes the service holds no baseline for (one sharing the real hash\'s first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer\'s inbox, even while the service cannot look in its folder of baselines':
+                      kept(g('made'), got.get('made_h')) and g('made').get('added') == {'real': 0, 'unclaimed': 1}
+                      and g('made_unsearchable').get('verdict') == ['UNKNOWN', 'BASELINE_MISMATCH', not_opened] and g('made_unsearchable').get('added') == {'real': 0, 'unclaimed': 1}
+                      and g('made_unsearchable').get('notices') == [nobody(got.get('made_h'))]
+                      and kept(g('last'), got.get('last_h')) and g('last').get('added') == {'real': 0, 'unclaimed': 1}
+                      and kept(g('other'), got.get('other_h')) and g('other').get('added') == {'real': 0, 'unclaimed': 1, 'own': 0} and g('other').get('own_inbox_made') is False,
+                  'a failure on the real baseline goes to its engineer\'s inbox': to_engineer(g('real'), ['FAIL', 'LIMIT_NOT_MET']),
+                  'while the real engineer\'s inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox':
+                      kept(g('made_with_no_claim'), got.get('made_h')) and g('made_with_no_claim').get('added') == {'real': 0, 'unclaimed': 1} and got.get('claim_after_made') is None
+                      and g('pass_with_no_claim').get('verdict', [None])[0] == 'PASS' and got.get('claim_after_pass') == h
+                      and to_engineer(g('no_links'), ['FAIL', 'LIMIT_NOT_MET']) and got.get('claim_after_no_links') == h and got.get('left_in_inbox') == ['baseline_sha256'],
+                  'with the baseline\'s folder taken away, a run on its hash is answered UNKNOWN, saying none is stored, and its notice still goes to its engineer, by the hash its inbox holds, saying the baseline should be restored':
+                      to_engineer(g('folder_gone'), ['UNKNOWN', 'BASELINE_MISMATCH']) and g('folder_gone').get('verdict', [None] * 3)[2] == none_stored
+                      and g('folder_gone').get('notices') == [[f'To: the responsible engineer for baseline {h}', 'No check was run.  This is not a pass.  Nothing is stored under this hash; the baseline should be restored, or a revised one issued.']],
+                  'an inbox that holds another baseline\'s hash, as two baselines sharing their first 64 bits would share one, still takes the notices of a baseline whose folder the gate holds, and its hash is not replaced':
+                      to_engineer(g('foreign_claim'), ['FAIL', 'LIMIT_NOT_MET']) and got.get('claim_after_foreign') == got.get('made_h'),
+                  'with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left':
+                      to_engineer(g('card_gone_no_claim'), ['UNKNOWN', 'BASELINE_MISMATCH']) and g('card_gone_no_claim').get('verdict', [None] * 3)[2] == not_opened and got.get('claim_after_card_gone') == h
+                      and to_engineer(g('baselines_unsearchable'), ['UNKNOWN', 'BASELINE_MISMATCH']) and g('baselines_unsearchable').get('verdict', [None] * 3)[2] == not_opened
+                      and g('baselines_unsearchable').get('notices') == [[f'To: the responsible engineer for baseline {h}', 'No check was run.  This is not a pass.  The stored baseline should be inspected.']]
+                      and to_engineer(g('claim_folder'), ['FAIL', 'LIMIT_NOT_MET']) and got.get('left_with_claim_folder') == ['baseline_sha256']
+                      and all(to_engineer(g(k), ['FAIL', 'LIMIT_NOT_MET']) and got.get(c) == h for k, c in (('empty_claim', 'claim_after_empty'), ('bad_claim', 'claim_after_bad'), ('garbage_claim', 'claim_after_garbage')))}
+    finally:
+        s.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19}
 
 
 def main():
