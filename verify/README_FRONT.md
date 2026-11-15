@@ -44,6 +44,10 @@ requirement line of a notice no longer calls the baseline "unchanged", the Check
 says what is so of the card, and the front door's own text, when it cannot read the card, names the gate's reason and
 sets the design out as sent. `DECLARED_AMEND5.md` has the list as it now stands.
 
+**Note of 15 November 2026.** `AMENDMENT_6_2026-11-15.md` keeps a notice about a hash the service holds no
+baseline for out of a real engineer's inbox: the inbox now holds the full hash of its baseline, and any other notice is
+kept in `inbox/unclaimed/`. The front door was not open to this. `DECLARED_AMEND6.md` has the list as it now stands.
+
 ## The pieces
 
 | file | what it does |
