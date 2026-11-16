@@ -1,0 +1,401 @@
+{
+ "M0": {
+  "defect": "no change at all: the control, which must not be caught",
+  "tests_run": [
+   "R19",
+   "R20",
+   "R21",
+   "F17",
+   "F19",
+   "F22",
+   "F23",
+   "F24",
+   "F25",
+   "F26",
+   "F27"
+  ],
+  "caught_by": [],
+  "failed_checks": {},
+  "errors": {},
+  "seconds": 30.7
+ },
+ "M1": {
+  "defect": "a failure to write a notice other than a missing file is not kept apart: it escapes the tool",
+  "tests_run": [
+   "R20"
+  ],
+  "caught_by": [
+   "R20"
+  ],
+  "failed_checks": {
+   "R20": [
+    "the inbox is a file in place of its folder: the verdict is returned, the notice is kept in the service's own store, whole, and the verdict says where it went",
+    "the inbox refuses writes, as one made by another account would: the same, with the notice whole in the service's own store",
+    "the disk fills part-way through the inbox's copy: the notice kept is whole, and no partial notice is left in either place",
+    "where nothing can be written, the verdict is still returned and says so, and nothing is raised",
+    "a ledger that cannot be written does not stop a run: the verdict is returned and its notice is in the inbox",
+    "a card whose notice text cannot be built gets its notice in fixed words, in the inbox, and the words repeat none of the card's text",
+    "a normal failing run is unchanged: its notice is in the inbox, whole, with the card's own text",
+    "the error output may fail too: the verdict is still returned, and its notice is in the inbox",
+    "a notice held under one name is one copy: a repeat is reported where that copy is, and no second copy is made",
+    "a write stopped part-way, with no hard links, leaves no notice under its name and no temporary file",
+    "every run returned a verdict, and no temporary file was left in any place"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.1
+ },
+ "M2": {
+  "defect": "a part-written temporary notice is left in the folder when the disk fills",
+  "tests_run": [
+   "R20"
+  ],
+  "caught_by": [
+   "R20"
+  ],
+  "failed_checks": {
+   "R20": [
+    "a write stopped part-way, with no hard links, leaves no notice under its name and no temporary file",
+    "every run returned a verdict, and no temporary file was left in any place"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.1
+ },
+ "M3": {
+  "defect": "the verdict does not say where its notice went",
+  "tests_run": [
+   "R20"
+  ],
+  "caught_by": [
+   "R20"
+  ],
+  "failed_checks": {
+   "R20": [
+    "the inbox is a file in place of its folder: the verdict is returned, the notice is kept in the service's own store, whole, and the verdict says where it went",
+    "the inbox refuses writes, as one made by another account would: the same, with the notice whole in the service's own store",
+    "the disk fills part-way through the inbox's copy: the notice kept is whole, and no partial notice is left in either place",
+    "where nothing can be written, the verdict is still returned and says so, and nothing is raised",
+    "a ledger that cannot be written does not stop a run: the verdict is returned and its notice is in the inbox",
+    "a card whose notice text cannot be built gets its notice in fixed words, in the inbox, and the words repeat none of the card's text",
+    "a normal failing run is unchanged: its notice is in the inbox, whole, with the card's own text",
+    "the error output may fail too: the verdict is still returned, and its notice is in the inbox"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.2
+ },
+ "M4": {
+  "defect": "a ledger that cannot be opened stops the run",
+  "tests_run": [
+   "R20"
+  ],
+  "caught_by": [
+   "R20"
+  ],
+  "failed_checks": {
+   "R20": [
+    "a ledger that cannot be written does not stop a run: the verdict is returned and its notice is in the inbox",
+    "the error output may fail too: the verdict is still returned, and its notice is in the inbox",
+    "every run returned a verdict, and no temporary file was left in any place"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.2
+ },
+ "M5": {
+  "defect": "no notice is kept in the service's own store when the inbox cannot take it",
+  "tests_run": [
+   "R20"
+  ],
+  "caught_by": [
+   "R20"
+  ],
+  "failed_checks": {
+   "R20": [
+    "the inbox is a file in place of its folder: the verdict is returned, the notice is kept in the service's own store, whole, and the verdict says where it went",
+    "the inbox refuses writes, as one made by another account would: the same, with the notice whole in the service's own store",
+    "the disk fills part-way through the inbox's copy: the notice kept is whole, and no partial notice is left in either place",
+    "a notice held under one name is one copy: a repeat is reported where that copy is, and no second copy is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.2
+ },
+ "M6": {
+  "defect": "a notice that nothing can take is reported as kept in the store",
+  "tests_run": [
+   "R20"
+  ],
+  "caught_by": [
+   "R20"
+  ],
+  "failed_checks": {
+   "R20": [
+    "where nothing can be written, the verdict is still returned and says so, and nothing is raised"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.1
+ },
+ "M7": {
+  "defect": "the console does not list notices kept undelivered",
+  "tests_run": [
+   "F25"
+  ],
+  "caught_by": [
+   "F25"
+  ],
+  "failed_checks": {
+   "F25": [
+    "the engineer's console lists the kept notice"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.7
+ },
+ "M8": {
+  "defect": "a card whose notice text cannot be built loses its notice",
+  "tests_run": [
+   "R20"
+  ],
+  "caught_by": [
+   "R20"
+  ],
+  "failed_checks": {
+   "R20": [
+    "a card whose notice text cannot be built gets its notice in fixed words, in the inbox, and the words repeat none of the card's text",
+    "every run returned a verdict, and no temporary file was left in any place"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.1
+ },
+ "M9": {
+  "defect": "a stated limit that is not text is accepted at baselining and at every run",
+  "tests_run": [
+   "R21"
+  ],
+  "caught_by": [
+   "R21"
+  ],
+  "failed_checks": {
+   "R21": [
+    "the console will not baseline a check whose stated limits are not text, and says why",
+    "a card signed that way anyway is refused at the run as not a baseline card: UNKNOWN, no check run, and its notice is in the engineer's inbox",
+    "the run raises no error, and the notice is the no-usable-baseline notice"
+   ]
+  },
+  "errors": {},
+  "seconds": 0.9
+ },
+ "M10": {
+  "defect": "the journal has no size limit",
+  "tests_run": [
+   "F22"
+  ],
+  "caught_by": [
+   "F22"
+  ],
+  "failed_checks": {
+   "F22": [
+    "at the size limit the next design is refused at the door with 507, STORAGE_FULL, and the refusal says nothing was run",
+    "nothing was run or counted for it, and the journal did not grow"
+   ]
+  },
+  "errors": {},
+  "seconds": 3.2
+ },
+ "M11": {
+  "defect": "no room is kept on the journal's disk for notices",
+  "tests_run": [
+   "F23"
+  ],
+  "caught_by": [
+   "F23"
+  ],
+  "failed_checks": {
+   "F23": [
+    "the same design again, at the reserve, is refused too, and adds no line and no run",
+    "a new design at the reserve is refused at the door: 507, STORAGE_FULL, nothing run or counted, no line added"
+   ]
+  },
+  "errors": {},
+  "seconds": 3.4
+ },
+ "M12": {
+  "defect": "the room for notices is not asked for a design already journaled (a re-ask)",
+  "tests_run": [
+   "F23"
+  ],
+  "caught_by": [
+   "F23"
+  ],
+  "failed_checks": {
+   "F23": [
+    "a repeat of it, with room to spare, is answered and adds no line and no run",
+    "the same design again, at the reserve, is refused too, and adds no line and no run"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.6
+ },
+ "M13": {
+  "defect": "a run cut off when the gate host dies gets no notice",
+  "tests_run": [
+   "F24"
+  ],
+  "caught_by": [
+   "F24"
+  ],
+  "failed_checks": {
+   "F24": [
+    "the engineer has one notice of the run, and it is the only notice in the inbox",
+    "the notice says the run was interrupted, is not a pass, will not be run again, and shows the design",
+    "the notice says no verdict was recorded"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.3
+ },
+ "M14": {
+  "defect": "a run cut off gets a new notice on each asking, not one",
+  "tests_run": [
+   "F24"
+  ],
+  "caught_by": [
+   "F24"
+  ],
+  "failed_checks": {
+   "F24": [
+    "the engineer has one notice of the run, and it is the only notice in the inbox"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.4
+ },
+ "M15": {
+  "defect": "the answer does not say the notice of a verdict could not be put in the inbox",
+  "tests_run": [
+   "F25"
+  ],
+  "caught_by": [
+   "F25"
+  ],
+  "failed_checks": {
+   "F25": [
+    "the answer says the notice was not delivered"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.8
+ },
+ "M16": {
+  "defect": "the notice of a run cut off does not say it will not be run again",
+  "tests_run": [
+   "F24"
+  ],
+  "caught_by": [
+   "F24"
+  ],
+  "failed_checks": {
+   "F24": [
+    "the notice says the run was interrupted, is not a pass, will not be run again, and shows the design"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.5
+ },
+ "M17": {
+  "defect": "a ledger whose error output fails too stops the run",
+  "tests_run": [
+   "R20"
+  ],
+  "caught_by": [
+   "R20"
+  ],
+  "failed_checks": {
+   "R20": [
+    "the error output may fail too: the verdict is still returned, and its notice is in the inbox",
+    "every run returned a verdict, and no temporary file was left in any place"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.1
+ },
+ "M18": {
+  "defect": "a notice held under one name is written again in the other place (no one-copy check)",
+  "tests_run": [
+   "R20"
+  ],
+  "caught_by": [
+   "R20"
+  ],
+  "failed_checks": {
+   "R20": [
+    "a notice held under one name is one copy: a repeat is reported where that copy is, and no second copy is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.2
+ },
+ "M19": {
+  "defect": "a stop part-way through a write without hard links leaves the notice under its name",
+  "tests_run": [
+   "R20"
+  ],
+  "caught_by": [
+   "R20"
+  ],
+  "failed_checks": {
+   "R20": [
+    "a write stopped part-way, with no hard links, leaves no notice under its name and no temporary file"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.2
+ },
+ "M20": {
+  "defect": "a journal line that a failed write part-wrote is left in the journal",
+  "tests_run": [
+   "F26"
+  ],
+  "caught_by": [
+   "F26"
+  ],
+  "failed_checks": {
+   "F26": [
+    "the part-written line is taken back, so the journal is as it was",
+    "the next design is journaled whole, and answered"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.4
+ },
+ "M21": {
+  "defect": "a look at the job's runs writes no notice for an interrupted run (backup path, not separately tested)",
+  "tests_run": [
+   "F27"
+  ],
+  "caught_by": [],
+  "failed_checks": {},
+  "errors": {},
+  "seconds": 5.6
+ },
+ "M22": {
+  "defect": "the interrupted notice does not say that no verdict was recorded",
+  "tests_run": [
+   "F24"
+  ],
+  "caught_by": [
+   "F24"
+  ],
+  "failed_checks": {
+   "F24": [
+    "the notice says no verdict was recorded"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.4
+ }
+}

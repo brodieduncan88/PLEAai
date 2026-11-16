@@ -24,6 +24,7 @@ job's binding, so the budget charged and the baseline decided against are always
                          400 the request is not a design (nothing is run and nothing is recorded)
                          403 not enrolled, or no budget      409 stopped, held, exhausted, or already running
                          502 the service refused its own step        503 a part of the service could not be reached
+                         507 the journal is at its size limit, or the disk is below the space kept for notices: nothing is run (Amendment 7)
   GET  /status        every official run on the job's baseline, and whether any design has met the check.
   anything else       404.  There is no path here that baselines, revises, acknowledges, builds a record or reads a key.
 
@@ -49,6 +50,7 @@ import json
 import os
 import pathlib
 import re
+import shutil
 import ssl
 import sys
 import threading
@@ -64,6 +66,7 @@ from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args,
 from baseline import HEADLINE, canonical, design_lines, face, root_for   # noqa: E402
 from verify_client import Client                                     # noqa: E402
 from verify_record import arguments_for, load_envelope, request_key, signed_by   # noqa: E402
+import notices                                                       # noqa: E402  (Amendment 7: a notice the inbox cannot take is kept, not lost)
 
 JOB_NAME = re.compile(r'^[a-z0-9][a-z0-9-]{1,40}$')
 RESERVED = ('frontdoor', 'front', 'witness', 'host', 'governor', 'engineer')
@@ -72,6 +75,8 @@ MAX_BODY = 16384
 MAX_DEPTH = 4
 EVENTS = ('ENROL', 'REBIND', 'REVOKE')
 BINDING_FIELDS = ('event', 'seq', 'job', 'baseline_sha256', 'root', 'cert_sha256', 'previous', 'time', 'note')
+JOURNAL_MAX = 1 << 30            # bytes the journal of submissions may reach; at that size the door refuses new runs (Amendment 7, D1)
+DISK_RESERVE = 512 << 20         # free bytes the journal's disk keeps for notices; below that the door refuses new runs (Amendment 7, D1)
 
 
 # ---------------------------------------------------------------------------------------------------- job bindings
@@ -237,6 +242,47 @@ def plain_text(verdict: dict, runs: dict, aid) -> str:
 
 
 # ---------------------------------------------------------------------------------------------------- the service
+NOTICE_WORDS = {
+    'UNDELIVERED': ("NOTICE NOT DELIVERED: the verification service could not write this result to the responsible engineer's inbox.  It is kept "
+                    "in the service's own store, for the engineer to collect.  The engineer must be told of this result by other means."),
+    'NOT_WRITTEN': ("NOTICE NOT WRITTEN: the verification service could not write this result to the responsible engineer's inbox, or to its own "
+                    "store.  The engineer must be told of this result by other means."),
+}
+
+
+def notice_line(verdict) -> str:
+    """The line an answer gives when the engineer's notice of a verdict could not be put in the inbox (Amendment 7, D2 and D3).
+    Nothing is added when the notice was delivered."""
+    state = verdict.get('notice') if isinstance(verdict, dict) else None
+    return ('\n' + NOTICE_WORDS[state]) if state in NOTICE_WORDS else ''
+
+
+def interrupted_body(card, baseline_sha256: str, design, runs: dict, aid: str, engineer: bool) -> str:
+    """The engineer's notice for a run cut off before its verdict (Amendment 7, D11): the run, the design as the notices of verdicts
+    set it out, and the fact that the run is counted and will not be run again.  The words are the service's own."""
+    if card is not None:
+        to, space = f"To: {card['responsible_engineer']['name']}", card['design_space']
+    elif engineer:
+        to, space = f"To: the responsible engineer for baseline {baseline_sha256}", None
+    else:
+        to, space = f"To: no engineer: the verification service found no baseline folder for the hash {baseline_sha256}, and read it in no inbox", None
+    return '\n'.join([to, 'From: the verification service (not the assistant)', '',
+                      'UNKNOWN: THE RUN WAS INTERRUPTED', '',
+                      'Reason        The verification service did not finish this design\'s run: no verdict was recorded.  The run is counted, '
+                      'and it will not be run again.  NOT VERIFIED.',
+                      f"Official runs {runs['total']} on this baseline: {runs['PASS']} met, {runs['FAIL']} not met, {runs['UNKNOWN']} unknown.  This run: {aid}.",
+                      ''] + design_lines(space, design) + ['', 'Nothing was checked to a result.  This is not a pass.'])
+
+
+def interrupted_fixed(baseline_sha256: str, aid: str, engineer: bool) -> str:
+    """The same notice in fixed words, for a card or a design that cannot be shown (Amendment 7, D11)."""
+    to = (f"To: the responsible engineer for baseline {baseline_sha256}" if engineer else
+          f"To: no engineer: the verification service found no baseline folder for the hash {baseline_sha256}, and read it in no inbox")
+    return '\n'.join([to, 'From: the verification service (not the assistant)', '', 'UNKNOWN: THE RUN WAS INTERRUPTED', '',
+                      f'Run {aid}.  The verification service did not finish this design\'s run: no verdict was recorded.  The run is counted, '
+                      'and it will not be run again.  NOT VERIFIED.  The design is not shown here.  This is not a pass.'])
+
+
 class ServiceClient(Client):
     """verify_client.Client, unchanged in what it does, built from what the service holds and not from a workspace file.
     One is made per request, for the baseline the caller's job is bound to.  The baseline's hash and the budget's name
@@ -264,6 +310,7 @@ class Front:
         self.home, self.store, self.cfg, self.engineer_keys, self.rate = pathlib.Path(home), store, cfg, tuple(engineer_keys), rate
         self._guard = threading.Lock()
         self._locks, self._hits, self._seen = {}, collections.defaultdict(collections.deque), {}
+        self._journaled = set()                  # the request keys this process has journaled: a design journaled once adds no line again (Amendment 7, D1)
         (self.home / 'front').mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------ who is asking
@@ -343,6 +390,7 @@ class Front:
             text = c.status()
         except UnknownRoot:
             return 403, refusal('NO_BUDGET', 'REFUSED: this baseline has no budget at the control plane.  It was not provisioned by the responsible engineer.')
+        self._notify_interrupted(c, attempts, runs)       # Amendment 7 (D11): a run the store shows as interrupted, and not yet noticed, is noticed on this look
         return 200, dict(self._head(binding, c), runs=runs, verified=runs['PASS'] > 0, attempts=[run_fields(a) for a in attempts], text=text)
 
     # ------------------------------------------------------------------ one official run
@@ -355,14 +403,117 @@ class Front:
         finally:
             lock.release()
 
+    def _journal_size(self):
+        """The size of the journal now, or None if it cannot be read.  (Amendment 7, D1.)"""
+        try:
+            p = pathlib.Path(self.cfg['journal'])
+            return p.stat().st_size if p.exists() else 0
+        except OSError:
+            return None
+
+    def _take_back(self, size) -> None:
+        """Take a journal back to the size it had before a write that failed part-way.  (Amendment 7, D1.)"""
+        if size is None:
+            return
+        try:
+            os.truncate(self.cfg['journal'], size)
+        except OSError:
+            pass
+
+    def _design_for(self, key):
+        """The design a journaled request carries, found by its request key, or None if the journal does not show it.  (Amendment 7, D11.)"""
+        try:
+            with open(self.cfg['journal']) as f:
+                for line in f:
+                    try:
+                        args = json.loads(line)
+                    except ValueError:
+                        continue
+                    if isinstance(args, dict) and request_key(args) == key:
+                        return args.get('design')
+        except OSError:
+            return None
+        return None
+
+    def _notify_interrupted(self, c: ServiceClient, attempts, runs: dict) -> None:
+        """Amendment 7 (D11).  Each run on the job's baseline that the store shows as interrupted, and that has no notice yet, is given
+        its engineer's notice, whichever answer first shows it: an ask, a second ask, or a look at the job's runs.  Nothing here is
+        raised, and nothing changes the answer it is part of."""
+        for a in attempts or []:
+            try:
+                if a.get('outcome') != 'INTERRUPTED' or 'aid' not in a:
+                    continue
+                name = 'INTERRUPTED_' + re.sub(r'[^A-Za-z0-9_-]', '_', str(a['aid']))
+                if notices.written(self.home, c.baseline, name):
+                    continue
+                design = self._design_for(a.get('request_key'))
+                if design is not None:
+                    self._interrupted_notice(c, design, runs, a['aid'])
+            except Exception:
+                continue
+
+    def _look_for_interrupted(self, c: ServiceClient) -> None:
+        """Amendment 7 (D11).  A failed ask does not say whether its run was interrupted; the store may already say so, and if it does,
+        the notice is written now.  The answer itself is not changed."""
+        try:
+            runs, attempts = c.fresh().runs()
+        except Exception:
+            return
+        self._notify_interrupted(c, attempts, runs)
+
+    def _journal_room(self, nbytes: int):
+        """None if the journal can take nbytes more and its disk keeps the space the service keeps for notices; otherwise why not, in
+        fixed words.  (Amendment 7, D1.)"""
+        path = pathlib.Path(self.cfg['journal'])
+        try:
+            size = path.stat().st_size if path.exists() else 0
+            free = shutil.disk_usage(path.parent).free
+        except OSError as exc:
+            return f'the journal or its disk cannot be read ({type(exc).__name__})'
+        if nbytes and size + nbytes > self.cfg.get('journal_max_bytes', JOURNAL_MAX):
+            return 'the journal of submissions has reached its size limit'
+        if free - nbytes < self.cfg.get('disk_reserve_bytes', DISK_RESERVE):
+            return 'the disk that holds the journal has less free space than the service keeps for notices'
+        return None
+
+    def _interrupted_notice(self, c: ServiceClient, design, runs: dict, aid: str) -> str:
+        """The engineer's notice of a run cut off when the gate host died (Amendment 7, D11).  The service writes it once for each run,
+        however often the answer is asked for again, to the baseline the job is bound to.  Returns the line the answer gives if the
+        notice could not be put in the inbox."""
+        name = 'INTERRUPTED_' + re.sub(r'[^A-Za-z0-9_-]', '_', str(aid))
+
+        def text(engineer: bool) -> str:
+            try:
+                return interrupted_body(c.card, c.baseline, design, runs, aid, engineer)
+            except Exception:                            # where the card or the design cannot be shown, the words are fixed
+                return interrupted_fixed(c.baseline, aid, engineer)
+        try:
+            state, _ = notices.deliver(self.home, c.baseline, name, text, numbered=False)
+        except Exception:                                # a notice that cannot be written is said so in the answer, not raised
+            state = 'NOT_WRITTEN'
+        return notice_line({'notice': state})
+
     def _submit(self, binding, design):
         c = self.client(binding)
         args = arguments_for(c.baseline, design)             # the baseline is the job's, never the caller's
         key = request_key(args)
-        with self._guard:
-            with open(self.cfg['journal'], 'a') as f:
-                f.write(json.dumps(args) + '\n')             # so an interrupted run can still be tied to what was sent
         head = self._head(binding, c)
+        with self._guard:
+            fresh = key not in self._journaled             # Amendment 7 (D1): a design journaled once adds no line again
+            line = json.dumps(args) + '\n'                 # so an interrupted run can still be tied to what was sent
+            why = self._journal_room(len(line.encode('utf-8')) if fresh else 0)   # every submission keeps the disk's reserve for notices
+            if why is None and fresh:
+                size = self._journal_size()
+                try:
+                    with open(self.cfg['journal'], 'a') as f:
+                        f.write(line)
+                    self._journaled.add(key)
+                except OSError as exc:
+                    self._take_back(size)                  # a line part-written by a full disk is taken back, so the next line starts clean
+                    why = f'the journal cannot be written ({type(exc).__name__})'
+            if why is not None:                            # refused before anything is run or counted
+                return 507, dict(head, **refusal('STORAGE_FULL', f'REFUSED: the verification service has stopped accepting runs: {why}.  '
+                                                                'Nothing was run and nothing was counted.'))
         try:
             verdict = c.governor().attempt(key, 'verify', **args)
         except UnknownRoot:
@@ -380,6 +531,7 @@ class Front:
         except (GateRefusedRun, OutcomeInvalid, RequestKeyReused, ReceiptInvalid, PermissionError) as exc:
             return 502, dict(head, **refusal('SERVICE_REFUSED', f'REFUSED by the verification service ({type(exc).__name__}).  NOT VERIFIED.'))
         except (WitnessUnavailable, TransportError, urllib.error.URLError, ConnectionError, TimeoutError, OSError) as exc:
+            self._look_for_interrupted(c)                  # Amendment 7 (D11): a run the store already shows as interrupted is noticed now
             return 503, dict(head, **refusal('UNAVAILABLE', f'The verification service could not be reached ({type(exc).__name__}).  NOT VERIFIED.  The run may be pending; ask again.'))
         except RuntimeError:
             runs, attempts = c.fresh().runs()
@@ -390,6 +542,7 @@ class Front:
                     f'counted, and it will not be run again.  NOT VERIFIED.\nOfficial runs {runs["total"]} on this baseline: {runs["PASS"]} met, {runs["FAIL"]} not met, {runs["UNKNOWN"]} unknown.')
             if c.card is None:
                 text += '\nThe baseline held by the service for this job could not be read as the one the responsible engineer signed.  Tell the responsible engineer.'
+            text += self._interrupted_notice(c, design, runs, mine['aid'])     # Amendment 7 (D11): the engineer is sent a notice of this run too
             return 200, dict(head, outcome='INTERRUPTED', met=False, exit=3, aid=mine['aid'], runs=runs, verdict=None, text=text)
         runs, attempts = c.fresh().runs()
         aid = next((a['aid'] for a in attempts if a['request_key'] == key), None)
@@ -397,7 +550,7 @@ class Front:
         if outcome not in ('PASS', 'FAIL', 'UNKNOWN') or verdict.get('baseline_sha256') != c.baseline:
             return 502, dict(head, **refusal('SERVICE_REFUSED', 'REFUSED by the verification service: the verdict returned is not for this job\'s baseline.  NOT VERIFIED.'))
         return 200, dict(head, outcome=outcome, met=outcome == 'PASS', exit={'PASS': 0, 'FAIL': 2}.get(outcome, 3), aid=aid, runs=runs, verdict=verdict,
-                         text=face(c.card, verdict, runs, aid) if c.card is not None else plain_text(verdict, runs, aid))
+                         text=(face(c.card, verdict, runs, aid) if c.card is not None else plain_text(verdict, runs, aid)) + notice_line(verdict))
 
 
 # ---------------------------------------------------------------------------------------------------- HTTPS
@@ -511,6 +664,8 @@ def main():
     ap.add_argument('--engineer-key', action='append', required=True, help='a responsible engineer\'s public key to pin (hex); repeatable')
     ap.add_argument('--upstream-cert', required=True, help='this service\'s client certificate for the witness and the gate host'); ap.add_argument('--upstream-key', required=True)
     ap.add_argument('--rate', type=int, default=120, help='requests a job may make in a minute')
+    ap.add_argument('--journal-max-bytes', type=int, default=JOURNAL_MAX, help='size the journal of submissions may reach before new runs are refused (Amendment 7)')
+    ap.add_argument('--disk-reserve-bytes', type=int, default=DISK_RESERVE, help='free bytes the journal\'s disk keeps for notices (Amendment 7)')
     add_server_args(ap)
     a = ap.parse_args()
     tls = server_from_args(a)
@@ -518,7 +673,8 @@ def main():
         raise SystemExit('the front door serves mutual TLS only: give --tls-cert, --tls-key and --tls-ca')
     home = pathlib.Path(a.home)
     cfg = {'witness_url': a.witness_url, 'witness_keys': a.witness_key, 'gate_url': a.gate_host, 'gate_key': a.gate_key,
-           'tls': {'ca': a.tls_ca, 'cert': a.upstream_cert, 'key': a.upstream_key}, 'journal': str(home / 'front' / 'submissions.jsonl')}
+           'tls': {'ca': a.tls_ca, 'cert': a.upstream_cert, 'key': a.upstream_key}, 'journal': str(home / 'front' / 'submissions.jsonl'),
+           'journal_max_bytes': a.journal_max_bytes, 'disk_reserve_bytes': a.disk_reserve_bytes}
     front = Front(home, Store(a.local_dsn), cfg, a.engineer_key, a.rate)
     server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(front)), tls)
     print(json.dumps({'listening': a.port, 'home': str(home), 'witness_keys': a.witness_key, 'gate_key': a.gate_key, 'engineer_keys': a.engineer_key, 'tls': True}), flush=True)

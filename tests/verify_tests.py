@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Declared tests R1-R13 for the verification-record plug-in (verify/DECLARED_VERIFY.md states the expected outcomes),
 and R14 to R16, added by Amendment 2 (verify/DECLARED_AMEND2.md), R17, added by Amendment 3 (verify/DECLARED_AMEND3.md),
-R18, added by Amendment 4 (verify/DECLARED_AMEND4.md), and R19, added by Amendment 6 (verify/DECLARED_AMEND6.md).
+R18, added by Amendment 4 (verify/DECLARED_AMEND4.md), and R19, added by Amendment 6 (verify/DECLARED_AMEND6.md), and R20 and R21, added by Amendment 7 (verify/DECLARED_AMEND7.md).
 R1 to R13 are as they were declared.
 
-    verify_tests.py [R1 R5 ...]       all nineteen by default; writes outputs/verify_tests.json; exits 1 if any test fails
+    verify_tests.py [R1 R5 ...]       all twenty-one by default; writes outputs/verify_tests.json; exits 1 if any test fails
 
 Each test makes a fresh deployment (verify/deploy.py: new keys, the released witness service and gate host under mutual
 TLS, the gate host loading verify_tools), baselines the self-test fixture in tests/verify_case/ as the responsible
@@ -32,7 +32,7 @@ import check_record                     # noqa: E402
 import deploy                           # noqa: E402
 import verify_ctl                       # noqa: E402
 from plea_gateway import AuthorityError, Store      # noqa: E402
-from verify_record import Key, canonical, envelope_message   # noqa: E402
+from verify_record import Key, canonical, envelope_message, sign_envelope   # noqa: E402
 
 OUT = GATEWAY / 'outputs' / 'verify_tests'
 CASE = HERE / 'verify_case'
@@ -1294,7 +1294,290 @@ def r19():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19}
+INSIDE20 = r"""
+import errno, json, os, pathlib, sys
+sys.path[:0] = [sys.argv[1], str(pathlib.Path(sys.argv[1]) / 'verify')]
+import verify_tools as V                                                   # the tool starts here, as the gate host starts it
+h = sys.argv[2]; out = {}
+BAD = {'material': 'PA66-GF30', 'wall_mm': 3, 'mode': 'normal'}
+box = V.HOME / 'inbox' / h[:16]; und = V.HOME / 'undelivered' / h
+real_link, real_open, real_write = os.link, pathlib.Path.open, pathlib.Path.write_text
+
+
+def inside(p, *folders):
+    return any(str(p) == str(f) or str(p).startswith(str(f) + os.sep) for f in folders)
+
+
+def texts(d):
+    return {p.name: p.read_text(encoding='utf-8') for p in d.glob('*.txt')} if d.is_dir() else {}
+
+
+def dots(*folders):
+    return sorted(n for d in folders if d.is_dir() for n in os.listdir(d) if n.startswith('.'))
+
+
+def run(wall):
+    before_box, before_und = set(texts(box)), set(texts(und))
+    try:
+        v = V.verify(h, dict(BAD, wall_mm=wall))
+    except Exception as exc:
+        return {'raised': type(exc).__name__}
+    new_box = {k: t for k, t in texts(box).items() if k not in before_box}
+    new_und = {k: t for k, t in texts(und).items() if k not in before_und}
+    return {'verdict': [v['verdict'], v['reason_code']], 'notice': v.get('notice'), 'in_inbox': sorted(new_box), 'in_undelivered': sorted(new_und),
+            'texts': list(new_box.values()) + list(new_und.values()), 'dots': dots(box, und)}
+
+
+# 1. the inbox is a file in place of its folder
+aside = box.with_name(box.name + '.aside'); box.rename(aside); box.write_text('a file in place of the folder\n')
+out['inbox_is_a_file'] = run(3.2)
+box.unlink(); aside.rename(box)
+
+
+# 2. the inbox refuses writes, as one made by another account would
+def refused_link(src, dst, *a, **k):
+    if inside(dst, box):
+        raise PermissionError(errno.EACCES, 'the inbox is made by another account')
+    return real_link(src, dst, *a, **k)
+
+
+def refused_open(self, *a, **k):
+    mode = a[0] if a else k.get('mode', 'r')
+    if inside(self, box) and any(c in mode for c in 'wxa+'):
+        raise PermissionError(errno.EACCES, 'the inbox is made by another account')
+    return real_open(self, *a, **k)
+
+
+def refused_write(self, *a, **k):
+    if inside(self, box):
+        raise PermissionError(errno.EACCES, 'the inbox is made by another account')
+    return real_write(self, *a, **k)
+
+
+os.link, pathlib.Path.open, pathlib.Path.write_text = refused_link, refused_open, refused_write
+out['inbox_refuses'] = run(3.25)
+os.link, pathlib.Path.open, pathlib.Path.write_text = real_link, real_open, real_write
+
+
+# 3. the disk fills part-way through the copy in the inbox: nothing partial may be left behind
+def full_disk(self, data, *a, **k):
+    if inside(self, box) and self.name.startswith('.notice'):
+        real_write(self, data[: len(data) // 2], *a, **k)
+        raise OSError(errno.ENOSPC, 'No space left on device')
+    return real_write(self, data, *a, **k)
+
+
+pathlib.Path.write_text = full_disk
+out['disk_fills'] = run(3.3)
+pathlib.Path.write_text = real_write
+
+
+# 4. nothing at all can be written, the inbox or the service's own store
+def refused_link_all(src, dst, *a, **k):
+    if inside(dst, box, und):
+        raise PermissionError(errno.EACCES, 'no place takes the notice')
+    return real_link(src, dst, *a, **k)
+
+
+def refused_open_all(self, *a, **k):
+    mode = a[0] if a else k.get('mode', 'r')
+    if inside(self, box, und) and any(c in mode for c in 'wxa+'):
+        raise PermissionError(errno.EACCES, 'no place takes the notice')
+    return real_open(self, *a, **k)
+
+
+def refused_write_all(self, *a, **k):
+    if inside(self, box, und):
+        raise PermissionError(errno.EACCES, 'no place takes the notice')
+    return real_write(self, *a, **k)
+
+
+os.link, pathlib.Path.open, pathlib.Path.write_text = refused_link_all, refused_open_all, refused_write_all
+out['nothing_writes'] = run(3.35)
+os.link, pathlib.Path.open, pathlib.Path.write_text = real_link, real_open, real_write
+
+# 5. the ledger cannot be written
+real_ledger = V.LEDGER
+V.LEDGER = V.HOME / 'ledger-kept-as-a-folder'; V.LEDGER.mkdir(exist_ok=True)
+out['ledger_refuses'] = run(3.4)
+V.LEDGER = real_ledger
+
+# 6. a card the notice text cannot be built from
+real_face = V.face
+
+
+def broken_face(*a, **k):
+    raise RuntimeError('the card cannot be shown')
+
+
+V.face = broken_face
+out['face_breaks'] = run(3.45)
+V.face = real_face
+
+# 8. the ledger and the error output both fail: the verdict is still returned
+class BrokenStream:
+    def write(self, *a, **k):
+        raise OSError(errno.ENOSPC, 'No space left on device')
+
+    def flush(self):
+        raise OSError(errno.ENOSPC, 'No space left on device')
+
+
+real_stderr, real_ledger = sys.stderr, V.LEDGER
+V.LEDGER = V.HOME / 'ledger-kept-as-a-folder'; V.LEDGER.mkdir(exist_ok=True)
+sys.stderr = BrokenStream()
+out['ledger_and_stderr'] = run(3.55)
+sys.stderr = real_stderr; V.LEDGER = real_ledger
+
+
+# 9. one notice held under one name is one copy across the inbox and the service's own store
+aside = box.with_name(box.name + '.aside'); box.rename(aside); box.write_text('a file in place of the folder\n')
+first = list(V.notices.deliver(V.HOME, h, 'INTERRUPTED_one', lambda engineer: 'one copy\n', numbered=False))
+box.unlink(); aside.rename(box)
+second = list(V.notices.deliver(V.HOME, h, 'INTERRUPTED_one', lambda engineer: 'one copy\n', numbered=False))
+out['one_copy'] = {'first': first, 'second': second,
+                   'in_inbox': sorted(n for n in os.listdir(box) if n.startswith('INTERRUPTED_one')) if box.is_dir() else [],
+                   'in_store': sorted(n for n in os.listdir(und) if n.startswith('INTERRUPTED_one')) if und.is_dir() else []}
+
+
+# 10. a write stopped part-way, with no hard links: no notice is left under its name
+real_link = os.link
+
+
+def no_links(*a, **k):
+    raise PermissionError(errno.EPERM, 'this file system makes no hard links')
+
+
+class Stopped:
+    def __init__(self, f):
+        self.f = f
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        self.f.close()
+        return False
+
+    def write(self, data):
+        self.f.write(data[: len(data) // 2]); self.f.flush()
+        raise KeyboardInterrupt()
+
+
+def open_stopped(self, *a, **k):
+    if inside(self, box) and a and 'x' in a[0]:
+        return Stopped(real_open(self, *a, **k))
+    return real_open(self, *a, **k)
+
+
+before = set(texts(box))
+os.link, pathlib.Path.open = no_links, open_stopped
+try:
+    V.verify(h, dict(BAD, wall_mm=3.65)); raised = 'none'
+except BaseException as exc:
+    raised = type(exc).__name__
+os.link, pathlib.Path.open = real_link, real_open
+out['stopped'] = {'raised': raised, 'new': sorted(set(texts(box)) - before), 'dots': dots(box, und)}
+
+
+# 7. the normal run, as a control
+out['normal'] = run(3.5)
+print(json.dumps(out))
+"""
+
+
+def r20():
+    """A notice that cannot be written does not stop a run or lose its verdict: it goes to the service's own store, whole, and the verdict says where it went; where nothing can be written, the verdict says so; a ledger that cannot be written does not stop a run; a card whose notice text cannot be built still gets its notice, in fixed words.  (Amendment 7, D2 and D3.)"""
+    s = deploy.Services(OUT / 'R20'); e = {}
+    try:
+        env = s.baseline(CASE, draft()); h = env['baseline_sha256']
+        script = OUT / 'R20' / 'inside20.py'; script.write_text(INSIDE20)
+        base = dict(os.environ, VERIFY_HOME=str(s.home), VERIFY_ENGINEER_KEYS=s.engineer.public_hex); base.pop('PLEA_CRASH_AT', None)
+        out = subprocess.run([PY, '-B', str(script), str(GATEWAY), h], capture_output=True, text=True, timeout=120, env=base)
+        got = json.loads(out.stdout) if out.returncode == 0 and out.stdout.strip() else {'failed': (out.stdout + out.stderr)[-300:].replace(str(GATEWAY), '<tree>')}
+        e['got'] = got
+        g = lambda k: got.get(k) or {}
+        fail = ['FAIL', 'LIMIT_NOT_MET']
+        words = 'FAIL: REQUIREMENT NOT MET'
+        whole = lambda r: len(r.get('in_undelivered', [])) == 1 and bool(r.get('texts')) and r['texts'][0].endswith('\n') and words in r['texts'][0]
+        keys = ('inbox_is_a_file', 'inbox_refuses', 'disk_fills', 'nothing_writes', 'ledger_refuses', 'face_breaks', 'normal', 'ledger_and_stderr')
+        checks = {'the inbox is a file in place of its folder: the verdict is returned, the notice is kept in the service\'s own store, whole, and the verdict says where it went':
+                      g('inbox_is_a_file').get('verdict') == fail and g('inbox_is_a_file').get('notice') == 'UNDELIVERED' and not g('inbox_is_a_file').get('in_inbox')
+                      and whole(g('inbox_is_a_file')),
+                  'the inbox refuses writes, as one made by another account would: the same, with the notice whole in the service\'s own store':
+                      g('inbox_refuses').get('verdict') == fail and g('inbox_refuses').get('notice') == 'UNDELIVERED' and not g('inbox_refuses').get('in_inbox')
+                      and whole(g('inbox_refuses')),
+                  'the disk fills part-way through the inbox\'s copy: the notice kept is whole, and no partial notice is left in either place':
+                      g('disk_fills').get('verdict') == fail and g('disk_fills').get('notice') == 'UNDELIVERED' and not g('disk_fills').get('in_inbox')
+                      and whole(g('disk_fills')),
+                  'where nothing can be written, the verdict is still returned and says so, and nothing is raised':
+                      g('nothing_writes').get('verdict') == fail and g('nothing_writes').get('notice') == 'NOT_WRITTEN' and 'raised' not in g('nothing_writes'),
+                  'a ledger that cannot be written does not stop a run: the verdict is returned and its notice is in the inbox':
+                      g('ledger_refuses').get('verdict') == fail and g('ledger_refuses').get('notice') == 'INBOX'
+                      and len(g('ledger_refuses').get('in_inbox', [])) == 1 and 'raised' not in g('ledger_refuses'),
+                  'a card whose notice text cannot be built gets its notice in fixed words, in the inbox, and the words repeat none of the card\'s text':
+                      g('face_breaks').get('notice') == 'INBOX' and any('NOTICE COULD NOT BE SHOWN IN FULL' in t for t in g('face_breaks').get('texts', []))
+                      and 'raised' not in g('face_breaks') and 'Requirement   ' not in ''.join(g('face_breaks').get('texts', [])),
+                  'a normal failing run is unchanged: its notice is in the inbox, whole, with the card\'s own text':
+                      g('normal').get('notice') == 'INBOX' and len(g('normal').get('in_inbox', [])) == 1 and words in (g('normal').get('texts') or [''])[0],
+                  'the error output may fail too: the verdict is still returned, and its notice is in the inbox':
+                      g('ledger_and_stderr').get('verdict') == fail and g('ledger_and_stderr').get('notice') == 'INBOX' and 'raised' not in g('ledger_and_stderr'),
+                  'a notice held under one name is one copy: a repeat is reported where that copy is, and no second copy is made':
+                      g('one_copy').get('first') == ['UNDELIVERED', 'INTERRUPTED_one.txt'] and g('one_copy').get('second') == ['UNDELIVERED', 'INTERRUPTED_one.txt']
+                      and g('one_copy').get('in_inbox') == [] and g('one_copy').get('in_store') == ['INTERRUPTED_one.txt'],
+                  'a write stopped part-way, with no hard links, leaves no notice under its name and no temporary file': g('stopped').get('raised') == 'KeyboardInterrupt'
+                      and g('stopped').get('new') == [] and not g('stopped').get('dots'),
+                  'every run returned a verdict, and no temporary file was left in any place': 'failed' not in got
+                      and all('raised' not in g(k) and not g(k).get('dots') for k in keys)}
+    finally:
+        s.stop()
+    return checks, e
+
+
+INSIDE21 = r"""
+import json, pathlib, sys
+sys.path[:0] = [sys.argv[1], str(pathlib.Path(sys.argv[1]) / 'verify')]
+import verify_tools as V
+h = sys.argv[2]
+v = V.verify(h, {'material': 'PA66-GF30', 'wall_mm': 3, 'mode': 'normal'})
+box = V.HOME / 'inbox' / h[:16]
+print(json.dumps({'verdict': [v['verdict'], v['reason_code'], v['detail']], 'notice': v.get('notice'),
+                  'texts': [p.read_text(encoding='utf-8') for p in sorted(box.glob('*.txt'))]}))
+"""
+
+
+def r21():
+    """A check whose stated limits are not text cannot be baselined, and a card signed that way is refused at every run, as not a baseline card, with its notice in the engineer's inbox and no error raised.  (Amendment 7, D4.)"""
+    s = deploy.Services(OUT / 'R21'); e = {}
+    try:
+        bad = draft(); bad['check'] = dict(bad['check'], stated_limits=[42])
+        try:
+            verify_ctl.make_baseline(s.home, CASE, bad, s.engineer)
+            refused = None
+        except B.BaselineInvalid as exc:
+            refused = str(exc)
+        env = s.baseline(CASE, draft()); h = env['baseline_sha256']
+        card = json.loads(json.dumps(env['card'])); card['check']['stated_limits'] = [42]
+        signed = sign_envelope(card, env['controls_run'], s.engineer)
+        h2 = signed['baseline_sha256']
+        (s.home / 'baselines' / h2).mkdir(parents=True, exist_ok=True)
+        (s.home / 'baselines' / h2 / 'baseline.json').write_text(json.dumps(signed, indent=1) + '\n')
+        script = OUT / 'R21' / 'inside21.py'; script.write_text(INSIDE21)
+        base = dict(os.environ, VERIFY_HOME=str(s.home), VERIFY_ENGINEER_KEYS=s.engineer.public_hex); base.pop('PLEA_CRASH_AT', None)
+        out = subprocess.run([PY, '-B', str(script), str(GATEWAY), h2], capture_output=True, text=True, timeout=120, env=base)
+        got = json.loads(out.stdout) if out.returncode == 0 and out.stdout.strip() else {'failed': (out.stdout + out.stderr)[-300:].replace(str(GATEWAY), '<tree>')}
+        e.update(refused=refused, got=got)
+        verdict = got.get('verdict') or [None, None, '']
+        checks = {'the console will not baseline a check whose stated limits are not text, and says why': refused is not None and 'stated_limits' in refused,
+                  'a card signed that way anyway is refused at the run as not a baseline card: UNKNOWN, no check run, and its notice is in the engineer\'s inbox':
+                      verdict[:2] == ['UNKNOWN', 'BASELINE_MISMATCH'] and 'not a baseline card' in verdict[2] and got.get('notice') == 'INBOX' and len(got.get('texts', [])) == 1,
+                  'the run raises no error, and the notice is the no-usable-baseline notice': 'failed' not in got and any('NO USABLE BASELINE IS HELD' in t for t in got.get('texts', []))}
+    finally:
+        s.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21}
 
 
 def main():

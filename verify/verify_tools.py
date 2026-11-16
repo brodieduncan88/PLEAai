@@ -16,7 +16,12 @@ VERIFY_HOME holds, on the engineer's side of the line:
                                  baseline_sha256 in it holds the full hash of the baseline it belongs to (Amendment 6).
   inbox/unclaimed/<full hash>/   a notice about a hash for which the service finds no baseline folder and whose full
                                  hash it reads in no inbox: kept, addressed to no engineer, read by none (Amendment 6)
-  ledger.jsonl                   one line per call and per verdict, outside every PLEA store, for tests
+  undelivered/<full hash>/       a notice the inbox could not take (a full disk, a permission, a file in its place, or an
+                                 inbox made by another account): kept here, and listed by the engineer's console (Amendment 7)
+  ledger.jsonl                   one line per call, per verdict and per notice, outside every PLEA store, for tests
+
+The verdict says where its notice went, in its field notice: INBOX, UNCLAIMED, UNDELIVERED or NOT_WRITTEN, or NO_HASH when
+the request names no usable hash (Amendment 7).  A verdict is returned whatever happens to its notice.
 
 VERIFY_ENGINEER_KEYS is the comma-separated list of engineer public keys this gate accepts baselines from.  A baseline
 is read and its signature checked on every call, so a card changed after signing is refused, not used.
@@ -34,6 +39,7 @@ from plea_gateway.faults import crash_point            # noqa: E402
 from baseline import REASONS, VERDICT_FORMAT, _blank, _verdict, design_hash, design_lines, evaluate, face   # noqa: E402
 from check_record import in_design_space as inside_as_checked, rederive   # noqa: E402  (Amendment 2: the record's checker is asked before a verdict is returned)
 from verify_record import load_envelope                # noqa: E402
+import notices                                         # noqa: E402  (Amendment 7: where a notice goes, and how it is kept)
 
 HOME = pathlib.Path(os.environ['VERIFY_HOME'])
 ENGINEER_KEYS = tuple(k for k in os.environ.get('VERIFY_ENGINEER_KEYS', '').split(',') if k)
@@ -44,8 +50,16 @@ NOT_A_CARD = {'BaselineInvalid': 'a part of it is missing or is not as a card ne
 
 
 def _ledger(event: str, **fields) -> None:
-    with LEDGER.open('a') as f:
-        f.write(json.dumps({'event': event, 'pid': os.getpid(), 't': time.time(), **fields}) + '\n')
+    """One line of the ledger, which is kept for the tests.  A ledger that cannot be written is said so on the error output and
+    does not stop a run: the verdict is the decision, and the ledger only records it.  (Amendment 7.)"""
+    try:
+        with LEDGER.open('a') as f:
+            f.write(json.dumps({'event': event, 'pid': os.getpid(), 't': time.time(), **fields}) + '\n')
+    except OSError as exc:
+        try:
+            print(f'verify tool: the ledger could not be written ({type(exc).__name__})', file=sys.stderr, flush=True)
+        except OSError:                    # the error output may fail too; the run goes on (Amendment 7)
+            pass
 
 
 def _printable(text: str) -> str:
@@ -94,114 +108,60 @@ def _refusal(baseline_sha256, design, detail: str) -> dict:
             'criteria': [], 'basis': '', 'detail': detail, 'check': None}
 
 
-CLAIM = 'baseline_sha256'          # Amendment 6: in an engineer's inbox, the full hash of the baseline the inbox belongs to
 NONE_STORED = '(none is stored under this hash)'    # Amendment 6: how the reason ends when nothing at all is stored under the hash
 
 
-def _held(baseline_sha256: str) -> bool:
-    """Whether the service holds a baseline folder for this exact hash.  (Amendment 6.)  An error in looking, such as a
-    folder that cannot be searched, counts as not held, so that the inbox's claim decides and the notice is not lost."""
-    try:
-        return (HOME / 'baselines' / baseline_sha256).is_dir()
-    except OSError:
-        return False
-
-
-def _claimed(box: pathlib.Path):
-    """The full hash an inbox holds, or None if it holds none that can be read: no file, an empty one, or one that is not
-    a hash.  (Amendment 6.)"""
-    try:
-        text = (box / CLAIM).read_text(encoding='utf-8').strip()
-    except (OSError, UnicodeError):
-        return None
-    return text if len(text) == 64 and set(text) <= HEX else None
-
-
-def _inbox(baseline_sha256: str):
-    """Where a notice about this hash goes, and whether that is an engineer's inbox.  (Amendment 6, 15 November 2026.)
-
-    An inbox is named by the first 64 bits of the hash, and a request may name any hash, so a notice for a made-up hash
-    that shared them went to a real engineer's inbox.  A notice now goes to that inbox only when the service holds a
-    baseline folder for this exact hash, or the inbox holds this exact full hash, so that a baseline whose folder was
-    taken away still reaches its engineer.  Any other notice is kept in inbox/unclaimed/<the full hash>/, which is no
-    engineer's inbox."""
-    box = HOME / 'inbox' / baseline_sha256[:16]
-    if _held(baseline_sha256) or _claimed(box) == baseline_sha256:
-        return box, True
-    return HOME / 'inbox' / 'unclaimed' / baseline_sha256, False
-
-
-def _claim(baseline_sha256: str) -> None:
-    """For a baseline folder the service holds: make its engineer's inbox, and write the inbox's claim if it holds none
-    that can be read.  (Amendment 6.)  A claim naming another full hash is left as it is: two baselines whose hashes share
-    their first 64 bits share an inbox, and the first keeps the claim.  The claim is written whole or not at all, by a
-    link or, where the file system makes none, a rename, and an empty or broken one, as a crash part-way could leave, is
-    written again.  Nothing here stops a run: an error is met again, and handled as before, when a notice is written."""
-    box = HOME / 'inbox' / baseline_sha256[:16]
-    try:
-        box.mkdir(parents=True, exist_ok=True)
-        if _claimed(box) is not None:
-            return
-        part = box / f'.{CLAIM}.{os.getpid()}.{os.urandom(6).hex()}'          # its own name in every thread and process
-        try:
-            part.write_text(baseline_sha256 + '\n', encoding='utf-8')
-            try:
-                os.link(part, box / CLAIM)
-            except OSError:                                    # one is there already, or the file system makes no hard links
-                if _claimed(box) is None:
-                    os.replace(part, box / CLAIM)
-        finally:
-            part.unlink(missing_ok=True)
-    except OSError:
-        pass
-
-
-def _claim_all() -> None:
-    """When the tool starts: every baseline folder the service holds gets its inbox's claim, as baselines made before
-    Amendment 6 have none."""
-    try:
-        names = [p.name for p in (HOME / 'baselines').iterdir()]
-    except OSError:
-        return
-    for name in names:
-        if len(name) == 64 and set(name) <= HEX and _held(name):
-            _claim(name)
-
-
-def _notify(card, baseline_sha256: str, verdict: dict) -> str:
-    """One notice per FAIL or UNKNOWN, in the inbox of the baseline the request named, when the service finds that baseline's
-    folder or reads its full hash in the inbox; otherwise kept in inbox/unclaimed/, addressed to no engineer (Amendment 6).  With no
-    usable card (it was changed, or signed by someone else) the notice says so in plain words; it never quotes the
-    unusable card."""
-    box, engineer = _inbox(baseline_sha256); box.mkdir(parents=True, exist_ok=True)
-    stem = f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{verdict['verdict']}_{verdict['design_sha256'][:8]}"
+def _body(card, baseline_sha256: str, verdict: dict, engineer: bool) -> str:
+    """The text of the notice for a verdict that is not a pass, in the words the service has written since Amendments 3 and 6."""
     if card is not None:
-        body = f"To: {card['responsible_engineer']['name']}\nFrom: the verification service (not the assistant)\n\n" + face(card, verdict)
-    elif not engineer:                                   # Amendment 6: no engineer holds this hash, and the notice does not say one does
-        body = (f"To: no engineer: the verification service found no baseline folder for the hash {baseline_sha256}, and read it in no inbox\n"
+        return f"To: {card['responsible_engineer']['name']}\nFrom: the verification service (not the assistant)\n\n" + face(card, verdict)
+    if not engineer:                                     # Amendment 6: no engineer holds this hash, and the notice does not say one does
+        return (f"To: no engineer: the verification service found no baseline folder for the hash {baseline_sha256}, and read it in no inbox\n"
                 f"From: the verification service (not the assistant)\n\n"
                 f"UNKNOWN: A VERIFICATION RUN WAS ASKED FOR AND NO USABLE BASELINE IS HELD\n\nReason        {verdict['detail']}\n"
                 + '\n'.join(design_lines(None, verdict['design']))
                 + "\n\nNo check was run.  This is not a pass.  This notice is kept by the service and sent to nobody.")
-    else:
-        body = (f"To: the responsible engineer for baseline {baseline_sha256}\nFrom: the verification service (not the assistant)\n\n"
-                f"UNKNOWN: A VERIFICATION RUN WAS ASKED FOR AND NO USABLE BASELINE IS HELD\n\nReason        {verdict['detail']}\n"
-                + '\n'.join(design_lines(None, verdict['design']))          # Amendment 3: marked as sent, in quotes and cut; no baseline is held to set it against
-                + ("\n\nNo check was run.  This is not a pass.  Nothing is stored under this hash; the baseline should be restored, or a revised one issued."
-                   if verdict['detail'].endswith(NONE_STORED) else      # Amendment 6: the folder was taken away, and the inbox's claim brought the notice here
-                   "\n\nNo check was run.  This is not a pass.  The stored baseline should be inspected."))
-    # Amendment 2.  The name is the time to the second, the verdict and eight digits of the design's hash, so two results
-    # could share it, and the second was written over the first.  A notice is now created, never replaced: a second
-    # result with the same name gets a number after it.  It is written as UTF-8 whatever the process's locale.
-    for n in range(1, 100000):
-        name = f'{stem}.txt' if n == 1 else f'{stem}_{n}.txt'
+    return (f"To: the responsible engineer for baseline {baseline_sha256}\nFrom: the verification service (not the assistant)\n\n"
+            f"UNKNOWN: A VERIFICATION RUN WAS ASKED FOR AND NO USABLE BASELINE IS HELD\n\nReason        {verdict['detail']}\n"
+            + '\n'.join(design_lines(None, verdict['design']))          # Amendment 3: marked as sent, in quotes and cut; no baseline is held to set it against
+            + ("\n\nNo check was run.  This is not a pass.  Nothing is stored under this hash; the baseline should be restored, or a revised one issued."
+               if verdict['detail'].endswith(NONE_STORED) else      # Amendment 6: the folder was taken away, and the inbox's claim brought the notice here
+               "\n\nNo check was run.  This is not a pass.  The stored baseline should be inspected."))
+
+
+def _fixed_body(baseline_sha256: str, verdict: dict, engineer: bool) -> str:
+    """A notice in fixed words, for a verdict whose notice cannot be built from the card.  It names the verdict and its reason
+    code, and repeats no text from the card or from the design.  (Amendment 7.)"""
+    to = (f"To: the responsible engineer for baseline {baseline_sha256}" if engineer else
+          f"To: no engineer: the verification service found no baseline folder for the hash {baseline_sha256}, and read it in no inbox")
+    return (f"{to}\nFrom: the verification service (not the assistant)\n\n"
+            f"{verdict['verdict']}: A VERIFICATION RUN GAVE THIS RESULT, AND ITS NOTICE COULD NOT BE SHOWN IN FULL\n\n"
+            f"Reason code  {verdict['reason_code']}\n\n"
+            "The notice could not be built from the baseline, so the text of the baseline and of the design is left out.  "
+            "The reason code above is the verification service's own.  This is not a pass.")
+
+
+def _write(card, baseline_sha256: str, verdict: dict):
+    """Write the notice for a verdict that is not a pass, where it can be written.  Returns (where it went, its file name or None).  (Amendment 7.)"""
+    stem = f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}_{verdict['verdict']}_{verdict['design_sha256'][:8]}"
+
+    def text(engineer: bool) -> str:
         try:
-            with open(box / name, 'x', encoding='utf-8') as f:
-                f.write(body + '\n')
-            return name
-        except FileExistsError:
-            continue
-    raise OSError(f'no free name for a notice beginning {stem}')
+            return _body(card, baseline_sha256, verdict, engineer)
+        except Exception:                                # a card the text cannot be built from does not lose the notice
+            return _fixed_body(baseline_sha256, verdict, engineer)
+    state, name = notices.deliver(HOME, baseline_sha256, stem, text)
+    _ledger('notice', baseline_sha256=baseline_sha256, state=state, name=name)
+    return state, name
+
+
+def _notify(card, baseline_sha256: str, verdict: dict) -> str:
+    """The file name of the notice for a verdict, kept for the tests of how names are given: a notice is never replaced, and five of one
+    name in one second get five names.  Raises OSError if no place takes it.  (Amendment 2, kept by Amendment 7.)"""
+    state, name = _write(card, baseline_sha256, verdict)
+    if name is None:
+        raise OSError('no place takes the notice')
+    return name
 
 
 def verify(baseline_sha256: str, design) -> dict:
@@ -210,8 +170,8 @@ def verify(baseline_sha256: str, design) -> dict:
         result, card = _refusal(baseline_sha256, design, 'the request does not name a baseline'), None
     else:
         directory = HOME / 'baselines' / baseline_sha256
-        if _held(baseline_sha256):
-            _claim(baseline_sha256)                       # Amendment 6: any run on a baseline the service holds, a pass too, claims its inbox
+        if notices.held(HOME, baseline_sha256):
+            notices.claim(HOME, baseline_sha256)           # Amendment 6: any run on a baseline the service holds, a pass too, claims its inbox
         try:
             envelope = load_envelope(directory / 'baseline.json', ENGINEER_KEYS)
             if envelope['baseline_sha256'] != baseline_sha256:
@@ -221,7 +181,7 @@ def verify(baseline_sha256: str, design) -> dict:
             # Amendment 2.  Fixed words: the error's own text holds the path of the service's folder, which went into the
             # signed verdict, the answer and the notice.  Amendment 6: when nothing at all is stored under the hash, the
             # words say that, and not that a stored file could not be opened.
-            stored = not (isinstance(exc, FileNotFoundError) and not _held(baseline_sha256))
+            stored = not (isinstance(exc, FileNotFoundError) and not notices.held(HOME, baseline_sha256))
             result, card = _refusal(baseline_sha256, design, 'no signed baseline with this hash is held by the verification service '
                                     + ('(the stored file could not be opened)' if stored else NONE_STORED)), None
         except (OSError, ValueError, KeyError, TypeError) as exc:
@@ -238,12 +198,18 @@ def verify(baseline_sha256: str, design) -> dict:
         else:
             crash_point('verify_running')                 # tests: the host dies after admission and before a verdict exists
             result = _decide(directory, card, design)
-    notice = _notify(card, baseline_sha256, result) if result['verdict'] != 'PASS' and isinstance(result['baseline_sha256'], str) and len(result['baseline_sha256']) == 64 and set(result['baseline_sha256']) <= HEX else None
-    _ledger('verdict', baseline_sha256=result['baseline_sha256'], design_sha256=result['design_sha256'], verdict=result['verdict'], reason_code=result['reason_code'], notice=notice)
+    notice_name = None
+    if result['verdict'] != 'PASS':                       # Amendment 7: the verdict says where its notice went; a notice that cannot be written does not undo it
+        h = result['baseline_sha256']
+        if isinstance(h, str) and len(h) == 64 and set(h) <= HEX:
+            result['notice'], notice_name = _write(card, h, result)
+        else:
+            result['notice'] = 'NO_HASH'
+    _ledger('verdict', baseline_sha256=result['baseline_sha256'], design_sha256=result['design_sha256'], verdict=result['verdict'], reason_code=result['reason_code'], notice=notice_name, notice_state=result.get('notice'))
     return result
 
 
-_claim_all()                                              # Amendment 6
+notices.claim_all(HOME)                                   # Amendment 6, as the tool starts (the work is in notices.py, Amendment 7)
 
 
 TOOLS = {

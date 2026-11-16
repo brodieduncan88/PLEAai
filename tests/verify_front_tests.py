@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Declared tests F1-F16 for the front door and the MCP server (verify/DECLARED_FRONT.md states the expected outcomes),
 and F17 to F19, added by Amendment 2 (verify/DECLARED_AMEND2.md), which also restates two checks of F15,
-and F20, added by Amendment 3 (verify/DECLARED_AMEND3.md), and F21, added by Amendment 4 (verify/DECLARED_AMEND4.md).
+and F20, added by Amendment 3 (verify/DECLARED_AMEND3.md), and F21, added by Amendment 4 (verify/DECLARED_AMEND4.md), and F22 to F27, added by Amendment 7 (verify/DECLARED_AMEND7.md).
 
-    verify_front_tests.py [F1 F6 ...]     all twenty-one by default; writes outputs/verify_front_tests.json; exits 1 if any test fails
+    verify_front_tests.py [F1 F6 ...]     all twenty-seven by default; writes outputs/verify_front_tests.json; exits 1 if any test fails
 
 F1 and F2 run the first plug-in as it was released, with no front door, and show the two defects this work is for.
 F3 to F16 make a fresh deployment with a front door (verify/deploy_front.py: new keys; the released witness service
@@ -853,7 +853,7 @@ def f18():
 
 
 def f19():
-    """Known limit, not closed: when the engineer's inbox cannot be written, a run is counted with no verdict and no notice.  It is never a pass, and the record verifies."""
+    """The engineer's inbox cannot be written: the run is still counted with its verdict, its notice is kept in the service's own store, and the answer says so; it is never a pass, and the record verifies.  (Amendment 2 recorded this as a known limit; Amendment 7 closes it, and this check now states the repaired behaviour.)"""
     r = Run('F19'); e = {}
     try:
         def design(wall): return {'material': 'PA66-GF30', 'wall_mm': wall, 'mode': 'normal'}
@@ -864,19 +864,19 @@ def f19():
         blocked = r.submit(design(2.6)); again = r.submit(design(2.6))
         box.unlink(); aside.rename(box)
         after = r.submit(design(2.7))
+        kept = sorted(p.name for p in (r.s.home / 'undelivered' / r.h).glob('*.txt'))
         ok, why, s = r.checked()
         e.update(first=(head(text_of(first)), sc(first).get('outcome')), blocked=(blocked.get('isError'), head(text_of(blocked)), sc(blocked).get('outcome'), sc(blocked).get('met')),
-                 again=(head(text_of(again)), sc(again).get('outcome')), after=(head(text_of(after)), sc(after).get('outcome')), tool_calls=r.calls(), verdict_lines=len(r.s.ledger('verdict')), notices=r.notices(),
-                 outcomes=sorted(x['outcome'] for x in s.get('runs', [])), status=s.get('status'), met=s.get('met'), record_verifies=ok, why=why)
-        interrupted = 'UNKNOWN: THE RUN WAS INTERRUPTED'
+                 blocked_says_undelivered='NOTICE NOT DELIVERED' in text_of(blocked),
+                 again=(head(text_of(again)), sc(again).get('outcome')), after=(head(text_of(after)), sc(after).get('outcome')), tool_calls=r.calls(), verdict_lines=len(r.s.ledger('verdict')),
+                 notices=r.notices(), kept=len(kept), outcomes=sorted(x['outcome'] for x in s.get('runs', [])), status=s.get('status'), met=s.get('met'), record_verifies=ok, why=why)
         checks = {'with the inbox in place a failing design is FAIL': e['first'] == (FAILED, 'FAIL'),
-                  'with a file where the inbox folder should be, the next failing design is answered UNKNOWN: THE RUN WAS INTERRUPTED: counted, not met, and not marked as a tool error':
-                      e['blocked'] == (False, interrupted, 'INTERRUPTED', False),
-                  'the same design sent again is the same interrupted run, and the check is not run a second time': e['again'] == (interrupted, 'INTERRUPTED') and e['tool_calls'] == 3,
-                  'no verdict was returned for that run and no notice was written for it: this is the limit': e['verdict_lines'] == 2 and e['notices'] == 2,
-                  'with the inbox put back the next failing design is FAIL and is sent to the engineer': e['after'] == (FAILED, 'FAIL'),
-                  'no run met the check, the record verifies with the interrupted run in it, and the status is NOT VERIFIED': ok and s.get('met') == 0 and s.get('status') == 'NOT VERIFIED'
-                      and e['outcomes'] == ['FAIL', 'FAIL', 'INTERRUPTED']}
+                  'with a file where the inbox folder should be, the next failing design is still FAIL, counted with its verdict: not an interrupted run, not a tool error': e['blocked'] == (False, FAILED, 'FAIL', False),
+                  'its answer says the notice was not delivered, and the notice is kept once in the service\'s own store': e['blocked_says_undelivered'] and e['kept'] == 1,
+                  'the same design sent again is answered the same, and the check is not run a second time': e['again'] == (FAILED, 'FAIL') and e['tool_calls'] == 3,
+                  'every run has its verdict on the record, and all three are FAIL': e['verdict_lines'] == 3 and e['outcomes'] == ['FAIL', 'FAIL', 'FAIL'],
+                  'with the inbox put back the next failing design is FAIL, and its notice goes to the inbox': e['after'] == (FAILED, 'FAIL') and e['notices'] == 2,
+                  'no run met the check, the record verifies with all three in it, and the status is NOT VERIFIED': ok and s.get('met') == 0 and s.get('status') == 'NOT VERIFIED'}
     finally:
         r.stop()
     return checks, e
@@ -1071,7 +1071,184 @@ def f21():
     return checks, e
 
 
-TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21}
+def front_cfg(r, **extra) -> dict:
+    """The configuration the running front door has (verify/deploy_front.py start_front), for a front door made in this process.  (Amendment 7.)"""
+    s = r.s
+    cfg = {'witness_url': f'https://127.0.0.1:{s.ports["witness"]}', 'witness_keys': [s.keys['witness']], 'gate_url': f'https://127.0.0.1:{s.ports["host"]}',
+           'gate_key': s.keys['gate'], 'tls': {'ca': s.pki['ca'], 'cert': s.pki['frontdoor'][0], 'key': s.pki['frontdoor'][1]},
+           'journal': str(front_ctl.journal(s.home))}
+    cfg.update(extra)
+    return cfg
+
+
+def f22():
+    """A full journal stops new runs at the door: the next design is refused with nothing run and nothing counted, and the journal keeps its size.  (Amendment 7, D1.)"""
+    r = Run('F22'); e = {}
+    try:
+        first = r.submit(GOOD)
+        jp = front_ctl.journal(r.s.home); size = jp.stat().st_size
+        calls_before = r.calls()
+        front = front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), front_cfg(r, journal_max_bytes=size), (r.s.keys['engineer'],))
+        job = front_door.read_jobs(r.s.home)['job-a']
+        st, body = front.submit(job, {'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'})
+        e.update(first=head(text_of(first)), refused=(st, body.get('refused')), text=head(body.get('text', '')), calls=(calls_before, r.calls()), size=(size, jp.stat().st_size))
+        checks = {'the first run is answered as before': head(text_of(first)) == MET,
+                  'at the size limit the next design is refused at the door with 507, STORAGE_FULL, and the refusal says nothing was run': st == 507 and body.get('refused') == 'STORAGE_FULL' and 'Nothing was run' in body.get('text', ''),
+                  'nothing was run or counted for it, and the journal did not grow': r.calls() == calls_before and jp.stat().st_size == size}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def f23():
+    """With less free space on the journal's disk than the service keeps for notices, a new design is refused at the door; a design already journaled is refused there too: the door keeps the room for a notice before any attempt, and adds no line.  (Amendment 7, D1.)"""
+    r = Run('F23'); e = {}
+    try:
+        jp = front_ctl.journal(r.s.home)
+        front = front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), front_cfg(r), (r.s.keys['engineer'],))
+        job = front_door.read_jobs(r.s.home)['job-a']
+        D = {'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'}
+        E = {'material': 'PPS-GF40', 'wall_mm': 2.75, 'mode': 'normal'}
+        lines = lambda: len(jp.read_text().splitlines()) if jp.exists() else 0
+        st1, b1 = front.submit(job, D); l1, c1 = lines(), r.calls()
+        st0, b0 = front.submit(job, D); l0, c0 = lines(), r.calls()     # the same design again, with room to spare: answered, not journaled again
+        front.cfg['disk_reserve_bytes'] = 10 ** 18                   # as if the disk had less free space than the notices keep
+        st2, b2 = front.submit(job, D); l2, c2 = lines(), r.calls()
+        st3, b3 = front.submit(job, E); l3, c3 = lines(), r.calls()
+        e.update(first=(st1, b1.get('outcome')), repeat=(st2, b2.get('outcome')), new=(st3, b3.get('refused')), lines=(l1, l2, l3), calls=(c1, c2, c3))
+        checks = {'before the reserve is reached, a new design is run and journaled': st1 == 200 and l1 >= 1 and c1 >= 1,
+                  'a repeat of it, with room to spare, is answered and adds no line and no run': st0 == 200 and b0.get('outcome') == b1.get('outcome') and l0 == l1 and c0 == c1,
+                  'the same design again, at the reserve, is refused too, and adds no line and no run': st2 == 507 and b2.get('refused') == 'STORAGE_FULL' and l2 == l1 and c2 == c1,
+                  'a new design at the reserve is refused at the door: 507, STORAGE_FULL, nothing run or counted, no line added': st3 == 507 and b3.get('refused') == 'STORAGE_FULL' and c3 == c2 and l3 == l2}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def f24():
+    """A run cut off when the gate host dies is counted INTERRUPTED, and the service writes one notice of it to the engineer, however often the answer is asked for again.  (Amendment 7, D11.)"""
+    r = Run('F24', crash_at='verify_running'); e = {}
+    try:
+        during = r.submit(GOOD); time.sleep(0.3); exit_code = r.s.procs['host'].poll()
+        r.s.stop_host(); r.s.start_host()
+        again = r.submit(GOOD); again2 = r.submit(GOOD)
+        inbox = r.s.home / 'inbox' / r.h[:16]
+        all_txt = sorted(p.name for p in inbox.glob('*.txt')) if inbox.is_dir() else []
+        names = [n for n in all_txt if n.startswith('INTERRUPTED_')]
+        body = (inbox / names[0]).read_text(encoding='utf-8') if names else ''
+        sc, sc2 = again.get('structuredContent') or {}, again2.get('structuredContent') or {}
+        e.update(host_exit=exit_code, again=head(text_of(again)), notices=all_txt, body_head=body.splitlines()[:4])
+        checks = {'the host died during the run (exit 137) and the tool did not say it passed': exit_code == 137 and MET not in text_of(during) and 'NOT VERIFIED' in text_of(during),
+                  'asked again, the answer is INTERRUPTED each time': sc.get('outcome') == 'INTERRUPTED' and sc2.get('outcome') == 'INTERRUPTED',
+                  'the engineer has one notice of the run, and it is the only notice in the inbox': len(names) == 1 and all_txt == names,
+                  'the notice says the run was interrupted, is not a pass, will not be run again, and shows the design': 'UNKNOWN: THE RUN WAS INTERRUPTED' in body
+                      and 'This is not a pass.' in body and 'will not be run again' in body and 'PPS-GF40' in body,
+                  'the notice says no verdict was recorded': 'no verdict was recorded' in body,
+                  'the answer does not say the notice was lost': 'NOTICE NOT' not in text_of(again) and 'NOTICE NOT' not in text_of(again2)}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def f25():
+    """A verdict the service cannot put in the engineer's inbox is still returned at the door, its answer says where the notice went, and the engineer's console lists the notice as kept undelivered.  (Amendment 7, D2 and D3.)"""
+    r = Run('F25'); e = {}
+    try:
+        box = r.s.home / 'inbox' / r.h[:16]; aside = box.with_name(box.name + '.aside')
+        box.rename(aside); box.write_text('a file in place of the folder\n')
+        try:
+            res = r.submit(BAD)
+        finally:
+            box.unlink(); aside.rename(box)
+        sc = res.get('structuredContent') or {}
+        kept = sorted(p.name for p in (r.s.home / 'undelivered' / r.h).glob('*.txt'))
+        listing = verify_ctl.status(r.s.home, r.h, r.s.keys['engineer'], deploy.LOCAL_DSN)
+        e.update(outcome=sc.get('outcome'), met=sc.get('met'), refused=res.get('isError'), kept=kept, status_line=[l for l in listing.splitlines() if 'undelivered' in l][:1])
+        checks = {'the run is decided and its verdict returned at the door, not refused': sc.get('outcome') == 'FAIL' and sc.get('met') is False and not res.get('isError'),
+                  'the answer says the notice was not delivered': 'NOTICE NOT DELIVERED' in text_of(res),
+                  'the notice is kept in the service\'s own store, once': len(kept) == 1,
+                  'the engineer\'s console lists the kept notice': len(kept) == 1 and kept[0] in listing and 'kept undelivered' in listing}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def f26():
+    """A journal write that fails part-way is taken back: the line is not left torn, the design is refused at the door with 507 and nothing is run, and the next design is journaled whole.  (Amendment 7, D1.)"""
+    import errno
+    def _parses(line):
+        try:
+            json.loads(line)
+            return True
+        except ValueError:
+            return False
+    r = Run('F26'); e = {}
+    try:
+        jp = front_ctl.journal(r.s.home)
+        front = front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), front_cfg(r), (r.s.keys['engineer'],))
+        job = front_door.read_jobs(r.s.home)['job-a']
+        before = jp.read_bytes() if jp.exists() else b''
+        calls_before = r.calls()
+        real_open = open
+
+        class Torn:
+            def __init__(self, path):
+                self.f = real_open(path, 'a')
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                self.f.close()
+                return False
+
+            def write(self, data):
+                self.f.write(data[: len(data) // 2]); self.f.flush()
+                raise OSError(errno.ENOSPC, 'No space left on device')
+        front_door.open = lambda path, mode='r', *a, **k: Torn(path)            # the next write to the journal fails part-way
+        try:
+            st, body = front.submit(job, {'material': 'PPS-GF40', 'wall_mm': 2.9, 'mode': 'normal'})
+        finally:
+            del front_door.open
+        after = jp.read_bytes() if jp.exists() else b''
+        calls_refused = r.calls()                   # counted before the next design is asked for, so that it is not counted here
+        st2, body2 = front.submit(job, {'material': 'PPS-GF40', 'wall_mm': 2.95, 'mode': 'normal'})
+        new_lines = jp.read_text().splitlines()[len(before.splitlines()):]
+        whole = bool(new_lines) and all(_parses(l) for l in new_lines)
+        e.update(refused=(st, body.get('refused')), journal_unchanged=after == before, calls=(calls_before, calls_refused), next=(st2, body2.get('outcome')), lines_whole=whole)
+        checks = {'a journal write that fails part-way is refused at the door with 507, STORAGE_FULL, and nothing is run': st == 507 and body.get('refused') == 'STORAGE_FULL' and calls_refused == calls_before,
+                  'the part-written line is taken back, so the journal is as it was': after == before,
+                  'the next design is journaled whole, and answered': st2 == 200 and whole}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def f27():
+    """A run the gate has not yet signed as interrupted is not noticed by a look at the job's runs: it is still PENDING.  The ask that the gate answers as interrupted writes its engineer one notice, and later looks and asks write no second one.  (Amendment 7, D11.)"""
+    r = Run('F27', crash_at='verify_running'); e = {}
+    try:
+        during = r.submit(GOOD); time.sleep(0.3); exit_code = r.s.procs['host'].poll()
+        r.s.stop_host(); r.s.start_host()
+        inbox = r.s.home / 'inbox' / r.h[:16]
+        seen = lambda: sorted(p.name for p in inbox.glob('INTERRUPTED_*.txt')) if inbox.is_dir() else []
+        look = lambda: [x.get('outcome') for x in ((r.mcp().call('plea_status').get('structuredContent') or {}).get('attempts') or [])]
+        first_look = look(); after_first = seen()
+        again = r.submit(GOOD); after_ask = seen()
+        later = look(); after_later = seen()
+        again2 = r.submit(GOOD); after_again2 = seen()
+        e.update(host_exit=exit_code, first_look=first_look, after_first=after_first, after_ask=after_ask, later=later, after_later=after_later,
+                 again=head(text_of(again)), after_again2=after_again2)
+        checks = {'the host died during the run (exit 137)': exit_code == 137,
+                  'a look before the gate has signed the run shows it pending, and writes no notice': first_look == ['PENDING'] and after_first == [],
+                  'the ask the gate answers as interrupted writes its engineer one notice': (again.get('structuredContent') or {}).get('outcome') == 'INTERRUPTED' and len(after_ask) == 1,
+                  'later looks and asks write no second notice': later == ['INTERRUPTED'] and after_later == after_ask and after_again2 == after_ask}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27}
 
 
 def main():

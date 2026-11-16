@@ -237,7 +237,10 @@ def validate_card(card: dict) -> None:
     chk = card.get('check') or {}
     for k in ('id', 'version', 'file', 'sha256', 'author', 'reviewed_by'):
         need(isinstance(chk.get(k), str) and chk[k].strip(), f'check.{k} is needed')
-    need(isinstance(chk.get('stated_limits'), list) and chk['stated_limits'], 'check.stated_limits is needed: say what the check does not cover')
+    # Amendment 7 (D4): each stated limit is text.  A card whose limits are not text was signed and accepted before, and its notice
+    # then failed in face(), so no verdict and no notice were given.  load_envelope() calls this too, so every run refuses such a card.
+    need(isinstance(chk.get('stated_limits'), list) and chk['stated_limits'] and all(isinstance(s, str) and s.strip() for s in chk['stated_limits']),
+         'check.stated_limits is needed: say what the check does not cover')
     need(isinstance(card.get('inputs'), list) and all(isinstance(i.get('file'), str) and isinstance(i.get('sha256'), str) for i in card['inputs']), 'inputs must be a list of {file, sha256}')
     for f in [chk['file']] + [i['file'] for i in card['inputs']]:
         need(f == pathlib.PurePosixPath(f).name and not f.startswith('.'), f'file name {f!r} must be a plain name in the baseline directory')

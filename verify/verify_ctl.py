@@ -35,6 +35,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from plea_gateway import RootExists, Store                          # noqa: E402
 from baseline import FORMAT, BaselineInvalid, card_hash, evaluate, root_for, sha256_hex, validate_card   # noqa: E402
 from verify_record import Key, acknowledgement_message, attempts_of, build, load_envelope, now, sign_envelope   # noqa: E402
+import notices                                                       # noqa: E402  (Amendment 7: notices the service kept undelivered)
 
 CONTROL_DSN = os.environ.get('PLEA_CONTROL_DSN', 'postgresql://plea_control:control@127.0.0.1:5432/plea')
 LOCAL_DSN = os.environ.get('PLEA_LOCAL_DSN', 'postgresql://plea_local:local@127.0.0.1:5432/plea')
@@ -180,6 +181,9 @@ def status(home, baseline_hash, engineer_key: str, local_dsn: str = LOCAL_DSN) -
     acked = {a['aid'] for a in acknowledgements(home, baseline_hash)}
     box = pathlib.Path(home) / 'inbox' / baseline_hash[:16]
     L = [root, f"{len(attempts)} official runs; {len(list(box.glob('*.txt'))) if box.exists() else 0} notices in the inbox"]
+    kept = notices.undelivered(home, baseline_hash)
+    if kept:                                       # Amendment 7 (D2, D3): notices the inbox could not take, kept in the service's own store
+        L.append(f"{len(kept)} notices kept undelivered, in {pathlib.Path(home) / 'undelivered' / baseline_hash}: {', '.join(kept)}")
     for a in attempts:
         r = a['result'] or {}
         L.append(f"  {a['aid']}  {a['outcome']:<11} {r.get('reason_code', ''):<24} {'' if a['outcome'] == 'PASS' else ('acknowledged' if a['aid'] in acked else 'OPEN: awaiting disposition')}")
