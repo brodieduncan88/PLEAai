@@ -48,6 +48,12 @@ sets the design out as sent. `DECLARED_AMEND5.md` has the list as it now stands.
 baseline for out of a real engineer's inbox: the inbox now holds the full hash of its baseline, and any other notice is
 kept in `inbox/unclaimed/`. The front door was not open to this. `DECLARED_AMEND6.md` has the list as it now stands.
 
+**Note of 16 November 2026.** `AMENDMENT_7_2026-11-16.md` repairs five defects of the register (D1, D2, D3, D4 and D11).
+A notice the inbox cannot take is kept in the service's own `undelivered/` store, and the verdict is returned with its state.
+A card whose stated limits are not text is refused. The journal has a size limit, and the disk keeps room for notices, for every
+submission: the door refuses a new run with 507 `STORAGE_FULL` when either would be exceeded. A cut-off run is noticed once, at the
+ask that the gate answers as interrupted. `DECLARED_AMEND7.md` has the list, and the open items.
+
 ## The pieces
 
 | file | what it does |
