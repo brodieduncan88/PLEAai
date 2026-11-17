@@ -81,8 +81,9 @@ BINDING_FIELDS = ('event', 'seq', 'job', 'baseline_sha256', 'root', 'cert_sha256
 JOURNAL_MAX = 1 << 30            # bytes the journal of submissions may reach; at that size the door refuses new runs (Amendment 7, D1)
 DISK_RESERVE = 512 << 20         # free bytes the journal's disk keeps for notices; below that the door refuses new runs (Amendment 7, D1)
 SWEEP_AFTER = 120.0               # seconds a run is seen pending before the front door asks the gate for it itself (Amendment 9)
-SWEEP_EVERY = 30.0
-SWEEP_MAX_WAIT = 6 * 3600.0          # the longest the look waits before it asks for one run again (Amendment 9)                # seconds between the front door's looks for such runs (Amendment 9)
+SWEEP_EVERY = 30.0                   # seconds between the front door's looks for runs left pending (Amendment 9)
+SWEEP_MIN_WAIT = 1.0                 # the shortest wait the look takes, whatever it is given (Amendment 9)
+SWEEP_MAX_WAIT = 3600.0              # the longest the look waits before it acts on one run again (Amendment 9)                # seconds between the front door's looks for such runs (Amendment 9)
 JOURNAL_SHARE = 64 << 20         # bytes of the journal one baseline's designs may take; at that size the door refuses new runs for it alone (Amendment 8, D1)
 HEX_BYTES = set(b'0123456789abcdef')
 
@@ -398,7 +399,7 @@ class Front:
         self._locks, self._hits, self._seen = {}, collections.defaultdict(collections.deque), {}
         self._journaled = set()                  # the request keys this process has journaled: a design journaled once adds no line again (Amendment 7, D1)
         self._shares, self._counted = None, None   # bytes of the journal taken by each baseline's designs, and the size of the journal they were counted from (Amendment 8, D1)
-        self._pending = {}                       # runs this door has seen pending: (baseline, attempt) -> when first seen (Amendment 9)
+        self._pending = {}                       # the look's runs to act on: (baseline, attempt, PENDING or INTERRUPTED) -> {'next', 'wait'} (Amendment 9)
         self._journal_lock = threading.Lock()    # the journal has a lock of its own, so that counting it does not hold up every other request (Amendment 8)
         (self.home / 'front').mkdir(parents=True, exist_ok=True)
 
@@ -743,19 +744,25 @@ class Front:
         such a run got its notice only if its design was sent again.
 
         For each job whose binding a pinned engineer signed and that is not revoked, the look reads the observation of the job's
-        baseline from the store, one reading, and from its phases picks the runs that may be pending, and the runs cut off whose
-        notice is not yet written.  A run first seen `after` seconds ago or more is due; once asked for, it is due again after twice
-        the wait before, up to SWEEP_MAX_WAIT, so a run that cannot be finished is asked for less and less often.  Only when one
-        is due are the job's runs read in full.  A run cut off whose notice is missing is given it, as an answer would give it.
-        A pending run is asked for again through the same path as a caller's request: the gate host never runs a run twice, so a
-        run it began is answered with its signed UNKNOWN, counted as interrupted, and its engineer is sent the notice; a run that
-        never reached the gate host is run now, once, as its caller asked.  Nothing is done for a baseline while the gate's
-        inbox-writability check for it is not good, nor while its budget is held or stopped, which the governor would refuse.
-        The job's binding is read again just before a run is asked for, so a revocation made during a look takes effect.  Runs
-        are a baseline's, not a job's: a run on a baseline is asked for through any live job bound to it.  A run whose design
-        this door's journal does not hold is passed over.  Returns what was done.  Nothing is raised."""
-        done, seen = [], set()
+        baseline from the store, and, for a run the gate began and has no notice of, the evidence of that run.  From these it
+        picks the runs left pending, and the runs cut off whose notice is not written.  A run is due once it has been seen in
+        that state for `after` seconds (at least SWEEP_MIN_WAIT); each time the look acts on it, the wait before it acts again
+        doubles, up to SWEEP_MAX_WAIT, so a run that cannot be finished is acted on less and less often.  A run seen in a new
+        state is seen afresh.  The job's runs are read in full only when one is due.  An error in reading a job's baseline
+        leaves its waits as they were.
+
+        A run cut off whose notice is missing is given it, as an answer would give it, whatever the state of the budget and of
+        the gate's inbox-writability check: a notice the inbox cannot take is kept in the service's own store.  A pending run
+        is asked for again, through the same path as a caller's request, only while that check is good and the budget is
+        neither held nor stopped (the governor would refuse it), only if this door's journal holds its design, and only if the
+        job's binding, read again just before, is unchanged, so that a revocation made during a look counts.  The gate host
+        never runs a run twice: a run it began is answered with its signed UNKNOWN, counted as interrupted, and its engineer is
+        sent the notice; a run that never reached the gate host is run now, once, as its caller asked.  Runs are a baseline's,
+        not a job's: a run on a baseline is asked for through any live job bound to it.  Returns what was done.  Nothing is
+        raised."""
+        done, seen, looked = [], set(), set()
         now = time.time() if now is None else now
+        after = max(float(after), SWEEP_MIN_WAIT)
         try:
             jobs = read_jobs(self.home)
         except Exception:
@@ -767,57 +774,68 @@ class Front:
                 with self._guard:
                     if b['seq'] < self._seen.get(name, 0):        # an earlier signed binding put back: as admit() refuses it
                         continue
-                h = b['baseline_sha256']
-                obs = self.store.observe(b['root'])              # one reading of the store; the journal is not read here
-                maybe = [str(aid) for aid, _req, phase, *_ in obs['attempts']
-                         if phase in PENDING_PHASES or (phase == 'CONSUMED' and not notices.written(self.home, h, 'INTERRUPTED_' + re.sub(r'[^A-Za-z0-9_-]', '_', str(aid))))]
+                h, root = b['baseline_sha256'], b['root']
+                obs = self.store.observe(root)                   # one reading of the store; the journal is not read here
+                found = []
+                for aid, _req, phase, *_ in obs['attempts']:
+                    aid = str(aid)
+                    if phase in PENDING_PHASES:
+                        found.append((aid, 'PENDING'))
+                    elif phase == 'CONSUMED' and not notices.written(self.home, h, 'INTERRUPTED_' + re.sub(r'[^A-Za-z0-9_-]', '_', aid)):
+                        claims = [e['evidence'].get('claim') for e in self.store.evidence_for(root, aid) if isinstance(e.get('evidence'), dict)]
+                        found.append((aid, 'INTERRUPTED' if 'UNKNOWN' in claims else 'PENDING'))
+                may_ask = obs.get('witness') == 'ACTIVE' and obs.get('business') == 'OPEN'
             except Exception:
-                continue
+                continue                                       # this job's waits are kept as they were
+            looked.add(h)
             due = []
             with self._guard:
-                for aid in maybe:
-                    k = (h, aid); seen.add(k)
+                for aid, kind in found:
+                    k = (h, aid, kind); seen.add(k)
                     w = self._pending.setdefault(k, {'next': now + after, 'wait': after})
                     if now >= w['next']:
-                        due.append(aid)
-            if not due or obs.get('witness') != 'ACTIVE' or obs.get('business') != 'OPEN':
-                continue                                       # nothing due, or the budget is held or stopped
+                        due.append((aid, kind, k))
+            if any(kind == 'PENDING' for _, kind, _ in due):
+                try:
+                    may_ask = may_ask and notices.delivery_state(self.home, h)[0] == 'WRITABLE'
+                except Exception:
+                    may_ask = False
+                if not may_ask:                                # not asked, and not counted as asked: due again at the next look
+                    due = [d for d in due if d[1] != 'PENDING']
+            if not due:
+                continue
             try:
-                if notices.delivery_state(self.home, h)[0] != 'WRITABLE':
-                    continue                                   # no step while a failure might not reach the engineer
                 c = self.client(b)
                 runs, attempts = c.fresh().runs()
             except Exception:
                 continue
-            for a in attempts:
-                aid = str(a.get('aid'))
-                if aid not in due:
-                    continue
-                k = (h, aid)
+            by_aid = {str(a.get('aid')): a for a in attempts}
+            for aid, kind, k in due:
+                a = by_aid.get(aid)
                 try:
+                    if a is None:
+                        continue
                     if a.get('outcome') == 'INTERRUPTED':          # cut off, its notice missing: it is written now, once
                         self._notify_interrupted(c, [a], runs)
                         wrote = notices.written(self.home, h, 'INTERRUPTED_' + re.sub(r'[^A-Za-z0-9_-]', '_', aid))
                         done.append({'job': name, 'aid': aid, 'status': None, 'outcome': 'INTERRUPTED_NOTICE_WRITTEN' if wrote else 'INTERRUPTED_NOTICE_NOT_WRITTEN'})
-                    elif a.get('outcome') == 'PENDING':
+                    elif a.get('outcome') == 'PENDING' and kind == 'PENDING':
                         design = self._design_for(a.get('request_key'))
                         if design is None:
                             continue
-                        cur = read_jobs(self.home).get(name)       # read again: a revocation or a move made during this look counts
-                        if cur != b:
+                        if read_jobs(self.home).get(name) != b:    # read again: a revocation or a move made during this look counts
                             continue
                         status, payload = self.submit(b, design)
                         done.append({'job': name, 'aid': aid, 'status': status, 'outcome': payload.get('outcome') or payload.get('refused')})
-                    else:
-                        continue
-                except Exception as exc:                       # one run that cannot be asked for does not stop the others
+                except Exception as exc:                       # one run that cannot be acted on does not stop the others
                     done.append({'job': name, 'aid': aid, 'status': None, 'outcome': type(exc).__name__})
-                with self._guard:                              # asked for: next time after twice the wait
-                    w = self._pending.get(k)
-                    if w is not None:
-                        w['wait'] = min(w['wait'] * 2, SWEEP_MAX_WAIT); w['next'] = now + w['wait']
-        with self._guard:
-            self._pending = {k: w for k, w in self._pending.items() if k in seen}
+                finally:                                       # every run looked at when due waits twice as long before the next time
+                    with self._guard:
+                        w = self._pending.get(k)
+                        if w is not None:
+                            w['wait'] = min(w['wait'] * 2, SWEEP_MAX_WAIT); w['next'] = now + w['wait']
+        with self._guard:                                      # forget only what a baseline read without error no longer shows
+            self._pending = {k: w for k, w in self._pending.items() if k in seen or k[0] not in looked}
         return done
 
 
@@ -827,7 +845,8 @@ def sweeper(front: Front, after: float, every: float) -> None:
         time.sleep(every)
         try:
             for d in front.sweep(after):
-                print(f"front door: a run left pending was asked for again: {json.dumps(d)}", file=sys.stderr, flush=True)
+                what = 'the notice of a run cut off was written' if str(d.get('outcome', '')).startswith('INTERRUPTED_NOTICE') else 'a run left pending was asked for again'
+                print(f"front door: {what}: {json.dumps(d)}", file=sys.stderr, flush=True)
         except Exception as exc:
             try:
                 print(f'front door: the look for runs left pending failed: {type(exc).__name__}', file=sys.stderr, flush=True)
@@ -963,7 +982,7 @@ def main():
            'journal_share_bytes': a.journal_share_bytes}
     front = Front(home, Store(a.local_dsn), cfg, a.engineer_key, a.rate)
     server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(front)), tls)
-    threading.Thread(target=sweeper, args=(front, max(0.0, a.sweep_after), min(600.0, max(0.1, a.sweep_every))), name='front-door-sweep', daemon=True).start()
+    threading.Thread(target=sweeper, args=(front, max(SWEEP_MIN_WAIT, a.sweep_after), min(600.0, max(0.1, a.sweep_every))), name='front-door-sweep', daemon=True).start()
     print(json.dumps({'listening': a.port, 'home': str(home), 'witness_keys': a.witness_key, 'gate_key': a.gate_key, 'engineer_keys': a.engineer_key, 'tls': True}), flush=True)
     server.serve_forever()
 

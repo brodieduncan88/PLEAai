@@ -1871,13 +1871,16 @@ def r23():
         cli = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'verify_ctl.py'), 'baseline', str(s.home), '--from', str(CASE), '--card', str(cardfile), '--key', str(keyfile)],
                              capture_output=True, text=True, timeout=120)
         count_after_cli = len(folders())
-        alike = [attempt(draft(requirement=dict(req, id=v))) for v in (' req-selftest-001', 'ＲＥＱ-SELFTEST-001', 'REQ-SELFTEST-001\t')]   # case and space; full-width letters; a tab
+        alike = [attempt(draft(requirement=dict(req, id=v))) for v in (' req-selftest-001', 'ＲＥＱ-SELFTEST-001', 'REQ-SELFTEST-001\t', 'REQ\u200b-SELFTEST-001', 'REQ\u2011SELFTEST\u2212001')]
+        # case and space; full-width letters; a tab; a zero-width space; a non-breaking hyphen and a minus sign
         fake = {'reason': 'Written in the draft, not by the service.', 'baselines': [{'baseline_sha256': 'ab' * 32, 'revision': 'Z'}]}
         from_draft = attempt(dict(draft(requirement=dict(req, id='REQ-SELFTEST-024')), alongside=fake))
         rev_draft = revised(dict(draft(requirement=dict(req, revision='C')), alongside=fake), h3, 'Strengthened again (CR-26).') if h3 else 'no revision B'
         forged_id = 'REQ-SELFTEST-025'; forged = s.home / 'baselines' / ('cd' * 32)
-        forged.mkdir(); forged.joinpath('baseline.json').write_text(json.dumps({'baseline_sha256': 'cd' * 32, 'card': dict(card_of(second) or first['card'], requirement=dict(req, id=forged_id)),
-                                                                                'controls_run': [], 'signature': {'signer': s.keys['engineer'], 'signature': '00' * 64}}))
+        forged.mkdir(); forged.joinpath('baseline.json').write_text(json.dumps({'baseline_sha256': 'cd' * 32, 'card': dict(first['card'], requirement=dict(req, id=forged_id)),
+                                                                                'controls_run': [], 'signature': {'signer': s.keys['engineer'], 'signature': '00' * 64}}))   # a signature that does not verify
+        stranger = Key(); fenv = sign_envelope(dict(first['card'], requirement=dict(req, id=forged_id), responsible_engineer={'name': 'Someone Else', 'key': stranger.public_hex}), [], stranger)
+        (s.home / 'baselines' / fenv['baseline_sha256']).mkdir(); (s.home / 'baselines' / fenv['baseline_sha256'] / 'baseline.json').write_text(json.dumps(fenv))   # whole, signed by a key not accepted
         after_forged = attempt(draft(requirement=dict(req, id=forged_id)))
         rec = s.record(h2); ok, checks_2, summary = check_record.verify(rec, s.keys)
         printed = check_record.render(ok, checks_2, summary)
@@ -1906,7 +1909,7 @@ def r23():
                   'with the engineer\'s reason it is baselined, and its signed card names the baseline held, with its revision, and the reason':
                       side == {'reason': why, 'baselines': [{'baseline_sha256': h1, 'revision': 'A'}]} and signed == side,
                   'a revision needs no reason and is linked as before, and its card has no such field': isinstance(rev, dict) and 'alongside' not in rev['card'] and rev['card']['supersedes']['baseline_sha256'] == h1,
-                  'a later baseline made as new names every baseline the service holds for the requirement': e['third'] == sorted(x[:16] for x in (h1, h2, h3)),
+                  'a later baseline made as new names every baseline the service holds for the requirement': e['third'] == sorted(str(x)[:16] for x in (h1, h2, h3)),
                   'a baseline for another requirement needs no reason, and its card has no such field, as a first baseline\'s has none': isinstance(other, dict) and 'alongside' not in other['card'] and 'alongside' not in first['card'],
                   'the record\'s checker, on a record that verifies, the first client\'s view of the requirement and the front door\'s, in its text and its fields, each give the link and the reason':
                       ok and e['printed'] == [link] and e['shown'] == [link] and e['door'] == [link] and door_fields == side and side is not None,
@@ -1916,7 +1919,7 @@ def r23():
                       all(isinstance(x, str) and 'already has a baseline' in x for x in alike),
                   'a link written in the draft is never signed: a first baseline for another requirement and a revision, each made from a draft that carries one, have none':
                       e['from_draft'] == 'none' and e['rev_draft'] == 'none',
-                  'a baseline folder whose envelope does not verify is not counted as held: a first baseline for its requirement needs no reason, and its card names nothing':
+                  'a baseline folder is not counted as held when its signature does not verify, or when it is whole but signed by a key that is neither the engineer\'s nor one the service accepts: a first baseline for its requirement needs no reason, and its card names nothing':
                       isinstance(after_forged, dict) and 'alongside' not in after_forged['card']}
     finally:
         s.stop()

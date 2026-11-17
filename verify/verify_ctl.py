@@ -62,15 +62,26 @@ def keygen(path) -> Key:
 
 
 def requirement_key(requirement_id) -> str:
-    """A requirement id as the continuity rule compares it: in Unicode's compatibility form, without case, with each run of
-    white space as one space, and none at either end.  Two ids that print alike are one requirement.  (Amendment 9.)"""
-    return ' '.join(unicodedata.normalize('NFKC', str(requirement_id)).casefold().split())
+    """A requirement id as the continuity rule compares it: in Unicode's compatibility form, without its invisible characters
+    (Unicode's format characters: a zero-width space, a soft hyphen, a byte-order mark), with every dash and the minus sign as
+    a hyphen, without case, with each run of white space as one space, and none at either end.  Ids that differ only in
+    these ways are one requirement.  Letters that only look alike, a Latin E and a Cyrillic one, are not made one.  (Amendment 9.)"""
+    s = unicodedata.normalize('NFKC', str(requirement_id))
+    s = ''.join('-' if unicodedata.category(ch) == 'Pd' or ch == '\u2212' else ch for ch in s if unicodedata.category(ch) != 'Cf')
+    return ' '.join(s.casefold().split())
 
 
-def held_for_requirement(home, requirement_id) -> list:
+def accepted_keys(key: 'Key') -> tuple:
+    """The engineer keys whose baselines the continuity rule counts: this engineer's, and those the service's gate accepts
+    (VERIFY_ENGINEER_KEYS, where it is set in the console's environment).  (Amendment 9.)"""
+    return (key.public_hex,) + tuple(k for k in os.environ.get('VERIFY_ENGINEER_KEYS', '').split(',') if k)
+
+
+def held_for_requirement(home, requirement_id, pinned_keys) -> list:
     """The baselines this service holds for a requirement id, as {baseline_sha256, revision}, oldest first by when they were
-    baselined.  Ids are compared as requirement_key gives them.  A baseline folder whose envelope does not verify (its card
-    cannot be read, its hash is not its card's, or it is not signed by the key its card names) is passed over.  (Amendment 9.)"""
+    baselined.  Ids are compared as requirement_key gives them.  A baseline folder whose envelope does not verify under one of
+    pinned_keys (its card cannot be read, its hash is not its card's, or it is not signed by a pinned key that its card names)
+    is passed over.  (Amendment 9.)"""
     found, want = [], requirement_key(requirement_id)
     try:
         folders = sorted((pathlib.Path(home) / 'baselines').iterdir())
@@ -78,8 +89,7 @@ def held_for_requirement(home, requirement_id) -> list:
         return found
     for d in folders:
         try:
-            env = json.loads((d / 'baseline.json').read_text(encoding='utf-8'))
-            env = load_envelope(d / 'baseline.json', env['signature']['signer'])      # its own signature and hash; the key is the one the card names
+            env = load_envelope(d / 'baseline.json', pinned_keys)                    # a pinned key signed exactly this card
             card = env['card']
             if requirement_key(card['requirement']['id']) == want and env['baseline_sha256'] == d.name:
                 found.append((str(card.get('baselined_at', '')), {'baseline_sha256': d.name, 'revision': str(card['requirement']['revision'])}))
@@ -105,7 +115,7 @@ def make_baseline(home, source, draft: dict, key: Key, runs: int = 1000, superse
     card.pop('alongside', None)                    # Amendment 9: a link is made here, from what the service holds, and never taken from the draft
     if supersedes is None:                         # Amendment 9 (continuity): a requirement already held is changed by revise, or linked here
         rid = (card.get('requirement') or {}).get('id')
-        others = held_for_requirement(home, rid) if isinstance(rid, str) else []
+        others = held_for_requirement(home, rid, accepted_keys(key)) if isinstance(rid, str) else []
         if others:
             if not (isinstance(alongside_reason, str) and alongside_reason.strip()):
                 raise BaselineInvalid(f"requirement {rid} already has a baseline at this service ({', '.join(o['baseline_sha256'][:16] + '… rev ' + o['revision'] for o in others)}): "
@@ -159,7 +169,10 @@ def make_baseline(home, source, draft: dict, key: Key, runs: int = 1000, superse
 def revise(home, source, draft: dict, key: Key, old_hash: str, reason: str, runs: int = 1000, control_dsn: str = CONTROL_DSN, local_dsn: str = LOCAL_DSN) -> dict:
     old = load_envelope(pathlib.Path(home) / 'baselines' / old_hash / 'baseline.json', key.public_hex)
     old_root = root_for(old['card'])
-    if (draft.get('requirement') or {}).get('id') != old['card']['requirement']['id']:
+    new_id, old_id = (draft.get('requirement') or {}).get('id'), old['card']['requirement']['id']
+    if new_id != old_id:
+        if isinstance(new_id, str) and requirement_key(new_id) == requirement_key(old_id):     # Amendment 9: say which spelling to keep
+            raise BaselineInvalid(f'a revision keeps the requirement id as it is spelled in the baseline it revises: {old_id!r}, not {new_id!r}')
         raise BaselineInvalid('a revision keeps the requirement id; a different id is a different requirement')
     if not reason or not reason.strip():
         raise BaselineInvalid('a revision needs a reason')
