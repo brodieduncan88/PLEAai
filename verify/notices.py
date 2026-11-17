@@ -16,14 +16,33 @@ file system makes no hard links, the text is written under its name in one piece
 part-way.  A notice is never replaced.  A notice that must have one copy per name (a run cut off, asked for again) is
 reported where its first copy is.
 
+Whether a notice can be delivered at all (Amendment 8).  The gate's tool shows that it can write an engineer's inbox by doing it:
+it makes a small file there and removes it, and records what it found, with the time, in delivery/<full hash>.json in the
+service's own home.  It does this when it starts, on every run, and on a look of its own every second for a baseline that has
+no proof yet or whose inbox it could not write, and again for each good proof well inside the time for which it stays good.  The engineer's console, enrolment and the front door read that proof.  A
+proof that is missing, too old, or says the inbox could not be written means a failure might not reach the engineer, so a job
+is not enrolled and a new run is not admitted until the proof is good.  The proof is a plain file, like a notice: it shows that
+the service is set up and working, and it is not a defence against someone who can write the service's home.
+
 Nothing here decides a verdict.  The gate's tool and the front door write what they have already decided.
 """
+import json
+import math
 import os
 import pathlib
+import re
+import stat
 import time
 
 CLAIM = 'baseline_sha256'           # Amendment 6: in an engineer's inbox, the full hash of the baseline the inbox belongs to
 HEX = set('0123456789abcdef')
+DELIVERY_MAX_AGE = 120.0            # Amendment 8: seconds for which the gate's proof that it can write an inbox stays good
+PROBE_BYTES = 4096                  # Amendment 8: the size of the file the gate writes to show it can write a notice
+DELIVERY_WORDS = {                  # Amendment 8: what each state of the proof means, in the service's own words
+    'UNPROVEN': 'the verification service has not shown that it can write a notice to the inbox of this baseline',
+    'STALE': 'the verification service has not shown lately that it can write a notice to the inbox of this baseline',
+    'NOT_WRITABLE': 'the verification service cannot write a notice to the inbox of this baseline',
+}
 
 
 class NameTaken(FileExistsError):
@@ -139,16 +158,19 @@ def publish(folder: pathlib.Path, stem: str, body: str, numbered: bool) -> str:
         part.unlink(missing_ok=True)
 
 
-def deliver(home, baseline_sha256: str, stem: str, make_body, numbered: bool = True):
+def deliver(home, baseline_sha256: str, stem: str, make_body, numbered: bool = True, inbox_again: bool = False):
     """Write one notice for this hash, where it can be written: in the engineer's inbox (or inbox/unclaimed/ for a hash nobody
     holds); failing that, in undelivered/<hash>/ in the service's own home; failing that, nowhere.  make_body(engineer) gives the
     text and must not raise.  Returns (state, file name or None), the state being INBOX, UNCLAIMED, UNDELIVERED or NOT_WRITTEN.
-    (Amendment 7.)"""
+    (Amendment 7.)
+
+    Not numbered: one copy per name, in either place.  With inbox_again, one copy per name in each place: a copy kept in the
+    store while the inbox could not take it does not stop the inbox getting its own copy once it can.  (Amendment 8.)"""
     home = pathlib.Path(home)
     box, engineer = inbox_for(home, baseline_sha256)
     places = ((box, 'INBOX' if engineer else 'UNCLAIMED'), (home / 'undelivered' / baseline_sha256, 'UNDELIVERED'))
     if not numbered:                       # one copy per name, in either place: a copy already there is reported where it is (Amendment 7)
-        for folder, state in places:
+        for folder, state in places[:1] if inbox_again else places:
             try:
                 if (folder / f'{stem}.txt').is_file():
                     return state, f'{stem}.txt'
@@ -184,3 +206,177 @@ def undelivered(home, baseline_sha256: str) -> list:
         return sorted(p.name for p in (pathlib.Path(home) / 'undelivered' / baseline_sha256).glob('*.txt'))
     except OSError:
         return []
+
+
+# ---------------------------------------------------------------------------------------------------- Amendment 8: proof of delivery
+# The exact names this service gives its own temporary files: a probe, a part-written claim and a part-written notice in an
+# inbox or its store, and a part-written proof in the folder of proofs.  Each carries the process's number and twelve hex digits.
+LEFT_BEHIND = re.compile(r'\.(?:probe|%s)\.[0-9]+\.[0-9a-f]{12}|\.notice\.[0-9]+\.[0-9a-f]{12}\.part' % re.escape(CLAIM))
+LEFT_PROOF = re.compile(r'\.[0-9a-f]{64}\.json\.[0-9]+\.[0-9a-f]{12}')
+
+
+def sweep(folder, names=LEFT_BEHIND, older_than: float = 60.0) -> int:
+    """Take away this service's own temporary files that a process killed part-way left in a folder: a probe, a part-written
+    notice, claim or proof, each more than a minute old.  Only a plain file whose whole name is one this service gives is taken:
+    not a folder or a link, and not a file of anyone else's that begins the same way.  Returns how many.  Nothing is raised.
+    (Amendment 8.)"""
+    taken = 0
+    try:
+        found = os.listdir(folder)
+    except OSError:
+        return 0
+    for name in found:
+        if names.fullmatch(name):
+            try:
+                path = os.path.join(folder, name); st = os.lstat(path)
+                if stat.S_ISREG(st.st_mode) and time.time() - st.st_mtime > older_than:
+                    os.unlink(path); taken += 1
+            except OSError:
+                pass
+    return taken
+
+
+def sweep_all(home) -> int:
+    """The same for every inbox, every folder of notices that are no engineer's, the service's own store and its folder of
+    proofs, as the gate's tool starts.  (Amendment 8.)"""
+    home = pathlib.Path(home); taken = 0
+    for parent in (home / 'inbox', home / 'inbox' / 'unclaimed', home / 'undelivered'):
+        taken += sweep(parent)                             # the store is probed in its own folder
+        try:
+            subs = os.listdir(parent)
+        except OSError:
+            subs = []
+        for sub in subs:
+            taken += sweep(parent / sub)
+    return taken + sweep(home / 'delivery', LEFT_PROOF)
+
+
+def can_write(folder, make: bool = True) -> bool:
+    """Whether this process can write a file the size of a notice in the folder now.  It writes a file under a name of its own,
+    has it put on the disk, and removes it.  Nothing is left behind.  With make, it makes the folder first if it can; without,
+    a folder that is not there cannot be written.  (Amendment 8.)"""
+    folder = pathlib.Path(folder); name = None
+    try:
+        if make:
+            folder.mkdir(parents=True, exist_ok=True)
+        elif not folder.is_dir():
+            return False
+        name = folder / f'.probe.{os.getpid()}.{os.urandom(6).hex()}'
+        fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        try:
+            os.write(fd, b'\n' * PROBE_BYTES)
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        return True
+    except OSError:
+        return False
+    finally:
+        if name is not None:
+            try:
+                os.unlink(name)
+            except OSError:
+                pass
+
+
+def proof_path(home, baseline_sha256: str) -> pathlib.Path:
+    return pathlib.Path(home) / 'delivery' / f'{baseline_sha256}.json'
+
+
+def prove(home, baseline_sha256: str, make: bool = True) -> dict:
+    """The gate's tool shows whether it can write this baseline's inbox and the service's own store, and records what it found
+    with the time at which it had tried.  The record replaces the last one whole, and can be read by any account.  If it cannot
+    be recorded, the record left from before is taken away, so that it is not read as good.  Returns what it found, and whether
+    it could be recorded.  Nothing is raised.  (Amendment 8.)"""
+    home = pathlib.Path(home)
+    inbox, store = can_write(home / 'inbox' / baseline_sha256[:16], make), can_write(home / 'undelivered')
+    found = {'baseline_sha256': baseline_sha256, 'checked_at': time.time(), 'pid': os.getpid(), 'inbox': inbox, 'store': store}
+    path = proof_path(home, baseline_sha256)
+    part = path.with_name(f'.{path.name}.{os.getpid()}.{os.urandom(6).hex()}')
+    recorded = False
+    try:
+        if not path.parent.is_dir():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            os.chmod(path.parent, 0o755)           # whatever this process's mask: the console and the front door read the proofs
+        fd = os.open(part, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+        try:
+            os.write(fd, (json.dumps(found) + '\n').encode('utf-8'))
+            os.fchmod(fd, 0o644)
+        finally:
+            os.close(fd)
+        os.replace(part, path)
+        recorded = True
+    except OSError:
+        for stale in (part, path):                 # the proof left from before is not kept as good when a new one cannot be recorded
+            try:
+                os.unlink(stale)
+            except OSError:
+                pass
+    return dict(found, recorded=recorded)
+
+
+def prove_due(home, seen: dict, refresh: float, grace: float = 0.0) -> list:
+    """Prove delivery again for every baseline whose notices would go to an engineer's inbox: each baseline folder the service
+    holds, and each baseline whose folder is gone and whose inbox still holds its hash.  One is left alone only if the last
+    proof this process made for it was good and is less than `refresh` seconds from now, either way, so that a clock put back
+    does not put a proof off.  `seen` is this process's memory of its own proofs.
+
+    Who makes an inbox.  The console makes it, a moment after the baseline's folder.  So a held baseline with no inbox yet is
+    left for the next look while its folder is dated less than `grace` seconds from now, either way; after that the inbox is
+    made here, as for a baseline made before Amendment 6.  Returns the proofs it made.  (Amendment 8.)"""
+    home = pathlib.Path(home)
+
+    def due(h: str) -> bool:
+        last = seen.get(h)
+        return not (last is not None and last[1] and abs(time.time() - last[0]) < refresh)
+
+    def note(found: dict) -> None:
+        seen[found['baseline_sha256']] = (found['checked_at'], bool(found['inbox'] and found['recorded']))
+        made.append(found)
+
+    try:
+        names = [n for n in os.listdir(home / 'baselines') if len(n) == 64 and set(n) <= HEX and held(home, n)]
+    except OSError:
+        names = []
+    made = []
+    for name in names:
+        if not due(name):
+            continue
+        try:
+            if not (home / 'inbox' / name[:16]).is_dir() and abs(time.time() - os.stat(home / 'baselines' / name).st_mtime) < grace:
+                continue                                   # the console is still making this baseline; its inbox is the console's to make
+        except OSError:
+            pass
+        claim(home, name)
+        note(prove(home, name))
+    ours = {n[:16] for n in names}
+    try:
+        boxes = [b for b in os.listdir(home / 'inbox') if len(b) == 16 and set(b) <= HEX and b not in ours]
+    except OSError:
+        boxes = []
+    for b in boxes:                                        # an inbox left with its hash after its baseline's folder was taken away
+        h = claimed(home / 'inbox' / b)
+        if h is not None and h[:16] == b and due(h):
+            note(prove(home, h, make=False))
+    return made
+
+
+def delivery_state(home, baseline_sha256: str, max_age: float = DELIVERY_MAX_AGE, now=None):
+    """What the gate's last proof for this baseline says: (state, the time of the proof or None).  PROVEN: it wrote the inbox, no
+    longer than max_age seconds ago.  NOT_WRITABLE: it could not write the inbox.  STALE: the proof is older than max_age, or is
+    dated further ahead than that.  UNPROVEN: there is no proof that can be read for this exact hash, with a time that is a
+    number.  (Amendment 8.)"""
+    try:
+        d = json.loads(proof_path(home, baseline_sha256).read_text(encoding='utf-8'))
+        if not isinstance(d, dict) or d.get('baseline_sha256') != baseline_sha256:
+            return 'UNPROVEN', None
+        t = float(d['checked_at'])
+        if isinstance(d['checked_at'], bool) or not math.isfinite(t):
+            return 'UNPROVEN', None
+    except (OSError, ValueError, KeyError, TypeError, ArithmeticError, RecursionError):
+        return 'UNPROVEN', None
+    if d.get('inbox') is not True:
+        return 'NOT_WRITABLE', t
+    if abs((time.time() if now is None else now) - t) > max_age:
+        return 'STALE', t
+    return 'PROVEN', t

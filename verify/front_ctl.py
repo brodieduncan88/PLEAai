@@ -27,6 +27,11 @@ signed binding and the log.  This does not reach inside the record: the record's
 unchanged, so a reader of one record sees a change of requirement only when it was made by revision.  The log
 (HOME/front/enrolment.jsonl) is the service's own signed list of every binding, in order.
 
+enrol and rebind also wait, for --wait seconds (15 unless given), until the gate's tool has shown that it can write a notice
+to the inbox of the baseline the job is to be bound to, and refuse if it has not: a job is not opened on a baseline whose
+failures might not reach its engineer (Amendment 8).  The gate shows it within a second or so of the baseline being made,
+if it is running and its account can write the inbox.
+
 revoke ends a job: its certificate is refused from the next request.
 
 record builds the verification record exactly as verify_ctl.py does, adding the front door's own journal of what was
@@ -38,6 +43,7 @@ import json
 import os
 import pathlib
 import sys
+import time
 
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
@@ -49,6 +55,7 @@ from baseline import BaselineInvalid, root_for                        # noqa: E4
 from front_door import JOB_NAME, RESERVED, binding_message, binding_valid, jobs_path, read_jobs   # noqa: E402
 from verify_record import Key, load_envelope, now                     # noqa: E402
 import verify_ctl                                                     # noqa: E402
+import notices                                                        # noqa: E402  (Amendment 8: the gate's proof that it can write an inbox)
 
 
 class Refused(Exception):
@@ -82,6 +89,22 @@ def _supersedes(home, env: dict, key: Key, target: str) -> bool:
     return False
 
 
+def _deliverable(home, baseline_hash: str, wait: float) -> None:
+    """Amendment 8 (D3).  Wait until the gate's tool has shown that it can write a notice to this baseline's inbox, and refuse if it
+    has not within `wait` seconds.  With the console and the gate under two accounts, an inbox the gate cannot write is found
+    here, before a job is opened, and not at the first failure."""
+    deadline = time.time() + max(0.0, wait)
+    while True:
+        state, _ = notices.delivery_state(home, baseline_hash)
+        if state == 'PROVEN':
+            return
+        if time.time() >= deadline:
+            break
+        time.sleep(0.1)
+    raise Refused(f'{notices.DELIVERY_WORDS[state]} ({baseline_hash[:16]}…), so a failure might not reach its engineer.  Start the gate if it is not '
+                  f'running, make the inbox writable by the gate\'s account, and try again.  Nothing was changed.')
+
+
 def _write(home, binding: dict) -> None:
     """The signed binding becomes the job's current one, and is added to the log.  The file is replaced whole."""
     path = jobs_path(home); path.parent.mkdir(parents=True, exist_ok=True)
@@ -108,7 +131,8 @@ def _current(home, job: str, key: Key) -> dict:
     return b
 
 
-def enrol(home, job: str, baseline_hash: str, key: Key, ca_cert_pem: bytes, ca_key_pem: bytes, url: str, out, reason: str | None = None, days: int = 90) -> dict:
+def enrol(home, job: str, baseline_hash: str, key: Key, ca_cert_pem: bytes, ca_key_pem: bytes, url: str, out, reason: str | None = None, days: int = 90,
+          wait: float = 15.0) -> dict:
     """Bind a new job to a baseline, issue its certificate and write its folder.  Returns the signed binding."""
     if not isinstance(job, str) or not JOB_NAME.match(job) or job in RESERVED:
         raise Refused('a job name is 2 to 41 lower-case letters, digits or hyphens, and not a service\'s own name')
@@ -129,6 +153,7 @@ def enrol(home, job: str, baseline_hash: str, key: Key, ca_cert_pem: bytes, ca_k
     out = pathlib.Path(out)
     if out.exists() and any(out.iterdir()):
         raise Refused(f'{out} is not empty')
+    _deliverable(home, baseline_hash, wait)              # Amendment 8 (D3): no job on a baseline whose failures might not reach its engineer
     key_pem, cert_pem = TLS.issue(ca_key_pem, ca_cert_pem, job, 'client', (), days)
     der = x509.load_pem_x509_certificate(cert_pem).public_bytes(serialization.Encoding.DER)
     binding = _signed('ENROL', 1, job, env, hashlib.sha256(der).hexdigest(), None, reason.strip() if reason and reason.strip() else None, key)
@@ -142,7 +167,7 @@ def enrol(home, job: str, baseline_hash: str, key: Key, ca_cert_pem: bytes, ca_k
     return binding
 
 
-def rebind(home, job: str, new_hash: str, key: Key) -> dict:
+def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0) -> dict:
     """Move a job to a revision of its baseline.  Refused unless the new baseline says it supersedes the one in force."""
     cur = _current(home, job, key)
     if cur['event'] == 'REVOKE':
@@ -154,6 +179,7 @@ def rebind(home, job: str, new_hash: str, key: Key) -> dict:
     if sup.get('baseline_sha256') != cur['baseline_sha256']:
         raise Refused(f'{job} is bound to {cur["baseline_sha256"][:16]}… and this baseline does not supersede it.  A job moves only to a revision of its '
                       f'own baseline (verify_ctl.py revise), so that the change and what had failed are on the record.')
+    _deliverable(home, new_hash, wait)                   # Amendment 8 (D3): the same proof is needed for the revision
     binding = _signed('REBIND', cur['seq'] + 1, job, env, cur['cert_sha256'], cur['baseline_sha256'], None, key)
     _write(home, binding)
     return binding
@@ -189,6 +215,7 @@ def main():
     ap.add_argument('action', choices=['enrol', 'rebind', 'revoke', 'jobs', 'record']); ap.add_argument('home'); ap.add_argument('rest', nargs='*')
     ap.add_argument('--key'); ap.add_argument('--ca'); ap.add_argument('--ca-key'); ap.add_argument('--url'); ap.add_argument('--out'); ap.add_argument('--reason')
     ap.add_argument('--days', type=int, default=90); ap.add_argument('--witness-key'); ap.add_argument('--gate-key')
+    ap.add_argument('--wait', type=float, default=15.0, help='seconds enrol and rebind wait for the gate to show it can write the inbox (Amendment 8)')
     a = ap.parse_args()
     try:
         if a.action == 'jobs':
@@ -197,9 +224,9 @@ def main():
             return
         key = verify_ctl.load_key(a.key)
         if a.action == 'enrol':
-            b = enrol(a.home, a.rest[0], a.rest[1], key, pathlib.Path(a.ca).read_bytes(), pathlib.Path(a.ca_key).read_bytes(), a.url, a.out, a.reason, a.days)
+            b = enrol(a.home, a.rest[0], a.rest[1], key, pathlib.Path(a.ca).read_bytes(), pathlib.Path(a.ca_key).read_bytes(), a.url, a.out, a.reason, a.days, a.wait)
         elif a.action == 'rebind':
-            b = rebind(a.home, a.rest[0], a.rest[1], key)
+            b = rebind(a.home, a.rest[0], a.rest[1], key, a.wait)
         elif a.action == 'revoke':
             b = revoke(a.home, a.rest[0], key)
         else:

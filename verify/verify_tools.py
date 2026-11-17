@@ -18,6 +18,8 @@ VERIFY_HOME holds, on the engineer's side of the line:
                                  hash it reads in no inbox: kept, addressed to no engineer, read by none (Amendment 6)
   undelivered/<full hash>/       a notice the inbox could not take (a full disk, a permission, a file in its place, or an
                                  inbox made by another account): kept here, and listed by the engineer's console (Amendment 7)
+  delivery/<full hash>.json      this tool's own proof that it can write that baseline's inbox, with the time: made when the
+                                 tool starts, on every run, and on a look of its own for a baseline that has none (Amendment 8)
   ledger.jsonl                   one line per call, per verdict and per notice, outside every PLEA store, for tests
 
 The verdict says where its notice went, in its field notice: INBOX, UNCLAIMED, UNDELIVERED or NOT_WRITTEN, or NO_HASH when
@@ -30,6 +32,7 @@ import json
 import os
 import pathlib
 import sys
+import threading
 import time
 import unicodedata
 
@@ -49,6 +52,49 @@ NOT_A_CARD = {'BaselineInvalid': 'a part of it is missing or is not as a card ne
               'RecursionError': 'it is nested too deeply to read'}
 
 
+def _seconds(name: str, default: float) -> float:
+    try:
+        return max(0.0, float(os.environ.get(name, default)))
+    except ValueError:
+        return default
+
+
+# Amendment 8 (16-17 November 2026).  The tool shows that it can write each baseline's inbox, and records it (notices.prove).
+# The look is never off, and a good proof is made again well inside the time for which it stays good: while a proof is not good
+# no run is admitted, so only the look can make it good again.
+PROOF_SCAN = min(10.0, max(0.1, _seconds('VERIFY_PROOF_SCAN', 1.0)))                         # seconds between this tool's own looks
+PROOF_REFRESH = min(notices.DELIVERY_MAX_AGE / 3, _seconds('VERIFY_PROOF_REFRESH', 30.0))    # seconds after which a good proof is made again
+PROOF_GRACE = 10.0                                       # seconds for which a new baseline's inbox is left for the console to make
+_PROVED = {}                                             # this process's memory of its own proofs: hash -> (time, good)
+_SAID = {}                                               # what was last said on the error output about each baseline's proof
+
+
+def _report(found: dict) -> None:
+    """Remember a proof this process made, and say so on the error output when a baseline's inbox stops being writable, when its
+    proof cannot be recorded, and when either is put right.  Nothing is raised.  (Amendment 8.)"""
+    try:
+        h = found['baseline_sha256']
+        state = 'inbox' if not found['inbox'] else ('record' if not found['recorded'] else 'good')
+        _PROVED[h] = (found['checked_at'], state == 'good')
+        was = _SAID.get(h); _SAID[h] = state
+        if state == was or (state == 'good' and was is None):
+            return
+        words = {'inbox': f'CANNOT WRITE THE INBOX of baseline {h[:16]}…: its notices go to the service\'s own store, and new runs for it are refused at the front door',
+                 'record': f'CANNOT RECORD THE PROOF OF DELIVERY for baseline {h[:16]}…: enrolment and new runs for it are refused until it can',
+                 'good': f'the inbox of baseline {h[:16]}… can be written again, and the proof of delivery is recorded'}[state]
+        print(f'verify tool: {words}', file=sys.stderr, flush=True)
+    except Exception:                                    # an error output that fails, or is closed, does not reach a run
+        pass
+
+
+def _prove(baseline_sha256: str, make: bool = True) -> None:
+    """Prove delivery for one baseline now, and remember it.  Nothing here can reach a run.  (Amendment 8.)"""
+    try:
+        _report(notices.prove(HOME, baseline_sha256, make))
+    except Exception:
+        pass
+
+
 def _ledger(event: str, **fields) -> None:
     """One line of the ledger, which is kept for the tests.  A ledger that cannot be written is said so on the error output and
     does not stop a run: the verdict is the decision, and the ledger only records it.  (Amendment 7.)"""
@@ -58,7 +104,7 @@ def _ledger(event: str, **fields) -> None:
     except OSError as exc:
         try:
             print(f'verify tool: the ledger could not be written ({type(exc).__name__})', file=sys.stderr, flush=True)
-        except OSError:                    # the error output may fail too; the run goes on (Amendment 7)
+        except Exception:                  # the error output may fail too, or be closed; the run goes on (Amendments 7 and 8)
             pass
 
 
@@ -172,6 +218,9 @@ def verify(baseline_sha256: str, design) -> dict:
         directory = HOME / 'baselines' / baseline_sha256
         if notices.held(HOME, baseline_sha256):
             notices.claim(HOME, baseline_sha256)           # Amendment 6: any run on a baseline the service holds, a pass too, claims its inbox
+            _prove(baseline_sha256)                        # Amendment 8: and shows again whether its inbox can be written
+        elif notices.inbox_for(HOME, baseline_sha256)[1]:
+            _prove(baseline_sha256, make=False)            # Amendment 8: its folder is gone, and its inbox still holds its hash and takes its notice
         try:
             envelope = load_envelope(directory / 'baseline.json', ENGINEER_KEYS)
             if envelope['baseline_sha256'] != baseline_sha256:
@@ -210,6 +259,28 @@ def verify(baseline_sha256: str, design) -> dict:
 
 
 notices.claim_all(HOME)                                   # Amendment 6, as the tool starts (the work is in notices.py, Amendment 7)
+try:                                                      # Amendment 8, as the tool starts; nothing here can stop it starting
+    notices.sweep_all(HOME)                               # temporary files a killed process left in an inbox, the store or the proofs
+    for _found in notices.prove_due(HOME, _PROVED, 0.0):  # every baseline whose notices go to an inbox gets its proof of delivery
+        _report(_found)
+except Exception:
+    pass
+
+
+def _watch() -> None:
+    """This tool's own look, every PROOF_SCAN seconds: a baseline made since the tool started, one whose inbox could not be written,
+    and one whose proof is older than PROOF_REFRESH seconds are each proved again.  Nothing here can stop a run.  (Amendment 8.)"""
+    while True:
+        time.sleep(PROOF_SCAN)
+        try:
+            for found in notices.prove_due(HOME, _PROVED, PROOF_REFRESH, PROOF_GRACE):
+                _report(found)
+        except Exception:
+            pass
+
+
+if not any(t.name == 'verify-delivery-proof' for t in threading.enumerate()):      # one look per process, however often the tool is loaded
+    threading.Thread(target=_watch, name='verify-delivery-proof', daemon=True).start()
 
 
 TOOLS = {

@@ -23,8 +23,11 @@ job's binding, so the budget charged and the baseline decided against are always
                       -> 200 {"outcome": "PASS" | "FAIL" | "UNKNOWN" | "INTERRUPTED", "exit", "text", "verdict", ...}
                          400 the request is not a design (nothing is run and nothing is recorded)
                          403 not enrolled, or no budget      409 stopped, held, exhausted, or already running
-                         502 the service refused its own step        503 a part of the service could not be reached
-                         507 the journal is at its size limit, or the disk is below the space kept for notices: nothing is run (Amendment 7)
+                         502 the service refused its own step        503 a part of the service could not be reached, or the
+                         service has not shown that it can write a notice to the engineer's inbox: nothing is run, and the
+                         engineer is sent a notice where one can be written (Amendment 8)
+                         507 the journal is at its size limit, the job's baseline has used its share of it (Amendment 8), or the
+                         disk is below the space kept for notices: nothing is run, and the engineer is sent a notice (Amendments 7, 8)
   GET  /status        every official run on the job's baseline, and whether any design has met the check.
   anything else       404.  There is no path here that baselines, revises, acknowledges, builds a record or reads a key.
 
@@ -77,6 +80,8 @@ EVENTS = ('ENROL', 'REBIND', 'REVOKE')
 BINDING_FIELDS = ('event', 'seq', 'job', 'baseline_sha256', 'root', 'cert_sha256', 'previous', 'time', 'note')
 JOURNAL_MAX = 1 << 30            # bytes the journal of submissions may reach; at that size the door refuses new runs (Amendment 7, D1)
 DISK_RESERVE = 512 << 20         # free bytes the journal's disk keeps for notices; below that the door refuses new runs (Amendment 7, D1)
+JOURNAL_SHARE = 64 << 20         # bytes of the journal one baseline's designs may take; at that size the door refuses new runs for it alone (Amendment 8, D1)
+HEX_BYTES = set(b'0123456789abcdef')
 
 
 # ---------------------------------------------------------------------------------------------------- job bindings
@@ -283,6 +288,66 @@ def interrupted_fixed(baseline_sha256: str, aid: str, engineer: bool) -> str:
                       'and it will not be run again.  NOT VERIFIED.  The design is not shown here.  This is not a pass.'])
 
 
+def _addressed(card, baseline_sha256: str, engineer: bool) -> str:
+    """The first line of a notice the front door writes: to the engineer by name where the card can be read, by the baseline's
+    hash where it cannot, and to no engineer where the hash is held in no inbox."""
+    if card is not None:
+        return f"To: {card['responsible_engineer']['name']}"
+    if engineer:
+        return f"To: the responsible engineer for baseline {baseline_sha256}"
+    return f"To: no engineer: the verification service found no baseline folder for the hash {baseline_sha256}, and read it in no inbox"
+
+
+DELIVERY_NOTICE = {                # Amendment 8 (D3): what a notice of this refusal says of each state of the gate's proof
+    'UNPROVEN': 'The gate, which writes the notice of each failure, has not shown that it can write to this inbox.',
+    'STALE': 'The gate, which writes the notice of each failure, has not shown lately that it can write to this inbox.  It may not be running.',
+    'NOT_WRITABLE': 'The gate, which writes the notice of each failure, could not write to this inbox when it last tried.',
+}
+
+
+def delivery_body(card, baseline_sha256: str, state: str, engineer: bool) -> str:
+    """The engineer's notice that the front door is refusing new runs because a failure might not reach the engineer (Amendment 8,
+    D3).  The front door writes it, where it can: the gate, which could not be shown to write here, does not."""
+    return '\n'.join([_addressed(card, baseline_sha256, engineer), 'From: the verification service (not the assistant)', '',
+                      'THE VERIFICATION SERVICE IS REFUSING NEW RUNS FOR THIS BASELINE', '',
+                      f'Reason        {DELIVERY_NOTICE[state]}',
+                      '              A failure might therefore not reach you, so no new run is admitted.',
+                      f'Baseline      {baseline_sha256[:16]}…',
+                      f"Refused       first today at {time.strftime('%H:%M:%S', time.gmtime())} UTC", '',
+                      'A new design sent for this baseline is refused before anything is run, and nothing is counted.  A run that an earlier',
+                      'request began, and that has no verdict yet, is not taken further until then; the status of the baseline shows it.',
+                      'No verdict is changed, and every run already made is on the record.  This is not the result of any check.',
+                      'The front door wrote this notice.',
+                      'What can happen next:  the operator of the service starts the gate if it is not running, and makes this inbox',
+                      '                       writable by the gate\'s account.  Runs go on once the gate has shown that it can write here.',
+                      'This notice is written once on each day on which the service refuses a run for this reason.'])
+
+
+STORAGE_REASONS = (('this baseline has used its share', 'SHARE'), ('the journal of submissions has reached its size limit', 'LIMIT'),
+                   ('the disk that holds the journal has less free space', 'DISK'))
+
+
+def storage_reason(why: str) -> str:
+    """The short name of a reason for refusing a run for want of room, for the name of its notice: the baseline's SHARE, the
+    journal's LIMIT, the DISK's reserve, or the JOURNAL itself, which could not be read or written.  (Amendment 8.)"""
+    return next((key for words, key in STORAGE_REASONS if why.startswith(words)), 'JOURNAL')
+
+
+def storage_body(card, baseline_sha256: str, why: str, engineer: bool) -> str:
+    """The engineer's notice that the front door is refusing new runs for want of room (Amendment 8, D1).  The words are the
+    service's own, and it says that no check gave this."""
+    return '\n'.join([_addressed(card, baseline_sha256, engineer), 'From: the verification service (not the assistant)', '',
+                      'THE VERIFICATION SERVICE IS REFUSING NEW RUNS FOR THIS BASELINE', '',
+                      f'Reason        {why[:1].upper() + why[1:]}.',
+                      f'Baseline      {baseline_sha256[:16]}…',
+                      f"Refused       first today at {time.strftime('%H:%M:%S', time.gmtime())} UTC", '',
+                      'A design sent for this baseline is refused before anything is run, and nothing is counted.  No verdict is changed,',
+                      'and every run already made is on the record.  This is not the result of any check.',
+                      'What can happen next:  the operator of the service makes room in the journal of submissions or on its disk,',
+                      '                       or raises the limit.',
+                      'This notice is written once on each day on which the service refuses a run for this reason.'])
+
+
 class ServiceClient(Client):
     """verify_client.Client, unchanged in what it does, built from what the service holds and not from a workspace file.
     One is made per request, for the baseline the caller's job is bound to.  The baseline's hash and the budget's name
@@ -304,6 +369,20 @@ class ServiceClient(Client):
         self._snapshot = None
         return self
 
+    def journal(self) -> list:
+        """The journal's lines, as the first client reads them, except that a line nested too deep to read is passed over as a
+        line that is not JSON is, and not raised.  The front door writes no such line.  (Amendment 8.)"""
+        p = pathlib.Path(self.path(self.cfg.get('journal', 'submissions.jsonl')))
+        if not p.exists():
+            return []
+        out = []
+        for line in p.read_text().splitlines():
+            try:
+                out.append(json.loads(line))
+            except (ValueError, RecursionError):
+                pass
+        return out
+
 
 class Front:
     def __init__(self, home, store: Store, cfg: dict, engineer_keys, rate: int = 120):
@@ -311,6 +390,8 @@ class Front:
         self._guard = threading.Lock()
         self._locks, self._hits, self._seen = {}, collections.defaultdict(collections.deque), {}
         self._journaled = set()                  # the request keys this process has journaled: a design journaled once adds no line again (Amendment 7, D1)
+        self._shares, self._counted = None, None   # bytes of the journal taken by each baseline's designs, and the size of the journal they were counted from (Amendment 8, D1)
+        self._journal_lock = threading.Lock()    # the journal has a lock of its own, so that counting it does not hold up every other request (Amendment 8)
         (self.home / 'front').mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------ who is asking
@@ -461,15 +542,93 @@ class Front:
             return
         self._notify_interrupted(c, attempts, runs)
 
-    def _journal_room(self, nbytes: int):
-        """None if the journal can take nbytes more and its disk keeps the space the service keeps for notices; otherwise why not, in
-        fixed words.  (Amendment 7, D1.)"""
+    def _used(self, baseline: str, size: int):
+        """The bytes of the journal that hold this baseline's designs, or None if the journal cannot be read.  They are counted from
+        the journal when this process first needs them, kept in step as it writes, and counted again whenever the journal is not
+        the size this process left it: an operator has made room in it, or another process has written to it.  (Amendment 8, D1.)"""
+        if self._shares is None or size != self._counted:
+            shares = collections.Counter()
+            path = pathlib.Path(self.cfg['journal'])
+            try:
+                if path.exists():
+                    with path.open('rb') as f:
+                        for line in f:
+                            h = line[21:85] if line.startswith(b'{"baseline_sha256": "') else b''
+                            if len(h) != 64 or not set(h) <= HEX_BYTES:        # a line this door did not write in its usual form
+                                try:
+                                    h = str(json.loads(line).get('baseline_sha256')).encode('ascii', 'replace')
+                                except Exception:                              # not JSON, not an object, or nested too deep to read
+                                    h = b'?'
+                            shares[h.decode('ascii', 'replace')] += len(line)
+            except OSError:
+                return None
+            self._shares, self._counted = shares, sum(shares.values())
+        return self._shares[baseline]
+
+    FINISHED = ('PASS', 'FAIL', 'UNKNOWN', 'INTERRUPTED')     # the outcomes after which asking again runs nothing
+
+    def _delivery(self, c: ServiceClient, key):
+        """Amendment 8 (D3).  None if the gate's tool has shown, not too long ago, that it can write a notice to the inbox of the job's
+        baseline, or if this design's run is finished, so that asking again runs nothing.  Otherwise (the state of the proof,
+        waiting).  A run that an earlier request began and that has no outcome yet is not let through: asking again could make
+        it.  waiting is True for such a run, False where no run of this design is on the record, and None where that cannot be
+        said: the runs could not be read, or the run on record is neither finished nor pending."""
+        state, _ = notices.delivery_state(self.home, c.baseline)
+        if state == 'PROVEN':
+            return None
+        waiting = None
+        try:
+            _, attempts = c.fresh().runs()
+            mine = [a.get('outcome') for a in attempts if a.get('request_key') == key]
+            if any(o in self.FINISHED for o in mine):
+                return None
+            waiting = True if 'PENDING' in mine else False if not mine else None
+        except Exception:                                # the runs cannot be read: the design is not let through
+            pass
+        return state, waiting
+
+    def _tell(self, c: ServiceClient, kind: str, reason: str, make) -> str:
+        """Amendment 8.  A refusal that the caller alone would otherwise hear of is told to the engineer of the refused job's baseline:
+        one notice for each reason on each day on which it happens, however many designs are refused.  A notice kept in the
+        service's own store while the inbox could not take it does not stop the inbox getting its copy once it can.
+        make(card, engineer) gives the text.  Returns the sentence the refusal gives the caller.  Nothing is raised."""
+        name = f"{kind}_{time.strftime('%Y%m%d', time.gmtime())}_{reason}"
+
+        def text(engineer: bool) -> str:
+            try:
+                return make(c.card, engineer)
+            except Exception:                            # where the card cannot be shown, the notice is addressed by the hash
+                return make(None, engineer)
+        try:
+            state, _ = notices.deliver(self.home, c.baseline, name, text, numbered=False, inbox_again=True)
+        except Exception:
+            state = 'NOT_WRITTEN'
+        return ('  The responsible engineer has been sent a notice of this.' if state == 'INBOX' else
+                '  The responsible engineer could not be sent a notice of this.  Tell the responsible engineer.')
+
+    def _storage_notice(self, c: ServiceClient, why: str) -> str:
+        """Amendment 8 (D1).  The engineer's notice of a refusal for want of room."""
+        return self._tell(c, 'STORAGE_FULL', storage_reason(why), lambda card, engineer: storage_body(card, c.baseline, why, engineer))
+
+    def _delivery_notice(self, c: ServiceClient, state: str) -> str:
+        """Amendment 8 (D3).  The engineer's notice of a refusal because the gate has not shown that it can write the inbox.  The front
+        door writes it: to the inbox if the front door can, and otherwise to the service's own store, which the console lists."""
+        return self._tell(c, 'DELIVERY_UNPROVEN', state, lambda card, engineer: delivery_body(card, c.baseline, state, engineer))
+
+    def _journal_room(self, nbytes: int, baseline: str):
+        """None if the journal can take nbytes more for this baseline and its disk keeps the space the service keeps for notices;
+        otherwise why not, in fixed words.  (Amendment 7, D1; the baseline's own share, Amendment 8.)"""
         path = pathlib.Path(self.cfg['journal'])
         try:
             size = path.stat().st_size if path.exists() else 0
             free = shutil.disk_usage(path.parent).free
         except OSError as exc:
             return f'the journal or its disk cannot be read ({type(exc).__name__})'
+        used = self._used(baseline, size)
+        if used is None:
+            return 'the journal of submissions cannot be read'
+        if nbytes and used + nbytes > self.cfg.get('journal_share_bytes', JOURNAL_SHARE):
+            return 'this baseline has used its share of the journal of submissions'
         if nbytes and size + nbytes > self.cfg.get('journal_max_bytes', JOURNAL_MAX):
             return 'the journal of submissions has reached its size limit'
         if free - nbytes < self.cfg.get('disk_reserve_bytes', DISK_RESERVE):
@@ -498,22 +657,35 @@ class Front:
         args = arguments_for(c.baseline, design)             # the baseline is the job's, never the caller's
         key = request_key(args)
         head = self._head(binding, c)
-        with self._guard:
+        unproven = self._delivery(c, key)                  # Amendment 8 (D3): no new run while a failure might not reach the engineer
+        if unproven is not None:
+            state, waiting = unproven
+            told = self._delivery_notice(c, state)         # the engineer is told of the refusal too, where a notice can be written
+            ran = ('  Nothing was run and nothing was counted.' if waiting is False else
+                   '  An earlier request began a run of this design: it is on the record with no verdict yet, and it is not taken further until the '
+                   'service has shown that it can write the inbox.  This request ran nothing and counted nothing.' if waiting else
+                   '  This request ran nothing and counted nothing.')     # what is on the record for this design could not be said
+            return 503, dict(head, **refusal('DELIVERY_UNPROVEN', f'REFUSED: {notices.DELIVERY_WORDS[state]}, so a failure might not reach the responsible '
+                                                                  'engineer.' + ran + told))
+        with self._journal_lock:
             fresh = key not in self._journaled             # Amendment 7 (D1): a design journaled once adds no line again
             line = json.dumps(args) + '\n'                 # so an interrupted run can still be tied to what was sent
-            why = self._journal_room(len(line.encode('utf-8')) if fresh else 0)   # every submission keeps the disk's reserve for notices
+            nbytes = len(line.encode('utf-8'))
+            why = self._journal_room(nbytes if fresh else 0, c.baseline)   # every submission keeps the disk's reserve for notices
             if why is None and fresh:
                 size = self._journal_size()
                 try:
                     with open(self.cfg['journal'], 'a') as f:
                         f.write(line)
                     self._journaled.add(key)
+                    self._shares[c.baseline] += nbytes; self._counted += nbytes     # Amendment 8 (D1): counted against this baseline's own share
                 except OSError as exc:
                     self._take_back(size)                  # a line part-written by a full disk is taken back, so the next line starts clean
                     why = f'the journal cannot be written ({type(exc).__name__})'
-            if why is not None:                            # refused before anything is run or counted
-                return 507, dict(head, **refusal('STORAGE_FULL', f'REFUSED: the verification service has stopped accepting runs: {why}.  '
-                                                                'Nothing was run and nothing was counted.'))
+        if why is not None:                                # refused before anything is run or counted; the engineer is told, outside the lock
+            told = self._storage_notice(c, why)            # Amendment 8 (D1)
+            return 507, dict(head, **refusal('STORAGE_FULL', f'REFUSED: the verification service has stopped accepting runs: {why}.  '
+                                                            'Nothing was run and nothing was counted.' + told))
         try:
             verdict = c.governor().attempt(key, 'verify', **args)
         except UnknownRoot:
@@ -666,6 +838,7 @@ def main():
     ap.add_argument('--rate', type=int, default=120, help='requests a job may make in a minute')
     ap.add_argument('--journal-max-bytes', type=int, default=JOURNAL_MAX, help='size the journal of submissions may reach before new runs are refused (Amendment 7)')
     ap.add_argument('--disk-reserve-bytes', type=int, default=DISK_RESERVE, help='free bytes the journal\'s disk keeps for notices (Amendment 7)')
+    ap.add_argument('--journal-share-bytes', type=int, default=JOURNAL_SHARE, help='bytes of the journal one baseline\'s designs may take before new runs for it are refused (Amendment 8)')
     add_server_args(ap)
     a = ap.parse_args()
     tls = server_from_args(a)
@@ -674,7 +847,8 @@ def main():
     home = pathlib.Path(a.home)
     cfg = {'witness_url': a.witness_url, 'witness_keys': a.witness_key, 'gate_url': a.gate_host, 'gate_key': a.gate_key,
            'tls': {'ca': a.tls_ca, 'cert': a.upstream_cert, 'key': a.upstream_key}, 'journal': str(home / 'front' / 'submissions.jsonl'),
-           'journal_max_bytes': a.journal_max_bytes, 'disk_reserve_bytes': a.disk_reserve_bytes}
+           'journal_max_bytes': a.journal_max_bytes, 'disk_reserve_bytes': a.disk_reserve_bytes,
+           'journal_share_bytes': a.journal_share_bytes}
     front = Front(home, Store(a.local_dsn), cfg, a.engineer_key, a.rate)
     server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(front)), tls)
     print(json.dumps({'listening': a.port, 'home': str(home), 'witness_keys': a.witness_key, 'gate_key': a.gate_key, 'engineer_keys': a.engineer_key, 'tls': True}), flush=True)

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Declared tests F1-F16 for the front door and the MCP server (verify/DECLARED_FRONT.md states the expected outcomes),
 and F17 to F19, added by Amendment 2 (verify/DECLARED_AMEND2.md), which also restates two checks of F15,
-and F20, added by Amendment 3 (verify/DECLARED_AMEND3.md), and F21, added by Amendment 4 (verify/DECLARED_AMEND4.md), and F22 to F27, added by Amendment 7 (verify/DECLARED_AMEND7.md).
+and F20, added by Amendment 3 (verify/DECLARED_AMEND3.md), and F21, added by Amendment 4 (verify/DECLARED_AMEND4.md), and F22 to F27, added by Amendment 7 (verify/DECLARED_AMEND7.md), and F28 to F32, added by Amendment 8 (verify/DECLARED_AMEND8.md), which also restates F19.
 
-    verify_front_tests.py [F1 F6 ...]     all twenty-seven by default; writes outputs/verify_front_tests.json; exits 1 if any test fails
+    verify_front_tests.py [F1 F6 ...]     all thirty-two by default; writes outputs/verify_front_tests.json; exits 1 if any test fails
 
 F1 and F2 run the first plug-in as it was released, with no front door, and show the two defects this work is for.
 F3 to F16 make a fresh deployment with a front door (verify/deploy_front.py: new keys; the released witness service
@@ -38,6 +38,7 @@ import deploy                           # noqa: E402
 import deploy_front                     # noqa: E402
 import front_ctl                        # noqa: E402
 import front_door                       # noqa: E402
+import notices as service_notices       # noqa: E402  (Amendment 8: the gate's proof that it can write an inbox)
 import verify_client                    # noqa: E402
 import verify_ctl                       # noqa: E402
 from deploy_front import text_of        # noqa: E402
@@ -853,7 +854,7 @@ def f18():
 
 
 def f19():
-    """The engineer's inbox cannot be written: the run is still counted with its verdict, its notice is kept in the service's own store, and the answer says so; it is never a pass, and the record verifies.  (Amendment 2 recorded this as a known limit; Amendment 7 closes it, and this check now states the repaired behaviour.)"""
+    """The engineer's inbox cannot be written: the run is still counted with its verdict, its notice is kept in the service's own store, and the answer says so; it is never a pass, and the record verifies.  (Amendment 2 recorded this as a known limit; Amendment 7 closes it, and this check now states the repaired behaviour.  Amendment 8: after the inbox is put back, a new run is admitted once the gate has shown that it can write it again.)"""
     r = Run('F19'); e = {}
     try:
         def design(wall): return {'material': 'PA66-GF30', 'wall_mm': wall, 'mode': 'normal'}
@@ -863,11 +864,12 @@ def f19():
         box.rename(aside); box.write_text('a file where the inbox folder should be\n')
         blocked = r.submit(design(2.6)); again = r.submit(design(2.6))
         box.unlink(); aside.rename(box)
+        proved_again = proven(r.s, r.h)                                                     # Amendment 8: the gate's own look, with no run
         after = r.submit(design(2.7))
         kept = sorted(p.name for p in (r.s.home / 'undelivered' / r.h).glob('*.txt'))
         ok, why, s = r.checked()
         e.update(first=(head(text_of(first)), sc(first).get('outcome')), blocked=(blocked.get('isError'), head(text_of(blocked)), sc(blocked).get('outcome'), sc(blocked).get('met')),
-                 blocked_says_undelivered='NOTICE NOT DELIVERED' in text_of(blocked),
+                 blocked_says_undelivered='NOTICE NOT DELIVERED' in text_of(blocked), proved_again=proved_again,
                  again=(head(text_of(again)), sc(again).get('outcome')), after=(head(text_of(after)), sc(after).get('outcome')), tool_calls=r.calls(), verdict_lines=len(r.s.ledger('verdict')),
                  notices=r.notices(), kept=len(kept), outcomes=sorted(x['outcome'] for x in s.get('runs', [])), status=s.get('status'), met=s.get('met'), record_verifies=ok, why=why)
         checks = {'with the inbox in place a failing design is FAIL': e['first'] == (FAILED, 'FAIL'),
@@ -875,7 +877,7 @@ def f19():
                   'its answer says the notice was not delivered, and the notice is kept once in the service\'s own store': e['blocked_says_undelivered'] and e['kept'] == 1,
                   'the same design sent again is answered the same, and the check is not run a second time': e['again'] == (FAILED, 'FAIL') and e['tool_calls'] == 3,
                   'every run has its verdict on the record, and all three are FAIL': e['verdict_lines'] == 3 and e['outcomes'] == ['FAIL', 'FAIL', 'FAIL'],
-                  'with the inbox put back the next failing design is FAIL, and its notice goes to the inbox': e['after'] == (FAILED, 'FAIL') and e['notices'] == 2,
+                  'with the inbox put back, and once the gate has shown that it can write it again, the next failing design is FAIL, and its notice goes to the inbox': proved_again == 'PROVEN' and e['after'] == (FAILED, 'FAIL') and e['notices'] == 2,
                   'no run met the check, the record verifies with all three in it, and the status is NOT VERIFIED': ok and s.get('met') == 0 and s.get('status') == 'NOT VERIFIED'}
     finally:
         r.stop()
@@ -1248,7 +1250,297 @@ def f27():
     return checks, e
 
 
-TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27}
+def proven(s, h, seconds: float = 10.0, want: str = 'PROVEN') -> str:
+    """Wait until the gate's proof of delivery for this baseline reads as wanted; the state it then has.  (Amendment 8.)"""
+    t0 = time.time()
+    while time.time() - t0 < seconds and service_notices.delivery_state(s.home, h)[0] != want:
+        time.sleep(0.05)
+    return service_notices.delivery_state(s.home, h)[0]
+
+
+def f28():
+    """A job is not enrolled on a baseline, or moved to a revision, until the gate has shown that it can write that baseline's inbox: with the gate not running, or with an inbox the gate cannot write, the engineer is refused there and then, and nothing is changed.  (Amendment 8, D3.)"""
+    r = Run('F28'); e = {}
+    try:
+        s = r.s
+        req2 = dict(json.loads((CASE / 'card.json').read_text())['requirement'], id='REQ-SELFTEST-028', title='Bracket service temperature', statement='The bracket shall withstand continuous operation at 170 C.')
+        src = case_b('F28')
+        s.stop_host()                                                                   # the gate is not running: nothing shows that the new inbox can be written
+        env2 = s.baseline(src, relaxed(requirement=req2)); h2 = env2['baseline_sha256']
+        out_down, out_blocked = s.dir / 'jobs' / 'job-down', s.dir / 'jobs' / 'job-blocked'       # a name for each try, so that one let through does not stop the next
+        try:
+            front_ctl.enrol(s.home, 'job-down', h2, s.engineer, s.ca_cert, s.ca_key, s.url, out_down, wait=1.0); down = 'enrolled'
+        except front_ctl.Refused as exc:
+            down = str(exc)
+        logged = lambda job: any(x.get('job') == job for x in front_ctl.log(s.home))
+        after_down = ('job-down' in front_door.read_jobs(s.home), out_down.exists(), logged('job-down'))
+        box = s.home / 'inbox' / h2[:16]; aside = box.with_name(box.name + '.aside')
+        box.rename(aside); box.write_text('a file in place of the folder\n')            # an inbox the gate cannot write, as one made by another account would be
+        s.start_host()
+        state_blocked = proven(s, h2, want='NOT_WRITABLE')
+        try:
+            front_ctl.enrol(s.home, 'job-blocked', h2, s.engineer, s.ca_cert, s.ca_key, s.url, out_blocked, wait=1.0); blocked = 'enrolled'
+        except front_ctl.Refused as exc:
+            blocked = str(exc)
+        after_blocked = ('job-blocked' in front_door.read_jobs(s.home), out_blocked.exists(), logged('job-blocked'))
+        host_said = [l for l in (s.dir / 'host.log').read_text().splitlines() if 'CANNOT WRITE THE INBOX' in l and h2[:16] in l]
+        box.unlink(); aside.rename(box)
+        state_restored = proven(s, h2)                                                  # the gate's own look, with no run
+        job_b = s.enrol('job-b', h2)
+        m = s.mcp(job_b); answered = m.call('plea_submit_design', {'design': BAD}); m.close()
+        # a revision of the first job's baseline, made while the gate is down, with an inbox the gate cannot write
+        s.stop_host()
+        req = dict(json.loads((CASE / 'card.json').read_text())['requirement'], revision='B', statement='The housing shall withstand continuous operation at 170 C.')
+        env_b = verify_ctl.revise(s.home, src, relaxed(requirement=req), s.engineer, r.h, 'Customer lowered the operating temperature (CR-28).')
+        hb = env_b['baseline_sha256']
+        box_b = s.home / 'inbox' / hb[:16]; aside_b = box_b.with_name(box_b.name + '.aside')
+        box_b.rename(aside_b); box_b.write_text('a file in place of the folder\n')
+        s.start_host(); state_rev = proven(s, hb, want='NOT_WRITABLE')
+        try:
+            front_ctl.rebind(s.home, 'job-a', hb, s.engineer, wait=1.0); moved = 'moved'
+        except front_ctl.Refused as exc:
+            moved = str(exc)
+        still = front_door.read_jobs(s.home)['job-a']['baseline_sha256'] == r.h
+        box_b.unlink(); aside_b.rename(box_b)
+        state_rev_restored = proven(s, hb)
+        try:
+            binding = s.rebind('job-a', hb)
+        except front_ctl.Refused as exc:
+            binding = {'event': str(exc)[:80]}
+        e.update(down=down[:150], after_down=after_down, state_blocked=state_blocked, blocked=blocked[:150], after_blocked=after_blocked, host_said=len(host_said),
+                 state_restored=state_restored, answered=(answered.get('isError'), head(text_of(answered))), state_rev=state_rev, moved=moved[:150], still=still,
+                 state_rev_restored=state_rev_restored, rebound=(binding.get('event'), binding.get('baseline_sha256') == hb))
+        checks = {'with the gate not running, a job is not enrolled on a new baseline: the refusal says the service has not shown that it can write the inbox, and nothing is changed: no binding, no folder, no line in the log of enrolments':
+                      'has not shown that it can write a notice to the inbox' in down and 'Nothing was changed' in down and after_down == (False, False, False),
+                  'with an inbox the gate cannot write, the gate says so when it starts, and enrolment is refused, saying the service cannot write the inbox; nothing is changed':
+                      state_blocked == 'NOT_WRITABLE' and len(host_said) >= 1 and 'cannot write a notice to the inbox' in blocked and after_blocked == (False, False, False),
+                  'once the inbox can be written, the gate shows it with no run, and the job is enrolled and its design answered':
+                      state_restored == 'PROVEN' and answered.get('isError') is False and head(text_of(answered)) in (MET, FAILED),
+                  'a job is not moved to a revision whose inbox the gate cannot write, and stays on its own baseline':
+                      state_rev == 'NOT_WRITABLE' and 'cannot write a notice to the inbox' in moved and still,
+                  'once that inbox can be written, the job moves to the revision': state_rev_restored == 'PROVEN' and e['rebound'] == ('REBIND', True)}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def f29():
+    """While the gate has not shown that it can write the baseline's inbox, the front door refuses a new run before anything is run, counted or journaled, says why, and tells the engineer once on the day for each reason; a design whose run is finished is still answered; a run that an earlier request began and that was not yet made is not made, and the refusal says that it is on the record; and when the gate shows it again, the refused designs are run.  (Amendment 8, D3.)"""
+    r = Run('F29'); e = {}
+    try:
+        def design(wall): return {'material': 'PA66-GF30', 'wall_mm': wall, 'mode': 'normal'}
+        sc = lambda x: x.get('structuredContent') or {}
+        jp = front_ctl.journal(r.s.home); box = r.s.home / 'inbox' / r.h[:16]
+        lines = lambda: len(jp.read_text().splitlines()) if jp.exists() else 0
+        told = lambda: sorted(p.name for p in box.glob('DELIVERY_UNPROVEN_*.txt'))
+        results = lambda: len([n for n in r.s.inbox(r.h) if not n.startswith(('DELIVERY_', 'STORAGE_', 'INTERRUPTED_'))])     # notices of verdicts
+        counts = lambda: (r.calls(), r.audit_rows(), results(), lines())
+        seen = lambda x: (x.get('isError'), sc(x).get('refused'), sc(x).get('outcome'), 'Nothing was run and nothing was counted' in text_of(x))
+        first = r.submit(design(2.5))                                                   # a FAIL, with the proof good
+        proof = r.s.home / 'delivery' / (r.h + '.json'); keep = json.loads(proof.read_text())
+        before = counts()
+        proof.unlink()                                                                  # no proof on record
+        none = r.submit(design(2.6)); after_none = counts(); told_none = told()
+        words = (box / told_none[0]).read_text(encoding='utf-8') if told_none else ''
+        r.submit(design(2.7)); told_same = told()                                       # a second design refused for the same reason
+        again = r.submit(design(2.5)); after_again = counts()                           # its run is finished: answered, and nothing more is run
+        proof.write_text(json.dumps(dict(keep, checked_at=time.time() - service_notices.DELIVERY_MAX_AGE - 1)))       # a proof older than its limit
+        old = r.submit(design(2.6)); after_old = counts()
+        proof.write_text(json.dumps(dict(keep, checked_at=time.time(), inbox=False)))   # a proof that says the inbox could not be written
+        cannot = r.submit(design(2.6)); after_cannot = counts(); told_all = told()
+        front = front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), front_cfg(r), (r.s.keys['engineer'],))
+
+        class Unread(front_door.ServiceClient):                                         # the runs cannot be read
+            def runs(self):
+                raise RuntimeError('the runs cannot be read')
+        front.client = lambda b: Unread(front, b, None)
+        try:
+            st_u, b_u = front.submit(front_door.read_jobs(r.s.home)['job-a'], design(2.5))
+        except Exception as exc:                                                        # let through, the design goes on to the runs, which cannot be read
+            st_u, b_u = type(exc).__name__, {}
+        after_unread = counts()
+        said = {n.split('_', 3)[-1]: (box / n).read_text(encoding='utf-8') for n in told_all}       # each notice by its reason: DELIVERY_UNPROVEN_<date>_<reason>.txt
+        r.s.stop_host(); r.s.start_host()                                               # the gate, starting, shows again that it can write the inbox
+        state = proven(r.s, r.h)
+        then = r.submit(design(2.6)); after_then = counts()
+        r.s.stop_host()                                                                 # a run admitted on a good proof and not made: the gate cannot be reached
+        pending = r.submit(design(2.8)); after_pending = counts()
+        r.s.start_host(); state_back = proven(r.s, r.h)
+        proof.write_text(json.dumps(dict(json.loads(proof.read_text()), inbox=False)))  # the proof on record now says the inbox could not be written
+        held = r.submit(design(2.8)); after_held = counts()
+        r.s.stop_host(); r.s.start_host(); state_again = proven(r.s, r.h)
+        made = r.submit(design(2.8)); after_made = counts()
+        e.update(first=head(text_of(first)), none=seen(none), none_says=text_of(none)[:120], told=told_all, notice_head=words.splitlines()[:7], again=(head(text_of(again)), sc(again).get('outcome')),
+                 old=seen(old), old_says=text_of(old)[:110], cannot=seen(cannot), cannot_says=text_of(cannot)[:100], unread=(st_u, b_u.get('refused')), unread_says=b_u.get('text', '')[-60:],
+                 told_same=told_same, held_says=text_of(held)[-330:],
+                 counts=(before, after_none, after_again, after_old, after_cannot, after_unread, after_then, after_pending, after_held, after_made),
+                 states=(state, state_back, state_again), then=(head(text_of(then)), sc(then).get('outcome')), pending=seen(pending), held=seen(held), made=(head(text_of(made)), sc(made).get('outcome')))
+        refused = (True, 'DELIVERY_UNPROVEN', None, True)
+        checks = {'with the proof good, a failing design is FAIL': head(text_of(first)) == FAILED,
+                  'with no proof on record, a new design is refused at the door, saying that the service has not shown it can write the inbox and that a failure might not reach the engineer; nothing is run, counted or journaled, and no result is sent':
+                      seen(none) == refused and 'has not shown that it can write a notice to the inbox' in text_of(none) and 'might not reach the responsible engineer' in text_of(none) and after_none == before,
+                  'the engineer is told of the refusal: one notice in the inbox on the day for that reason, however many designs are refused; it says that the gate has not shown it can write there, that nothing is run or counted, and that no check gave it; and the caller is told that the engineer has been sent it':
+                      len(told_none) == 1 and told_none[0].endswith('_UNPROVEN.txt') and told_same == told_none and 'THE VERIFICATION SERVICE IS REFUSING NEW RUNS FOR THIS BASELINE' in words
+                      and 'has not shown that it can write to this inbox' in words and 'nothing is counted' in words and 'not the result of any check' in words
+                      and 'that has no verdict yet, is not taken further until then' in words
+                      and 'The responsible engineer has been sent a notice of this.' in text_of(none),
+                  'a design whose run is finished is still answered as before, and nothing more is run': e['again'] == (FAILED, 'FAIL') and after_again == before,
+                  'a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason':
+                      seen(old) == refused and 'has not shown lately' in text_of(old) and seen(cannot) == refused and 'cannot write a notice to the inbox' in text_of(cannot) and after_cannot == before
+                      and sorted(said) == ['NOT_WRITABLE.txt', 'STALE.txt', 'UNPROVEN.txt'] and 'has not shown lately that it can write to this inbox' in said.get('STALE.txt', '')
+                      and 'could not write to this inbox when it last tried' in said.get('NOT_WRITABLE.txt', ''),
+                  'where the runs cannot be read, a design is not let through, though its run is finished; the refusal says only that this request ran nothing':
+                      e['unread'] == (503, 'DELIVERY_UNPROVEN') and after_unread == before and 'This request ran nothing and counted nothing.' in b_u.get('text', '')
+                      and 'Nothing was run and nothing was counted' not in b_u.get('text', ''),
+                  'when the gate shows again that it can write the inbox, the design refused before is run and answered':
+                      state == 'PROVEN' and e['then'] == (FAILED, 'FAIL') and after_then[0] == before[0] + 1 and after_then[3] == before[3] + 1,
+                  'a run that an earlier request began and that was not yet made is not made while the proof is not good: the refusal says that it is on the record with no verdict yet, and does not say that nothing was run; it is made once the proof is good':
+                      sc(pending).get('refused') == 'UNAVAILABLE' and after_pending[0] == after_then[0] and seen(held) == (True, 'DELIVERY_UNPROVEN', None, False) and after_held == after_pending
+                      and 'An earlier request began a run of this design: it is on the record with no verdict yet' in text_of(held) and 'This request ran nothing and counted nothing.' in text_of(held)
+                      and state_again == 'PROVEN' and e['made'] == (FAILED, 'FAIL') and after_made[0] == after_then[0] + 1}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def f30():
+    """Each baseline has its own share of the journal: a job that has used its baseline's share is refused, with nothing run or counted, while a job on another baseline still runs; the engineer of the refused baseline is sent one notice of it; a front door started afresh counts the share again from the journal; when room is made in the journal, the count is taken again; and a journal line that cannot be read stops no answer.  (Amendment 8, D1.)"""
+    r = Run('F30'); e = {}
+    try:
+        s = r.s
+        req2 = dict(json.loads((CASE / 'card.json').read_text())['requirement'], id='REQ-SELFTEST-030', title='Bracket service temperature', statement='The bracket shall withstand continuous operation at 170 C.')
+        env2 = s.baseline(case_b('F30'), relaxed(requirement=req2)); h2 = env2['baseline_sha256']
+        s.enrol('job-b', h2)
+        jobs = front_door.read_jobs(s.home); a, b = jobs['job-a'], jobs['job-b']
+        def design(wall): return {'material': 'PA66-GF30', 'wall_mm': wall, 'mode': 'normal'}
+        one = len((json.dumps(arguments_for(r.h, design(2.5))) + '\n').encode())        # the journal line of one such design
+        cfg = front_cfg(r, journal_share_bytes=one + 10)                                # a share that holds one design of this size, and not two
+        front = front_door.Front(s.home, Store(deploy.LOCAL_DSN), cfg, (s.keys['engineer'],))
+        jp = front_ctl.journal(s.home)
+        size = lambda: jp.stat().st_size if jp.exists() else 0
+        box_a, box_b = s.home / 'inbox' / r.h[:16], s.home / 'inbox' / h2[:16]
+        told = lambda box: sorted(p.name for p in box.glob('STORAGE_FULL_*.txt')) if box.is_dir() else []
+        st1, b1 = front.submit(a, design(2.5)); c1, z1 = r.calls(), size()
+        st2, b2 = front.submit(a, design(2.6)); st3, b3 = front.submit(a, design(2.7)); c3, z3 = r.calls(), size()
+        st4, b4 = front.submit(a, design(2.5)); c4 = r.calls()
+        st5, b5 = front.submit(b, design(2.5)); c5 = r.calls()
+        told_a, told_b = told(box_a), told(box_b)
+        words = (box_a / told_a[0]).read_text(encoding='utf-8') if told_a else ''
+        afresh = front_door.Front(s.home, Store(deploy.LOCAL_DSN), cfg, (s.keys['engineer'],))
+        st6, b6 = afresh.submit(a, design(2.8)); c6 = r.calls()
+        jp.write_text('')                                                               # the operator makes room in the journal
+        st7, b7 = afresh.submit(a, design(2.8)); c7 = r.calls()
+        with jp.open('a') as f:
+            f.write('[' * 5000 + ']' * 5000 + '\n')                                    # a line nested too deep to read, which the door never writes
+        try:
+            st8, b8 = afresh.submit(a, design(2.8))                                    # a design already run: the count is taken again, and it is answered
+        except Exception as exc:
+            st8, b8 = type(exc).__name__, {}
+        c8 = r.calls()
+        e.update(one=one, first=(st1, b1.get('outcome')), refused=[(st2, b2.get('refused')), (st3, b3.get('refused'))], says=b2.get('text', '')[:230], calls=(c1, c3, c4, c5, c6), sizes=(z1, z3),
+                 repeat=(st4, b4.get('outcome')), other=(st5, b5.get('outcome')), told_a=told_a, told_b=told_b, notice_head=words.splitlines()[:6], afresh=(st6, b6.get('refused')), room_made=(st7, b7.get('outcome'), c7 - c6), deep_line=(st8, b8.get('outcome'), c8 - c7))
+        checks = {'a design within its baseline\'s share is run': st1 == 200 and b1.get('outcome') == 'FAIL',
+                  'the next new designs for that baseline are refused at the door: 507, STORAGE_FULL, saying the baseline has used its share; nothing is run or counted, and the journal does not grow':
+                      e['refused'] == [(507, 'STORAGE_FULL'), (507, 'STORAGE_FULL')] and 'this baseline has used its share of the journal' in b2.get('text', '')
+                      and 'Nothing was run and nothing was counted' in b2.get('text', '') and c3 == c1 and z3 == z1,
+                  'a design already journaled for that baseline is still answered, with no new run': e['repeat'] == (200, 'FAIL') and c4 == c3,
+                  'a job on another baseline still runs': st5 == 200 and b5.get('outcome') in ('PASS', 'FAIL') and c5 == c4 + 1,
+                  'the engineer of the refused baseline has one notice of it in the inbox, however many designs were refused; it gives the reason and says that nothing is run or counted and that no check gave it; the other baseline\'s inbox has none':
+                      len(told_a) == 1 and 'THE VERIFICATION SERVICE IS REFUSING NEW RUNS FOR THIS BASELINE' in words and 'This baseline has used its share of the journal' in words
+                      and 'nothing is counted' in words and 'not the result of any check' in words and told_b == [],
+                  'the refusal tells the caller that the engineer has been sent a notice': 'The responsible engineer has been sent a notice of this.' in b2.get('text', ''),
+                  'a front door started afresh counts the share again from the journal, and refuses that baseline at once': e['afresh'] == (507, 'STORAGE_FULL') and 'share' in b6.get('text', '') and c6 == c5,
+                  'when room is made in the journal, the count is taken again, and the baseline\'s next design is run': e['room_made'] == (200, 'FAIL', 1),
+                  'a journal line nested too deep to read, which the door never writes, is counted for no baseline and does not stop an answer': e['deep_line'] == (200, 'FAIL', 0)}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def f31():
+    """A refusal for a full journal or a full disk reaches the engineer too: one notice on the day for each reason, in the inbox of the refused job's baseline; and where the inbox cannot take it, the notice is kept in the service's own store, the console lists it, and the caller is told that the engineer could not be sent it.  (Amendment 8, D1.)"""
+    r = Run('F31'); e = {}
+    try:
+        s = r.s
+        job = front_door.read_jobs(s.home)['job-a']
+        def design(wall): return {'material': 'PA66-GF30', 'wall_mm': wall, 'mode': 'normal'}
+        box = s.home / 'inbox' / r.h[:16]
+        told = lambda: sorted(p.name for p in box.glob('STORAGE_FULL_*.txt')) if box.is_dir() else []
+        full = front_door.Front(s.home, Store(deploy.LOCAL_DSN), front_cfg(r, journal_max_bytes=0), (s.keys['engineer'],))                 # a journal with no room at all
+        st1, b1 = full.submit(job, design(2.5)); told1 = told()
+        words = (box / told1[0]).read_text(encoding='utf-8') if told1 else ''
+        full.submit(job, design(2.55)); told_same = told()                              # a second design refused for the same reason
+        low = front_door.Front(s.home, Store(deploy.LOCAL_DSN), front_cfg(r, disk_reserve_bytes=10 ** 18), (s.keys['engineer'],))          # as with too little free space on the disk
+        st2, b2 = low.submit(job, design(2.6)); told2 = told()
+        words_low = ''.join((box / n).read_text(encoding='utf-8') for n in told2 if n not in told1)
+        aside = box.with_name(box.name + '.aside'); box.rename(aside); box.write_text('a file in place of the folder\n')
+        try:
+            st3, b3 = full.submit(job, design(2.7))
+        finally:
+            box.unlink(); aside.rename(box)
+        kept = service_notices.undelivered(s.home, r.h)
+        listing = verify_ctl.status(s.home, r.h, s.keys['engineer'], deploy.LOCAL_DSN)
+        e.update(full=(st1, b1.get('refused')), says=b1.get('text', '')[:220], told1=told1, notice_head=words.splitlines()[:6], low=(st2, b2.get('refused')), told2=told2,
+                 told_same=told_same, blocked=(st3, b3.get('refused')), blocked_says=b3.get('text', '')[-110:], kept=kept, calls=r.calls(), audit_rows=r.audit_rows())
+        checks = {'a full journal refuses the design, and the engineer has one notice of it in the inbox: it gives the reason and says that nothing is run or counted':
+                      e['full'] == (507, 'STORAGE_FULL') and len(told1) == 1 and 'The journal of submissions has reached its size limit' in words and 'nothing is counted' in words,
+                  'the caller is told that the engineer has been sent a notice': 'The responsible engineer has been sent a notice of this.' in b1.get('text', ''),
+                  'a second design refused for the same reason on the same day writes no second notice; a refusal for too little disk is refused in its own words and writes a notice of its own, with its own reason':
+                      told_same == told1 and e['low'] == (507, 'STORAGE_FULL') and 'less free space than the service keeps for notices' in b2.get('text', '')
+                      and len(told2) == 2 and set(told1) < set(told2) and 'The disk that holds the journal has less free space than the service keeps for notices' in words_low,
+                  'with the inbox unable to take it, the notice is kept in the service\'s own store, the engineer\'s console lists it, and the caller is told that the engineer could not be sent it':
+                      e['blocked'] == (507, 'STORAGE_FULL') and len(kept) == 1 and kept[0].startswith('STORAGE_FULL_') and kept[0] in listing
+                      and 'The responsible engineer could not be sent a notice of this.' in b3.get('text', ''),
+                  'nothing was run or counted in any of these': r.calls() == 0 and r.audit_rows() == 0}
+    finally:
+        r.stop()
+    return checks, e
+
+
+def f32():
+    """A refusal does not deny a run that an earlier request began: while the gate has not shown that it can write the inbox, the door says that the run is on the record with no verdict yet, and takes it no further; a run the gate has signed as interrupted is finished, and its design is answered whatever the proof says; and a notice of a refusal that had to be kept in the service's own store has its copy in the inbox once the inbox can take it.  (Amendment 8, D3.)"""
+    r = Run('F32', crash_at='verify_running'); e = {}
+    try:
+        sc = lambda x: x.get('structuredContent') or {}
+        box = r.s.home / 'inbox' / r.h[:16]; proof = r.s.home / 'delivery' / (r.h + '.json')
+        told = lambda d: sorted(p.name for p in d.glob('DELIVERY_UNPROVEN_*.txt')) if d.is_dir() else []
+        cut = lambda: sorted(p.name for p in box.glob('INTERRUPTED_*.txt')) if box.is_dir() else []
+        r.submit(GOOD); time.sleep(0.3); exit_code = r.s.procs['host'].poll()             # the host dies during the run
+        r.s.stop_host()
+        aside = box.with_name(box.name + '.aside'); box.rename(aside); box.write_text('a file in place of the folder\n')
+        try:
+            r.s.start_host(); state_blocked = proven(r.s, r.h, want='NOT_WRITABLE')       # the gate, starting, finds that it cannot write the inbox
+            before = (r.calls(), r.audit_rows())
+            held = r.submit(GOOD); after_held = (r.calls(), r.audit_rows())
+            kept = [n for n in service_notices.undelivered(r.s.home, r.h) if n.startswith('DELIVERY_UNPROVEN_')]
+        finally:
+            box.unlink(); aside.rename(box)
+        state_back = proven(r.s, r.h)                                                     # put back, the gate's own look proves the inbox again
+        again = r.submit(GOOD); cut_after = cut()                                         # the gate signs the run as interrupted
+        proof.write_text(json.dumps(dict(json.loads(proof.read_text()), checked_at=time.time(), inbox=False)))    # the proof on record now says the inbox could not be written
+        calls = r.calls()
+        finished = r.submit(GOOD); after_finished = r.calls(); cut_then = cut()
+        new = r.submit({'material': 'PA66-GF30', 'wall_mm': 2.5, 'mode': 'normal'}); in_inbox = told(box); after_new = r.calls()
+        e.update(host_exit=exit_code, states=(state_blocked, state_back), held=(sc(held).get('refused'), text_of(held)[-420:]), counts=(before, after_held), kept=kept,
+                 again=sc(again).get('outcome'), finished=sc(finished).get('outcome'), interrupted_notices=(cut_after, cut_then), new=(sc(new).get('refused'), text_of(new)[-150:]), in_inbox=in_inbox)
+        checks = {'the host died during the run (exit 137), and the gate, started again with a file in place of the inbox, shows that it cannot write it': exit_code == 137 and state_blocked == 'NOT_WRITABLE',
+                  'asked again while the proof is not good, the design is refused, and the refusal does not deny the run: it says that an earlier request began a run that is on the record with no verdict yet, and that this request ran nothing; it does not say that nothing was run; nothing more is run or counted':
+                      sc(held).get('refused') == 'DELIVERY_UNPROVEN' and 'An earlier request began a run of this design: it is on the record with no verdict yet' in text_of(held)
+                      and 'This request ran nothing and counted nothing.' in text_of(held) and 'Nothing was run and nothing was counted' not in text_of(held) and after_held == before,
+                  'the notice of that refusal is kept in the service\'s own store, as the inbox cannot take it, and the caller is told that the engineer could not be sent it':
+                      len(kept) == 1 and kept[0].endswith('_NOT_WRITABLE.txt') and 'The responsible engineer could not be sent a notice of this.' in text_of(held),
+                  'once the gate has shown that it can write the inbox, the design is answered INTERRUPTED, with one notice of the run in the inbox': state_back == 'PROVEN' and sc(again).get('outcome') == 'INTERRUPTED' and len(cut_after) == 1,
+                  'a run signed as interrupted is finished: with the proof saying again that the inbox could not be written, its design is still answered INTERRUPTED, nothing more is run, and no second notice of the run is written':
+                      sc(finished).get('outcome') == 'INTERRUPTED' and after_finished == calls and cut_then == cut_after,
+                  'a new design is then refused with nothing run, and the notice that was kept in the store has its copy in the inbox now that the inbox can take it; the caller is told that the engineer has been sent it':
+                      sc(new).get('refused') == 'DELIVERY_UNPROVEN' and 'Nothing was run and nothing was counted.' in text_of(new) and after_new == calls and in_inbox == kept
+                      and 'The responsible engineer has been sent a notice of this.' in text_of(new)}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32}
 
 
 def main():

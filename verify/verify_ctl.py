@@ -29,6 +29,7 @@ import os
 import pathlib
 import shutil
 import sys
+import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -181,6 +182,12 @@ def status(home, baseline_hash, engineer_key: str, local_dsn: str = LOCAL_DSN) -
     acked = {a['aid'] for a in acknowledgements(home, baseline_hash)}
     box = pathlib.Path(home) / 'inbox' / baseline_hash[:16]
     L = [root, f"{len(attempts)} official runs; {len(list(box.glob('*.txt'))) if box.exists() else 0} notices in the inbox"]
+    proved, at = notices.delivery_state(home, baseline_hash)      # Amendment 8 (D3): whether the gate has shown it can write this inbox
+    if proved == 'PROVEN':
+        L.append(f"delivery proven: the gate showed at {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(at))} that it can write this inbox")
+    else:
+        L.append(f"DELIVERY NOT PROVEN: {notices.DELIVERY_WORDS[proved]}.  A failure might not reach this inbox, and new runs through the "
+                 f"front door are refused until it is proven.")
     kept = notices.undelivered(home, baseline_hash)
     if kept:                                       # Amendment 7 (D2, D3): notices the inbox could not take, kept in the service's own store
         L.append(f"{len(kept)} notices kept undelivered, in {pathlib.Path(home) / 'undelivered' / baseline_hash}: {', '.join(kept)}")

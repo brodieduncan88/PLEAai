@@ -1,0 +1,1058 @@
+{
+ "M0": {
+  "defect": "no change at all: the control, which must not be caught",
+  "tests_run": [
+   "R19",
+   "R20",
+   "R22",
+   "F19",
+   "F25",
+   "F28",
+   "F29",
+   "F30",
+   "F31",
+   "F32"
+  ],
+  "caught_by": [],
+  "failed_checks": {},
+  "errors": {},
+  "seconds": 53.4
+ },
+ "N1": {
+  "defect": "no probe is made: every inbox is taken as writable",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "with a file in place of the inbox, a run still returns its verdict, with its notice kept in the service's own store, and the proof then says the inbox cannot be written; the tool says so on its error output",
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash"
+   ]
+  },
+  "errors": {},
+  "seconds": 12.9
+ },
+ "N2": {
+  "defect": "the probe leaves its file in the inbox",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "when the tool starts, a baseline it holds has a proof of delivery on record: its inbox and the service's store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer's and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service's own, though its name begins the same way",
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.9
+ },
+ "N3": {
+  "defect": "a proof never goes stale",
+  "tests_run": [
+   "R22",
+   "F29"
+  ],
+  "caught_by": [
+   "F29",
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that"
+   ],
+   "F29": [
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason",
+    "where the runs cannot be read, a design is not let through, though its run is finished; the refusal says only that this request ran nothing"
+   ]
+  },
+  "errors": {},
+  "seconds": 22.8
+ },
+ "N4": {
+  "defect": "a proof that is missing or cannot be read counts as proven",
+  "tests_run": [
+   "R22",
+   "F29"
+  ],
+  "caught_by": [
+   "F29",
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that",
+    "a baseline folder that appears after the tool started, and has had no inbox for a minute, is given its inbox, its hash and its proof by the tool's own look; so is one whose folder is dated an hour ahead",
+    "a baseline folder made this moment, with no inbox yet, is left for the console: the tool's look makes no inbox for it, and it is not proven; once the console has made the inbox, the look proves it",
+    "where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is",
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be",
+    "the engineer's console shows the state: proven, with its time; and, with the proof taken away, not proven, saying that new runs are refused"
+   ],
+   "F29": [
+    "with no proof on record, a new design is refused at the door, saying that the service has not shown it can write the inbox and that a failure might not reach the engineer; nothing is run, counted or journaled, and no result is sent",
+    "the engineer is told of the refusal: one notice in the inbox on the day for that reason, however many designs are refused; it says that the gate has not shown it can write there, that nothing is run or counted, and that no check gave it; and the caller is told that the engineer has been sent it",
+    "a design whose run is finished is still answered as before, and nothing more is run",
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason",
+    "where the runs cannot be read, a design is not let through, though its run is finished; the refusal says only that this request ran nothing",
+    "when the gate shows again that it can write the inbox, the design refused before is run and answered"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.4
+ },
+ "N5": {
+  "defect": "a proof that names another baseline is taken",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.9
+ },
+ "N6": {
+  "defect": "anything but a plain no is taken to mean the inbox was written",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.9
+ },
+ "N7": {
+  "defect": "an inbox that could not be written is not tried again until its proof is due",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash",
+    "where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is",
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be",
+    "the engineer's console shows the state: proven, with its time; and, with the proof taken away, not proven, saying that new runs are refused"
+   ]
+  },
+  "errors": {},
+  "seconds": 42.9
+ },
+ "N8": {
+  "defect": "a proof dated far ahead is taken",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.9
+ },
+ "N9": {
+  "defect": "with the clock put back, a proof is not made again until the clock catches up",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "with the clock put back, so that the tool's memory of its proof is dated an hour ahead, the proof is made again all the same"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.9
+ },
+ "N10": {
+  "defect": "a proof that cannot be recorded leaves the one from before on file as good",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be"
+   ]
+  },
+  "errors": {},
+  "seconds": 10.9
+ },
+ "N11": {
+  "defect": "a time that is not a number, or is a yes, is taken as a time",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that"
+   ]
+  },
+  "errors": {},
+  "seconds": 12.0
+ },
+ "N12": {
+  "defect": "a time too large to be a number stops the reader",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.9
+ },
+ "N13": {
+  "defect": "a baseline whose folder is gone, and whose inbox still holds its hash, is not proved",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "with the baseline's folder taken away and its inbox still holding its hash, its proof is still made by the tool's own look, and a run on it is answered UNKNOWN with its notice in that inbox, as before this amendment"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.0
+ },
+ "N14": {
+  "defect": "the tool's look makes the inbox of a baseline the console is still making",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "when the tool starts, a baseline it holds has a proof of delivery on record: its inbox and the service's store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer's and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service's own, though its name begins the same way",
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that",
+    "with a file in place of the inbox, a run still returns its verdict, with its notice kept in the service's own store, and the proof then says the inbox cannot be written; the tool says so on its error output",
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash",
+    "a baseline folder that appears after the tool started, and has had no inbox for a minute, is given its inbox, its hash and its proof by the tool's own look; so is one whose folder is dated an hour ahead",
+    "a baseline folder made this moment, with no inbox yet, is left for the console: the tool's look makes no inbox for it, and it is not proven; once the console has made the inbox, the look proves it",
+    "a run on a baseline renews its proof",
+    "where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is",
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be",
+    "with the clock put back, so that the tool's memory of its proof is dated an hour ahead, the proof is made again all the same",
+    "with the baseline's folder taken away and its inbox still holding its hash, its proof is still made by the tool's own look, and a run on it is answered UNKNOWN with its notice in that inbox, as before this amendment",
+    "with the error output closed, a run whose proof and whose ledger both have something to say still returns its verdict and keeps its notice"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.5
+ },
+ "N15": {
+  "defect": "a baseline folder dated ahead is left with no inbox and no proof",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "a baseline folder that appears after the tool started, and has had no inbox for a minute, is given its inbox, its hash and its proof by the tool's own look; so is one whose folder is dated an hour ahead"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.9
+ },
+ "N16": {
+  "defect": "any old file whose name begins as one of the service's temporary files is taken away",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "when the tool starts, a baseline it holds has a proof of delivery on record: its inbox and the service's store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer's and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service's own, though its name begins the same way"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.9
+ },
+ "N17": {
+  "defect": "a temporary file left in a folder of notices that are no engineer's is not taken away",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "when the tool starts, a baseline it holds has a proof of delivery on record: its inbox and the service's store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer's and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service's own, though its name begins the same way"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.9
+ },
+ "N18": {
+  "defect": "a part-written proof left in the folder of proofs is not taken away",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "when the tool starts, a baseline it holds has a proof of delivery on record: its inbox and the service's store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer's and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service's own, though its name begins the same way",
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.8
+ },
+ "N19": {
+  "defect": "any old file in the folder of proofs whose name begins with a dot is taken away",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "when the tool starts, a baseline it holds has a proof of delivery on record: its inbox and the service's store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer's and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service's own, though its name begins the same way"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.9
+ },
+ "V1": {
+  "defect": "no proof is made as the tool starts",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "when the tool starts, a baseline it holds has a proof of delivery on record: its inbox and the service's store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer's and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service's own, though its name begins the same way",
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that",
+    "with a file in place of the inbox, a run still returns its verdict, with its notice kept in the service's own store, and the proof then says the inbox cannot be written; the tool says so on its error output",
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash",
+    "a baseline folder that appears after the tool started, and has had no inbox for a minute, is given its inbox, its hash and its proof by the tool's own look; so is one whose folder is dated an hour ahead",
+    "a baseline folder made this moment, with no inbox yet, is left for the console: the tool's look makes no inbox for it, and it is not proven; once the console has made the inbox, the look proves it",
+    "a run on a baseline renews its proof",
+    "where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is",
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be",
+    "with the clock put back, so that the tool's memory of its proof is dated an hour ahead, the proof is made again all the same",
+    "with the baseline's folder taken away and its inbox still holding its hash, its proof is still made by the tool's own look, and a run on it is answered UNKNOWN with its notice in that inbox, as before this amendment",
+    "with the error output closed, a run whose proof and whose ledger both have something to say still returns its verdict and keeps its notice",
+    "the engineer's console shows the state: proven, with its time; and, with the proof taken away, not proven, saying that new runs are refused"
+   ]
+  },
+  "errors": {},
+  "seconds": 0.9
+ },
+ "V2": {
+  "defect": "a run does not renew the proof",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "with a file in place of the inbox, a run still returns its verdict, with its notice kept in the service's own store, and the proof then says the inbox cannot be written; the tool says so on its error output",
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash",
+    "a run on a baseline renews its proof",
+    "where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is",
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.9
+ },
+ "V3": {
+  "defect": "the tool makes no look of its own",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash",
+    "a baseline folder that appears after the tool started, and has had no inbox for a minute, is given its inbox, its hash and its proof by the tool's own look; so is one whose folder is dated an hour ahead",
+    "a baseline folder made this moment, with no inbox yet, is left for the console: the tool's look makes no inbox for it, and it is not proven; once the console has made the inbox, the look proves it",
+    "where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is",
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be",
+    "with the clock put back, so that the tool's memory of its proof is dated an hour ahead, the proof is made again all the same",
+    "with the baseline's folder taken away and its inbox still holding its hash, its proof is still made by the tool's own look, and a run on it is answered UNKNOWN with its notice in that inbox, as before this amendment",
+    "the engineer's console shows the state: proven, with its time; and, with the proof taken away, not proven, saying that new runs are refused"
+   ]
+  },
+  "errors": {},
+  "seconds": 78.7
+ },
+ "V4": {
+  "defect": "the tool says nothing when it cannot write an inbox or record a proof",
+  "tests_run": [
+   "R22",
+   "F28"
+  ],
+  "caught_by": [
+   "F28",
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "with a file in place of the inbox, a run still returns its verdict, with its notice kept in the service's own store, and the proof then says the inbox cannot be written; the tool says so on its error output",
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash",
+    "where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is"
+   ],
+   "F28": [
+    "with an inbox the gate cannot write, the gate says so when it starts, and enrolment is refused, saying the service cannot write the inbox; nothing is changed"
+   ]
+  },
+  "errors": {},
+  "seconds": 25.2
+ },
+ "V5": {
+  "defect": "a proof that could not be recorded is remembered as good, and not made again",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is",
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be"
+   ]
+  },
+  "errors": {},
+  "seconds": 25.9
+ },
+ "V6": {
+  "defect": "a closed error output stops a run when the ledger cannot be written",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "with the error output closed, a run whose proof and whose ledger both have something to say still returns its verdict and keeps its notice"
+   ]
+  },
+  "errors": {},
+  "seconds": 10.9
+ },
+ "V7": {
+  "defect": "temporary files a killed process left behind are not taken away",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "when the tool starts, a baseline it holds has a proof of delivery on record: its inbox and the service's store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer's and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service's own, though its name begins the same way",
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash",
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be"
+   ]
+  },
+  "errors": {},
+  "seconds": 12.1
+ },
+ "V8": {
+  "defect": "a run on a baseline whose folder is gone does not renew its proof",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "with the baseline's folder taken away and its inbox still holding its hash, its proof is still made by the tool's own look, and a run on it is answered UNKNOWN with its notice in that inbox, as before this amendment"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.9
+ },
+ "D1": {
+  "defect": "the door does not ask for the proof",
+  "tests_run": [
+   "F29"
+  ],
+  "caught_by": [
+   "F29"
+  ],
+  "failed_checks": {
+   "F29": [
+    "with no proof on record, a new design is refused at the door, saying that the service has not shown it can write the inbox and that a failure might not reach the engineer; nothing is run, counted or journaled, and no result is sent",
+    "the engineer is told of the refusal: one notice in the inbox on the day for that reason, however many designs are refused; it says that the gate has not shown it can write there, that nothing is run or counted, and that no check gave it; and the caller is told that the engineer has been sent it",
+    "a design whose run is finished is still answered as before, and nothing more is run",
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason",
+    "where the runs cannot be read, a design is not let through, though its run is finished; the refusal says only that this request ran nothing",
+    "when the gate shows again that it can write the inbox, the design refused before is run and answered",
+    "a run that an earlier request began and that was not yet made is not made while the proof is not good: the refusal says that it is on the record with no verdict yet, and does not say that nothing was run; it is made once the proof is good"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.8
+ },
+ "D2": {
+  "defect": "the door refuses a design whose run is finished, too",
+  "tests_run": [
+   "F29",
+   "F19"
+  ],
+  "caught_by": [
+   "F19",
+   "F29"
+  ],
+  "failed_checks": {
+   "F29": [
+    "a design whose run is finished is still answered as before, and nothing more is run"
+   ],
+   "F19": [
+    "its answer says the notice was not delivered, and the notice is kept once in the service's own store",
+    "the same design sent again is answered the same, and the check is not run a second time"
+   ]
+  },
+  "errors": {},
+  "seconds": 15.1
+ },
+ "D3": {
+  "defect": "the door takes a proof of any age",
+  "tests_run": [
+   "F29"
+  ],
+  "caught_by": [
+   "F29"
+  ],
+  "failed_checks": {
+   "F29": [
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason",
+    "where the runs cannot be read, a design is not let through, though its run is finished; the refusal says only that this request ran nothing"
+   ]
+  },
+  "errors": {},
+  "seconds": 10.8
+ },
+ "D13": {
+  "defect": "a run that was admitted and not yet made is let through",
+  "tests_run": [
+   "F29"
+  ],
+  "caught_by": [
+   "F29"
+  ],
+  "failed_checks": {
+   "F29": [
+    "a run that an earlier request began and that was not yet made is not made while the proof is not good: the refusal says that it is on the record with no verdict yet, and does not say that nothing was run; it is made once the proof is good"
+   ]
+  },
+  "errors": {},
+  "seconds": 10.8
+ },
+ "D14": {
+  "defect": "the engineer is sent no notice when a run is refused for an unproven inbox",
+  "tests_run": [
+   "F29"
+  ],
+  "caught_by": [
+   "F29"
+  ],
+  "failed_checks": {
+   "F29": [
+    "the engineer is told of the refusal: one notice in the inbox on the day for that reason, however many designs are refused; it says that the gate has not shown it can write there, that nothing is run or counted, and that no check gave it; and the caller is told that the engineer has been sent it",
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 10.5
+ },
+ "D16": {
+  "defect": "a design is let through when the runs cannot be read",
+  "tests_run": [
+   "F29"
+  ],
+  "caught_by": [
+   "F29"
+  ],
+  "failed_checks": {
+   "F29": [
+    "where the runs cannot be read, a design is not let through, though its run is finished; the refusal says only that this request ran nothing",
+    "when the gate shows again that it can write the inbox, the design refused before is run and answered"
+   ]
+  },
+  "errors": {},
+  "seconds": 10.5
+ },
+ "D17": {
+  "defect": "the refusal of a design whose run is already on the record says that nothing was run",
+  "tests_run": [
+   "F29",
+   "F32"
+  ],
+  "caught_by": [
+   "F29",
+   "F32"
+  ],
+  "failed_checks": {
+   "F29": [
+    "a run that an earlier request began and that was not yet made is not made while the proof is not good: the refusal says that it is on the record with no verdict yet, and does not say that nothing was run; it is made once the proof is good"
+   ],
+   "F32": [
+    "asked again while the proof is not good, the design is refused, and the refusal does not deny the run: it says that an earlier request began a run that is on the record with no verdict yet, and that this request ran nothing; it does not say that nothing was run; nothing more is run or counted"
+   ]
+  },
+  "errors": {},
+  "seconds": 16.5
+ },
+ "D18": {
+  "defect": "a run signed as interrupted is not taken as finished",
+  "tests_run": [
+   "F32"
+  ],
+  "caught_by": [
+   "F32"
+  ],
+  "failed_checks": {
+   "F32": [
+    "a run signed as interrupted is finished: with the proof saying again that the inbox could not be written, its design is still answered INTERRUPTED, nothing more is run, and no second notice of the run is written"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.2
+ },
+ "D19": {
+  "defect": "a notice kept in the store stops the inbox getting its copy once it can take one",
+  "tests_run": [
+   "F32"
+  ],
+  "caught_by": [
+   "F32"
+  ],
+  "failed_checks": {
+   "F32": [
+    "a new design is then refused with nothing run, and the notice that was kept in the store has its copy in the inbox now that the inbox can take it; the caller is told that the engineer has been sent it"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.6
+ },
+ "D20": {
+  "defect": "one notice of a refusal on the day, whatever the reason",
+  "tests_run": [
+   "F29",
+   "F31"
+  ],
+  "caught_by": [
+   "F29",
+   "F31"
+  ],
+  "failed_checks": {
+   "F29": [
+    "the engineer is told of the refusal: one notice in the inbox on the day for that reason, however many designs are refused; it says that the gate has not shown it can write there, that nothing is run or counted, and that no check gave it; and the caller is told that the engineer has been sent it",
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason"
+   ],
+   "F31": [
+    "a second design refused for the same reason on the same day writes no second notice; a refusal for too little disk is refused in its own words and writes a notice of its own, with its own reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 12.5
+ },
+ "D23": {
+  "defect": "the notice of a refusal for an unproven inbox says nothing of a run already on the record",
+  "tests_run": [
+   "F29"
+  ],
+  "caught_by": [
+   "F29"
+  ],
+  "failed_checks": {
+   "F29": [
+    "the engineer is told of the refusal: one notice in the inbox on the day for that reason, however many designs are refused; it says that the gate has not shown it can write there, that nothing is run or counted, and that no check gave it; and the caller is told that the engineer has been sent it"
+   ]
+  },
+  "errors": {},
+  "seconds": 10.4
+ },
+ "D24": {
+  "defect": "the notice of a refusal for an unproven inbox gives the same reason whatever the proof says",
+  "tests_run": [
+   "F29"
+  ],
+  "caught_by": [
+   "F29"
+  ],
+  "failed_checks": {
+   "F29": [
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 10.3
+ },
+ "D25": {
+  "defect": "every refusal for want of room is named for the same reason",
+  "tests_run": [
+   "F31"
+  ],
+  "caught_by": [
+   "F31"
+  ],
+  "failed_checks": {
+   "F31": [
+    "a second design refused for the same reason on the same day writes no second notice; a refusal for too little disk is refused in its own words and writes a notice of its own, with its own reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.4
+ },
+ "D4": {
+  "defect": "no baseline has a share of its own",
+  "tests_run": [
+   "F30"
+  ],
+  "caught_by": [
+   "F30"
+  ],
+  "failed_checks": {
+   "F30": [
+    "the next new designs for that baseline are refused at the door: 507, STORAGE_FULL, saying the baseline has used its share; nothing is run or counted, and the journal does not grow",
+    "the engineer of the refused baseline has one notice of it in the inbox, however many designs were refused; it gives the reason and says that nothing is run or counted and that no check gave it; the other baseline's inbox has none",
+    "the refusal tells the caller that the engineer has been sent a notice",
+    "a front door started afresh counts the share again from the journal, and refuses that baseline at once",
+    "when room is made in the journal, the count is taken again, and the baseline's next design is run"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.5
+ },
+ "D5": {
+  "defect": "the share is counted for all baselines together",
+  "tests_run": [
+   "F30"
+  ],
+  "caught_by": [
+   "F30"
+  ],
+  "failed_checks": {
+   "F30": [
+    "a job on another baseline still runs",
+    "the engineer of the refused baseline has one notice of it in the inbox, however many designs were refused; it gives the reason and says that nothing is run or counted and that no check gave it; the other baseline's inbox has none"
+   ]
+  },
+  "errors": {},
+  "seconds": 4.7
+ },
+ "D6": {
+  "defect": "a line written is not counted against its baseline's share",
+  "tests_run": [
+   "F30"
+  ],
+  "caught_by": [
+   "F30"
+  ],
+  "failed_checks": {
+   "F30": [
+    "the next new designs for that baseline are refused at the door: 507, STORAGE_FULL, saying the baseline has used its share; nothing is run or counted, and the journal does not grow",
+    "the engineer of the refused baseline has one notice of it in the inbox, however many designs were refused; it gives the reason and says that nothing is run or counted and that no check gave it; the other baseline's inbox has none",
+    "the refusal tells the caller that the engineer has been sent a notice"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.1
+ },
+ "D7": {
+  "defect": "the shares are not counted from the journal",
+  "tests_run": [
+   "F30"
+  ],
+  "caught_by": [
+   "F30"
+  ],
+  "failed_checks": {
+   "F30": [
+    "a front door started afresh counts the share again from the journal, and refuses that baseline at once",
+    "when room is made in the journal, the count is taken again, and the baseline's next design is run"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.1
+ },
+ "D21": {
+  "defect": "a journal line nested too deep to read stops every answer",
+  "tests_run": [
+   "F30"
+  ],
+  "caught_by": [
+   "F30"
+  ],
+  "failed_checks": {
+   "F30": [
+    "a journal line nested too deep to read, which the door never writes, is counted for no baseline and does not stop an answer"
+   ]
+  },
+  "errors": {},
+  "seconds": 4.7
+ },
+ "D22": {
+  "defect": "a journal line nested too deep to read stops the count",
+  "tests_run": [
+   "F30"
+  ],
+  "caught_by": [
+   "F30"
+  ],
+  "failed_checks": {
+   "F30": [
+    "a journal line nested too deep to read, which the door never writes, is counted for no baseline and does not stop an answer"
+   ]
+  },
+  "errors": {},
+  "seconds": 4.8
+ },
+ "D15": {
+  "defect": "the count is not taken again when room is made in the journal",
+  "tests_run": [
+   "F30"
+  ],
+  "caught_by": [
+   "F30"
+  ],
+  "failed_checks": {
+   "F30": [
+    "when room is made in the journal, the count is taken again, and the baseline's next design is run",
+    "a journal line nested too deep to read, which the door never writes, is counted for no baseline and does not stop an answer"
+   ]
+  },
+  "errors": {},
+  "seconds": 4.1
+ },
+ "D8": {
+  "defect": "the engineer is sent no notice of a refusal for want of room",
+  "tests_run": [
+   "F30",
+   "F31"
+  ],
+  "caught_by": [
+   "F30",
+   "F31"
+  ],
+  "failed_checks": {
+   "F30": [
+    "the engineer of the refused baseline has one notice of it in the inbox, however many designs were refused; it gives the reason and says that nothing is run or counted and that no check gave it; the other baseline's inbox has none"
+   ],
+   "F31": [
+    "a full journal refuses the design, and the engineer has one notice of it in the inbox: it gives the reason and says that nothing is run or counted",
+    "a second design refused for the same reason on the same day writes no second notice; a refusal for too little disk is refused in its own words and writes a notice of its own, with its own reason",
+    "with the inbox unable to take it, the notice is kept in the service's own store, the engineer's console lists it, and the caller is told that the engineer could not be sent it"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.8
+ },
+ "D9": {
+  "defect": "a notice is written for every refusal, not one on the day",
+  "tests_run": [
+   "F29",
+   "F30",
+   "F31"
+  ],
+  "caught_by": [
+   "F29",
+   "F30",
+   "F31"
+  ],
+  "failed_checks": {
+   "F29": [
+    "the engineer is told of the refusal: one notice in the inbox on the day for that reason, however many designs are refused; it says that the gate has not shown it can write there, that nothing is run or counted, and that no check gave it; and the caller is told that the engineer has been sent it",
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason"
+   ],
+   "F30": [
+    "the engineer of the refused baseline has one notice of it in the inbox, however many designs were refused; it gives the reason and says that nothing is run or counted and that no check gave it; the other baseline's inbox has none"
+   ],
+   "F31": [
+    "a second design refused for the same reason on the same day writes no second notice; a refusal for too little disk is refused in its own words and writes a notice of its own, with its own reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 17.0
+ },
+ "D10": {
+  "defect": "the caller is not told whether the engineer was sent the notice of a refusal for want of room",
+  "tests_run": [
+   "F30",
+   "F31"
+  ],
+  "caught_by": [
+   "F30",
+   "F31"
+  ],
+  "failed_checks": {
+   "F30": [
+    "the refusal tells the caller that the engineer has been sent a notice"
+   ],
+   "F31": [
+    "the caller is told that the engineer has been sent a notice",
+    "with the inbox unable to take it, the notice is kept in the service's own store, the engineer's console lists it, and the caller is told that the engineer could not be sent it"
+   ]
+  },
+  "errors": {},
+  "seconds": 7.0
+ },
+ "D11": {
+  "defect": "the caller is told the engineer was sent the notice, whatever became of it",
+  "tests_run": [
+   "F31"
+  ],
+  "caught_by": [
+   "F31"
+  ],
+  "failed_checks": {
+   "F31": [
+    "with the inbox unable to take it, the notice is kept in the service's own store, the engineer's console lists it, and the caller is told that the engineer could not be sent it"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.3
+ },
+ "D12": {
+  "defect": "the notice of a refusal for want of room gives no reason of its own",
+  "tests_run": [
+   "F30",
+   "F31"
+  ],
+  "caught_by": [
+   "F30",
+   "F31"
+  ],
+  "failed_checks": {
+   "F30": [
+    "the engineer of the refused baseline has one notice of it in the inbox, however many designs were refused; it gives the reason and says that nothing is run or counted and that no check gave it; the other baseline's inbox has none"
+   ],
+   "F31": [
+    "a full journal refuses the design, and the engineer has one notice of it in the inbox: it gives the reason and says that nothing is run or counted",
+    "a second design refused for the same reason on the same day writes no second notice; a refusal for too little disk is refused in its own words and writes a notice of its own, with its own reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.9
+ },
+ "C1": {
+  "defect": "a job is enrolled without the proof",
+  "tests_run": [
+   "F28"
+  ],
+  "caught_by": [
+   "F28"
+  ],
+  "failed_checks": {
+   "F28": [
+    "with the gate not running, a job is not enrolled on a new baseline: the refusal says the service has not shown that it can write the inbox, and nothing is changed: no binding, no folder, no line in the log of enrolments",
+    "with an inbox the gate cannot write, the gate says so when it starts, and enrolment is refused, saying the service cannot write the inbox; nothing is changed"
+   ]
+  },
+  "errors": {},
+  "seconds": 9.1
+ },
+ "C2": {
+  "defect": "a job is moved to a revision without the proof",
+  "tests_run": [
+   "F28"
+  ],
+  "caught_by": [
+   "F28"
+  ],
+  "failed_checks": {
+   "F28": [
+    "a job is not moved to a revision whose inbox the gate cannot write, and stays on its own baseline",
+    "once that inbox can be written, the job moves to the revision"
+   ]
+  },
+  "errors": {},
+  "seconds": 9.4
+ },
+ "C3": {
+  "defect": "the wait for the proof ends without refusing",
+  "tests_run": [
+   "F28"
+  ],
+  "caught_by": [
+   "F28"
+  ],
+  "failed_checks": {
+   "F28": [
+    "with the gate not running, a job is not enrolled on a new baseline: the refusal says the service has not shown that it can write the inbox, and nothing is changed: no binding, no folder, no line in the log of enrolments",
+    "with an inbox the gate cannot write, the gate says so when it starts, and enrolment is refused, saying the service cannot write the inbox; nothing is changed",
+    "a job is not moved to a revision whose inbox the gate cannot write, and stays on its own baseline",
+    "once that inbox can be written, the job moves to the revision"
+   ]
+  },
+  "errors": {},
+  "seconds": 10.3
+ },
+ "T1": {
+  "defect": "the console shows delivery as proven whatever the proof says",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "the engineer's console shows the state: proven, with its time; and, with the proof taken away, not proven, saying that new runs are refused"
+   ]
+  },
+  "errors": {},
+  "seconds": 12.0
+ }
+}
