@@ -24,10 +24,10 @@ evidence: nobody outside has reviewed or attacked it.
 
 | file | what it does |
 | --- | --- |
-| `baseline.py` | The requirement card, the design space, and the decision: PASS, FAIL or UNKNOWN with a reason. |
+| `baseline.py` | The requirement card, the design space, and the decision: PASS, FAIL or UNKNOWN with a reason. A pass is signed as PASS and shown to people as the declared check met. |
 | `verify_tools.py` | The one tool the gate host runs. Never refunds a failure. Writes the engineer's notice. |
 | `verify_client.py` | The assistant's command: `show`, `submit`, `status`. Holds no signing key. |
-| `verify_ctl.py` | The engineer's console: baseline, revise, acknowledge, record. |
+| `verify_ctl.py` | The engineer's console: baseline, revise, acknowledge, record. A second baseline for a requirement it already holds is a revision, or needs a reason that goes into the signed card. |
 | `verify_record.py` | The signed baseline envelope and the signed record. |
 | `check_record.py` | Checks a record offline. Stands alone: standard library and `cryptography` only. |
 | `deploy.py` | One service on one machine, for the demo, the tests and the trials. |

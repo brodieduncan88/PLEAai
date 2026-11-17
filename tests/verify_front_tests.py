@@ -204,7 +204,7 @@ def f2():
     try:
         got = {}
         for name, design in (('a NUL character in a value', dict(GOOD, material='PPS-GF40\u0000')), ('an infinite number', dict(GOOD, wall_mm=float('inf')))):
-            env = s.baseline(CASE, draft()); h = env['baseline_sha256']
+            env = s.baseline(CASE, draft(), alongside_reason='a second baseline of the same requirement, one for each case, as the test needs' if got else None); h = env['baseline_sha256']
             cfg = s.client_config(OUT / 'F2' / f'workspace_{len(got)}', h)
             first = s.submit(cfg, design); again = s.submit(cfg, design); good = s.submit(cfg, GOOD)
             ok, checks, summ = check_record.verify(s.record(h, [cfg.parent / 'submissions.jsonl']), s.keys, GOOD)

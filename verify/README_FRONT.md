@@ -108,8 +108,9 @@ engineer.key`. The record is built with `front_ctl.py record` and checked with `
 
 ## What the tools return
 
-`plea_submit_design` returns the verdict first, in words, and the same verdict as fields. PASS, FAIL and UNKNOWN are
-all results: `isError` is false. `isError` is true only when nothing was decided: the call was malformed, the
+`plea_submit_design` returns the verdict first, in words, and the same verdict as fields. A pass is given as the
+declared check met, with what the check does not cover; it is signed as PASS, and the field `outcome` still says PASS.
+It is not a statement that the check is correct. PASS, FAIL and UNKNOWN are all results: `isError` is false. `isError` is true only when nothing was decided: the call was malformed, the
 service refused (stopped, held, used up, not enrolled, another run in progress) or could not be reached. One tool
 call is one request and nothing retries. Sending the same design again returns the verdict already held.
 
@@ -118,9 +119,12 @@ call is one request and nothing retries. Sending the same design again returns t
 - **It cannot make a host show a result, or an assistant repeat it truthfully.** MCP delivers a tool's result to the
   host application and stops there. The failure does not depend on it: the service keeps the signed verdict and
   sends a FAIL or UNKNOWN to the engineer itself. The rule is unchanged: no record, not verified.
-- **The record's format is the first plug-in's.** A reader of one record sees a change of requirement only when it
-  was made by revision. Opening a second job for the same requirement under another baseline needs the engineer's
-  reason, which is kept in the service's signed log (`HOME/front/enrolment.jsonl`), not in the record.
+- **The record's format is the first plug-in's**, with one field of the card added by Amendment 9. A reader of one
+  record sees a change of requirement when it was made by revision, and a second baseline made as new at the same
+  service for the same requirement id names, in its signed card, the baselines held and the engineer's reason. A
+  relaxed requirement given a new id, or baselined at another service, is not linked. Opening a second job for the
+  same requirement under another baseline still needs the engineer's reason, which is kept in the service's signed log
+  (`HOME/front/enrolment.jsonl`).
 - **A party who can write the service's files** can put an earlier signed binding back. The front door refuses one
   older than it has seen since it started; a restart forgets that.
 - **A job certificate is a bearer of the job.** Whoever holds the folder can spend the job's runs and cause notices.

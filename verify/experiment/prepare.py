@@ -38,7 +38,10 @@ for trial in json.loads(pathlib.Path(a.plan).read_text()):
     baseline_hash = None
     if trial['arm'] == 'governed':
         draft = json.loads(json.dumps(card)); draft['job'] = job
-        env = services.baseline(case, draft); baseline_hash = env['baseline_sha256']
+        # Amendment 9: each governed trial's job has its own baseline of the same requirement, which is not a change to it.  The
+        # second and later name the others, with this reason, in the signed card; the first has nothing to name.
+        env = services.baseline(case, draft, alongside_reason=f'a separate job ({job}) of the trial plan, under the same requirement: not a change to it')
+        baseline_hash = env['baseline_sha256']
         manifest = workspace.make(case, folder, lambda f: services.client_config(f, baseline_hash), card['responsible_engineer']['name'], a.python, a.client)
     else:
         manifest = workspace.make(case, folder)
