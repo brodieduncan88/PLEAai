@@ -72,7 +72,7 @@ def main():
         r = m.call('plea_submit_design', {'design': dict(BEST, size_mm2=120)}); say(f'  1  120 mm2, which the requirement does not allow:   {first(r)}')
         r = m.call('plea_submit_design', {'design': BEST, 'limit': '7.0'}); say(f'  2  a limit passed as an argument:                    {text_of(r)[:60]}…  (tool error: {r["isError"]})')
         relaxed = json.loads((CASE / 'card.json').read_text()); relaxed['criteria'][0]['limit'] = '7.0'; relaxed['job_note'] = 'a relaxed copy, baselined as new'
-        hb = s.baseline(CASE, relaxed)['baseline_sha256']
+        hb = s.baseline(CASE, relaxed, alongside_reason='a relaxed copy, made for this demonstration of a caller naming another baseline')['baseline_sha256']   # Amendment 9: a second baseline of a requirement needs a reason
         r = m.call('plea_submit_design', {'design': BEST, 'baseline_sha256': hb}); say(f'  3  a relaxed baseline named as an argument:          {text_of(r)[:60]}…  (tool error: {r["isError"]})')
         c = FrontClient(job); conn = http.client.HTTPSConnection(c.host, c.port, context=c.ctx, timeout=60)
         conn.request('POST', '/submit', body=json.dumps({'design': BEST, 'baseline_sha256': hb}), headers={'Content-Type': 'application/json'}); resp = conn.getresponse(); body = json.loads(resp.read()); conn.close()

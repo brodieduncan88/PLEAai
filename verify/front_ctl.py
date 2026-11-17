@@ -55,7 +55,7 @@ from baseline import BaselineInvalid, root_for                        # noqa: E4
 from front_door import JOB_NAME, RESERVED, binding_message, binding_valid, jobs_path, read_jobs   # noqa: E402
 from verify_record import Key, load_envelope, now                     # noqa: E402
 import verify_ctl                                                     # noqa: E402
-import notices                                                        # noqa: E402  (Amendment 8: the gate's proof that it can write an inbox)
+import notices                                                        # noqa: E402  (Amendment 8: the gate's inbox-writability check)
 
 
 class Refused(Exception):
@@ -96,7 +96,7 @@ def _deliverable(home, baseline_hash: str, wait: float) -> None:
     deadline = time.time() + max(0.0, wait)
     while True:
         state, _ = notices.delivery_state(home, baseline_hash)
-        if state == 'PROVEN':
+        if state == 'WRITABLE':
             return
         if time.time() >= deadline:
             break
@@ -179,7 +179,7 @@ def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0) -> dict:
     if sup.get('baseline_sha256') != cur['baseline_sha256']:
         raise Refused(f'{job} is bound to {cur["baseline_sha256"][:16]}… and this baseline does not supersede it.  A job moves only to a revision of its '
                       f'own baseline (verify_ctl.py revise), so that the change and what had failed are on the record.')
-    _deliverable(home, new_hash, wait)                   # Amendment 8 (D3): the same proof is needed for the revision
+    _deliverable(home, new_hash, wait)                   # Amendment 8 (D3): the same check is needed for the revision
     binding = _signed('REBIND', cur['seq'] + 1, job, env, cur['cert_sha256'], cur['baseline_sha256'], None, key)
     _write(home, binding)
     return binding

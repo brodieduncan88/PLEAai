@@ -19,7 +19,7 @@ One tool call is one HTTPS request.  Nothing here retries.  If the service canno
 the same design again is safe, because the service answers from the verdict it already has and never runs the check
 twice.
 
-A FAIL is not a tool error.  PASS, FAIL and UNKNOWN are all the service working: the verdict comes first in the text
+A FAIL is not a tool error.  A pass (the declared check met), a FAIL and an UNKNOWN are all the service working: the verdict comes first in the text
 and again in structuredContent, and isError is false.  isError is true only when nothing was decided: the call was
 malformed, the service refused it (stopped, held, exhausted, not enrolled), or the service could not be reached.
 
@@ -52,8 +52,10 @@ MAX_LINE = 1024 * 1024
 
 INSTRUCTIONS = ('This server relays to an engineering verification service.  The requirement, its limits, the load case, the design space and the check were fixed '
                 'by the responsible engineer and cannot be changed or chosen here.  Read the requirement with plea_show_requirement, then submit a design with '
-                'plea_submit_design.  The service, not the assistant, decides PASS, FAIL or UNKNOWN.  A FAIL or UNKNOWN is a result to report as it stands, with '
-                'its reason; it is recorded and the responsible engineer is told by the service.  UNKNOWN is never a pass.')
+                'plea_submit_design.  The service, not the assistant, decides whether the declared check was met, not met (FAIL) or could not be decided (UNKNOWN).  '
+                'Report a pass as "declared check met", with what the check does not cover: it says what the declared check returned against the limits, not that '
+                'the check is correct, the requirement complete or the design safe.  A FAIL or UNKNOWN is a result to report as it stands, with its reason; it is '
+                'recorded, and the service writes a notice of it for the responsible engineer.  UNKNOWN is never a pass.')
 
 NO_ARGUMENTS = {'type': 'object', 'properties': {}, 'additionalProperties': False}
 TOOLS = [
@@ -65,9 +67,10 @@ TOOLS = [
      'annotations': {'readOnlyHint': True, 'destructiveHint': False, 'idempotentHint': True, 'openWorldHint': False}},
     {'name': 'plea_submit_design', 'title': 'Submit a design for an official verification run',
      'description': ('Submit one design for an official run against the baselined requirement.  `design` is an object giving exactly the design-space parameters '
-                     'that plea_show_requirement lists.  The verification service runs the declared check once and returns its signed verdict: PASS (the declared '
-                     'check was met), FAIL (with each limit and the value achieved) or UNKNOWN (no verdict; never a pass).  Every run is counted and kept on the '
-                     'record, and a FAIL or UNKNOWN is sent to the responsible engineer by the service.  The same design sent again returns the same verdict '
+                     'that plea_show_requirement lists.  The verification service runs the declared check once and returns its signed verdict: declared check met '
+                     '(signed as PASS), given with what the check does not cover and not as a statement that the check is correct; FAIL, with each limit and the '
+                     'value achieved; or UNKNOWN, no verdict and never a pass.  Every run is counted and kept on the record, and the service writes a notice of a FAIL or '
+                     'UNKNOWN for the responsible engineer.  The same design sent again returns the same verdict '
                      'without a second run.  The requirement, the limits, the load case, the design space and the check cannot be set here.  Report the verdict '
                      'as returned.'),
      'inputSchema': {'type': 'object', 'properties': {'design': {'type': 'object', 'description': 'The design-space parameters and their values, and nothing else.'}},
@@ -75,7 +78,7 @@ TOOLS = [
      'annotations': {'readOnlyHint': False, 'destructiveHint': False, 'idempotentHint': True, 'openWorldHint': False}},
     {'name': 'plea_status', 'title': 'Show the official runs so far',
      'description': ('List every official run so far on this job\'s baseline, each with its verdict and reason, and say whether any design has met the declared '
-                     'check.  Read-only.'),
+                     'check, and what the check does not cover.  Read-only.'),
      'inputSchema': NO_ARGUMENTS,
      'annotations': {'readOnlyHint': True, 'destructiveHint': False, 'idempotentHint': True, 'openWorldHint': False}},
 ]

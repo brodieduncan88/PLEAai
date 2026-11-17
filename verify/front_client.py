@@ -2,7 +2,7 @@
 """The assistant's side of the front door: three questions over HTTPS, and nothing else.
 
     front_client.py --job-dir DIR show                 the baselined requirement, as the engineer approved it
-    front_client.py --job-dir DIR submit DESIGN.json   one official run: PASS, FAIL or UNKNOWN, with the reason
+    front_client.py --job-dir DIR submit DESIGN.json   one official run: declared check met, FAIL or UNKNOWN, with the reason
     front_client.py --job-dir DIR status               every official run so far on this job's baseline
 
 DIR is the folder front_ctl.py enrol wrote: job.json (the service's address), the authority's certificate, and this

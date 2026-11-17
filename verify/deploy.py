@@ -103,8 +103,8 @@ class Services:
         time.sleep(0.2)
 
     # ------------------------------------------------------------------ the engineer's and the assistant's sides
-    def baseline(self, source, draft: dict, runs: int = 1000) -> dict:
-        return verify_ctl.make_baseline(self.home, source, draft, self.engineer, runs)
+    def baseline(self, source, draft: dict, runs: int = 1000, alongside_reason: str | None = None) -> dict:
+        return verify_ctl.make_baseline(self.home, source, draft, self.engineer, runs, alongside_reason=alongside_reason)    # Amendment 9: a second one needs a reason
 
     def client_config(self, workspace, baseline_hash: str) -> pathlib.Path:
         """Write WORKSPACE/.verify/ (config, baseline copy, journal) and return the config path."""

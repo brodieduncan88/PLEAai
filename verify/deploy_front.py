@@ -44,12 +44,15 @@ class FrontServices(deploy.Services):
     def _tls(self, name) -> list:
         return ['--tls-cert', self.pki[name][0], '--tls-key', self.pki[name][1], '--tls-ca', self.pki['ca'], '--tls-allow', 'frontdoor']
 
-    def start_front(self, rate: int = 120) -> None:
+    def start_front(self, rate: int = 120, sweep_after: float = 3600.0, sweep_every: float = 30.0) -> None:
+        """Amendment 9: the front door's look for runs left pending waits an hour here unless a test asks otherwise, so that tests
+        that leave a run pending on purpose see it as they left it.  The front door's own default is SWEEP_AFTER."""
         cmd = [PY, '-B', str(HERE / 'front_door.py'), '--home', str(self.home), '--port', str(self.ports['front']), '--local-dsn', deploy.LOCAL_DSN,
                '--witness-url', f'https://127.0.0.1:{self.ports["witness"]}', '--witness-key', self.keys['witness'],
                '--gate-host', f'https://127.0.0.1:{self.ports["host"]}', '--gate-key', self.keys['gate'], '--engineer-key', self.keys['engineer'],
                '--tls-cert', self.pki['front'][0], '--tls-key', self.pki['front'][1], '--tls-ca', self.pki['ca'],
-               '--upstream-cert', self.pki['frontdoor'][0], '--upstream-key', self.pki['frontdoor'][1], '--rate', str(rate)]
+               '--upstream-cert', self.pki['frontdoor'][0], '--upstream-key', self.pki['frontdoor'][1], '--rate', str(rate),
+               '--sweep-after', str(sweep_after), '--sweep-every', str(sweep_every)]
         self.procs['front'] = subprocess.Popen(cmd, stdout=open(self.dir / 'front.log', 'a'), stderr=subprocess.STDOUT)
         self._await('front')
 

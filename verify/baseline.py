@@ -252,6 +252,14 @@ def validate_card(card: dict) -> None:
     sup = card.get('supersedes')
     need(sup is None or (isinstance(sup, dict) and isinstance(sup.get('baseline_sha256'), str) and isinstance(sup.get('reason'), str) and sup['reason'].strip()),
          'supersedes must be null or name the earlier baseline and give a reason')
+    # Amendment 9: a baseline made for a requirement id the service already held a baseline for, and not as a revision of it,
+    # names those baselines and the engineer's reason, so that the link is in the signed card and in every record built from it.
+    side = card.get('alongside')
+    need(side is None or (isinstance(side, dict) and isinstance(side.get('reason'), str) and side['reason'].strip()
+                          and isinstance(side.get('baselines'), list) and side['baselines']
+                          and all(isinstance(x, dict) and isinstance(x.get('baseline_sha256'), str) and len(x['baseline_sha256']) == 64
+                                  and set(x['baseline_sha256']) <= set('0123456789abcdef') and isinstance(x.get('revision'), str) for x in side['baselines'])),
+         'alongside must be null or name the other baselines held for this requirement and give a reason')
 
 
 def in_design_space(card: dict, design) -> tuple[bool, str]:
@@ -367,13 +375,22 @@ _CHECK_FILES = {'BASELINE_MISMATCH': 'The check or its data is not as baselined 
                 'LIMIT_NOT_MET': 'The check and its data matched their baselined hashes when it ran.',
                 'RESULT_IMPLAUSIBLE': 'The check and its data matched their baselined hashes when it ran.'}
 NO_CARD_HEADLINE = 'UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE'
+# Amendment 9: what the Verdict row calls each signed verdict.  A pass is signed PASS, and the record and its checker keep that
+# word; what a person or an assistant reads calls it what it is, the declared check met.
+VERDICT_WORDS = {'PASS': 'DECLARED CHECK MET (signed as PASS)', 'FAIL': 'FAIL', 'UNKNOWN': 'UNKNOWN'}
+
+
+def does_not_cover(card: dict) -> str:
+    """The line that says what the check does not cover, from the card.  (Amendment 9: it stands under the headline of every
+    verdict, so that a host that shortens a result does not cut it, and again at the end.)"""
+    return 'The check does not cover: ' + '; '.join(card['check']['stated_limits']) + '.'
 
 
 def face(card: dict, verdict: dict, runs: dict | None = None, aid: str | None = None) -> str:
     """The verdict as an engineer reads it.  The same text goes to the assistant and to the engineer's inbox."""
     req, eng, chk = card['requirement'], card['responsible_engineer'], card['check']
     held = verdict.get('check') is not None             # Amendment 4: False only for the gate's refusal when it holds no usable copy of the card
-    L = [HEADLINE[verdict['reason_code']] if held else NO_CARD_HEADLINE, '']
+    L = [HEADLINE[verdict['reason_code']] if held else NO_CARD_HEADLINE, does_not_cover(card), '']      # Amendment 9: the exclusions first
     L.append(f"Requirement   {req['id']} rev {req['revision']}: {req['title']}")
     L.append(f"              \"{req['statement']}\"")
     # Amendment 5 (13 November 2026): this line ended "unchanged." for a usable card, which is so of the signed card but sat
@@ -405,7 +422,8 @@ def face(card: dict, verdict: dict, runs: dict | None = None, aid: str | None = 
         L.append(f"Basis         As reported by the declared check (not verified by this tool): \"{verdict['basis']}\"")
     L.append(f"Check         {chk['id']} v{chk['version']}, written by {chk['author']}, reviewed by {chk['reviewed_by']}.  Baselined hash {chk['sha256'][:16]}…")     # Amendment 5: "Baselined", not the file's hash now
     compared = verdict['reason_code'] in ('MET', 'LIMIT_NOT_MET')          # Amendment 4: only then were the check's numbers compared with the limits
-    L.append(f"Verdict       {verdict['verdict']}.  " + ("Computed by the verification service from the check's output and the baselined limits." if compared else
+    # Amendment 9: a pass is called the declared check met, signed as PASS
+    L.append(f"Verdict       {VERDICT_WORDS[verdict['verdict']]}.  " + ("Computed by the verification service from the check's output and the baselined limits." if compared else
                                                          'Decided by the verification service, not by comparing the check\'s numbers with the limits.') + '  Not stated by the assistant.')
     if runs:
         L.append(f"Official runs {runs['total']} through the service on this baseline: {runs['PASS']} met, {runs['FAIL']} not met, {runs['UNKNOWN']} unknown." + (f"  This run: {aid}." if aid else ''))
@@ -436,5 +454,5 @@ def face(card: dict, verdict: dict, runs: dict | None = None, aid: str | None = 
             L.append(f"                       or a decision by {eng['name']}: redesign, a revised baseline with a reason, or a recorded concession.")
     L.append('This result says what the declared check returned against the baselined limits.  It does not say the check is correct.' if compared else
              'This result gives no number from the check against the limits.  It does not say the check is correct.')
-    L.append('The check does not cover: ' + '; '.join(chk['stated_limits']) + '.')
+    L.append(does_not_cover(card))
     return '\n'.join(L)

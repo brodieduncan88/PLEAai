@@ -2,7 +2,7 @@
 """The assistant's side: the one command that gets a design a verdict of record.
 
     verify_client.py --config CONFIG.json show                 the baselined requirement, as the engineer approved it
-    verify_client.py --config CONFIG.json submit DESIGN.json   one official run: PASS, FAIL or UNKNOWN, with the reason
+    verify_client.py --config CONFIG.json submit DESIGN.json   one official run: declared check met, FAIL or UNKNOWN, with the reason
     verify_client.py --config CONFIG.json status               every official run so far on this baseline
 
 This process holds what an agent-facing process holds in the v1.2.1 gateway and no more: the gateway's database
@@ -25,8 +25,32 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from plea_gateway import (BudgetExhausted, GateHostClient, GateRefusedRun, Governor, GovernedError, Held, InProgress, OutcomeInvalid,   # noqa: E402
                           ReceiptInvalid, RemoteWitness, RequestKeyReused, Store, Stopped, TransportError, UnknownRoot, WitnessUnavailable)
 from plea_gateway.tls import TLSClient                              # noqa: E402
-from baseline import face, root_for                                  # noqa: E402
+from baseline import does_not_cover, face, root_for                  # noqa: E402
 from verify_record import arguments_for, attempts_of, load_envelope, request_key   # noqa: E402
+
+
+OUTCOME_WORDS = {'PASS': 'MET'}     # Amendment 9: a listing shows a pass as the declared check met; the record keeps the signed word
+
+
+def met_lines(card, attempts: list) -> list:
+    """Amendment 9.  Where a design has met the declared check, what that does and does not say, and what the check does not
+    cover, so that a listing never shows a pass bare."""
+    met = [a for a in attempts if a.get('outcome') == 'PASS']
+    if not met:
+        return []
+    designs = sorted({str((a.get('result') or {}).get('design_sha256') or '?')[:16] for a in met})
+    return [f"DECLARED CHECK MET, for design {', '.join(d + '…' for d in designs)} only.  This says what the declared check returned against the "
+            'baselined limits.  It does not say the check is correct, the requirement is complete, or the design is safe.',
+            does_not_cover(card) if card is not None else 'What the check does not cover cannot be shown here: the stored baseline could not be read.']
+
+
+def alongside_lines(card) -> list:
+    """Amendment 9.  The other baselines held for this requirement when this one was made, not as a revision, and why."""
+    side = (card or {}).get('alongside')
+    if not side:
+        return []
+    return [f"  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: "
+            + ', '.join(f"{b['baseline_sha256'][:16]}… (rev {b['revision']})" for b in side['baselines']) + f".  Reason given by the engineer: {side['reason']}"]
 
 
 def tally(attempts: list) -> dict:
@@ -116,6 +140,7 @@ class Client:
         if c.get('supersedes'):
             s = c['supersedes']; L.insert(1, f"  THIS BASELINE SUPERSEDES {s['baseline_sha256'][:16]}… ({s.get('official_runs', '?')} official runs, {s.get('not_met', '?')} not met); "
                                             f"{s.get('unknown', '?')} unknown, {s.get('met', '?')} met.  Reason given: {s['reason']}")     # Amendment 4
+        L[1:1] = alongside_lines(c)                                                                         # Amendment 9
         return '\n'.join(L)
 
     def status(self) -> str:
@@ -124,9 +149,10 @@ class Client:
         for a in attempts:
             r = a['result'] or {}
             what = '; '.join(f"{c['id']} {c['achieved']} vs {c['limit']} {c['units']}" for c in r.get('criteria', []) if c.get('achieved') is not None) or r.get('detail', '')
-            L.append(f"  {a['aid']}  {a['outcome']:<11} {r.get('reason_code', ''):<24} {what}")
+            L.append(f"  {a['aid']}  {OUTCOME_WORDS.get(a['outcome'], a['outcome']):<11} {r.get('reason_code', ''):<24} {what}")    # Amendment 9: MET, not PASS
         if not runs['PASS']:
             L.append('NOT VERIFIED: no design has met the declared check on this baseline.')
+        L += met_lines(self.card, attempts)                                                                 # Amendment 9
         return '\n'.join(L)
 
 

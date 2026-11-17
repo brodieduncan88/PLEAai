@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Declared tests R1-R13 for the verification-record plug-in (verify/DECLARED_VERIFY.md states the expected outcomes),
 and R14 to R16, added by Amendment 2 (verify/DECLARED_AMEND2.md), R17, added by Amendment 3 (verify/DECLARED_AMEND3.md),
-R18, added by Amendment 4 (verify/DECLARED_AMEND4.md), and R19, added by Amendment 6 (verify/DECLARED_AMEND6.md), and R20 and R21, added by Amendment 7 (verify/DECLARED_AMEND7.md), and R22, added by Amendment 8 (verify/DECLARED_AMEND8.md).
+R18, added by Amendment 4 (verify/DECLARED_AMEND4.md), and R19, added by Amendment 6 (verify/DECLARED_AMEND6.md), and R20 and R21, added by Amendment 7 (verify/DECLARED_AMEND7.md), and R22, added by Amendment 8 (verify/DECLARED_AMEND8.md), and R23 and R24, added by Amendment 9 (verify/DECLARED_AMEND9.md), which also restates R18's model of a notice and R22.
 R1 to R13 are as they were declared.
 
-    verify_tests.py [R1 R5 ...]       all twenty-two by default; writes outputs/verify_tests.json; exits 1 if any test fails
+    verify_tests.py [R1 R5 ...]       all twenty-four by default; writes outputs/verify_tests.json; exits 1 if any test fails
 
 Each test makes a fresh deployment (verify/deploy.py: new keys, the released witness service and gate host under mutual
 TLS, the gate host loading verify_tools), baselines the self-test fixture in tests/verify_case/ as the responsible
@@ -31,8 +31,9 @@ import baseline as B                    # noqa: E402
 import check_record                     # noqa: E402
 import deploy                           # noqa: E402
 import verify_ctl                       # noqa: E402
+import verify_client                    # noqa: E402  (Amendment 9)
 from plea_gateway import AuthorityError, Store      # noqa: E402
-from verify_record import Key, canonical, envelope_message, sign_envelope   # noqa: E402
+from verify_record import Key, canonical, envelope_message, load_envelope, sign_envelope   # noqa: E402
 
 OUT = GATEWAY / 'outputs' / 'verify_tests'
 CASE = HERE / 'verify_case'
@@ -868,7 +869,8 @@ NO_CARD_LINE = 'The verification service could not use its stored copy of this b
 
 def verdict_row(code: str) -> str:
     compared = code in ('MET', 'LIMIT_NOT_MET')
-    return (f'Verdict       {B.REASONS[code]}.  ' + ("Computed by the verification service from the check's output and the baselined limits." if compared else
+    words = {'MET': 'DECLARED CHECK MET (signed as PASS)'}.get(code, B.REASONS[code])          # Amendment 9: a pass is called the declared check met
+    return (f'Verdict       {words}.  ' + ("Computed by the verification service from the check's output and the baselined limits." if compared else
                                                     "Decided by the verification service, not by comparing the check's numbers with the limits.") + '  Not stated by the assistant.')
 
 
@@ -954,7 +956,7 @@ def rows_known(t: str, code: str, held: bool, card: dict, design=..., verdict=No
     basis = (E('Basis         As reported by the declared check (not verified by this tool): "' + str(verdict['basis']) + '"') if verdict is not None else
              E('Basis         As reported by the declared check (not verified by this tool): "') + '.*"')
     basis_most = (1 if verdict['basis'] else 0) if verdict is not None else 1 if held and code in ('MET', 'LIMIT_NOT_MET', 'RESULT_IMPLAUSIBLE', 'CHECK_OUTPUT_INVALID') else 0
-    steps = [(E(HEADLINES[code] if held else NO_CARD_ANSWER), 1, 1), ('', 1, 1),
+    steps = [(E(HEADLINES[code] if held else NO_CARD_ANSWER), 1, 1), (E('The check does not cover: ' + '; '.join(chk['stated_limits']) + '.'), 1, 1), ('', 1, 1),   # Amendment 9
              (E(f"Requirement   {req['id']} rev {req['revision']}: {req['title']}"), 1, 1), (E(f'              "{req["statement"]}"'), 1, 1),
              (E(f"              baselined {card.get('baselined_at', '?')} by {eng}, responsible engineer.  Baseline {B.card_hash(card)[:16]}…" + ('' if held else ', as read for this answer.')), 1, 1),
              (E(f"Load case     {card['load_case']}"), 1, 1),
@@ -1584,7 +1586,7 @@ import verify_tools as V                                                   # the
 import notices as N
 h = sys.argv[2]; out = {}
 BAD = {'material': 'PA66-GF30', 'wall_mm': 3, 'mode': 'normal'}
-box = V.HOME / 'inbox' / h[:16]; proof = V.HOME / 'delivery' / (h + '.json')
+box = V.HOME / 'inbox' / h[:16]; proof = V.HOME / 'inbox_checks' / (h + '.json')
 read = lambda: json.loads(proof.read_text()) if proof.is_file() else {}
 state = lambda **k: N.delivery_state(V.HOME, h, **k)[0]
 rest = lambda d: sorted(n for n in os.listdir(d) if not n.endswith('.txt')) if d.is_dir() else None
@@ -1623,7 +1625,7 @@ p = read()
 out['at_start'] = {'inbox': p.get('inbox'), 'store': p.get('store'), 'names_this_baseline': p.get('baseline_sha256') == h,
                    'time_is_now': abs(time.time() - p.get('checked_at', 0)) < 30, 'state': state(), 'inbox_holds': rest(box),
                    'no_engineers_folder_holds': rest(V.HOME / 'inbox' / 'unclaimed' / ('0' * 64)),
-                   'proofs_folder_holds': sorted(n for n in os.listdir(V.HOME / 'delivery') if n.startswith('.'))}
+                   'proofs_folder_holds': sorted(n for n in os.listdir(V.HOME / 'inbox_checks') if n.startswith('.'))}
 for name in ('.probe.1.0123456789ab', '.notice.draft'):                        # the fresh temporary file and the engineer's own file the test put there
     (box / name).unlink(missing_ok=True)
 
@@ -1651,7 +1653,7 @@ except Exception as exc:
 # 4. put back: the tool's own look proves it again, with no run, and the tool says so in this step
 said_before = len(tee.lines)
 box.unlink(); aside.rename(box)
-out['restored'] = {'seconds': until('PROVEN'), 'state': state(), 'inbox_holds': rest(box)}
+out['restored'] = {'seconds': until('WRITABLE'), 'state': state(), 'inbox_holds': rest(box)}
 t0 = time.time()
 while time.time() - t0 < 3 and not any('can be written again' in l and h[:16] in l for l in tee.lines[said_before:]):
     time.sleep(0.05)
@@ -1662,7 +1664,7 @@ h2 = ''.join('0123456789abcdef'[(int(c, 16) + 5) % 16] for c in h)
 shutil.copytree(V.HOME / 'baselines' / h, V.HOME / 'baselines' / h2)
 os.utime(V.HOME / 'baselines' / h2, (time.time() - 60, time.time() - 60))        # as one that has had no inbox for a minute
 t0 = time.time()
-while time.time() - t0 < 8 and N.delivery_state(V.HOME, h2)[0] != 'PROVEN':
+while time.time() - t0 < 8 and N.delivery_state(V.HOME, h2)[0] != 'WRITABLE':
     time.sleep(0.05)
 claim2 = V.HOME / 'inbox' / h2[:16] / 'baseline_sha256'
 out['later'] = {'seconds': round(time.time() - t0, 2), 'state': N.delivery_state(V.HOME, h2)[0], 'inbox_claims_it': claim2.is_file() and claim2.read_text().strip() == h2}
@@ -1670,7 +1672,7 @@ h4 = ''.join('0123456789abcdef'[(int(c, 16) + 3) % 16] for c in h)             #
 shutil.copytree(V.HOME / 'baselines' / h, V.HOME / 'baselines' / h4)
 os.utime(V.HOME / 'baselines' / h4, (time.time() + 3600, time.time() + 3600))
 t0 = time.time()
-while time.time() - t0 < 8 and N.delivery_state(V.HOME, h4)[0] != 'PROVEN':
+while time.time() - t0 < 8 and N.delivery_state(V.HOME, h4)[0] != 'WRITABLE':
     time.sleep(0.05)
 claim4 = V.HOME / 'inbox' / h4[:16] / 'baseline_sha256'
 out['later_dated_ahead'] = {'state': N.delivery_state(V.HOME, h4)[0], 'inbox_claims_it': claim4.is_file() and claim4.read_text().strip() == h4}
@@ -1683,7 +1685,7 @@ box3 = V.HOME / 'inbox' / h3[:16]
 out['young'] = {'inbox_made_by_the_tool': box3.exists(), 'state': N.delivery_state(V.HOME, h3)[0]}
 box3.mkdir(); (box3 / 'baseline_sha256').write_text(h3 + '\n')                  # the console makes it
 t0 = time.time()
-while time.time() - t0 < 8 and N.delivery_state(V.HOME, h3)[0] != 'PROVEN':
+while time.time() - t0 < 8 and N.delivery_state(V.HOME, h3)[0] != 'WRITABLE':
     time.sleep(0.05)
 out['young_after_console'] = {'seconds': round(time.time() - t0, 2), 'state': N.delivery_state(V.HOME, h3)[0]}
 
@@ -1693,7 +1695,7 @@ V.verify(h, dict(BAD, wall_mm=3.3)); out['renewed'] = read().get('checked_at', 0
 
 # 7. the proof cannot be recorded: a run still gives its verdict, and the state reads as not proven
 left = read().get('checked_at')                                                 # the proof on file before its folder is taken away
-ddir = V.HOME / 'delivery'; daside = ddir.with_name('delivery.aside'); ddir.rename(daside); ddir.write_text('a file in place of the folder\n')
+ddir = V.HOME / 'inbox_checks'; daside = ddir.with_name('inbox_checks.aside'); ddir.rename(daside); ddir.write_text('a file in place of the folder\n')
 try:
     v = V.verify(h, dict(BAD, wall_mm=3.4))
     out['unrecorded'] = {'verdict': [v['verdict'], v['reason_code']], 'notice': v.get('notice'), 'state': state()}
@@ -1710,7 +1712,7 @@ real_replace = os.replace
 
 
 def no_room(src, dst, *a, **k):
-    if str(dst).startswith(str(V.HOME / 'delivery')):
+    if str(dst).startswith(str(V.HOME / 'inbox_checks')):
         raise OSError(errno.ENOSPC, 'No space left on device')
     return real_replace(src, dst, *a, **k)
 
@@ -1718,12 +1720,12 @@ def no_room(src, dst, *a, **k):
 os.replace = no_room
 try:
     v = V.verify(h, dict(BAD, wall_mm=3.45))
-    out['no_room'] = {'verdict': [v['verdict'], v['reason_code']], 'state': state(), 'left': sorted(n for n in os.listdir(V.HOME / 'delivery') if n.startswith('.') and n != '.keep')}
+    out['no_room'] = {'verdict': [v['verdict'], v['reason_code']], 'state': state(), 'left': sorted(n for n in os.listdir(V.HOME / 'inbox_checks') if n.startswith('.') and n != '.keep')}
 except Exception as exc:
     out['no_room'] = {'raised': type(exc).__name__}
 finally:
     os.replace = real_replace
-out['room_again'] = {'seconds': until('PROVEN'), 'state': state()}
+out['room_again'] = {'seconds': until('WRITABLE'), 'state': state()}
 
 # 9. the clock put back: this process's memory of its proof is dated an hour ahead, and the proof is made again all the same
 before = read().get('checked_at', 0); V._PROVED[h] = (time.time() + 3600, True)
@@ -1735,7 +1737,7 @@ out['clock_put_back'] = {'seconds': round(time.time() - t0, 2), 'made_again': re
 # 10. the baseline's folder is taken away, and its inbox still holds its hash: its notices still go there, so its proof is still made
 d = V.HOME / 'baselines' / h; gone = d.with_name(d.name + '.aside'); d.rename(gone)
 proof.unlink(missing_ok=True); V._PROVED.pop(h, None)
-out['folder_gone'] = {'seconds': until('PROVEN'), 'state': state()}
+out['folder_gone'] = {'seconds': until('WRITABLE'), 'state': state()}
 proof.unlink(missing_ok=True)                                                  # the proof is taken away; the tool's look is not due for 30 seconds, so only the run can make it again
 try:
     v = V.verify(h, dict(BAD, wall_mm=3.5)); out['folder_gone']['run'] = [v['verdict'], v['reason_code'], v.get('notice')]
@@ -1763,7 +1765,7 @@ except Exception as exc:
     out['closed_output'] = {'raised': type(exc).__name__}
 finally:
     sys.stderr = real_err; V.LEDGER = real_ledger; box.unlink(); aside.rename(box)
-until('PROVEN')
+until('WRITABLE')
 out['h2'] = h2
 print(json.dumps(out))
 """
@@ -1776,7 +1778,7 @@ def r22():
         env = s.baseline(CASE, draft()); h = env['baseline_sha256']
         script = OUT / 'R22' / 'inside22.py'; script.write_text(INSIDE22)
         box = s.home / 'inbox' / h[:16]; old = (time.time() - 300, time.time() - 300)
-        nobody, proofs = s.home / 'inbox' / 'unclaimed' / ('0' * 64), s.home / 'delivery'
+        nobody, proofs = s.home / 'inbox' / 'unclaimed' / ('0' * 64), s.home / 'inbox_checks'
         for folder in (nobody, proofs):
             folder.mkdir(parents=True, exist_ok=True)
         for left in (box / '.notice.1.0123456789ab.part', nobody / '.notice.1.0123456789ab.part', proofs / f'.{h}.json.1.0123456789ab',     # as a process killed part-way leaves them
@@ -1790,48 +1792,150 @@ def r22():
         got = json.loads(out.stdout) if out.returncode == 0 and out.stdout.strip() else {'failed': (out.stdout + out.stderr)[-300:].replace(str(GATEWAY), '<tree>')}
         said = [l for l in out.stderr.splitlines() if l.startswith('verify tool: ')]
         shown = verify_ctl.status(s.home, h, s.engineer.public_hex, deploy.LOCAL_DSN).splitlines()
-        (s.home / 'delivery' / (h + '.json')).unlink(missing_ok=True)
+        (s.home / 'inbox_checks' / (h + '.json')).unlink(missing_ok=True)
         shown_without = verify_ctl.status(s.home, h, s.engineer.public_hex, deploy.LOCAL_DSN).splitlines()
         e.update(got=got, said=[l[:90] for l in said], shown=[l[:110] for l in shown[1:4]], shown_without=[l[:110] for l in shown_without[1:4]])
         g = lambda k: got.get(k) or {}
         fail = ['FAIL', 'LIMIT_NOT_MET']
-        checks = {'when the tool starts, a baseline it holds has a proof of delivery on record: its inbox and the service\'s store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer\'s and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service\'s own, though its name begins the same way':
-                      g('at_start') == {'inbox': True, 'store': True, 'names_this_baseline': True, 'time_is_now': True, 'state': 'PROVEN',
+        checks = {'when the tool starts, a baseline it holds has an inbox-writability check on record: its inbox and the service\'s store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer\'s and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service\'s own, though its name begins the same way':
+                      g('at_start') == {'inbox': True, 'store': True, 'names_this_baseline': True, 'time_is_now': True, 'state': 'WRITABLE',
                                         'inbox_holds': ['.notice.draft', '.probe.1.0123456789ab', 'baseline_sha256'], 'no_engineers_folder_holds': [], 'proofs_folder_holds': ['.keep']},
                   'a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that':
-                      g('read') == {'older_than_limit': 'STALE', 'within_limit': 'PROVEN', 'dated_ahead': 'STALE', 'time_not_a_number': 'UNPROVEN', 'time_too_large': 'UNPROVEN',
-                                    'time_a_yes': 'UNPROVEN', 'missing': 'UNPROVEN', 'not_a_proof': 'UNPROVEN', 'another_baseline': 'UNPROVEN', 'inbox_not_true': 'NOT_WRITABLE',
-                                    'put_back': 'PROVEN'},
+                      g('read') == {'older_than_limit': 'STALE', 'within_limit': 'WRITABLE', 'dated_ahead': 'STALE', 'time_not_a_number': 'UNCHECKED', 'time_too_large': 'UNCHECKED',
+                                    'time_a_yes': 'UNCHECKED', 'missing': 'UNCHECKED', 'not_a_proof': 'UNCHECKED', 'another_baseline': 'UNCHECKED', 'inbox_not_true': 'NOT_WRITABLE',
+                                    'put_back': 'WRITABLE'},
                   'with a file in place of the inbox, a run still returns its verdict, with its notice kept in the service\'s own store, and the proof then says the inbox cannot be written; the tool says so on its error output':
                       g('blocked') == {'verdict': fail, 'notice': 'UNDELIVERED', 'inbox': False, 'store': True, 'state': 'NOT_WRITABLE'}
                       and any('CANNOT WRITE THE INBOX' in l and h[:16] in l for l in said),
                   'put back, the inbox is proved again by the tool\'s own look, with no run, the tool says so, and nothing is left in the inbox but its hash':
-                      g('restored').get('state') == 'PROVEN' and g('restored').get('inbox_holds') == ['baseline_sha256'] and g('restored').get('the_tool_says_so') is True,
+                      g('restored').get('state') == 'WRITABLE' and g('restored').get('inbox_holds') == ['baseline_sha256'] and g('restored').get('the_tool_says_so') is True,
                   'a baseline folder that appears after the tool started, and has had no inbox for a minute, is given its inbox, its hash and its proof by the tool\'s own look; so is one whose folder is dated an hour ahead':
-                      g('later').get('state') == 'PROVEN' and g('later').get('inbox_claims_it') is True and g('later_dated_ahead') == {'state': 'PROVEN', 'inbox_claims_it': True},
+                      g('later').get('state') == 'WRITABLE' and g('later').get('inbox_claims_it') is True and g('later_dated_ahead') == {'state': 'WRITABLE', 'inbox_claims_it': True},
                   'a baseline folder made this moment, with no inbox yet, is left for the console: the tool\'s look makes no inbox for it, and it is not proven; once the console has made the inbox, the look proves it':
-                      g('young') == {'inbox_made_by_the_tool': False, 'state': 'UNPROVEN'} and g('young_after_console').get('state') == 'PROVEN',
+                      g('young') == {'inbox_made_by_the_tool': False, 'state': 'UNCHECKED'} and g('young_after_console').get('state') == 'WRITABLE',
                   'a run on a baseline renews its proof': got.get('renewed') is True,
                   'where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is':
-                      g('unrecorded') == {'verdict': fail, 'notice': 'INBOX', 'state': 'UNPROVEN'} and any('CANNOT RECORD THE PROOF OF DELIVERY' in l for l in said)
-                      and g('recorded_again').get('state') == 'PROVEN' and g('recorded_again').get('a_new_proof_is_on_record') is True,
+                      g('unrecorded') == {'verdict': fail, 'notice': 'INBOX', 'state': 'UNCHECKED'} and any('CANNOT RECORD THE INBOX-WRITABILITY CHECK' in l for l in said)
+                      and g('recorded_again').get('state') == 'WRITABLE' and g('recorded_again').get('a_new_proof_is_on_record') is True,
                   'where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be':
-                      g('no_room') == {'verdict': fail, 'state': 'UNPROVEN', 'left': []} and g('room_again').get('state') == 'PROVEN',
+                      g('no_room') == {'verdict': fail, 'state': 'UNCHECKED', 'left': []} and g('room_again').get('state') == 'WRITABLE',
                   'with the clock put back, so that the tool\'s memory of its proof is dated an hour ahead, the proof is made again all the same':
                       g('clock_put_back').get('made_again') is True,
                   'with the baseline\'s folder taken away and its inbox still holding its hash, its proof is still made by the tool\'s own look, and a run on it is answered UNKNOWN with its notice in that inbox, as before this amendment':
-                      g('folder_gone').get('state') == 'PROVEN' and g('folder_gone').get('run') == ['UNKNOWN', 'BASELINE_MISMATCH', 'INBOX'] and g('folder_gone').get('after_the_run') == 'PROVEN',
+                      g('folder_gone').get('state') == 'WRITABLE' and g('folder_gone').get('run') == ['UNKNOWN', 'BASELINE_MISMATCH', 'INBOX'] and g('folder_gone').get('after_the_run') == 'WRITABLE',
                   'with the error output closed, a run whose proof and whose ledger both have something to say still returns its verdict and keeps its notice':
                       g('closed_output') == {'verdict': fail, 'notice': 'UNDELIVERED'},
                   'the engineer\'s console shows the state: proven, with its time; and, with the proof taken away, not proven, saying that new runs are refused':
-                      any(l.startswith('delivery proven: the gate showed at 20') for l in shown) and not any('DELIVERY NOT PROVEN' in l for l in shown)
-                      and any(l.startswith('DELIVERY NOT PROVEN: the verification service has not shown') and 'new runs through the front door are refused' in l for l in shown_without)}
+                      any(l.startswith('inbox writable: the gate wrote a test file in this inbox at 20') and 'This is not delivery' in l for l in shown) and not any('INBOX NOT CHECKED' in l for l in shown)
+                      and any(l.startswith('INBOX NOT CHECKED: the verification service has not shown') and 'new runs through the front door are refused' in l for l in shown_without)}
     finally:
         s.stop()
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22}
+def r23():
+    """A requirement the service already holds a baseline for is changed by a revision, which is linked as before, or baselined again only with the engineer's reason; the reason, and the baselines already held, go into the signed card, and the record's checker and the first client's view of the requirement print them.  (Amendment 9.)"""
+    s = deploy.Services(OUT / 'R23').start(); e = {}
+    try:
+        first = s.baseline(CASE, draft()); h1 = first['baseline_sha256']; req = first['card']['requirement']; rid = req['id']
+        relaxed = lambda limit: draft(criteria=[dict(draft()['criteria'][0], limit=limit)])           # the same requirement, a lower limit; the controls still fail and pass
+        folders = lambda: sorted(p.name for p in (s.home / 'baselines').iterdir())
+        boxes = lambda: sorted(p.name for p in (s.home / 'inbox').iterdir()) if (s.home / 'inbox').exists() else []
+        before, boxes_before = folders(), boxes()
+
+        def attempt(d, reason=None):
+            try:
+                return s.baseline(CASE, d, alongside_reason=reason)
+            except B.BaselineInvalid as exc:
+                return str(exc)
+        refused, blank = attempt(relaxed('190')), attempt(relaxed('190'), '   ')
+        after, boxes_after = folders(), boxes()
+        why = 'A second bracket of the same part, rated for a lower temperature (CR-23).'
+        second = attempt(relaxed('190'), why); h2 = second['baseline_sha256'] if isinstance(second, dict) else None
+        side = second['card'].get('alongside') if isinstance(second, dict) else None
+        signed = load_envelope(s.home / 'baselines' / h2 / 'baseline.json', s.keys['engineer'])['card'].get('alongside') if h2 else None
+        rev = verify_ctl.revise(s.home, CASE, draft(requirement=dict(req, revision='B')), s.engineer, h1, 'The bracket was strengthened (CR-24).'); h3 = rev['baseline_sha256']
+        third = attempt(relaxed('195'), 'Another variant of the part (CR-25).')
+        other = attempt(draft(requirement=dict(req, id='REQ-SELFTEST-023')))
+        keyfile = OUT / 'R23' / 'engineer.key'; keyfile.write_text(s.engineer.private_hex + '\n')
+        cardfile = OUT / 'R23' / 'draft.json'; cardfile.write_text(json.dumps(relaxed('185')))
+        count_before_cli = len(folders())
+        cli = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'verify_ctl.py'), 'baseline', str(s.home), '--from', str(CASE), '--card', str(cardfile), '--key', str(keyfile)],
+                             capture_output=True, text=True, timeout=120)
+        rec = s.record(h2); ok, checks_2, summary = check_record.verify(rec, s.keys)
+        printed = check_record.render(ok, checks_2, summary)
+        shown = verify_client.Client(s.client_config(OUT / 'R23' / 'workspace', h2)).show()
+        link = f'  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: {h1[:16]}… (rev A).  Reason given by the engineer: {why}'
+
+        def rejects(card):
+            try:
+                B.validate_card(card); return False
+            except B.BaselineInvalid:
+                return True
+        c2 = second['card'] if isinstance(second, dict) else {}
+        malformed = [dict(c2, alongside=dict(side or {}, reason='  ')), dict(c2, alongside=dict(side or {}, baselines=[])),
+                     dict(c2, alongside=dict(side or {}, baselines=[{'baseline_sha256': 'x' * 64, 'revision': 'A'}])), dict(c2, alongside='yes')]
+        e.update(refused=refused[:260] if isinstance(refused, str) else 'baselined', blank=blank[:120] if isinstance(blank, str) else 'baselined', side=side,
+                 third=sorted(b['baseline_sha256'][:16] for b in (third['card']['alongside']['baselines'] if isinstance(third, dict) else [])),
+                 other=list(other['card']) if isinstance(other, dict) else other, cli=(cli.returncode, cli.stderr[-260:]), record_ok=ok,
+                 printed=[l for l in printed.splitlines() if 'ALSO BASELINED' in l], shown=[l for l in shown.splitlines() if 'ALSO BASELINED' in l])
+        checks = {'a second baseline for a requirement the service holds, not made as a revision, is refused without a reason, or with a blank one; the refusal names the baseline held and says to revise it or give a reason; nothing is stored and no inbox is made':
+                      isinstance(refused, str) and rid in refused and h1[:16] in refused and 'revise' in refused and '--alongside-reason' in refused
+                      and isinstance(blank, str) and 'already has a baseline' in blank and after == before and boxes_after == boxes_before,
+                  'with the engineer\'s reason it is baselined, and its signed card names the baseline held, with its revision, and the reason':
+                      side == {'reason': why, 'baselines': [{'baseline_sha256': h1, 'revision': 'A'}]} and signed == side,
+                  'a revision needs no reason and is linked as before, and its card has no such field': 'alongside' not in rev['card'] and rev['card']['supersedes']['baseline_sha256'] == h1,
+                  'a later baseline made as new names every baseline the service holds for the requirement': e['third'] == sorted(x[:16] for x in (h1, h2, h3)),
+                  'a baseline for another requirement needs no reason, and its card has no such field, as a first baseline\'s has none': isinstance(other, dict) and 'alongside' not in other['card'] and 'alongside' not in first['card'],
+                  'the record\'s checker, on a record that verifies, and the first client\'s view of the requirement each print the link and the reason': ok and e['printed'] == [link] and e['shown'] == [link],
+                  'the console\'s command line refuses such a draft without a reason, with exit status 1, and stores nothing': cli.returncode == 1 and 'already has a baseline' in cli.stderr and len(folders()) == count_before_cli,
+                  'a card whose link has a blank reason, no baselines, a hash that is not one, or is not a link at all, is refused by the card\'s rules': all(rejects(c) for c in malformed)}
+    finally:
+        s.stop()
+    return checks, e
+
+
+def r24():
+    """What a person or an assistant reads of a pass calls it the declared check met, never a bare PASS, and shows what the check does not cover: the answer, the first client's status and the engineer's console.  A notice shows what the check does not cover under its headline.  The signed verdict and the record keep the word PASS.  (Amendment 9.)"""
+    r = Run('R24'); e = {}
+    try:
+        excl = 'The check does not cover: ' + '; '.join(r.env['card']['check']['stated_limits']) + '.'
+        bare = lambda t: [l for l in t.splitlines() if re.search(r'\bPASS\b', l.replace('(signed as PASS)', ''))]
+        code_f, out_f = r.submit(BAD)
+        mid = verify_client.Client(r.cfg).status()
+        code, out = r.submit(GOOD)
+        after = verify_client.Client(r.cfg).status()
+        console = verify_ctl.status(r.s.home, r.h, r.s.keys['engineer'], deploy.LOCAL_DSN)
+        notice = (r.s.home / 'inbox' / r.h[:16] / r.s.inbox(r.h)[0]).read_text() if r.s.inbox(r.h) else ''
+        ok, checks_r, s = check_record.verify(r.record(), r.s.keys)
+        printed = check_record.render(ok, checks_r, s)
+        lines, nl = out.strip().splitlines(), notice.strip().splitlines()
+        met_line = (f"DECLARED CHECK MET, for design {B.design_hash(GOOD)[:16]}… only.  This says what the declared check returned against the baselined limits.  "
+                    'It does not say the check is correct, the requirement is complete, or the design is safe.')
+        rows = lambda t: sorted(l.split()[1] for l in t.splitlines() if re.match(r'  a-[0-9a-f]+ ', l))       # runs are listed by their identity, not in the order sent
+        e.update(code=code, first_lines=lines[:2], last=lines[-1:], verdict_rows=[l for l in lines if l.startswith('Verdict ')], bare=(bare(out), bare(after), bare(console), bare(out_f)),
+                 rows_after=rows(after), rows_console=rows(console), mid_tail=mid.splitlines()[-1:], after_tail=after.splitlines()[-2:], console_tail=console.splitlines()[-2:],
+                 inbox_line=[l[:60] for l in console.splitlines() if l.startswith(('inbox writable', 'INBOX NOT CHECKED'))], notice_lines=nl[3:5] + nl[-1:],
+                 outcomes=sorted(x['outcome'] for x in s.get('runs', [])), status=s.get('status'))
+        checks = {'the answer to a pass begins DECLARED CHECK MET, with what the check does not cover on the next line and again at its end, and its Verdict row calls it the declared check met, signed as PASS (exit status 0)':
+                      code == 0 and lines[:2] == ['DECLARED CHECK MET', excl] and lines[-1] == excl
+                      and e['verdict_rows'] == ["Verdict       DECLARED CHECK MET (signed as PASS).  Computed by the verification service from the check's output and the baselined limits.  Not stated by the assistant."],
+                  'no line of the answers, the first client\'s status or the engineer\'s console shows the bare word PASS': e['bare'] == ([], [], [], []),
+                  'with no design met, the status says NOT VERIFIED and nothing more; with one met, the first client\'s status shows the run as MET and says for which design the declared check was met, that this does not say the check is correct, and what the check does not cover':
+                      e['mid_tail'] == ['NOT VERIFIED: no design has met the declared check on this baseline.'] and 'DECLARED CHECK MET' not in mid
+                      and e['rows_after'] == ['FAIL', 'MET'] and e['after_tail'] == [met_line, excl],
+                  'the engineer\'s console shows the run as MET with the same lines, and calls the gate\'s check what it is, an inbox-writability check, not delivery':
+                      e['rows_console'] == ['FAIL', 'MET'] and e['console_tail'] == [met_line, excl]
+                      and any(l.startswith('inbox writable: the gate wrote a test file in this inbox at ') and l.endswith('This is not delivery: it does not show that a notice was delivered or read.') for l in console.splitlines()),
+                  'the notice of the failure has what the check does not cover under its headline and at its end': e['notice_lines'] == ['FAIL: REQUIREMENT NOT MET', excl, excl],
+                  'the signed verdicts and the record keep the word PASS, the record verifies, and its checker prints DECLARED CHECK MET':
+                      ok and e['outcomes'] == ['FAIL', 'PASS'] and s.get('status') == 'DECLARED CHECK MET' and 'STATUS: DECLARED CHECK MET, for design' in printed}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24}
 
 
 def main():

@@ -2,7 +2,7 @@
 """The responsible engineer's console.  Everything here needs a key or a credential the assistant never holds.
 
     verify_ctl.py keygen KEYFILE
-    verify_ctl.py baseline HOME --from DIR --card DRAFT.json --key KEYFILE [--runs 1000]
+    verify_ctl.py baseline HOME --from DIR --card DRAFT.json --key KEYFILE [--runs 1000] [--alongside-reason "..."]
     verify_ctl.py revise   HOME --from DIR --card DRAFT.json --key KEYFILE --supersedes HASH --reason "..."
     verify_ctl.py status   HOME HASH
     verify_ctl.py acknowledge HOME HASH AID --disposition "..." --key KEYFILE
@@ -16,6 +16,11 @@ not baselined.  It then signs the card and the control results with the engineer
 and data under HOME/baselines/<hash>/, and provisions the budget REQ/REV/<hash> through the control plane, so the
 immutable provisioning record names the baseline.  The number of official runs allowed is a ceiling, not a ration:
 the default is 1000, and the replacement allowance is always 0, so no run is ever refunded.
+
+baseline refuses a draft whose requirement id the service already holds a baseline for (Amendment 9): a change to a
+requirement is made with revise, so that it is linked.  A second baseline for the same requirement that is not a change to
+the first needs the engineer's reason, --alongside-reason; the reason and the baselines already held for that requirement are
+written into the new card, which the engineer signs, so the link is in every record built from it.
 
 revise is the only way a requirement, a limit, a load case, a design space or a check changes.  It stops the old
 baseline's budget (no further runs on it), counts what happened on it from the store, and writes that count and the
@@ -36,6 +41,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from plea_gateway import RootExists, Store                          # noqa: E402
 from baseline import FORMAT, BaselineInvalid, card_hash, evaluate, root_for, sha256_hex, validate_card   # noqa: E402
 from verify_record import Key, acknowledgement_message, attempts_of, build, load_envelope, now, sign_envelope   # noqa: E402
+from verify_client import OUTCOME_WORDS, met_lines                  # noqa: E402  (Amendment 9: a pass is shown as the declared check met)
 import notices                                                       # noqa: E402  (Amendment 7: notices the service kept undelivered)
 
 CONTROL_DSN = os.environ.get('PLEA_CONTROL_DSN', 'postgresql://plea_control:control@127.0.0.1:5432/plea')
@@ -54,7 +60,27 @@ def keygen(path) -> Key:
     return key
 
 
-def make_baseline(home, source, draft: dict, key: Key, runs: int = 1000, supersedes: dict | None = None, control_dsn: str = CONTROL_DSN, at: str | None = None) -> dict:
+def held_for_requirement(home, requirement_id) -> list:
+    """The baselines this service holds for a requirement id, as {baseline_sha256, revision}, oldest first by when they were
+    baselined.  A baseline folder whose card cannot be read is passed over.  (Amendment 9.)"""
+    found = []
+    try:
+        folders = sorted((pathlib.Path(home) / 'baselines').iterdir())
+    except OSError:
+        return found
+    for d in folders:
+        try:
+            env = json.loads((d / 'baseline.json').read_text(encoding='utf-8'))
+            card = env['card']
+            if card['requirement']['id'] == requirement_id and env['baseline_sha256'] == d.name:
+                found.append((str(card.get('baselined_at', '')), {'baseline_sha256': d.name, 'revision': str(card['requirement']['revision'])}))
+        except Exception:
+            continue
+    return [x for _, x in sorted(found, key=lambda t: t[0])]
+
+
+def make_baseline(home, source, draft: dict, key: Key, runs: int = 1000, supersedes: dict | None = None, control_dsn: str = CONTROL_DSN, at: str | None = None,
+                  alongside_reason: str | None = None) -> dict:
     """Fill, test, sign, store and provision a baseline.  Returns the envelope.  Raises BaselineInvalid with the reason."""
     home, source = pathlib.Path(home), pathlib.Path(source)
     card = json.loads(json.dumps(draft))
@@ -67,6 +93,15 @@ def make_baseline(home, source, draft: dict, key: Key, runs: int = 1000, superse
         raise BaselineInvalid(f'the check or a data file could not be read: {exc}')
     card['responsible_engineer'] = {'name': (card.get('responsible_engineer') or {}).get('name', ''), 'key': key.public_hex}
     card['supersedes'] = supersedes
+    if supersedes is None:                         # Amendment 9 (continuity): a requirement already held is changed by revise, or linked here
+        rid = (card.get('requirement') or {}).get('id')
+        others = held_for_requirement(home, rid) if isinstance(rid, str) else []
+        if others:
+            if not (isinstance(alongside_reason, str) and alongside_reason.strip()):
+                raise BaselineInvalid(f"requirement {rid} already has a baseline at this service ({', '.join(o['baseline_sha256'][:16] + '… rev ' + o['revision'] for o in others)}): "
+                                      'make this one a revision of it (revise --supersedes), or, if it is a separate baseline for the same requirement and not a change to it, '
+                                      'give the reason (--alongside-reason), which is written into the signed card.  Nothing was baselined')
+            card['alongside'] = {'reason': alongside_reason.strip(), 'baselines': others}
     card['baselined_at'] = at or now()
     validate_card(card)
     controls_run = []
@@ -182,18 +217,20 @@ def status(home, baseline_hash, engineer_key: str, local_dsn: str = LOCAL_DSN) -
     acked = {a['aid'] for a in acknowledgements(home, baseline_hash)}
     box = pathlib.Path(home) / 'inbox' / baseline_hash[:16]
     L = [root, f"{len(attempts)} official runs; {len(list(box.glob('*.txt'))) if box.exists() else 0} notices in the inbox"]
-    proved, at = notices.delivery_state(home, baseline_hash)      # Amendment 8 (D3): whether the gate has shown it can write this inbox
-    if proved == 'PROVEN':
-        L.append(f"delivery proven: the gate showed at {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(at))} that it can write this inbox")
+    checked, at = notices.delivery_state(home, baseline_hash)     # Amendment 8 (D3): whether the gate has shown it can write this inbox
+    if checked == 'WRITABLE':                                       # Amendment 9: named for what it shows, which is not delivery
+        L.append(f"inbox writable: the gate wrote a test file in this inbox at {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(at))}.  "
+                 'This is not delivery: it does not show that a notice was delivered or read.')
     else:
-        L.append(f"DELIVERY NOT PROVEN: {notices.DELIVERY_WORDS[proved]}.  A failure might not reach this inbox, and new runs through the "
-                 f"front door are refused until it is proven.")
+        L.append(f"INBOX NOT CHECKED: {notices.DELIVERY_WORDS[checked]}.  A failure might not reach this inbox, and new runs through the "
+                 f"front door are refused until the gate has written a test file there.")
     kept = notices.undelivered(home, baseline_hash)
     if kept:                                       # Amendment 7 (D2, D3): notices the inbox could not take, kept in the service's own store
         L.append(f"{len(kept)} notices kept undelivered, in {pathlib.Path(home) / 'undelivered' / baseline_hash}: {', '.join(kept)}")
     for a in attempts:
         r = a['result'] or {}
-        L.append(f"  {a['aid']}  {a['outcome']:<11} {r.get('reason_code', ''):<24} {'' if a['outcome'] == 'PASS' else ('acknowledged' if a['aid'] in acked else 'OPEN: awaiting disposition')}")
+        L.append(f"  {a['aid']}  {OUTCOME_WORDS.get(a['outcome'], a['outcome']):<11} {r.get('reason_code', ''):<24} {'' if a['outcome'] == 'PASS' else ('acknowledged' if a['aid'] in acked else 'OPEN: awaiting disposition')}")
+    L += met_lines(env['card'], attempts)
     return '\n'.join(L)
 
 
@@ -202,6 +239,7 @@ def main():
     ap.add_argument('action', choices=['keygen', 'baseline', 'revise', 'status', 'acknowledge', 'record']); ap.add_argument('home'); ap.add_argument('rest', nargs='*')
     ap.add_argument('--from', dest='source'); ap.add_argument('--card'); ap.add_argument('--key'); ap.add_argument('--runs', type=int, default=1000)
     ap.add_argument('--supersedes'); ap.add_argument('--reason'); ap.add_argument('--disposition'); ap.add_argument('--witness-key'); ap.add_argument('--gate-key')
+    ap.add_argument('--alongside-reason', help='why a second baseline for a requirement already held is not a revision of it (Amendment 9)')
     ap.add_argument('--out'); ap.add_argument('--journal', action='append', default=[])
     a = ap.parse_args()
     try:
@@ -210,7 +248,7 @@ def main():
         key = load_key(a.key) if a.key else None
         if a.action in ('baseline', 'revise'):
             draft = json.loads(pathlib.Path(a.card).read_text())
-            env = make_baseline(a.home, a.source, draft, key, a.runs) if a.action == 'baseline' else revise(a.home, a.source, draft, key, a.supersedes, a.reason, a.runs)
+            env = make_baseline(a.home, a.source, draft, key, a.runs, alongside_reason=a.alongside_reason) if a.action == 'baseline' else revise(a.home, a.source, draft, key, a.supersedes, a.reason, a.runs)
             print(json.dumps({'baseline_sha256': env['baseline_sha256'], 'root': root_for(env['card']), 'controls': [(c['name'], c['verdict']) for c in env['controls_run']]}))
         elif a.action == 'status':
             print(status(a.home, a.rest[0], key.public_hex))

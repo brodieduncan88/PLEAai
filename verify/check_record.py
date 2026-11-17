@@ -435,7 +435,7 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
         h = sha(canonical(design))
         released = {'design_sha256': h, 'met': any(r['design_sha256'] == h for r in met), 'seen': any(r['design_sha256'] == h for r in rows_out)}
     summary = {'requirement': req, 'engineer': (card.get('responsible_engineer') or {}).get('name'), 'baseline_sha256': b_hash, 'baselined_at': card.get('baselined_at'),
-               'criteria': card['criteria'], 'load_case': card.get('load_case'), 'check': card['check'], 'supersedes': card.get('supersedes'), 'design_space': card.get('design_space'),
+               'criteria': card['criteria'], 'load_case': card.get('load_case'), 'check': card['check'], 'supersedes': card.get('supersedes'), 'alongside': card.get('alongside'), 'design_space': card.get('design_space'),
                'runs': rows_out, 'official_runs': len(rows_out), 'met': len(met), 'not_met': sum(r['outcome'] == 'FAIL' for r in rows_out),
                'unknown': sum(r['outcome'] not in ('PASS', 'FAIL') for r in rows_out), 'open': sum(1 for r in rows_out if r['outcome'] != 'PASS' and not r['acknowledged']),
                'status': 'DECLARED CHECK MET' if ok and met else 'NOT VERIFIED', 'met_designs': [r['design_sha256'] for r in met], 'released': released,
@@ -454,6 +454,10 @@ def render(ok: bool, checks: list, s: dict) -> str:
         sp = s['supersedes']
         L.append(f"  CHANGED AFTER THE EVENT: this baseline replaced {sp.get('baseline_sha256', '')[:16]}… (rev {sp.get('revision', '?')}) after {sp.get('official_runs', '?')} official runs "
                  f"on it: {sp.get('met', '?')} met, {sp.get('not_met', '?')} not met, {sp.get('unknown', '?')} unknown.  Reason given by the engineer: {sp.get('reason')}")   # Amendment 4: all three counts
+    if s.get('alongside'):                         # Amendment 9: a baseline made for a requirement already held, not as a revision of it, names the others
+        al = s['alongside']
+        L.append('  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: ' + ', '.join(f"{str(b.get('baseline_sha256', ''))[:16]}… (rev {b.get('revision', '?')})" for b in al.get('baselines') or [])
+                 + f".  Reason given by the engineer: {al.get('reason')}")
     for c in s['criteria']:
         L.append(f"  limit: {c['quantity']} {'at most' if c['comparison'] == '<=' else 'at least'} {c['limit']} {c['units']}")
     L += ['', f"  Official runs through the service: {s['official_runs']}.  Met {s['met']}, not met {s['not_met']}, unknown {s['unknown']}.  Awaiting the engineer's disposition: {s['open']}."]

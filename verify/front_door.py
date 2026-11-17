@@ -67,7 +67,7 @@ from plea_gateway import (BudgetExhausted, GateRefusedRun, GovernedError, Held, 
                           RequestKeyReused, Store, Stopped, TransportError, UnknownRoot, WitnessUnavailable)
 from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args, wrap_server   # noqa: E402
 from baseline import HEADLINE, canonical, design_lines, face, root_for   # noqa: E402
-from verify_client import Client                                     # noqa: E402
+from verify_client import Client, alongside_lines                    # noqa: E402
 from verify_record import arguments_for, load_envelope, request_key, signed_by   # noqa: E402
 import notices                                                       # noqa: E402  (Amendment 7: a notice the inbox cannot take is kept, not lost)
 
@@ -80,6 +80,8 @@ EVENTS = ('ENROL', 'REBIND', 'REVOKE')
 BINDING_FIELDS = ('event', 'seq', 'job', 'baseline_sha256', 'root', 'cert_sha256', 'previous', 'time', 'note')
 JOURNAL_MAX = 1 << 30            # bytes the journal of submissions may reach; at that size the door refuses new runs (Amendment 7, D1)
 DISK_RESERVE = 512 << 20         # free bytes the journal's disk keeps for notices; below that the door refuses new runs (Amendment 7, D1)
+SWEEP_AFTER = 120.0               # seconds a run is seen pending before the front door asks the gate for it itself (Amendment 9)
+SWEEP_EVERY = 30.0                # seconds between the front door's looks for such runs (Amendment 9)
 JOURNAL_SHARE = 64 << 20         # bytes of the journal one baseline's designs may take; at that size the door refuses new runs for it alone (Amendment 8, D1)
 HEX_BYTES = set(b'0123456789abcdef')
 
@@ -190,6 +192,7 @@ def requirement_text(card: dict, baseline_hash: str, state: str = 'OPEN') -> str
         s = card['supersedes']
         L.append(f"  THIS BASELINE SUPERSEDES {s['baseline_sha256'][:16]}… ({s.get('official_runs', '?')} official runs, {s.get('not_met', '?')} not met); "
                  f"{s.get('unknown', '?')} unknown, {s.get('met', '?')} met.  Reason given: {s['reason']}")     # Amendment 4: the unknown and met counts too
+    L += alongside_lines(card)                                                                      # Amendment 9
     L += [f"  \"{req['statement']}\"", f"  Source: {req['source']}",
           f"  Baselined {card.get('baselined_at', '?')} by {eng['name']}, responsible engineer.  Baseline hash {baseline_hash}", '', 'ACCEPTANCE LIMITS']
     for k in card['criteria']:
@@ -240,6 +243,8 @@ def plain_text(verdict: dict, runs: dict, aid) -> str:
     L += [f"Official runs {runs['total']} through the service on this baseline: {runs['PASS']} met, {runs['FAIL']} not met, {runs['UNKNOWN']} unknown." + (f"  This run: {aid}." if aid else ''), '']
     if verdict.get('verdict') != 'PASS':
         L.append('This is not a pass.  The run is counted and kept, and the responsible engineer has been sent this result directly by the verification service.')
+    L.append('This result does not say the check is correct, the requirement is complete, or the design is safe.  '            # Amendment 9: a pass too
+             'What the check does not cover cannot be shown here: ask the responsible engineer.')
     L.append('The front door could not read the stored baseline for this job as the one the responsible engineer signed, so the requirement is not printed here.  '
              'The gate read it as signed and decided this result.' if gate_held else
              'The baseline held by the service for this job could not be read as the one the responsible engineer signed, so the requirement is not printed here.')
@@ -298,8 +303,8 @@ def _addressed(card, baseline_sha256: str, engineer: bool) -> str:
     return f"To: no engineer: the verification service found no baseline folder for the hash {baseline_sha256}, and read it in no inbox"
 
 
-DELIVERY_NOTICE = {                # Amendment 8 (D3): what a notice of this refusal says of each state of the gate's proof
-    'UNPROVEN': 'The gate, which writes the notice of each failure, has not shown that it can write to this inbox.',
+DELIVERY_NOTICE = {                # Amendment 8 (D3): what a notice of this refusal says of each state of the gate's inbox-writability check
+    'UNCHECKED': 'The gate, which writes the notice of each failure, has not shown that it can write to this inbox.',
     'STALE': 'The gate, which writes the notice of each failure, has not shown lately that it can write to this inbox.  It may not be running.',
     'NOT_WRITABLE': 'The gate, which writes the notice of each failure, could not write to this inbox when it last tried.',
 }
@@ -391,6 +396,7 @@ class Front:
         self._locks, self._hits, self._seen = {}, collections.defaultdict(collections.deque), {}
         self._journaled = set()                  # the request keys this process has journaled: a design journaled once adds no line again (Amendment 7, D1)
         self._shares, self._counted = None, None   # bytes of the journal taken by each baseline's designs, and the size of the journal they were counted from (Amendment 8, D1)
+        self._pending = {}                       # runs this door has seen pending: (baseline, attempt) -> when first seen (Amendment 9)
         self._journal_lock = threading.Lock()    # the journal has a lock of its own, so that counting it does not hold up every other request (Amendment 8)
         (self.home / 'front').mkdir(parents=True, exist_ok=True)
 
@@ -472,7 +478,7 @@ class Front:
         except UnknownRoot:
             return 403, refusal('NO_BUDGET', 'REFUSED: this baseline has no budget at the control plane.  It was not provisioned by the responsible engineer.')
         self._notify_interrupted(c, attempts, runs)       # Amendment 7 (D11): a run the store shows as interrupted, and not yet noticed, is noticed on this look
-        return 200, dict(self._head(binding, c), runs=runs, verified=runs['PASS'] > 0, attempts=[run_fields(a) for a in attempts], text=text)
+        return 200, dict(self._head(binding, c), runs=runs, declared_check_met=runs['PASS'] > 0, attempts=[run_fields(a) for a in attempts], text=text)   # Amendment 9: not "verified"
 
     # ------------------------------------------------------------------ one official run
     def submit(self, binding, design):
@@ -569,12 +575,12 @@ class Front:
 
     def _delivery(self, c: ServiceClient, key):
         """Amendment 8 (D3).  None if the gate's tool has shown, not too long ago, that it can write a notice to the inbox of the job's
-        baseline, or if this design's run is finished, so that asking again runs nothing.  Otherwise (the state of the proof,
+        baseline, or if this design's run is finished, so that asking again runs nothing.  Otherwise (the state of the gate's check,
         waiting).  A run that an earlier request began and that has no outcome yet is not let through: asking again could make
         it.  waiting is True for such a run, False where no run of this design is on the record, and None where that cannot be
         said: the runs could not be read, or the run on record is neither finished nor pending."""
         state, _ = notices.delivery_state(self.home, c.baseline)
-        if state == 'PROVEN':
+        if state == 'WRITABLE':
             return None
         waiting = None
         try:
@@ -613,7 +619,7 @@ class Front:
     def _delivery_notice(self, c: ServiceClient, state: str) -> str:
         """Amendment 8 (D3).  The engineer's notice of a refusal because the gate has not shown that it can write the inbox.  The front
         door writes it: to the inbox if the front door can, and otherwise to the service's own store, which the console lists."""
-        return self._tell(c, 'DELIVERY_UNPROVEN', state, lambda card, engineer: delivery_body(card, c.baseline, state, engineer))
+        return self._tell(c, 'INBOX_UNCHECKED', state, lambda card, engineer: delivery_body(card, c.baseline, state, engineer))     # Amendment 9: the name
 
     def _journal_room(self, nbytes: int, baseline: str):
         """None if the journal can take nbytes more for this baseline and its disk keeps the space the service keeps for notices;
@@ -665,7 +671,7 @@ class Front:
                    '  An earlier request began a run of this design: it is on the record with no verdict yet, and it is not taken further until the '
                    'service has shown that it can write the inbox.  This request ran nothing and counted nothing.' if waiting else
                    '  This request ran nothing and counted nothing.')     # what is on the record for this design could not be said
-            return 503, dict(head, **refusal('DELIVERY_UNPROVEN', f'REFUSED: {notices.DELIVERY_WORDS[state]}, so a failure might not reach the responsible '
+            return 503, dict(head, **refusal('INBOX_UNCHECKED', f'REFUSED: {notices.DELIVERY_WORDS[state]}, so a failure might not reach the responsible '
                                                                   'engineer.' + ran + told))
         with self._journal_lock:
             fresh = key not in self._journaled             # Amendment 7 (D1): a design journaled once adds no line again
@@ -721,8 +727,74 @@ class Front:
         outcome = verdict.get('verdict') if isinstance(verdict, dict) else None
         if outcome not in ('PASS', 'FAIL', 'UNKNOWN') or verdict.get('baseline_sha256') != c.baseline:
             return 502, dict(head, **refusal('SERVICE_REFUSED', 'REFUSED by the verification service: the verdict returned is not for this job\'s baseline.  NOT VERIFIED.'))
-        return 200, dict(head, outcome=outcome, met=outcome == 'PASS', exit={'PASS': 0, 'FAIL': 2}.get(outcome, 3), aid=aid, runs=runs, verdict=verdict,
+        return 200, dict(head, outcome=outcome, met=outcome == 'PASS', declared_check_met=outcome == 'PASS',             # Amendment 9: the words for a pass,
+                         check_does_not_cover=list(c.card['check']['stated_limits']) if c.card is not None else None,     # and what the check does not cover
+                         exit={'PASS': 0, 'FAIL': 2}.get(outcome, 3), aid=aid, runs=runs, verdict=verdict,
                          text=(face(c.card, verdict, runs, aid) if c.card is not None else plain_text(verdict, runs, aid)) + notice_line(verdict))
+
+
+    # ------------------------------------------------------------------ runs left pending (Amendment 9)
+    def sweep(self, after: float = SWEEP_AFTER) -> list:
+        """Finish the runs that are left pending, with no caller asking.  A run is pending when it was admitted and the gate has
+        signed no outcome for it: the gate host died during it, or the request that began it was cut off.  Before this amendment
+        such a run got its notice only if its design was sent again.  Each run this door has seen pending for `after` seconds is
+        asked for again here, through the same path as a caller's request: the gate host never runs a run twice, so a run it began
+        is answered with its signed UNKNOWN, counted as interrupted, and its engineer is sent the notice; a run that never reached
+        the gate host is run now, once, as its caller asked.  A job that is revoked, or whose binding a pinned engineer did not
+        sign, is passed over, and so is a run whose design this door's journal does not hold.  A run is asked for only while the
+        gate's inbox-writability check for its baseline is good, as for any new run.  Returns what was asked and how it was
+        answered.  Nothing is raised."""
+        done, seen, now = [], set(), time.time()
+        try:
+            jobs = read_jobs(self.home)
+        except Exception:
+            return done
+        for name, b in sorted(jobs.items()):
+            try:
+                if not binding_valid(b, self.engineer_keys) or b['job'] != name or b['event'] == 'REVOKE':
+                    continue
+                with self._guard:
+                    if b['seq'] < self._seen.get(name, 0):        # an earlier signed binding put back: as admit() refuses it
+                        continue
+                c = self.client(b)
+                _, attempts = c.fresh().runs()
+            except Exception:
+                continue
+            for a in attempts:
+                if a.get('outcome') != 'PENDING':
+                    continue
+                k = (b['baseline_sha256'], a.get('aid')); seen.add(k)
+                with self._guard:
+                    first = self._pending.setdefault(k, now)
+                if now - first < after:
+                    continue
+                try:
+                    if notices.delivery_state(self.home, b['baseline_sha256'])[0] != 'WRITABLE':
+                        continue                               # no new step while a failure might not reach the engineer
+                    design = self._design_for(a.get('request_key'))
+                    if design is None:
+                        continue
+                    status, payload = self.submit(b, design)
+                    done.append({'job': name, 'aid': a.get('aid'), 'status': status, 'outcome': payload.get('outcome') or payload.get('refused')})
+                except Exception as exc:                       # one run that cannot be asked for does not stop the others
+                    done.append({'job': name, 'aid': a.get('aid'), 'status': None, 'outcome': type(exc).__name__})
+        with self._guard:
+            self._pending = {k: t for k, t in self._pending.items() if k in seen}
+        return done
+
+
+def sweeper(front: Front, after: float, every: float) -> None:
+    """The front door's own look for runs left pending, every `every` seconds.  (Amendment 9.)"""
+    while True:
+        time.sleep(every)
+        try:
+            for d in front.sweep(after):
+                print(f"front door: a run left pending was asked for again: {json.dumps(d)}", file=sys.stderr, flush=True)
+        except Exception as exc:
+            try:
+                print(f'front door: the look for runs left pending failed: {type(exc).__name__}', file=sys.stderr, flush=True)
+            except Exception:
+                pass
 
 
 # ---------------------------------------------------------------------------------------------------- HTTPS
@@ -839,6 +911,8 @@ def main():
     ap.add_argument('--journal-max-bytes', type=int, default=JOURNAL_MAX, help='size the journal of submissions may reach before new runs are refused (Amendment 7)')
     ap.add_argument('--disk-reserve-bytes', type=int, default=DISK_RESERVE, help='free bytes the journal\'s disk keeps for notices (Amendment 7)')
     ap.add_argument('--journal-share-bytes', type=int, default=JOURNAL_SHARE, help='bytes of the journal one baseline\'s designs may take before new runs for it are refused (Amendment 8)')
+    ap.add_argument('--sweep-after', type=float, default=SWEEP_AFTER, help='seconds a run is seen pending before the front door asks the gate for it itself (Amendment 9)')
+    ap.add_argument('--sweep-every', type=float, default=SWEEP_EVERY, help='seconds between the front door\'s looks for runs left pending (Amendment 9)')
     add_server_args(ap)
     a = ap.parse_args()
     tls = server_from_args(a)
@@ -851,6 +925,7 @@ def main():
            'journal_share_bytes': a.journal_share_bytes}
     front = Front(home, Store(a.local_dsn), cfg, a.engineer_key, a.rate)
     server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(front)), tls)
+    threading.Thread(target=sweeper, args=(front, max(0.0, a.sweep_after), min(600.0, max(0.1, a.sweep_every))), name='front-door-sweep', daemon=True).start()
     print(json.dumps({'listening': a.port, 'home': str(home), 'witness_keys': a.witness_key, 'gate_key': a.gate_key, 'engineer_keys': a.engineer_key, 'tls': True}), flush=True)
     server.serve_forever()
 

@@ -18,8 +18,9 @@ VERIFY_HOME holds, on the engineer's side of the line:
                                  hash it reads in no inbox: kept, addressed to no engineer, read by none (Amendment 6)
   undelivered/<full hash>/       a notice the inbox could not take (a full disk, a permission, a file in its place, or an
                                  inbox made by another account): kept here, and listed by the engineer's console (Amendment 7)
-  delivery/<full hash>.json      this tool's own proof that it can write that baseline's inbox, with the time: made when the
-                                 tool starts, on every run, and on a look of its own for a baseline that has none (Amendment 8)
+  inbox_checks/<full hash>.json  this tool's inbox-writability check for that baseline: whether it could write a test file in
+                                 the inbox, with the time; made when the tool starts, on every run, and on a look of its own
+                                 for a baseline that has none (Amendment 8; named so by Amendment 9: it does not show delivery)
   ledger.jsonl                   one line per call, per verdict and per notice, outside every PLEA store, for tests
 
 The verdict says where its notice went, in its field notice: INBOX, UNCLAIMED, UNDELIVERED or NOT_WRITTEN, or NO_HASH when
@@ -80,8 +81,8 @@ def _report(found: dict) -> None:
         if state == was or (state == 'good' and was is None):
             return
         words = {'inbox': f'CANNOT WRITE THE INBOX of baseline {h[:16]}…: its notices go to the service\'s own store, and new runs for it are refused at the front door',
-                 'record': f'CANNOT RECORD THE PROOF OF DELIVERY for baseline {h[:16]}…: enrolment and new runs for it are refused until it can',
-                 'good': f'the inbox of baseline {h[:16]}… can be written again, and the proof of delivery is recorded'}[state]
+                 'record': f'CANNOT RECORD THE INBOX-WRITABILITY CHECK for baseline {h[:16]}…: enrolment and new runs for it are refused until it can',   # Amendment 9: the name
+                 'good': f'the inbox of baseline {h[:16]}… can be written again, and the inbox-writability check is recorded'}[state]
         print(f'verify tool: {words}', file=sys.stderr, flush=True)
     except Exception:                                    # an error output that fails, or is closed, does not reach a run
         pass
@@ -261,7 +262,7 @@ def verify(baseline_sha256: str, design) -> dict:
 notices.claim_all(HOME)                                   # Amendment 6, as the tool starts (the work is in notices.py, Amendment 7)
 try:                                                      # Amendment 8, as the tool starts; nothing here can stop it starting
     notices.sweep_all(HOME)                               # temporary files a killed process left in an inbox, the store or the proofs
-    for _found in notices.prove_due(HOME, _PROVED, 0.0):  # every baseline whose notices go to an inbox gets its proof of delivery
+    for _found in notices.prove_due(HOME, _PROVED, 0.0):  # every baseline whose notices go to an inbox gets its inbox-writability check
         _report(_found)
 except Exception:
     pass
