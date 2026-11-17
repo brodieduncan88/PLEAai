@@ -1,0 +1,907 @@
+{
+ "M0": {
+  "defect": "no change at all: the control, which must not be caught",
+  "tests_run": [
+   "R18",
+   "R22",
+   "R23",
+   "R24",
+   "F21",
+   "F29",
+   "F33",
+   "F34",
+   "F35"
+  ],
+  "caught_by": [],
+  "failed_checks": {},
+  "errors": {},
+  "seconds": 67.1
+ },
+ "W1": {
+  "defect": "the Verdict row of a pass says PASS",
+  "tests_run": [
+   "R18",
+   "R24"
+  ],
+  "caught_by": [
+   "R18",
+   "R24"
+  ],
+  "failed_checks": {
+   "R18": [
+    "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+    "in process, for every verdict on two cards (the fixture and the pump station), each with five kinds of design, and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+   ],
+   "R24": [
+    "the answer to a pass begins DECLARED CHECK MET, with what the check does not cover on the next line and again at its end, and its Verdict row calls it the declared check met, signed as PASS (exit status 0)",
+    "no line of the answers, the first client's status or the engineer's console shows the bare word PASS"
+   ]
+  },
+  "errors": {},
+  "seconds": 14.5
+ },
+ "W2": {
+  "defect": "what the check does not cover is not shown under the headline",
+  "tests_run": [
+   "R18",
+   "R24",
+   "F33"
+  ],
+  "caught_by": [
+   "F33",
+   "R18",
+   "R24"
+  ],
+  "failed_checks": {
+   "R18": [
+    "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+    "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+    "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+    "in process, for every verdict on two cards (the fixture and the pump station), each with five kinds of design, and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+   ],
+   "R24": [
+    "the answer to a pass begins DECLARED CHECK MET, with what the check does not cover on the next line and again at its end, and its Verdict row calls it the declared check met, signed as PASS (exit status 0)",
+    "the notice of the failure has what the check does not cover under its headline and at its end"
+   ],
+   "F33": [
+    "the answer to a pass begins DECLARED CHECK MET, with what the check does not cover on the next line; its fields say the declared check was met and list what the check does not cover; the signed verdict in it still says PASS",
+    "the command line's answer to a pass begins DECLARED CHECK MET, with what the check does not cover, and exits 0"
+   ]
+  },
+  "errors": {},
+  "seconds": 17.8
+ },
+ "W3": {
+  "defect": "what the check does not cover is not shown at the end",
+  "tests_run": [
+   "R18",
+   "R24"
+  ],
+  "caught_by": [
+   "R18",
+   "R24"
+  ],
+  "failed_checks": {
+   "R18": [
+    "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design",
+    "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown",
+    "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored",
+    "in process, for every verdict on two cards (the fixture and the pump station), each with five kinds of design, and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules"
+   ],
+   "R24": [
+    "the answer to a pass begins DECLARED CHECK MET, with what the check does not cover on the next line and again at its end, and its Verdict row calls it the declared check met, signed as PASS (exit status 0)",
+    "the notice of the failure has what the check does not cover under its headline and at its end"
+   ]
+  },
+  "errors": {},
+  "seconds": 13.7
+ },
+ "W4": {
+  "defect": "a listing shows a pass as PASS",
+  "tests_run": [
+   "R24",
+   "F33"
+  ],
+  "caught_by": [
+   "F33",
+   "R24"
+  ],
+  "failed_checks": {
+   "R24": [
+    "no line of the answers, the first client's status or the engineer's console shows the bare word PASS",
+    "with no design met, the status says NOT VERIFIED and nothing more; with one met, the first client's status shows the run as MET and says for which design the declared check was met, that this does not say the check is correct, and what the check does not cover",
+    "the engineer's console shows the run as MET with the same lines, and calls the gate's check what it is, an inbox-writability check, not delivery"
+   ],
+   "F33": [
+    "no line of the words of the answers and the status (their first part; the second gives the fields, in which outcome is still PASS), nor of the tools' descriptions or the server's instructions, shows the bare word PASS"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.7
+ },
+ "W5": {
+  "defect": "a listing with a design met says nothing of what that does and does not say",
+  "tests_run": [
+   "R24",
+   "F33"
+  ],
+  "caught_by": [
+   "F33",
+   "R24"
+  ],
+  "failed_checks": {
+   "R24": [
+    "with no design met, the status says NOT VERIFIED and nothing more; with one met, the first client's status shows the run as MET and says for which design the declared check was met, that this does not say the check is correct, and what the check does not cover"
+   ],
+   "F33": [
+    "the status's text, through the tool and through the command line, shows for which design the declared check was met, that this does not say the check is correct, and what the check does not cover"
+   ]
+  },
+  "errors": {},
+  "seconds": 7.1
+ },
+ "W6": {
+  "defect": "a listing with a design met does not show what the check does not cover",
+  "tests_run": [
+   "R24",
+   "F33"
+  ],
+  "caught_by": [
+   "F33",
+   "R24"
+  ],
+  "failed_checks": {
+   "R24": [
+    "with no design met, the status says NOT VERIFIED and nothing more; with one met, the first client's status shows the run as MET and says for which design the declared check was met, that this does not say the check is correct, and what the check does not cover",
+    "the engineer's console shows the run as MET with the same lines, and calls the gate's check what it is, an inbox-writability check, not delivery"
+   ],
+   "F33": [
+    "the status's text, through the tool and through the command line, shows for which design the declared check was met, that this does not say the check is correct, and what the check does not cover"
+   ]
+  },
+  "errors": {},
+  "seconds": 7.3
+ },
+ "W7": {
+  "defect": "the status field is called verified again",
+  "tests_run": [
+   "F33"
+  ],
+  "caught_by": [
+   "F33"
+  ],
+  "failed_checks": {
+   "F33": [
+    "the status's fields say whether a design has met the declared check under that name, before a run and after it, and no field is called verified, in the tool's result or in the front door's answer"
+   ]
+  },
+  "errors": {},
+  "seconds": 3.5
+ },
+ "W8": {
+  "defect": "the answer to a run carries no field naming the declared check met, nor what the check does not cover",
+  "tests_run": [
+   "F33"
+  ],
+  "caught_by": [
+   "F33"
+  ],
+  "failed_checks": {
+   "F33": [
+    "the answer to a pass begins DECLARED CHECK MET, with what the check does not cover on the next line; its fields say the declared check was met and list what the check does not cover; the signed verdict in it still says PASS"
+   ]
+  },
+  "errors": {},
+  "seconds": 3.5
+ },
+ "W9": {
+  "defect": "the front door's own text does not say a result does not say the check is correct",
+  "tests_run": [
+   "F21",
+   "F33"
+  ],
+  "caught_by": [
+   "F21",
+   "F33"
+  ],
+  "failed_checks": {
+   "F21": [
+    "in process, the front door's own text for when it holds no usable card is, line for line, what is so: for every reason the gate gives with its card, a missing data file, a design of many names and an empty design among them, it begins with the gate's reason, and it says no usable baseline is held only for the gate's refusal; it sets the design out as sent and has no old words"
+   ],
+   "F33": [
+    "in process, the front door's own text for a pass, for when it cannot read the stored card, says that the result does not say the check is correct, and that what the check does not cover cannot be shown there"
+   ]
+  },
+  "errors": {},
+  "seconds": 10.1
+ },
+ "W10": {
+  "defect": "the submit tool's description calls a pass PASS",
+  "tests_run": [
+   "F33"
+  ],
+  "caught_by": [
+   "F33"
+  ],
+  "failed_checks": {
+   "F33": [
+    "no line of the words of the answers and the status (their first part; the second gives the fields, in which outcome is still PASS), nor of the tools' descriptions or the server's instructions, shows the bare word PASS"
+   ]
+  },
+  "errors": {},
+  "seconds": 3.4
+ },
+ "W11": {
+  "defect": "the engineer's console shows a pass as PASS",
+  "tests_run": [
+   "R24"
+  ],
+  "caught_by": [
+   "R24"
+  ],
+  "failed_checks": {
+   "R24": [
+    "no line of the answers, the first client's status or the engineer's console shows the bare word PASS",
+    "the engineer's console shows the run as MET with the same lines, and calls the gate's check what it is, an inbox-writability check, not delivery"
+   ]
+  },
+  "errors": {},
+  "seconds": 3.7
+ },
+ "W12": {
+  "defect": "the engineer's console says nothing of what a design met does and does not say",
+  "tests_run": [
+   "R24"
+  ],
+  "caught_by": [
+   "R24"
+  ],
+  "failed_checks": {
+   "R24": [
+    "the engineer's console shows the run as MET with the same lines, and calls the gate's check what it is, an inbox-writability check, not delivery"
+   ]
+  },
+  "errors": {},
+  "seconds": 3.7
+ },
+ "K1": {
+  "defect": "a second baseline for a requirement held is made without a reason",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "a second baseline for a requirement the service holds, not made as a revision, is refused without a reason, or with a blank one; the refusal names the baseline held and says to revise it or give a reason; nothing is stored and no inbox is made",
+    "the console's command line refuses such a draft without a reason, with exit status 1, and stores nothing",
+    "an id that differs from one held only in case, in white space or in its Unicode form is the same requirement: each such draft is refused without a reason",
+    "a baseline folder whose signature does not verify is not counted as held, and a first baseline for its requirement needs no reason; one that is whole, signed by another engineer's key, is counted, and a baseline for its requirement is refused without a reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.5
+ },
+ "K2": {
+  "defect": "the link and the reason are not written into the card",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "with the engineer's reason it is baselined, and its signed card names the baseline held, with its revision, and the reason",
+    "a later baseline made as new names every baseline the service holds for the requirement",
+    "the record's checker, on a record that verifies, the first client's view of the requirement and the front door's, in its text and its fields, each give the link and the reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.5
+ },
+ "K3": {
+  "defect": "a blank reason is taken as a reason",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "a second baseline for a requirement the service holds, not made as a revision, is refused without a reason, or with a blank one; the refusal names the baseline held and says to revise it or give a reason; nothing is stored and no inbox is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.6
+ },
+ "K4": {
+  "defect": "only the first baseline held is named",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "a later baseline made as new names every baseline the service holds for the requirement"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.5
+ },
+ "K5": {
+  "defect": "a revision needs a reason too",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "a revision needs no reason and is linked as before, and its card has no such field",
+    "a later baseline made as new names every baseline the service holds for the requirement",
+    "a link written in the draft is never signed: a first baseline for another requirement and a revision, each made from a draft that carries one, have none"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.5
+ },
+ "K6": {
+  "defect": "the record's checker does not print the link",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "the record's checker, on a record that verifies, the first client's view of the requirement and the front door's, in its text and its fields, each give the link and the reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.7
+ },
+ "K7": {
+  "defect": "the first client's view of the requirement does not print the link",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "the record's checker, on a record that verifies, the first client's view of the requirement and the front door's, in its text and its fields, each give the link and the reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.4
+ },
+ "K8": {
+  "defect": "the card's rules take a link with no reason",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "a card whose link has a blank reason, no baselines, a hash that is not one, or is not a link at all, is refused by the card's rules"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.4
+ },
+ "K9": {
+  "defect": "a baseline held for any requirement counts as one held for this requirement",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "a baseline for another requirement needs no reason, and its card has no such field, as a first baseline's has none",
+    "a baseline folder whose signature does not verify is not counted as held, and a first baseline for its requirement needs no reason; one that is whole, signed by another engineer's key, is counted, and a baseline for its requirement is refused without a reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.2
+ },
+ "N1": {
+  "defect": "the refusal is coded DELIVERY_UNPROVEN again",
+  "tests_run": [
+   "F29",
+   "F34"
+  ],
+  "caught_by": [
+   "F29",
+   "F34"
+  ],
+  "failed_checks": {
+   "F29": [
+    "with no proof on record, a new design is refused at the door, saying that the service has not shown it can write the inbox and that a failure might not reach the engineer; nothing is run, counted or journaled, and no result is sent",
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason",
+    "where the runs cannot be read, a design is not let through, though its run is finished; the refusal says only that this request ran nothing",
+    "a run that an earlier request began and that was not yet made is not made while the proof is not good: the refusal says that it is on the record with no verdict yet, and does not say that nothing was run; it is made once the proof is good"
+   ],
+   "F34": [
+    "with no check on record, a new design is refused as INBOX_UNCHECKED, and the engineer's notice of it is named INBOX_UNCHECKED, for its reason; nothing is named as before"
+   ]
+  },
+  "errors": {},
+  "seconds": 21.8
+ },
+ "N2": {
+  "defect": "the notice of the refusal is named DELIVERY_UNPROVEN again",
+  "tests_run": [
+   "F29",
+   "F34"
+  ],
+  "caught_by": [
+   "F29",
+   "F34"
+  ],
+  "failed_checks": {
+   "F29": [
+    "with no proof on record, a new design is refused at the door, saying that the service has not shown it can write the inbox and that a failure might not reach the engineer; nothing is run, counted or journaled, and no result is sent",
+    "the engineer is told of the refusal: one notice in the inbox on the day for that reason, however many designs are refused; it says that the gate has not shown it can write there, that nothing is run or counted, and that no check gave it; and the caller is told that the engineer has been sent it",
+    "a design whose run is finished is still answered as before, and nothing more is run",
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason",
+    "where the runs cannot be read, a design is not let through, though its run is finished; the refusal says only that this request ran nothing"
+   ],
+   "F34": [
+    "with no check on record, a new design is refused as INBOX_UNCHECKED, and the engineer's notice of it is named INBOX_UNCHECKED, for its reason; nothing is named as before"
+   ]
+  },
+  "errors": {},
+  "seconds": 21.9
+ },
+ "N3": {
+  "defect": "the engineer's console says delivery proven again",
+  "tests_run": [
+   "R22",
+   "R24"
+  ],
+  "caught_by": [
+   "R22",
+   "R24"
+  ],
+  "failed_checks": {
+   "R22": [
+    "the engineer's console shows the state: proven, with its time; and, with the proof taken away, not proven, saying that new runs are refused"
+   ],
+   "R24": [
+    "the engineer's console shows the run as MET with the same lines, and calls the gate's check what it is, an inbox-writability check, not delivery"
+   ]
+  },
+  "errors": {},
+  "seconds": 15.1
+ },
+ "N4": {
+  "defect": "the checks are kept in delivery/ again",
+  "tests_run": [
+   "R22"
+  ],
+  "caught_by": [
+   "R22"
+  ],
+  "failed_checks": {
+   "R22": [
+    "when the tool starts, a baseline it holds has an inbox-writability check on record: its inbox and the service's store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer's and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service's own, though its name begins the same way",
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that",
+    "with a file in place of the inbox, a run still returns its verdict, with its notice kept in the service's own store, and the proof then says the inbox cannot be written; the tool says so on its error output",
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash",
+    "a baseline folder that appears after the tool started, and has had no inbox for a minute, is given its inbox, its hash and its proof by the tool's own look; so is one whose folder is dated an hour ahead",
+    "a baseline folder made this moment, with no inbox yet, is left for the console: the tool's look makes no inbox for it, and it is not proven; once the console has made the inbox, the look proves it",
+    "a run on a baseline renews its proof",
+    "where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is",
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be",
+    "with the clock put back, so that the tool's memory of its proof is dated an hour ahead, the proof is made again all the same",
+    "with the baseline's folder taken away and its inbox still holding its hash, its proof is still made by the tool's own look, and a run on it is answered UNKNOWN with its notice in that inbox, as before this amendment",
+    "with the error output closed, a run whose proof and whose ledger both have something to say still returns its verdict and keeps its notice",
+    "the engineer's console shows the state: proven, with its time; and, with the proof taken away, not proven, saying that new runs are refused"
+   ]
+  },
+  "errors": {},
+  "seconds": 1.0
+ },
+ "S1": {
+  "defect": "the front door never looks for runs left pending",
+  "tests_run": [
+   "F34"
+  ],
+  "caught_by": [
+   "F34"
+  ],
+  "failed_checks": {
+   "F34": [
+    "once the gate has shown again that it can write the inbox, the front door asks for the run itself, with no design sent by anyone: the run is INTERRUPTED, one notice of it is in the inbox, the check was not run again, and the front door's log says it asked",
+    "the design sent again afterwards is answered INTERRUPTED, with no second notice and nothing run; its fields say the declared check was not met, and what it does not cover"
+   ]
+  },
+  "errors": {},
+  "seconds": 31.3
+ },
+ "S2": {
+  "defect": "the front door asks for a run left pending while the gate's check of its inbox is not good",
+  "tests_run": [
+   "F34"
+  ],
+  "caught_by": [
+   "F34"
+  ],
+  "failed_checks": {
+   "F34": [
+    "while the gate's check of the inbox is not good, the front door, which looks for runs left pending every 0.3 seconds and asks after one, does not ask: the run is still pending, no notice of any kind is written, and nothing more was run"
+   ]
+  },
+  "errors": {},
+  "seconds": 13.8
+ },
+ "S3": {
+  "defect": "the front door asks only for runs it has journaled since it started",
+  "tests_run": [
+   "F34"
+  ],
+  "caught_by": [
+   "F34"
+  ],
+  "failed_checks": {
+   "F34": [
+    "once the gate has shown again that it can write the inbox, the front door asks for the run itself, with no design sent by anyone: the run is INTERRUPTED, one notice of it is in the inbox, the check was not run again, and the front door's log says it asked",
+    "the design sent again afterwards is answered INTERRUPTED, with no second notice and nothing run; its fields say the declared check was not met, and what it does not cover"
+   ]
+  },
+  "errors": {},
+  "seconds": 31.0
+ },
+ "K10": {
+  "defect": "two requirement ids that print alike are compared as different strings",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "an id that differs from one held only in case, in white space or in its Unicode form is the same requirement: each such draft is refused without a reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.8
+ },
+ "K11": {
+  "defect": "a link written in the draft is signed",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "a link written in the draft is never signed: a first baseline for another requirement and a revision, each made from a draft that carries one, have none"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.4
+ },
+ "K12": {
+  "defect": "a baseline folder whose envelope does not verify is counted as held",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "a baseline folder whose signature does not verify is not counted as held, and a first baseline for its requirement needs no reason; one that is whole, signed by another engineer's key, is counted, and a baseline for its requirement is refused without a reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.4
+ },
+ "K13": {
+  "defect": "only the engineer's own baselines are counted, not a colleague's",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "a baseline folder whose signature does not verify is not counted as held, and a first baseline for its requirement needs no reason; one that is whole, signed by another engineer's key, is counted, and a baseline for its requirement is refused without a reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.5
+ },
+ "K14": {
+  "defect": "a format character, such as a zero-width space, makes an id another requirement",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "an id that differs from one held only in case, in white space or in its Unicode form is the same requirement: each such draft is refused without a reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.5
+ },
+ "K15": {
+  "defect": "a combining mark left over, such as a variation selector, makes an id another requirement",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "an id that differs from one held only in case, in white space or in its Unicode form is the same requirement: each such draft is refused without a reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.5
+ },
+ "W13": {
+  "defect": "the record's checker shows a run that met the check as PASS",
+  "tests_run": [
+   "R24"
+  ],
+  "caught_by": [
+   "R24"
+  ],
+  "failed_checks": {
+   "R24": [
+    "the signed verdicts and the record keep the word PASS, the record verifies, and its checker prints DECLARED CHECK MET and shows the run that met it as MET"
+   ]
+  },
+  "errors": {},
+  "seconds": 3.4
+ },
+ "W14": {
+  "defect": "the answer to an interrupted run has neither field",
+  "tests_run": [
+   "F34"
+  ],
+  "caught_by": [
+   "F34"
+  ],
+  "failed_checks": {
+   "F34": [
+    "the design sent again afterwards is answered INTERRUPTED, with no second notice and nothing run; its fields say the declared check was not met, and what it does not cover"
+   ]
+  },
+  "errors": {},
+  "seconds": 11.4
+ },
+ "W15": {
+  "defect": "the front door's fields of the requirement do not give the link",
+  "tests_run": [
+   "R23"
+  ],
+  "caught_by": [
+   "R23"
+  ],
+  "failed_checks": {
+   "R23": [
+    "the record's checker, on a record that verifies, the first client's view of the requirement and the front door's, in its text and its fields, each give the link and the reason"
+   ]
+  },
+  "errors": {},
+  "seconds": 2.5
+ },
+ "S4": {
+  "defect": "the look asks for a run it cannot finish at the same wait each time",
+  "tests_run": [
+   "F35"
+  ],
+  "caught_by": [
+   "F35"
+  ],
+  "failed_checks": {
+   "F35": [
+    "while an ask does not finish the run, it is asked for once it has been pending for the wait (10 s here), and again after 20 s and then 40 s more: twice the wait before each time",
+    "the wait stops growing at an hour, and after twelve asks the look leaves the run as it is; a look that cannot read the store forgets no wait; a wait of nought is taken as one second; nothing was run and no notice was written meanwhile",
+    "a run whose design the journal does not hold is looked for no more often: at 10 s, then 20 s after that, and not between"
+   ]
+  },
+  "errors": {},
+  "seconds": 7.9
+ },
+ "S5": {
+  "defect": "the wait between asks has no upper limit",
+  "tests_run": [
+   "F35"
+  ],
+  "caught_by": [
+   "F35"
+  ],
+  "failed_checks": {
+   "F35": [
+    "the wait stops growing at an hour, and after twelve asks the look leaves the run as it is; a look that cannot read the store forgets no wait; a wait of nought is taken as one second; nothing was run and no notice was written meanwhile"
+   ]
+  },
+  "errors": {},
+  "seconds": 7.8
+ },
+ "S6": {
+  "defect": "the look asks for a run while its baseline's budget is held",
+  "tests_run": [
+   "F35"
+  ],
+  "caught_by": [
+   "F35"
+  ],
+  "failed_checks": {
+   "F35": [
+    "while the baseline's budget is held, the run is not asked for, though it is due, and is still pending",
+    "with the budget open again, the real ask, at once, makes the run INTERRUPTED, with one notice and nothing run again",
+    "a run cut off whose notice is missing is given it by the look, once it is due, and only once; nothing is run",
+    "with the budget held, a missing notice of a run cut off is still written, once it is due; nothing is run"
+   ]
+  },
+  "errors": {},
+  "seconds": 8.0
+ },
+ "S7": {
+  "defect": "the look does not write the missing notice of a run cut off",
+  "tests_run": [
+   "F35"
+  ],
+  "caught_by": [
+   "F35"
+  ],
+  "failed_checks": {
+   "F35": [
+    "a run cut off whose notice is missing is given it by the look, once it is due, and only once; nothing is run",
+    "with the budget held, a missing notice of a run cut off is still written, once it is due; nothing is run",
+    "where the journal does not hold the design, the notice is still written, in the service's fixed words, which say the design is not shown; nothing is run"
+   ]
+  },
+  "errors": {},
+  "seconds": 7.9
+ },
+ "S8": {
+  "defect": "the look passes over a run the gate began and did not finish",
+  "tests_run": [
+   "F34",
+   "F35"
+  ],
+  "caught_by": [
+   "F34",
+   "F35"
+  ],
+  "failed_checks": {
+   "F34": [
+    "once the gate has shown again that it can write the inbox, the front door asks for the run itself, with no design sent by anyone: the run is INTERRUPTED, one notice of it is in the inbox, the check was not run again, and the front door's log says it asked",
+    "the design sent again afterwards is answered INTERRUPTED, with no second notice and nothing run; its fields say the declared check was not met, and what it does not cover"
+   ],
+   "F35": [
+    "while an ask does not finish the run, it is asked for once it has been pending for the wait (10 s here), and again after 20 s and then 40 s more: twice the wait before each time",
+    "the wait stops growing at an hour, and after twelve asks the look leaves the run as it is; a look that cannot read the store forgets no wait; a wait of nought is taken as one second; nothing was run and no notice was written meanwhile",
+    "a run whose design the journal does not hold is looked for no more often: at 10 s, then 20 s after that, and not between",
+    "with the budget open again, the real ask, at once, makes the run INTERRUPTED, with one notice and nothing run again",
+    "a run cut off whose notice is missing is given it by the look, once it is due, and only once; nothing is run",
+    "with the budget held, a missing notice of a run cut off is still written, once it is due; nothing is run",
+    "where the journal does not hold the design, the notice is still written, in the service's fixed words, which say the design is not shown; nothing is run"
+   ]
+  },
+  "errors": {},
+  "seconds": 36.5
+ },
+ "S9": {
+  "defect": "a run passed over because the journal does not hold its design waits no longer for it",
+  "tests_run": [
+   "F35"
+  ],
+  "caught_by": [
+   "F35"
+  ],
+  "failed_checks": {
+   "F35": [
+    "a run whose design the journal does not hold is looked for no more often: at 10 s, then 20 s after that, and not between"
+   ]
+  },
+  "errors": {},
+  "seconds": 8.0
+ },
+ "S10": {
+  "defect": "the missing notice of a run cut off is not written while the budget is held",
+  "tests_run": [
+   "F35"
+  ],
+  "caught_by": [
+   "F35"
+  ],
+  "failed_checks": {
+   "F35": [
+    "with the budget held, a missing notice of a run cut off is still written, once it is due; nothing is run",
+    "where the journal does not hold the design, the notice is still written, in the service's fixed words, which say the design is not shown; nothing is run"
+   ]
+  },
+  "errors": {},
+  "seconds": 7.9
+ },
+ "S11": {
+  "defect": "a wait of nought is taken as it is",
+  "tests_run": [
+   "F35"
+  ],
+  "caught_by": [
+   "F35"
+  ],
+  "failed_checks": {
+   "F35": [
+    "the wait stops growing at an hour, and after twelve asks the look leaves the run as it is; a look that cannot read the store forgets no wait; a wait of nought is taken as one second; nothing was run and no notice was written meanwhile"
+   ]
+  },
+  "errors": {},
+  "seconds": 8.5
+ },
+ "S12": {
+  "defect": "a look that cannot read a job's baseline forgets its waits",
+  "tests_run": [
+   "F35"
+  ],
+  "caught_by": [
+   "F35"
+  ],
+  "failed_checks": {
+   "F35": [
+    "the wait stops growing at an hour, and after twelve asks the look leaves the run as it is; a look that cannot read the store forgets no wait; a wait of nought is taken as one second; nothing was run and no notice was written meanwhile"
+   ]
+  },
+  "errors": {},
+  "seconds": 8.3
+ },
+ "S13": {
+  "defect": "the look writes no notice of a run cut off whose design the journal does not hold",
+  "tests_run": [
+   "F35"
+  ],
+  "caught_by": [
+   "F35"
+  ],
+  "failed_checks": {
+   "F35": [
+    "where the journal does not hold the design, the notice is still written, in the service's fixed words, which say the design is not shown; nothing is run"
+   ]
+  },
+  "errors": {},
+  "seconds": 7.9
+ },
+ "S14": {
+  "defect": "the look acts on a run that it cannot finish for ever",
+  "tests_run": [
+   "F35"
+  ],
+  "caught_by": [
+   "F35"
+  ],
+  "failed_checks": {
+   "F35": [
+    "the wait stops growing at an hour, and after twelve asks the look leaves the run as it is; a look that cannot read the store forgets no wait; a wait of nought is taken as one second; nothing was run and no notice was written meanwhile"
+   ]
+  },
+  "errors": {},
+  "seconds": 8.7
+ }
+}
