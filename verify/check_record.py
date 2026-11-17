@@ -465,7 +465,7 @@ def render(ok: bool, checks: list, s: dict) -> str:
         what = ('; '.join(f"{c['id']} {c['achieved']} vs limit {c['limit']} {c['units']}" for c in r['criteria'] if c.get('achieved') is not None)
                 or (outside_reason(s.get('design_space'), r.get('design')) if r['reason_code'] == 'DESIGN_OUTSIDE_BASELINE' else recorded(r['detail'])))
         tail = '' if r['outcome'] == 'PASS' else ('   acknowledged' if r['acknowledged'] else '   OPEN')
-        L.append(f"    {r['aid']}  design {str(r['design_sha256'])[:10]}…  {r['outcome']:<11} {r['reason_code'] or '':<24} {what}{tail}")
+        L.append(f"    {r['aid']}  design {str(r['design_sha256'])[:10]}…  {'MET' if r['outcome'] == 'PASS' else r['outcome']:<11} {r['reason_code'] or '':<24} {what}{tail}")   # Amendment 9: MET, not PASS
     L.append('')
     if not ok:
         L.append('FAILED: do not rely on this record.')

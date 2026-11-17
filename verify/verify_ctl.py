@@ -35,6 +35,7 @@ import pathlib
 import shutil
 import sys
 import time
+import unicodedata
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -60,10 +61,17 @@ def keygen(path) -> Key:
     return key
 
 
+def requirement_key(requirement_id) -> str:
+    """A requirement id as the continuity rule compares it: in Unicode's compatibility form, without case, with each run of
+    white space as one space, and none at either end.  Two ids that print alike are one requirement.  (Amendment 9.)"""
+    return ' '.join(unicodedata.normalize('NFKC', str(requirement_id)).casefold().split())
+
+
 def held_for_requirement(home, requirement_id) -> list:
     """The baselines this service holds for a requirement id, as {baseline_sha256, revision}, oldest first by when they were
-    baselined.  A baseline folder whose card cannot be read is passed over.  (Amendment 9.)"""
-    found = []
+    baselined.  Ids are compared as requirement_key gives them.  A baseline folder whose envelope does not verify (its card
+    cannot be read, its hash is not its card's, or it is not signed by the key its card names) is passed over.  (Amendment 9.)"""
+    found, want = [], requirement_key(requirement_id)
     try:
         folders = sorted((pathlib.Path(home) / 'baselines').iterdir())
     except OSError:
@@ -71,8 +79,9 @@ def held_for_requirement(home, requirement_id) -> list:
     for d in folders:
         try:
             env = json.loads((d / 'baseline.json').read_text(encoding='utf-8'))
+            env = load_envelope(d / 'baseline.json', env['signature']['signer'])      # its own signature and hash; the key is the one the card names
             card = env['card']
-            if card['requirement']['id'] == requirement_id and env['baseline_sha256'] == d.name:
+            if requirement_key(card['requirement']['id']) == want and env['baseline_sha256'] == d.name:
                 found.append((str(card.get('baselined_at', '')), {'baseline_sha256': d.name, 'revision': str(card['requirement']['revision'])}))
         except Exception:
             continue
@@ -93,6 +102,7 @@ def make_baseline(home, source, draft: dict, key: Key, runs: int = 1000, superse
         raise BaselineInvalid(f'the check or a data file could not be read: {exc}')
     card['responsible_engineer'] = {'name': (card.get('responsible_engineer') or {}).get('name', ''), 'key': key.public_hex}
     card['supersedes'] = supersedes
+    card.pop('alongside', None)                    # Amendment 9: a link is made here, from what the service holds, and never taken from the draft
     if supersedes is None:                         # Amendment 9 (continuity): a requirement already held is changed by revise, or linked here
         rid = (card.get('requirement') or {}).get('id')
         others = held_for_requirement(home, rid) if isinstance(rid, str) else []
@@ -222,7 +232,8 @@ def status(home, baseline_hash, engineer_key: str, local_dsn: str = LOCAL_DSN) -
         L.append(f"inbox writable: the gate wrote a test file in this inbox at {time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(at))}.  "
                  'This is not delivery: it does not show that a notice was delivered or read.')
     else:
-        L.append(f"INBOX NOT CHECKED: {notices.DELIVERY_WORDS[checked]}.  A failure might not reach this inbox, and new runs through the "
+        heading = {'UNCHECKED': 'INBOX NOT CHECKED', 'STALE': 'INBOX CHECK OUT OF DATE', 'NOT_WRITABLE': 'INBOX NOT WRITABLE'}.get(checked, 'INBOX NOT CHECKED')
+        L.append(f"{heading}: {notices.DELIVERY_WORDS[checked]}.  A failure might not reach this inbox, and new runs through the "
                  f"front door are refused until the gate has written a test file there.")
     kept = notices.undelivered(home, baseline_hash)
     if kept:                                       # Amendment 7 (D2, D3): notices the inbox could not take, kept in the service's own store

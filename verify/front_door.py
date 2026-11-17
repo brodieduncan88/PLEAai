@@ -68,7 +68,7 @@ from plea_gateway import (BudgetExhausted, GateRefusedRun, GovernedError, Held, 
 from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args, wrap_server   # noqa: E402
 from baseline import HEADLINE, canonical, design_lines, face, root_for   # noqa: E402
 from verify_client import Client, alongside_lines                    # noqa: E402
-from verify_record import arguments_for, load_envelope, request_key, signed_by   # noqa: E402
+from verify_record import PENDING_PHASES, arguments_for, load_envelope, request_key, signed_by   # noqa: E402
 import notices                                                       # noqa: E402  (Amendment 7: a notice the inbox cannot take is kept, not lost)
 
 JOB_NAME = re.compile(r'^[a-z0-9][a-z0-9-]{1,40}$')
@@ -81,7 +81,8 @@ BINDING_FIELDS = ('event', 'seq', 'job', 'baseline_sha256', 'root', 'cert_sha256
 JOURNAL_MAX = 1 << 30            # bytes the journal of submissions may reach; at that size the door refuses new runs (Amendment 7, D1)
 DISK_RESERVE = 512 << 20         # free bytes the journal's disk keeps for notices; below that the door refuses new runs (Amendment 7, D1)
 SWEEP_AFTER = 120.0               # seconds a run is seen pending before the front door asks the gate for it itself (Amendment 9)
-SWEEP_EVERY = 30.0                # seconds between the front door's looks for such runs (Amendment 9)
+SWEEP_EVERY = 30.0
+SWEEP_MAX_WAIT = 6 * 3600.0          # the longest the look waits before it asks for one run again (Amendment 9)                # seconds between the front door's looks for such runs (Amendment 9)
 JOURNAL_SHARE = 64 << 20         # bytes of the journal one baseline's designs may take; at that size the door refuses new runs for it alone (Amendment 8, D1)
 HEX_BYTES = set(b'0123456789abcdef')
 
@@ -201,7 +202,7 @@ def requirement_text(card: dict, baseline_hash: str, state: str = 'OPEN') -> str
     for name, rule in card['design_space'].items():
         L.append(f"  {name}: " + ('one of ' + ', '.join(map(str, rule['choice'])) if 'choice' in rule else f"a number from {rule['min']} to {rule['max']}"))
     L += ['', f"DECLARED CHECK  {chk['id']} v{chk['version']}, written by {chk['author']}, reviewed by {chk['reviewed_by']}", '  It does not cover: ' + '; '.join(chk['stated_limits']), '',
-          'A design is verified only by submitting it to the verification service: an object giving exactly the design-space parameters.',
+          'A design is checked against this baseline only by submitting it to the verification service: an object giving exactly the design-space parameters.',
           'The requirement, the limits, the load case, the design space and the check cannot be changed from here.',
           f"Only {eng['name']} can issue a revised baseline or accept a failure."]
     return '\n'.join(L)
@@ -213,7 +214,8 @@ def requirement_fields(card: dict) -> dict:
             'criteria': [{k: c[k] for k in ('id', 'quantity', 'comparison', 'limit', 'units')} for c in card['criteria']],
             'load_case': card['load_case'], 'design_space': card['design_space'],
             'check': {'id': chk['id'], 'version': chk['version'], 'author': chk['author'], 'reviewed_by': chk['reviewed_by'], 'stated_limits': chk['stated_limits']},
-            'responsible_engineer': card['responsible_engineer']['name'], 'baselined_at': card.get('baselined_at'), 'supersedes': card.get('supersedes')}
+            'responsible_engineer': card['responsible_engineer']['name'], 'baselined_at': card.get('baselined_at'), 'supersedes': card.get('supersedes'),
+            'alongside': card.get('alongside')}                       # Amendment 9: the other baselines held for this requirement, and the engineer's reason
 
 
 def run_fields(attempt: dict) -> dict:
@@ -721,7 +723,8 @@ class Front:
             if c.card is None:
                 text += '\nThe baseline held by the service for this job could not be read as the one the responsible engineer signed.  Tell the responsible engineer.'
             text += self._interrupted_notice(c, design, runs, mine['aid'])     # Amendment 7 (D11): the engineer is sent a notice of this run too
-            return 200, dict(head, outcome='INTERRUPTED', met=False, exit=3, aid=mine['aid'], runs=runs, verdict=None, text=text)
+            return 200, dict(head, outcome='INTERRUPTED', met=False, declared_check_met=False,                                  # Amendment 9: as for any answer
+                             check_does_not_cover=list(c.card['check']['stated_limits']) if c.card is not None else None, exit=3, aid=mine['aid'], runs=runs, verdict=None, text=text)
         runs, attempts = c.fresh().runs()
         aid = next((a['aid'] for a in attempts if a['request_key'] == key), None)
         outcome = verdict.get('verdict') if isinstance(verdict, dict) else None
@@ -734,17 +737,25 @@ class Front:
 
 
     # ------------------------------------------------------------------ runs left pending (Amendment 9)
-    def sweep(self, after: float = SWEEP_AFTER) -> list:
+    def sweep(self, after: float = SWEEP_AFTER, now: float | None = None) -> list:
         """Finish the runs that are left pending, with no caller asking.  A run is pending when it was admitted and the gate has
         signed no outcome for it: the gate host died during it, or the request that began it was cut off.  Before this amendment
-        such a run got its notice only if its design was sent again.  Each run this door has seen pending for `after` seconds is
-        asked for again here, through the same path as a caller's request: the gate host never runs a run twice, so a run it began
-        is answered with its signed UNKNOWN, counted as interrupted, and its engineer is sent the notice; a run that never reached
-        the gate host is run now, once, as its caller asked.  A job that is revoked, or whose binding a pinned engineer did not
-        sign, is passed over, and so is a run whose design this door's journal does not hold.  A run is asked for only while the
-        gate's inbox-writability check for its baseline is good, as for any new run.  Returns what was asked and how it was
-        answered.  Nothing is raised."""
-        done, seen, now = [], set(), time.time()
+        such a run got its notice only if its design was sent again.
+
+        For each job whose binding a pinned engineer signed and that is not revoked, the look reads the observation of the job's
+        baseline from the store, one reading, and from its phases picks the runs that may be pending, and the runs cut off whose
+        notice is not yet written.  A run first seen `after` seconds ago or more is due; once asked for, it is due again after twice
+        the wait before, up to SWEEP_MAX_WAIT, so a run that cannot be finished is asked for less and less often.  Only when one
+        is due are the job's runs read in full.  A run cut off whose notice is missing is given it, as an answer would give it.
+        A pending run is asked for again through the same path as a caller's request: the gate host never runs a run twice, so a
+        run it began is answered with its signed UNKNOWN, counted as interrupted, and its engineer is sent the notice; a run that
+        never reached the gate host is run now, once, as its caller asked.  Nothing is done for a baseline while the gate's
+        inbox-writability check for it is not good, nor while its budget is held or stopped, which the governor would refuse.
+        The job's binding is read again just before a run is asked for, so a revocation made during a look takes effect.  Runs
+        are a baseline's, not a job's: a run on a baseline is asked for through any live job bound to it.  A run whose design
+        this door's journal does not hold is passed over.  Returns what was done.  Nothing is raised."""
+        done, seen = [], set()
+        now = time.time() if now is None else now
         try:
             jobs = read_jobs(self.home)
         except Exception:
@@ -756,30 +767,57 @@ class Front:
                 with self._guard:
                     if b['seq'] < self._seen.get(name, 0):        # an earlier signed binding put back: as admit() refuses it
                         continue
+                h = b['baseline_sha256']
+                obs = self.store.observe(b['root'])              # one reading of the store; the journal is not read here
+                maybe = [str(aid) for aid, _req, phase, *_ in obs['attempts']
+                         if phase in PENDING_PHASES or (phase == 'CONSUMED' and not notices.written(self.home, h, 'INTERRUPTED_' + re.sub(r'[^A-Za-z0-9_-]', '_', str(aid))))]
+            except Exception:
+                continue
+            due = []
+            with self._guard:
+                for aid in maybe:
+                    k = (h, aid); seen.add(k)
+                    w = self._pending.setdefault(k, {'next': now + after, 'wait': after})
+                    if now >= w['next']:
+                        due.append(aid)
+            if not due or obs.get('witness') != 'ACTIVE' or obs.get('business') != 'OPEN':
+                continue                                       # nothing due, or the budget is held or stopped
+            try:
+                if notices.delivery_state(self.home, h)[0] != 'WRITABLE':
+                    continue                                   # no step while a failure might not reach the engineer
                 c = self.client(b)
-                _, attempts = c.fresh().runs()
+                runs, attempts = c.fresh().runs()
             except Exception:
                 continue
             for a in attempts:
-                if a.get('outcome') != 'PENDING':
+                aid = str(a.get('aid'))
+                if aid not in due:
                     continue
-                k = (b['baseline_sha256'], a.get('aid')); seen.add(k)
-                with self._guard:
-                    first = self._pending.setdefault(k, now)
-                if now - first < after:
-                    continue
+                k = (h, aid)
                 try:
-                    if notices.delivery_state(self.home, b['baseline_sha256'])[0] != 'WRITABLE':
-                        continue                               # no new step while a failure might not reach the engineer
-                    design = self._design_for(a.get('request_key'))
-                    if design is None:
+                    if a.get('outcome') == 'INTERRUPTED':          # cut off, its notice missing: it is written now, once
+                        self._notify_interrupted(c, [a], runs)
+                        wrote = notices.written(self.home, h, 'INTERRUPTED_' + re.sub(r'[^A-Za-z0-9_-]', '_', aid))
+                        done.append({'job': name, 'aid': aid, 'status': None, 'outcome': 'INTERRUPTED_NOTICE_WRITTEN' if wrote else 'INTERRUPTED_NOTICE_NOT_WRITTEN'})
+                    elif a.get('outcome') == 'PENDING':
+                        design = self._design_for(a.get('request_key'))
+                        if design is None:
+                            continue
+                        cur = read_jobs(self.home).get(name)       # read again: a revocation or a move made during this look counts
+                        if cur != b:
+                            continue
+                        status, payload = self.submit(b, design)
+                        done.append({'job': name, 'aid': aid, 'status': status, 'outcome': payload.get('outcome') or payload.get('refused')})
+                    else:
                         continue
-                    status, payload = self.submit(b, design)
-                    done.append({'job': name, 'aid': a.get('aid'), 'status': status, 'outcome': payload.get('outcome') or payload.get('refused')})
                 except Exception as exc:                       # one run that cannot be asked for does not stop the others
-                    done.append({'job': name, 'aid': a.get('aid'), 'status': None, 'outcome': type(exc).__name__})
+                    done.append({'job': name, 'aid': aid, 'status': None, 'outcome': type(exc).__name__})
+                with self._guard:                              # asked for: next time after twice the wait
+                    w = self._pending.get(k)
+                    if w is not None:
+                        w['wait'] = min(w['wait'] * 2, SWEEP_MAX_WAIT); w['next'] = now + w['wait']
         with self._guard:
-            self._pending = {k: t for k, t in self._pending.items() if k in seen}
+            self._pending = {k: w for k, w in self._pending.items() if k in seen}
         return done
 
 

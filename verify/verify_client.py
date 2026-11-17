@@ -134,7 +134,7 @@ class Client:
         for name, rule in c['design_space'].items():
             L.append(f"  {name}: " + ('one of ' + ', '.join(map(str, rule['choice'])) if 'choice' in rule else f"a number from {rule['min']} to {rule['max']}"))
         L += ['', f"DECLARED CHECK  {chk['id']} v{chk['version']}, written by {chk['author']}, reviewed by {chk['reviewed_by']}", '  It does not cover: ' + '; '.join(chk['stated_limits']), '',
-              'A design is verified only by:  submit DESIGN.json   (a JSON object giving exactly the design-space parameters).',
+              'A design is checked against this baseline only by:  submit DESIGN.json   (a JSON object giving exactly the design-space parameters).',
               'The requirement, the limits, the load case, the design space and the check cannot be changed from here.',
               f"Only {c['responsible_engineer']['name']} can issue a revised baseline or accept a failure."]
         if c.get('supersedes'):

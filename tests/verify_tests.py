@@ -32,6 +32,7 @@ import check_record                     # noqa: E402
 import deploy                           # noqa: E402
 import verify_ctl                       # noqa: E402
 import verify_client                    # noqa: E402  (Amendment 9)
+import front_door                       # noqa: E402  (Amendment 9: its view of the requirement, in R23)
 from plea_gateway import AuthorityError, Store      # noqa: E402
 from verify_record import Key, canonical, envelope_message, load_envelope, sign_envelope   # noqa: E402
 
@@ -1843,18 +1844,25 @@ def r23():
         boxes = lambda: sorted(p.name for p in (s.home / 'inbox').iterdir()) if (s.home / 'inbox').exists() else []
         before, boxes_before = folders(), boxes()
 
-        def attempt(d, reason=None):
+        def attempt(d, reason=None):                                                 # any error is an answer here, so that a defect fails a check
             try:
                 return s.baseline(CASE, d, alongside_reason=reason)
-            except B.BaselineInvalid as exc:
-                return str(exc)
+            except Exception as exc:
+                return str(exc) if isinstance(exc, B.BaselineInvalid) else f'{type(exc).__name__}: {exc}'
+
+        def revised(d, old, why_):
+            try:
+                return verify_ctl.revise(s.home, CASE, d, s.engineer, old, why_)
+            except Exception as exc:
+                return f'{type(exc).__name__}: {exc}'
+        card_of = lambda x: x['card'] if isinstance(x, dict) else {}
         refused, blank = attempt(relaxed('190')), attempt(relaxed('190'), '   ')
         after, boxes_after = folders(), boxes()
         why = 'A second bracket of the same part, rated for a lower temperature (CR-23).'
         second = attempt(relaxed('190'), why); h2 = second['baseline_sha256'] if isinstance(second, dict) else None
         side = second['card'].get('alongside') if isinstance(second, dict) else None
         signed = load_envelope(s.home / 'baselines' / h2 / 'baseline.json', s.keys['engineer'])['card'].get('alongside') if h2 else None
-        rev = verify_ctl.revise(s.home, CASE, draft(requirement=dict(req, revision='B')), s.engineer, h1, 'The bracket was strengthened (CR-24).'); h3 = rev['baseline_sha256']
+        rev = revised(draft(requirement=dict(req, revision='B')), h1, 'The bracket was strengthened (CR-24).'); h3 = rev['baseline_sha256'] if isinstance(rev, dict) else None
         third = attempt(relaxed('195'), 'Another variant of the part (CR-25).')
         other = attempt(draft(requirement=dict(req, id='REQ-SELFTEST-023')))
         keyfile = OUT / 'R23' / 'engineer.key'; keyfile.write_text(s.engineer.private_hex + '\n')
@@ -1862,9 +1870,20 @@ def r23():
         count_before_cli = len(folders())
         cli = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'verify_ctl.py'), 'baseline', str(s.home), '--from', str(CASE), '--card', str(cardfile), '--key', str(keyfile)],
                              capture_output=True, text=True, timeout=120)
+        count_after_cli = len(folders())
+        alike = [attempt(draft(requirement=dict(req, id=v))) for v in (' req-selftest-001', 'ＲＥＱ-SELFTEST-001', 'REQ-SELFTEST-001\t')]   # case and space; full-width letters; a tab
+        fake = {'reason': 'Written in the draft, not by the service.', 'baselines': [{'baseline_sha256': 'ab' * 32, 'revision': 'Z'}]}
+        from_draft = attempt(dict(draft(requirement=dict(req, id='REQ-SELFTEST-024')), alongside=fake))
+        rev_draft = revised(dict(draft(requirement=dict(req, revision='C')), alongside=fake), h3, 'Strengthened again (CR-26).') if h3 else 'no revision B'
+        forged_id = 'REQ-SELFTEST-025'; forged = s.home / 'baselines' / ('cd' * 32)
+        forged.mkdir(); forged.joinpath('baseline.json').write_text(json.dumps({'baseline_sha256': 'cd' * 32, 'card': dict(card_of(second) or first['card'], requirement=dict(req, id=forged_id)),
+                                                                                'controls_run': [], 'signature': {'signer': s.keys['engineer'], 'signature': '00' * 64}}))
+        after_forged = attempt(draft(requirement=dict(req, id=forged_id)))
         rec = s.record(h2); ok, checks_2, summary = check_record.verify(rec, s.keys)
         printed = check_record.render(ok, checks_2, summary)
         shown = verify_client.Client(s.client_config(OUT / 'R23' / 'workspace', h2)).show()
+        door_text = front_door.requirement_text(card_of(second), h2) if isinstance(second, dict) else ''
+        door_fields = front_door.requirement_fields(card_of(second)).get('alongside') if isinstance(second, dict) else None
         link = f'  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: {h1[:16]}… (rev A).  Reason given by the engineer: {why}'
 
         def rejects(card):
@@ -1872,11 +1891,13 @@ def r23():
                 B.validate_card(card); return False
             except B.BaselineInvalid:
                 return True
-        c2 = second['card'] if isinstance(second, dict) else {}
+        c2 = card_of(second)
         malformed = [dict(c2, alongside=dict(side or {}, reason='  ')), dict(c2, alongside=dict(side or {}, baselines=[])),
                      dict(c2, alongside=dict(side or {}, baselines=[{'baseline_sha256': 'x' * 64, 'revision': 'A'}])), dict(c2, alongside='yes')]
         e.update(refused=refused[:260] if isinstance(refused, str) else 'baselined', blank=blank[:120] if isinstance(blank, str) else 'baselined', side=side,
-                 third=sorted(b['baseline_sha256'][:16] for b in (third['card']['alongside']['baselines'] if isinstance(third, dict) else [])),
+                 third=sorted(str(b.get('baseline_sha256'))[:16] for b in ((card_of(third).get('alongside') or {}).get('baselines') or [])),
+                 alike=[x[:90] if isinstance(x, str) else 'baselined' for x in alike], from_draft=card_of(from_draft).get('alongside', 'none'), rev_draft=card_of(rev_draft).get('alongside', 'none') if isinstance(rev_draft, dict) else rev_draft[:120],
+                 after_forged=list(card_of(after_forged)) if isinstance(after_forged, dict) else after_forged[:160], door=[l for l in door_text.splitlines() if 'ALSO BASELINED' in l], door_fields=door_fields,
                  other=list(other['card']) if isinstance(other, dict) else other, cli=(cli.returncode, cli.stderr[-260:]), record_ok=ok,
                  printed=[l for l in printed.splitlines() if 'ALSO BASELINED' in l], shown=[l for l in shown.splitlines() if 'ALSO BASELINED' in l])
         checks = {'a second baseline for a requirement the service holds, not made as a revision, is refused without a reason, or with a blank one; the refusal names the baseline held and says to revise it or give a reason; nothing is stored and no inbox is made':
@@ -1884,12 +1905,19 @@ def r23():
                       and isinstance(blank, str) and 'already has a baseline' in blank and after == before and boxes_after == boxes_before,
                   'with the engineer\'s reason it is baselined, and its signed card names the baseline held, with its revision, and the reason':
                       side == {'reason': why, 'baselines': [{'baseline_sha256': h1, 'revision': 'A'}]} and signed == side,
-                  'a revision needs no reason and is linked as before, and its card has no such field': 'alongside' not in rev['card'] and rev['card']['supersedes']['baseline_sha256'] == h1,
+                  'a revision needs no reason and is linked as before, and its card has no such field': isinstance(rev, dict) and 'alongside' not in rev['card'] and rev['card']['supersedes']['baseline_sha256'] == h1,
                   'a later baseline made as new names every baseline the service holds for the requirement': e['third'] == sorted(x[:16] for x in (h1, h2, h3)),
                   'a baseline for another requirement needs no reason, and its card has no such field, as a first baseline\'s has none': isinstance(other, dict) and 'alongside' not in other['card'] and 'alongside' not in first['card'],
-                  'the record\'s checker, on a record that verifies, and the first client\'s view of the requirement each print the link and the reason': ok and e['printed'] == [link] and e['shown'] == [link],
-                  'the console\'s command line refuses such a draft without a reason, with exit status 1, and stores nothing': cli.returncode == 1 and 'already has a baseline' in cli.stderr and len(folders()) == count_before_cli,
-                  'a card whose link has a blank reason, no baselines, a hash that is not one, or is not a link at all, is refused by the card\'s rules': all(rejects(c) for c in malformed)}
+                  'the record\'s checker, on a record that verifies, the first client\'s view of the requirement and the front door\'s, in its text and its fields, each give the link and the reason':
+                      ok and e['printed'] == [link] and e['shown'] == [link] and e['door'] == [link] and door_fields == side and side is not None,
+                  'the console\'s command line refuses such a draft without a reason, with exit status 1, and stores nothing': cli.returncode == 1 and 'already has a baseline' in cli.stderr and count_after_cli == count_before_cli,
+                  'a card whose link has a blank reason, no baselines, a hash that is not one, or is not a link at all, is refused by the card\'s rules': all(rejects(c) for c in malformed),
+                  'an id that differs from one held only in case, in white space or in its Unicode form is the same requirement: each such draft is refused without a reason':
+                      all(isinstance(x, str) and 'already has a baseline' in x for x in alike),
+                  'a link written in the draft is never signed: a first baseline for another requirement and a revision, each made from a draft that carries one, have none':
+                      e['from_draft'] == 'none' and e['rev_draft'] == 'none',
+                  'a baseline folder whose envelope does not verify is not counted as held: a first baseline for its requirement needs no reason, and its card names nothing':
+                      isinstance(after_forged, dict) and 'alongside' not in after_forged['card']}
     finally:
         s.stop()
     return checks, e
@@ -1928,8 +1956,9 @@ def r24():
                       e['rows_console'] == ['FAIL', 'MET'] and e['console_tail'] == [met_line, excl]
                       and any(l.startswith('inbox writable: the gate wrote a test file in this inbox at ') and l.endswith('This is not delivery: it does not show that a notice was delivered or read.') for l in console.splitlines()),
                   'the notice of the failure has what the check does not cover under its headline and at its end': e['notice_lines'] == ['FAIL: REQUIREMENT NOT MET', excl, excl],
-                  'the signed verdicts and the record keep the word PASS, the record verifies, and its checker prints DECLARED CHECK MET':
-                      ok and e['outcomes'] == ['FAIL', 'PASS'] and s.get('status') == 'DECLARED CHECK MET' and 'STATUS: DECLARED CHECK MET, for design' in printed}
+                  'the signed verdicts and the record keep the word PASS, the record verifies, and its checker prints DECLARED CHECK MET and shows the run that met it as MET':
+                      ok and e['outcomes'] == ['FAIL', 'PASS'] and s.get('status') == 'DECLARED CHECK MET' and 'STATUS: DECLARED CHECK MET, for design' in printed
+                      and sorted(l.split()[3] for l in printed.splitlines() if l.startswith('    ') and '  design ' in l) == ['FAIL', 'MET']}
     finally:
         r.stop()
     return checks, e

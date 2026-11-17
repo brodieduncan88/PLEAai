@@ -423,7 +423,7 @@ def face(card: dict, verdict: dict, runs: dict | None = None, aid: str | None = 
     L.append(f"Check         {chk['id']} v{chk['version']}, written by {chk['author']}, reviewed by {chk['reviewed_by']}.  Baselined hash {chk['sha256'][:16]}…")     # Amendment 5: "Baselined", not the file's hash now
     compared = verdict['reason_code'] in ('MET', 'LIMIT_NOT_MET')          # Amendment 4: only then were the check's numbers compared with the limits
     # Amendment 9: a pass is called the declared check met, signed as PASS
-    L.append(f"Verdict       {VERDICT_WORDS[verdict['verdict']]}.  " + ("Computed by the verification service from the check's output and the baselined limits." if compared else
+    L.append(f"Verdict       {VERDICT_WORDS.get(verdict['verdict'], verdict['verdict'])}.  " + ("Computed by the verification service from the check's output and the baselined limits." if compared else
                                                          'Decided by the verification service, not by comparing the check\'s numbers with the limits.') + '  Not stated by the assistant.')
     if runs:
         L.append(f"Official runs {runs['total']} through the service on this baseline: {runs['PASS']} met, {runs['FAIL']} not met, {runs['UNKNOWN']} unknown." + (f"  This run: {aid}." if aid else ''))

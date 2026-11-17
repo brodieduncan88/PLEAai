@@ -1574,7 +1574,7 @@ def f33():
                   'the status\'s text, through the tool and through the command line, shows for which design the declared check was met, that this does not say the check is correct, and what the check does not cover':
                       e['status_tail'] == [met_line, excl] and cli_code == 0 and e['cli'][1] == [met_line, excl],
                   'the command line\'s answer to a pass begins DECLARED CHECK MET, with what the check does not cover, and exits 0': cli_s_code == 0 and e['cli'][3] == [MET, excl],
-                  'no line of the answers, the status, the tools\' descriptions or the server\'s instructions shows the bare word PASS': e['bare'] == [[], [], [], [], []],
+                  'no line of the words of the answers and the status (their first part; the second gives the fields, in which outcome is still PASS), nor of the tools\' descriptions or the server\'s instructions, shows the bare word PASS': e['bare'] == [[], [], [], [], []],
                   'the tools\' descriptions and the server\'s instructions call a pass the declared check met, and say it is not a statement that the check is correct':
                       'declared check met' in said and 'not as a statement that the check is correct' in said and 'not that the check is correct' in said,
                   'in process, the front door\'s own text for a pass, for when it cannot read the stored card, says that the result does not say the check is correct, and that what the check does not cover cannot be shown there':
@@ -1614,7 +1614,7 @@ def f34():
         check.unlink()                                                                  # no check on record: the gate's look is not due for 30 seconds
         refused = r.submit({'material': 'PA66-GF30', 'wall_mm': 2.5, 'mode': 'normal'})
         named = sorted(p.name for p in box.iterdir() if p.name.startswith(('INBOX_UNCHECKED_', 'DELIVERY_')))
-        e.update(host_exit=exit_code, states=(first_state, blocked, back), while_blocked=while_blocked, after=after, logged=logged, again=(sc(again).get('outcome'), after_again),
+        e.update(host_exit=exit_code, states=(first_state, blocked, back), while_blocked=while_blocked, after=after, logged=logged, again=(sc(again).get('outcome'), after_again), again_fields=(sc(again).get('declared_check_met'), sc(again).get('check_does_not_cover') == r.env['card']['check']['stated_limits']),
                  refused=(sc(refused).get('refused'), text_of(refused)[:90]), named=named)
         checks = {'the host died during the run (exit 137); started again, the gate shows that it can write the inbox; with a file in place of the inbox and the check taken away, the check is not good':
                       exit_code == 137 and e['states'][:2] == ('WRITABLE', 'UNCHECKED'),
@@ -1622,7 +1622,8 @@ def f34():
                       while_blocked[0] == ['PENDING'] and while_blocked[1] == [] and while_blocked[2] == [] and while_blocked[3] == calls,
                   'once the gate has shown again that it can write the inbox, the front door asks for the run itself, with no design sent by anyone: the run is INTERRUPTED, one notice of it is in the inbox, the check was not run again, and the front door\'s log says it asked':
                       e['states'][2] == 'WRITABLE' and after[0] == ['INTERRUPTED'] and len(after[1]) == 1 and after[2] == calls and logged,
-                  'the design sent again afterwards is answered INTERRUPTED, with no second notice and nothing run': e['again'] == ('INTERRUPTED', (after[1], calls)),
+                  'the design sent again afterwards is answered INTERRUPTED, with no second notice and nothing run; its fields say the declared check was not met, and what it does not cover':
+                      e['again'] == ('INTERRUPTED', (after[1], calls)) and e['again_fields'] == (False, True),
                   'with no check on record, a new design is refused as INBOX_UNCHECKED, and the engineer\'s notice of it is named INBOX_UNCHECKED, for its reason; nothing is named as before':
                       e['refused'][0] == 'INBOX_UNCHECKED' and len(named) == 1 and named[0].startswith('INBOX_UNCHECKED_') and named[0].endswith('_UNCHECKED.txt')}
     finally:
@@ -1630,7 +1631,60 @@ def f34():
     return checks, e
 
 
-TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34}
+def f35():
+    """The front door's look for runs left pending asks for one run less and less often while it cannot be finished, does not ask while its baseline's budget is held, and writes the notice of a run cut off whose notice is missing; none of it runs anything again.  (Amendment 9.)"""
+    r = Run('F35', crash_at='verify_running'); e = {}
+    try:
+        box = r.s.home / 'inbox' / r.h[:16]
+        cut = lambda: sorted(p.name for p in box.glob('INTERRUPTED_*.txt')) if box.is_dir() else []
+        outcomes = lambda: [a.get('outcome') for a in (raw(r.job, 'GET', '/status')[1] or {}).get('attempts', [])]
+        r.submit(GOOD); time.sleep(0.3); exit_code = r.s.procs['host'].poll()           # the gate host dies during the run
+        r.s.stop_host(); r.s.start_host(); state = proven(r.s, r.h); calls = r.calls()
+        cfg = {'witness_url': f"https://127.0.0.1:{r.s.ports['witness']}", 'witness_keys': [r.s.keys['witness']], 'gate_url': f"https://127.0.0.1:{r.s.ports['host']}",
+               'gate_key': r.s.keys['gate'], 'tls': {'ca': r.s.pki['ca'], 'cert': r.s.pki['frontdoor'][0], 'key': r.s.pki['frontdoor'][1]},
+               'journal': str(r.s.home / 'front' / 'submissions.jsonl')}
+        front = front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), cfg, [r.s.keys['engineer']])     # a second front door, in this process, on the same service
+        asked, real = [], front.submit
+        front.submit = lambda b, d: (asked.append(1), (503, {'refused': 'UNAVAILABLE'}))[1]          # an ask that does not finish the run: it stays pending
+        t0 = time.time(); counts = []
+        for dt in (0, 9, 10, 11, 29, 30, 69, 70):
+            front.sweep(after=10, now=t0 + dt); counts.append(len(asked))
+        for i in range(16):
+            front.sweep(after=10, now=t0 + 1e6 * (i + 1))
+        waits = sorted(w['wait'] for w in front._pending.values())
+        mid = (outcomes(), r.calls(), cut())
+        control = Store(verify_ctl.CONTROL_DSN)
+        control.apply(r.root, ('HOLD',)); n = len(asked)
+        for i in range(3):
+            front.sweep(after=10, now=t0 + 1e8 + 1e6 * i)
+        held = (len(asked) - n, outcomes())
+        control.apply(r.root, ('RECOVER', True, True))
+        front.submit = real
+        asked_real = front.sweep(after=10, now=t0 + 2e8)                                     # the real ask, through the same path as a caller's
+        after = (outcomes(), cut(), r.calls())
+        between = front.sweep(after=10, now=t0 + 2e8 + 1)                                    # the run is finished and noticed: the look has nothing to do, and forgets it
+        for p in box.glob('INTERRUPTED_*.txt'):
+            p.unlink()                                                                       # the notice is lost
+        first_look = front.sweep(after=10, now=t0 + 3e8); second_look = front.sweep(after=10, now=t0 + 3e8 + 10); third_look = front.sweep(after=10, now=t0 + 4e8)
+        restored = (cut(), r.calls())
+        e.update(host_exit=exit_code, state=state, counts=counts, waits=waits, mid=mid, held=held, asked_real=asked_real, after=after,
+                 between=between, looks=(first_look, second_look, third_look), restored=restored)
+        checks = {'the host died during the run (exit 137) and, started again, shows that it can write the inbox; the run is pending': exit_code == 137 and state == 'WRITABLE' and mid[0] == ['PENDING'],
+                  'while an ask does not finish the run, it is asked for once it has been pending for the wait (10 s here), and again after 20 s and then 40 s more: twice the wait before each time':
+                      counts == [0, 0, 1, 1, 1, 2, 2, 3],
+                  'however often it is asked for, the wait stops growing at six hours; nothing was run and no notice was written meanwhile':
+                      waits == [front_door.SWEEP_MAX_WAIT] and mid[1] == calls and mid[2] == [],
+                  'while the baseline\'s budget is held, the run is not asked for, and is still pending': held == (0, ['PENDING']),
+                  'with the budget open again, the real ask makes the run INTERRUPTED, with one notice and nothing run again':
+                      [d.get('outcome') for d in asked_real] == ['INTERRUPTED'] and after[0] == ['INTERRUPTED'] and len(after[1]) == 1 and after[2] == calls,
+                  'a run cut off whose notice is missing is given it by the look, once it is due, and only once; nothing is run':
+                      between == [] and first_look == [] and [d.get('outcome') for d in second_look] == ['INTERRUPTED_NOTICE_WRITTEN'] and third_look == [] and restored == (after[1], calls)}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35}
 
 
 def main():
