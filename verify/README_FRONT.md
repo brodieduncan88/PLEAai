@@ -60,6 +60,14 @@ proof: without one the door refuses with 503 `DELIVERY_UNPROVEN`. Each baseline 
 unproven inbox, or for want of room, writes one notice to the engineer for each reason on the day. `DECLARED_AMEND8.md` has the
 list, and the open items.
 
+**Note of 17 November 2026.** `AMENDMENT_9_2026-11-17.md` takes up three of a reviewer's points. What a person or an assistant
+reads of a pass calls it the declared check met, with what the check does not cover under the headline; the signed verdict stays
+PASS. A second baseline for a requirement the service holds is a revision, or needs the engineer's reason, which goes into the
+signed card with the baselines held. What Amendment 8 called a proof of delivery is an inbox-writability check, kept in
+`inbox_checks/`; the door's refusal without one is 503 `INBOX_UNCHECKED`. The door looks for runs left pending and asks for them
+itself, so that a run cut off gets its notice with no one sending its design again. `DECLARED_AMEND9.md` has the list, and the
+open items.
+
 ## The pieces
 
 | file | what it does |
