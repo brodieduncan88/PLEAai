@@ -54,6 +54,12 @@ A card whose stated limits are not text is refused. The journal has a size limit
 submission: the door refuses a new run with 507 `STORAGE_FULL` when either would be exceeded. A cut-off run is noticed once, at the
 ask that the gate answers as interrupted. `DECLARED_AMEND7.md` has the list, and the open items.
 
+**Note of 17 November 2026.** `AMENDMENT_8_2026-11-17.md` closes what Amendment 7 left silent in D3 and D1. The gate proves that it
+can write each baseline's inbox, and keeps a dated proof. A job is enrolled or moved, and a new run admitted, only on a good
+proof: without one the door refuses with 503 `DELIVERY_UNPROVEN`. Each baseline has its own share of the journal. A refusal for an
+unproven inbox, or for want of room, writes one notice to the engineer for each reason on the day. `DECLARED_AMEND8.md` has the
+list, and the open items.
+
 ## The pieces
 
 | file | what it does |
