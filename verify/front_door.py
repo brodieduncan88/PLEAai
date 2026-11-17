@@ -83,7 +83,8 @@ DISK_RESERVE = 512 << 20         # free bytes the journal's disk keeps for notic
 SWEEP_AFTER = 120.0               # seconds a run is seen pending before the front door asks the gate for it itself (Amendment 9)
 SWEEP_EVERY = 30.0                   # seconds between the front door's looks for runs left pending (Amendment 9)
 SWEEP_MIN_WAIT = 1.0                 # the shortest wait the look takes, whatever it is given (Amendment 9)
-SWEEP_MAX_WAIT = 3600.0              # the longest the look waits before it acts on one run again (Amendment 9)                # seconds between the front door's looks for such runs (Amendment 9)
+SWEEP_MAX_WAIT = 3600.0              # the longest the look waits before it acts on one run again (Amendment 9)
+SWEEP_MAX_ASKS = 12                  # how often the look acts on one run before it leaves it as it is, until the front door restarts (Amendment 9)
 JOURNAL_SHARE = 64 << 20         # bytes of the journal one baseline's designs may take; at that size the door refuses new runs for it alone (Amendment 8, D1)
 HEX_BYTES = set(b'0123456789abcdef')
 
@@ -651,6 +652,8 @@ class Front:
         name = 'INTERRUPTED_' + re.sub(r'[^A-Za-z0-9_-]', '_', str(aid))
 
         def text(engineer: bool) -> str:
+            if design is None:                           # Amendment 9: the look writes it for a run whose design the journal does not hold
+                return interrupted_fixed(c.baseline, aid, engineer)
             try:
                 return interrupted_body(c.card, c.baseline, design, runs, aid, engineer)
             except Exception:                            # where the card or the design cannot be shown, the words are fixed
@@ -752,13 +755,16 @@ class Front:
         leaves its waits as they were.
 
         A run cut off whose notice is missing is given it, as an answer would give it, whatever the state of the budget and of
-        the gate's inbox-writability check: a notice the inbox cannot take is kept in the service's own store.  A pending run
+        the gate's inbox-writability check (a notice the inbox cannot take is kept in the service's own store), and in the
+        service's fixed words where this door's journal does not hold the run's design.  A pending run
         is asked for again, through the same path as a caller's request, only while that check is good and the budget is
         neither held nor stopped (the governor would refuse it), only if this door's journal holds its design, and only if the
         job's binding, read again just before, is unchanged, so that a revocation made during a look counts.  The gate host
         never runs a run twice: a run it began is answered with its signed UNKNOWN, counted as interrupted, and its engineer is
-        sent the notice; a run that never reached the gate host is run now, once, as its caller asked.  Runs are a baseline's,
-        not a job's: a run on a baseline is asked for through any live job bound to it.  Returns what was done.  Nothing is
+        sent the notice; a run that never reached the gate host is run now, once, as its caller asked.  The design found in the
+        journal is not journaled again.  Runs are a baseline's, not a job's: a run on a baseline is asked for through any live
+        job bound to it.  The look acts on one run at most SWEEP_MAX_ASKS times, and then leaves it as it is, pending or without
+        its notice, until the front door restarts; the console shows the run as it stands.  Returns what was done.  Nothing is
         raised."""
         done, seen, looked = [], set(), set()
         now = time.time() if now is None else now
@@ -792,8 +798,8 @@ class Front:
             with self._guard:
                 for aid, kind in found:
                     k = (h, aid, kind); seen.add(k)
-                    w = self._pending.setdefault(k, {'next': now + after, 'wait': after})
-                    if now >= w['next']:
+                    w = self._pending.setdefault(k, {'next': now + after, 'wait': after, 'acts': 0})
+                    if now >= w['next'] and w['acts'] < SWEEP_MAX_ASKS:
                         due.append((aid, kind, k))
             if any(kind == 'PENDING' for _, kind, _ in due):
                 try:
@@ -815,8 +821,8 @@ class Front:
                 try:
                     if a is None:
                         continue
-                    if a.get('outcome') == 'INTERRUPTED':          # cut off, its notice missing: it is written now, once
-                        self._notify_interrupted(c, [a], runs)
+                    if a.get('outcome') == 'INTERRUPTED':          # cut off, its notice missing: it is written now, once, in fixed words if need be
+                        self._interrupted_notice(c, self._design_for(a.get('request_key')), runs, aid)
                         wrote = notices.written(self.home, h, 'INTERRUPTED_' + re.sub(r'[^A-Za-z0-9_-]', '_', aid))
                         done.append({'job': name, 'aid': aid, 'status': None, 'outcome': 'INTERRUPTED_NOTICE_WRITTEN' if wrote else 'INTERRUPTED_NOTICE_NOT_WRITTEN'})
                     elif a.get('outcome') == 'PENDING' and kind == 'PENDING':
@@ -825,6 +831,8 @@ class Front:
                             continue
                         if read_jobs(self.home).get(name) != b:    # read again: a revocation or a move made during this look counts
                             continue
+                        with self._journal_lock:                   # it is in the journal already: asking for it adds no line there
+                            self._journaled.add(a.get('request_key'))
                         status, payload = self.submit(b, design)
                         done.append({'job': name, 'aid': aid, 'status': status, 'outcome': payload.get('outcome') or payload.get('refused')})
                 except Exception as exc:                       # one run that cannot be acted on does not stop the others
@@ -833,7 +841,9 @@ class Front:
                     with self._guard:
                         w = self._pending.get(k)
                         if w is not None:
-                            w['wait'] = min(w['wait'] * 2, SWEEP_MAX_WAIT); w['next'] = now + w['wait']
+                            w['wait'] = min(w['wait'] * 2, SWEEP_MAX_WAIT); w['next'] = now + w['wait']; w['acts'] += 1
+                            if w['acts'] == SWEEP_MAX_ASKS:
+                                done.append({'job': name, 'aid': aid, 'status': None, 'outcome': 'LEFT_AS_IT_IS'})
         with self._guard:                                      # forget only what a baseline read without error no longer shows
             self._pending = {k: w for k, w in self._pending.items() if k in seen or k[0] not in looked}
         return done
@@ -845,7 +855,8 @@ def sweeper(front: Front, after: float, every: float) -> None:
         time.sleep(every)
         try:
             for d in front.sweep(after):
-                what = 'the notice of a run cut off was written' if str(d.get('outcome', '')).startswith('INTERRUPTED_NOTICE') else 'a run left pending was asked for again'
+                what = {'INTERRUPTED_NOTICE_WRITTEN': 'the notice of a run cut off was written', 'INTERRUPTED_NOTICE_NOT_WRITTEN': 'the notice of a run cut off could not be written',
+                        'LEFT_AS_IT_IS': f'the look has acted on a run {SWEEP_MAX_ASKS} times and leaves it as it is until the front door restarts'}.get(d.get('outcome'), 'a run left pending was asked for again')
                 print(f"front door: {what}: {json.dumps(d)}", file=sys.stderr, flush=True)
         except Exception as exc:
             try:

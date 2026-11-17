@@ -1871,17 +1871,19 @@ def r23():
         cli = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'verify_ctl.py'), 'baseline', str(s.home), '--from', str(CASE), '--card', str(cardfile), '--key', str(keyfile)],
                              capture_output=True, text=True, timeout=120)
         count_after_cli = len(folders())
-        alike = [attempt(draft(requirement=dict(req, id=v))) for v in (' req-selftest-001', 'ＲＥＱ-SELFTEST-001', 'REQ-SELFTEST-001\t', 'REQ\u200b-SELFTEST-001', 'REQ\u2011SELFTEST\u2212001')]
-        # case and space; full-width letters; a tab; a zero-width space; a non-breaking hyphen and a minus sign
+        alike = [attempt(draft(requirement=dict(req, id=v))) for v in (' req-selftest-001', 'ＲＥＱ-SELFTEST-001', 'REQ-SELFTEST-001\t', 'REQ\u200b-SELFTEST-001', 'REQ\u2011SELFTEST\u2212001', 'REQ-SELFTEST-001\ufe0f')]
+        # case and space; full-width letters; a tab; a zero-width space; a non-breaking hyphen and a minus sign; a variation selector
         fake = {'reason': 'Written in the draft, not by the service.', 'baselines': [{'baseline_sha256': 'ab' * 32, 'revision': 'Z'}]}
         from_draft = attempt(dict(draft(requirement=dict(req, id='REQ-SELFTEST-024')), alongside=fake))
         rev_draft = revised(dict(draft(requirement=dict(req, revision='C')), alongside=fake), h3, 'Strengthened again (CR-26).') if h3 else 'no revision B'
         forged_id = 'REQ-SELFTEST-025'; forged = s.home / 'baselines' / ('cd' * 32)
         forged.mkdir(); forged.joinpath('baseline.json').write_text(json.dumps({'baseline_sha256': 'cd' * 32, 'card': dict(first['card'], requirement=dict(req, id=forged_id)),
                                                                                 'controls_run': [], 'signature': {'signer': s.keys['engineer'], 'signature': '00' * 64}}))   # a signature that does not verify
-        stranger = Key(); fenv = sign_envelope(dict(first['card'], requirement=dict(req, id=forged_id), responsible_engineer={'name': 'Someone Else', 'key': stranger.public_hex}), [], stranger)
-        (s.home / 'baselines' / fenv['baseline_sha256']).mkdir(); (s.home / 'baselines' / fenv['baseline_sha256'] / 'baseline.json').write_text(json.dumps(fenv))   # whole, signed by a key not accepted
         after_forged = attempt(draft(requirement=dict(req, id=forged_id)))
+        colleague = Key(); other_id = 'REQ-SELFTEST-026'                                    # another engineer of the service, with a key of their own
+        fenv = sign_envelope(dict(first['card'], requirement=dict(req, id=other_id), responsible_engineer={'name': 'A Colleague', 'key': colleague.public_hex}), [], colleague)
+        (s.home / 'baselines' / fenv['baseline_sha256']).mkdir(); (s.home / 'baselines' / fenv['baseline_sha256'] / 'baseline.json').write_text(json.dumps(fenv))
+        after_colleague = attempt(draft(requirement=dict(req, id=other_id)))
         rec = s.record(h2); ok, checks_2, summary = check_record.verify(rec, s.keys)
         printed = check_record.render(ok, checks_2, summary)
         shown = verify_client.Client(s.client_config(OUT / 'R23' / 'workspace', h2)).show()
@@ -1900,7 +1902,7 @@ def r23():
         e.update(refused=refused[:260] if isinstance(refused, str) else 'baselined', blank=blank[:120] if isinstance(blank, str) else 'baselined', side=side,
                  third=sorted(str(b.get('baseline_sha256'))[:16] for b in ((card_of(third).get('alongside') or {}).get('baselines') or [])),
                  alike=[x[:90] if isinstance(x, str) else 'baselined' for x in alike], from_draft=card_of(from_draft).get('alongside', 'none'), rev_draft=card_of(rev_draft).get('alongside', 'none') if isinstance(rev_draft, dict) else rev_draft[:120],
-                 after_forged=list(card_of(after_forged)) if isinstance(after_forged, dict) else after_forged[:160], door=[l for l in door_text.splitlines() if 'ALSO BASELINED' in l], door_fields=door_fields,
+                 after_forged=list(card_of(after_forged)) if isinstance(after_forged, dict) else after_forged[:160], after_colleague=after_colleague[:200] if isinstance(after_colleague, str) else 'baselined', door=[l for l in door_text.splitlines() if 'ALSO BASELINED' in l], door_fields=door_fields,
                  other=list(other['card']) if isinstance(other, dict) else other, cli=(cli.returncode, cli.stderr[-260:]), record_ok=ok,
                  printed=[l for l in printed.splitlines() if 'ALSO BASELINED' in l], shown=[l for l in shown.splitlines() if 'ALSO BASELINED' in l])
         checks = {'a second baseline for a requirement the service holds, not made as a revision, is refused without a reason, or with a blank one; the refusal names the baseline held and says to revise it or give a reason; nothing is stored and no inbox is made':
@@ -1919,8 +1921,9 @@ def r23():
                       all(isinstance(x, str) and 'already has a baseline' in x for x in alike),
                   'a link written in the draft is never signed: a first baseline for another requirement and a revision, each made from a draft that carries one, have none':
                       e['from_draft'] == 'none' and e['rev_draft'] == 'none',
-                  'a baseline folder is not counted as held when its signature does not verify, or when it is whole but signed by a key that is neither the engineer\'s nor one the service accepts: a first baseline for its requirement needs no reason, and its card names nothing':
-                      isinstance(after_forged, dict) and 'alongside' not in after_forged['card']}
+                  'a baseline folder whose signature does not verify is not counted as held, and a first baseline for its requirement needs no reason; one that is whole, signed by another engineer\'s key, is counted, and a baseline for its requirement is refused without a reason':
+                      isinstance(after_forged, dict) and 'alongside' not in after_forged['card'] and isinstance(after_colleague, str)
+                      and 'already has a baseline' in after_colleague and fenv['baseline_sha256'][:16] in after_colleague}
     finally:
         s.stop()
     return checks, e

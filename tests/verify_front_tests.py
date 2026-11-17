@@ -1632,26 +1632,32 @@ def f34():
 
 
 def f35():
-    """The front door's look for runs left pending acts on one run less and less often while it cannot be finished, also when the journal does not hold its design; it does not ask while its baseline's budget is held, and writes the notice of a run cut off whose notice is missing, held or not; none of it runs anything again.  (Amendment 9.)"""
+    """The front door's look for runs left pending acts on one run less and less often while it cannot be finished, also when the journal does not hold its design, and leaves it after twelve times; it does not ask while its baseline's budget is held; and it writes the notice of a run cut off whose notice is missing, held or not, and in fixed words where the journal does not hold the design; none of it runs anything again.  (Amendment 9.)"""
     r = Run('F35', crash_at='verify_running'); e = {}
     try:
         box = r.s.home / 'inbox' / r.h[:16]
         cut = lambda: sorted(p.name for p in box.glob('INTERRUPTED_*.txt')) if box.is_dir() else []
+        lose = lambda: [p.unlink() for p in box.glob('INTERRUPTED_*.txt')]
         outcomes = lambda: [a.get('outcome') for a in (raw(r.job, 'GET', '/status')[1] or {}).get('attempts', [])]
         r.submit(GOOD); time.sleep(0.3); exit_code = r.s.procs['host'].poll()           # the gate host dies during the run
         r.s.stop_host(); r.s.start_host(); state = proven(r.s, r.h); calls = r.calls()
         cfg = {'witness_url': f"https://127.0.0.1:{r.s.ports['witness']}", 'witness_keys': [r.s.keys['witness']], 'gate_url': f"https://127.0.0.1:{r.s.ports['host']}",
                'gate_key': r.s.keys['gate'], 'tls': {'ca': r.s.pki['ca'], 'cert': r.s.pki['frontdoor'][0], 'key': r.s.pki['frontdoor'][1]},
                'journal': str(r.s.home / 'front' / 'submissions.jsonl')}
-        front = front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), cfg, [r.s.keys['engineer']])     # a second front door, in this process, on the same service
-        asked, real = [], front.submit
-        front.submit = lambda b, d: (asked.append(1), (503, {'refused': 'UNAVAILABLE'}))[1]          # an ask that does not finish the run: it stays pending
+        door = lambda: front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), cfg, [r.s.keys['engineer']])   # another front door, in this process, on the same service
+        journal = pathlib.Path(cfg['journal']); aside = journal.with_name(journal.name + '.aside')
+
+        def stand_in(front):                                                             # an ask that does not finish the run: it stays pending
+            got = []
+            front.submit = lambda b, d: (got.append(1), (503, {'refused': 'UNAVAILABLE'}))[1]
+            return got
+        front = door(); asked = stand_in(front)
         t0 = time.time(); counts = []
         for dt in (0, 9, 10, 11, 29, 30, 69, 70):
             front.sweep(after=10, now=t0 + dt); counts.append(len(asked))
         for i in range(16):
             front.sweep(after=10, now=t0 + 1e6 * (i + 1))
-        waits = sorted(w['wait'] for w in front._pending.values())
+        capped, waits = len(asked), sorted(w['wait'] for w in front._pending.values())
         reader = front.store.observe
         front.store.observe = lambda root: (_ for _ in ()).throw(OSError('the store cannot be read'))
         try:
@@ -1659,55 +1665,62 @@ def f35():
         finally:
             front.store.observe = reader
         kept = sorted(w['wait'] for w in front._pending.values())
-        brisk = front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), cfg, [r.s.keys['engineer']]); brisk_asked = []
-        brisk.submit = lambda b, d: (brisk_asked.append(1), (503, {'refused': 'UNAVAILABLE'}))[1]
+        brisk = door(); brisk_asked = stand_in(brisk)
         for i in range(5):
             brisk.sweep(after=0, now=t0 + 0.1 * i)                                          # a wait of nought is taken as the least, one second
-        brisk = len(brisk_asked)
         mid = (outcomes(), r.calls(), cut())
-        control = Store(verify_ctl.CONTROL_DSN)
-        control.apply(r.root, ('HOLD',)); n = len(asked)
-        for i in range(3):
-            front.sweep(after=10, now=t0 + 1e8 + 1e6 * i)
-        held = (len(asked) - n, outcomes())
-        control.apply(r.root, ('RECOVER', True, True))
-        journal = pathlib.Path(cfg['journal']); aside = journal.with_name(journal.name + '.aside'); journal.rename(aside)    # the journal does not hold the design
+        journal.rename(aside)                                                                # the journal does not hold the design
         try:
-            blind = front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), cfg, [r.s.keys['engineer']]); lookups, find = [], blind._design_for
+            blind = door(); lookups, find = [], blind._design_for
             blind._design_for = lambda key: (lookups.append(1), find(key))[1]
             blind_counts = []
             for dt in (0, 10, 11, 29, 30, 31):
                 blind.sweep(after=10, now=t0 + 5e8 + dt); blind_counts.append(len(lookups))
         finally:
             aside.rename(journal)
-        front.submit = real
-        asked_real = front.sweep(after=10, now=t0 + 2e8)                                     # the real ask, through the same path as a caller's
-        after = (outcomes(), cut(), r.calls())
-        between = front.sweep(after=10, now=t0 + 2e8 + 1)                                    # the run is finished and noticed: the look has nothing to do, and forgets it
-        for p in box.glob('INTERRUPTED_*.txt'):
-            p.unlink()                                                                       # the notice is lost
-        first_look = front.sweep(after=10, now=t0 + 3e8); second_look = front.sweep(after=10, now=t0 + 3e8 + 10); third_look = front.sweep(after=10, now=t0 + 4e8)
-        restored = (cut(), r.calls())
+        control = Store(verify_ctl.CONTROL_DSN)
+        T = t0 + 1e8; holder = door(); held_asked = stand_in(holder)
         control.apply(r.root, ('HOLD',))
-        for p in box.glob('INTERRUPTED_*.txt'):
-            p.unlink()                                                                       # lost again, with the budget held
-        held_looks = (front.sweep(after=10, now=t0 + 6e8), front.sweep(after=10, now=t0 + 6e8 + 10)); held_restored = (cut(), r.calls())
-        e.update(kept=kept, brisk=brisk, blind_counts=blind_counts, held_looks=held_looks, held_restored=held_restored, host_exit=exit_code, state=state, counts=counts, waits=waits, mid=mid, held=held, asked_real=asked_real, after=after,
-                 between=between, looks=(first_look, second_look, third_look), restored=restored)
+        for dt in (0, 10, 20):
+            holder.sweep(after=10, now=T + dt)
+        held = (len(held_asked), outcomes())
+        control.apply(r.root, ('RECOVER', True, True))
+        holder.submit = front_door.Front.submit.__get__(holder)                             # the real path, as a caller's request takes it
+        asked_real = holder.sweep(after=10, now=T + 21)
+        after = (outcomes(), cut(), r.calls())
+        between = holder.sweep(after=10, now=T + 22)                                         # finished and noticed: nothing to do, and forgotten
+        lose()                                                                               # the notice is lost
+        looks = (holder.sweep(after=10, now=T + 1e6), holder.sweep(after=10, now=T + 1e6 + 10), holder.sweep(after=10, now=T + 2e6))
+        restored = (cut(), r.calls())
+        control.apply(r.root, ('HOLD',)); lose()                                             # lost again, with the budget held
+        held_looks = (holder.sweep(after=10, now=T + 3e6), holder.sweep(after=10, now=T + 3e6 + 10)); held_restored = (cut(), r.calls())
+        held_between = holder.sweep(after=10, now=T + 3e6 + 11)                              # noticed again: nothing to do, and forgotten
+        lose(); journal.rename(aside)                                                        # lost again, and the journal does not hold the design
+        try:
+            blind_looks = (holder.sweep(after=10, now=T + 4e6), holder.sweep(after=10, now=T + 4e6 + 10))
+        finally:
+            aside.rename(journal)
+        fixed = [p.read_text() for p in box.glob('INTERRUPTED_*.txt')]
+        e.update(host_exit=exit_code, state=state, counts=counts, capped=capped, waits=waits, kept=kept, brisk=len(brisk_asked), mid=mid, blind_counts=blind_counts,
+                 held=held, asked_real=asked_real, after=after, between=between, looks=looks, restored=restored, held_looks=held_looks, held_restored=held_restored,
+                 blind_looks=blind_looks, fixed=[t[-200:] for t in fixed], calls_at_end=r.calls())
         checks = {'the host died during the run (exit 137) and, started again, shows that it can write the inbox; the run is pending': exit_code == 137 and state == 'WRITABLE' and mid[0] == ['PENDING'],
                   'while an ask does not finish the run, it is asked for once it has been pending for the wait (10 s here), and again after 20 s and then 40 s more: twice the wait before each time':
                       counts == [0, 0, 1, 1, 1, 2, 2, 3],
-                  'however often it is asked for, the wait stops growing at an hour; a look that cannot read the store forgets no wait; a wait of nought is taken as one second; nothing was run and no notice was written meanwhile':
-                      waits == [front_door.SWEEP_MAX_WAIT] == [3600.0] and kept == waits and brisk == 0 and mid[1] == calls and mid[2] == [],
+                  'the wait stops growing at an hour, and after twelve asks the look leaves the run as it is; a look that cannot read the store forgets no wait; a wait of nought is taken as one second; nothing was run and no notice was written meanwhile':
+                      waits == [front_door.SWEEP_MAX_WAIT] == [3600.0] and capped == front_door.SWEEP_MAX_ASKS == 12 and kept == waits and e['brisk'] == 0 and mid[1] == calls and mid[2] == [],
                   'a run whose design the journal does not hold is looked for no more often: at 10 s, then 20 s after that, and not between':
                       blind_counts == [0, 1, 1, 1, 2, 2],
-                  'while the baseline\'s budget is held, the run is not asked for, and is still pending': held == (0, ['PENDING']),
-                  'with the budget open again, the real ask makes the run INTERRUPTED, with one notice and nothing run again':
+                  'while the baseline\'s budget is held, the run is not asked for, though it is due, and is still pending': held == (0, ['PENDING']),
+                  'with the budget open again, the real ask, at once, makes the run INTERRUPTED, with one notice and nothing run again':
                       [d.get('outcome') for d in asked_real] == ['INTERRUPTED'] and after[0] == ['INTERRUPTED'] and len(after[1]) == 1 and after[2] == calls,
                   'a run cut off whose notice is missing is given it by the look, once it is due, and only once; nothing is run':
-                      between == [] and first_look == [] and [d.get('outcome') for d in second_look] == ['INTERRUPTED_NOTICE_WRITTEN'] and third_look == [] and restored == (after[1], calls),
+                      between == [] and looks[0] == [] and [d.get('outcome') for d in looks[1]] == ['INTERRUPTED_NOTICE_WRITTEN'] and looks[2] == [] and restored == (after[1], calls),
                   'with the budget held, a missing notice of a run cut off is still written, once it is due; nothing is run':
-                      held_looks[0] == [] and [d.get('outcome') for d in held_looks[1]] == ['INTERRUPTED_NOTICE_WRITTEN'] and held_restored == (after[1], calls)}
+                      held_looks[0] == [] and [d.get('outcome') for d in held_looks[1]] == ['INTERRUPTED_NOTICE_WRITTEN'] and held_restored == (after[1], calls),
+                  'where the journal does not hold the design, the notice is still written, in the service\'s fixed words, which say the design is not shown; nothing is run':
+                      held_between == [] and blind_looks[0] == [] and [d.get('outcome') for d in blind_looks[1]] == ['INTERRUPTED_NOTICE_WRITTEN'] and len(fixed) == 1
+                      and 'The design is not shown here.' in fixed[0] and e['calls_at_end'] == calls}
     finally:
         r.stop()
     return checks, e
