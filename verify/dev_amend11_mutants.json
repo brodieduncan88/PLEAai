@@ -1,0 +1,954 @@
+{
+ "M0": {
+  "defect": "no change at all: the control, which must not be caught",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [],
+  "failed_checks": {},
+  "errors": {},
+  "seconds": 19.6
+ },
+ "G1": {
+  "defect": "the witness gives the chain from the start whatever is asked",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the witness gives the courier's certificate its decisions, which follow on from the head a checkpoint names for decision 0 and hash one to the next, and a run's signed gate reports and stored result; reading adds no decision",
+    "a run cut off when the gate host dies gets no notice before the courier has seen it with no outcome for the time allowed, then a notice that it has none; once the gate signs that it does not know the outcome, a notice that it was interrupted; each is delivered",
+    "a failing run whose own notice was taken out of the service's inbox still gets the courier's notice of the failure, delivered; a passing run gets none; a second pass sends nothing more",
+    "the mailbox holds each notice with its receipt, which verifies under the mailbox's key and names that notice, and a readable copy that opens with what happened; the failure's copy gives the numbers; the courier's log holds the same notices",
+    "with the mailbox down, the notice of a failure is made and waits, and the pass exits 1; with the mailbox back, the next pass delivers it, makes no other, and exits 0",
+    "a courier whose last head the witness contradicts refuses the budget (a fork), keeps the witness's signed checkpoint as the evidence, exits 1, and stays stopped at the next pass",
+    "a record built with the courier's log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker's command says so and exits 0 when delivery is required",
+    "a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required; a record that lacks the notice of the interruption says so, though it holds the earlier notice that the run had no outcome",
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given",
+    "a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken",
+    "a record carrying notices, checked with the three keys alone, verifies and says its notices were not checked; the command exits 1 when delivery is required, and 0 with the courier's and the mailbox's keys given",
+    "a courier reading the chain five decisions at a time, from the start, makes the notices of the interruption and the two failures, and delivers them",
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered",
+    "an attempt the gateway names oddly (\"!x\"), started and never admitted, gets a notice that it has no outcome, beside the notices of the other runs; once admitted and crossed, the witness answers for it by that name, and the courier sends nothing more of it",
+    "when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers"
+   ]
+  },
+  "errors": {},
+  "seconds": 17.7
+ },
+ "G2": {
+  "defect": "any client certificate the authority issued reads the chain",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the courier's certificate reads and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the chain (403), and so is the keeper, which reads checkpoints only"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.5
+ },
+ "G3": {
+  "defect": "a page of decisions has no bounds",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the witness answers 404 for a budget it does not hold and 400 for no budget, a number that is not one, a page of 0 or 201 decisions, a budget name with a control character, no run named and a run named with a control character"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.6
+ },
+ "G4": {
+  "defect": "the witness answers for a run of a budget it does not hold",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the witness answers 404 for a budget it does not hold and 400 for no budget, a number that is not one, a page of 0 or 201 decisions, a budget name with a control character, no run named and a run named with a control character"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.0
+ },
+ "G5": {
+  "defect": "the witness takes a run named in any shape",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the witness answers 404 for a budget it does not hold and 400 for no budget, a number that is not one, a page of 0 or 201 decisions, a budget name with a control character, no run named and a run named with a control character"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.7
+ },
+ "G6": {
+  "defect": "the store reads the chain of a budget it does not hold as empty",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the witness answers 404 for a budget it does not hold and 400 for no budget, a number that is not one, a page of 0 or 201 decisions, a budget name with a control character, no run named and a run named with a control character"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.0
+ },
+ "G7": {
+  "defect": "the courier's certificate is admitted to everything the witness does, writing too",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the courier's certificate reads and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the chain (403), and so is the keeper, which reads checkpoints only",
+    "a courier told that the last decision it read is beyond the chain refuses the budget (a rollback), and keeps the witness's signed checkpoint of the shorter chain as the evidence"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.4
+ },
+ "G2b": {
+  "defect": "a name that may read checkpoints may read the whole chain too",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the courier's certificate reads and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the chain (403), and so is the keeper, which reads checkpoints only"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.5
+ },
+ "G8": {
+  "defect": "a gate report counts whoever signed it",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.5
+ },
+ "G9": {
+  "defect": "a gate report counts for any nonce",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.6
+ },
+ "G10": {
+  "defect": "a result is believed whether or not it hashes to the digest the gate signed",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.0
+ },
+ "G11": {
+  "defect": "a run with no outcome is called interrupted",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a run cut off when the gate host dies gets no notice before the courier has seen it with no outcome for the time allowed, then a notice that it has none; once the gate signs that it does not know the outcome, a notice that it was interrupted; each is delivered",
+    "the mailbox holds each notice with its receipt, which verifies under the mailbox's key and names that notice, and a readable copy that opens with what happened; the failure's copy gives the numbers; the courier's log holds the same notices",
+    "a record built with the courier's log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker's command says so and exits 0 when delivery is required",
+    "an attempt the gateway names oddly (\"!x\"), started and never admitted, gets a notice that it has no outcome, beside the notices of the other runs; once admitted and crossed, the witness answers for it by that name, and the courier sends nothing more of it",
+    "when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.2
+ },
+ "G12": {
+  "defect": "a notice is taken whoever signed it",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the mailbox refuses a notice signed by another key (403), one that is not a notice (400), a body that is not JSON (400) and a client that is not the courier (403); a notice delivered again gets the receipt first given and is kept once",
+    "a client that connects to the mailbox and sends nothing does not hold up another; a body over 64 KiB is refused (400); a notice whose signature is spelt in capitals is refused (403) and not kept"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.9
+ },
+ "G13": {
+  "defect": "a notice may carry fields the courier did not sign",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.8
+ },
+ "G14": {
+  "defect": "a receipt is taken whoever signed it",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a courier given another key for the mailbox takes no answer of the mailbox as a receipt: nothing is delivered, the notices wait, and the pass exits 1",
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.0
+ },
+ "G15": {
+  "defect": "a receipt need not name the notice",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.6
+ },
+ "G16": {
+  "defect": "a notice need not name a decision of the record's chain",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.1
+ },
+ "G17": {
+  "defect": "a notice need not say what the record says of the run",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not (in its outcome or in its words), each fail check 10 alone"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.2
+ },
+ "G18": {
+  "defect": "a notice may be for another budget",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.9
+ },
+ "G19": {
+  "defect": "any notice delivered for a run counts, whatever it says",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required; a record that lacks the notice of the interruption says so, though it holds the earlier notice that the run had no outcome"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.1
+ },
+ "G20": {
+  "defect": "the command exits 0 though delivery is required and missing",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required; a record that lacks the notice of the interruption says so, though it holds the earlier notice that the run had no outcome",
+    "a record carrying notices, checked with the three keys alone, verifies and says its notices were not checked; the command exits 1 when delivery is required, and 0 with the courier's and the mailbox's keys given",
+    "a record without notices verifies and says it has none; the command says notices were not checked and exits 1 when delivery is required; the engineer's console, given the courier's log and the two keys, writes a record that carries the notices and verifies, and refuses without the keys"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.0
+ },
+ "G21": {
+  "defect": "the checker does not name the runs without a notice",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required; a record that lacks the notice of the interruption says so, though it holds the earlier notice that the run had no outcome"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.7
+ },
+ "G22": {
+  "defect": "a record carrying notices, checked with no courier or mailbox key given, fails rather than leaving them unchecked",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a record carrying notices, checked with the three keys alone, verifies and says its notices were not checked; the command exits 1 when delivery is required, and 0 with the courier's and the mailbox's keys given"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.7
+ },
+ "G23": {
+  "defect": "the courier does not compare the nonce it asked with the one signed back",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the courier takes a checkpoint signed by the witness that signs back its own nonce and names the decision it asked about, and refuses an old one handed back, one naming another decision, and one signed by another key"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.2
+ },
+ "G24": {
+  "defect": "the courier takes a checkpoint naming another decision than it asked",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the courier takes a checkpoint signed by the witness that signs back its own nonce and names the decision it asked about, and refuses an old one handed back, one naming another decision, and one signed by another key"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.9
+ },
+ "G25": {
+  "defect": "the courier takes a checkpoint whoever signed it",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the courier takes a checkpoint signed by the witness that signs back its own nonce and names the decision it asked about, and refuses an old one handed back, one naming another decision, and one signed by another key"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.8
+ },
+ "G26": {
+  "defect": "the courier does not recompute each decision's hash",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the courier refuses decisions that were changed, skip one, or do not end at the head the checkpoint names, and takes them when they are whole"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.8
+ },
+ "G27": {
+  "defect": "the courier does not require the decisions to end at the checkpoint's head",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the courier refuses decisions that were changed, skip one, or do not end at the head the checkpoint names, and takes them when they are whole"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.9
+ },
+ "G28": {
+  "defect": "the courier does not see a fork against what it read before",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a courier whose last head the witness contradicts refuses the budget (a fork), keeps the witness's signed checkpoint as the evidence, exits 1, and stays stopped at the next pass"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.3
+ },
+ "G29": {
+  "defect": "the courier does not see a rollback",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a courier told that the last decision it read is beyond the chain refuses the budget (a rollback), and keeps the witness's signed checkpoint of the shorter chain as the evidence"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.8
+ },
+ "G30": {
+  "defect": "a courier that refused a budget goes on with it at the next pass",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a courier whose last head the witness contradicts refuses the budget (a fork), keeps the witness's signed checkpoint as the evidence, exits 1, and stays stopped at the next pass"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.3
+ },
+ "G31": {
+  "defect": "the courier sends a notice of a run with no outcome at once",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a run cut off when the gate host dies gets no notice before the courier has seen it with no outcome for the time allowed, then a notice that it has none; once the gate signs that it does not know the outcome, a notice that it was interrupted; each is delivered"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.9
+ },
+ "G32": {
+  "defect": "the courier sends a notice again at each pass",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a failing run whose own notice was taken out of the service's inbox still gets the courier's notice of the failure, delivered; a passing run gets none; a second pass sends nothing more",
+    "the mailbox holds each notice with its receipt, which verifies under the mailbox's key and names that notice, and a readable copy that opens with what happened; the failure's copy gives the numbers; the courier's log holds the same notices",
+    "with the mailbox down, the notice of a failure is made and waits, and the pass exits 1; with the mailbox back, the next pass delivers it, makes no other, and exits 0",
+    "a record built with the courier's log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker's command says so and exits 0 when delivery is required",
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered",
+    "an attempt the gateway names oddly (\"!x\"), started and never admitted, gets a notice that it has no outcome, beside the notices of the other runs; once admitted and crossed, the witness answers for it by that name, and the courier sends nothing more of it",
+    "when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.3
+ },
+ "G33": {
+  "defect": "the courier takes any answer of the mailbox as a receipt",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a courier given another key for the mailbox takes no answer of the mailbox as a receipt: nothing is delivered, the notices wait, and the pass exits 1"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.2
+ },
+ "G34": {
+  "defect": "a notice not delivered is dropped",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "with the mailbox down, the notice of a failure is made and waits, and the pass exits 1; with the mailbox back, the next pass delivers it, makes no other, and exits 0",
+    "a record built with the courier's log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker's command says so and exits 0 when delivery is required",
+    "a record carrying notices, checked with the three keys alone, verifies and says its notices were not checked; the command exits 1 when delivery is required, and 0 with the courier's and the mailbox's keys given",
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.8
+ },
+ "G35": {
+  "defect": "the courier keeps no log of what it delivered",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the witness gives the courier's certificate its decisions, which follow on from the head a checkpoint names for decision 0 and hash one to the next, and a run's signed gate reports and stored result; reading adds no decision",
+    "the mailbox holds each notice with its receipt, which verifies under the mailbox's key and names that notice, and a readable copy that opens with what happened; the failure's copy gives the numbers; the courier's log holds the same notices",
+    "a record built with the courier's log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker's command says so and exits 0 when delivery is required",
+    "a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required; a record that lacks the notice of the interruption says so, though it holds the earlier notice that the run had no outcome",
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given",
+    "a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken",
+    "a record carrying notices, checked with the three keys alone, verifies and says its notices were not checked; the command exits 1 when delivery is required, and 0 with the courier's and the mailbox's keys given",
+    "a courier given decisions it cannot read (one with no number, one numbered in text, one with no operation), none where the checkpoint says there are some, or a run's reports that are not a list, refuses the budget, does not stop with an error, and delivers to the mailbox a signed notice that it has stopped",
+    "a courier that cannot reach the witness exits 1; it sends nothing until it has been blocked for the time allowed, then one signed notice that it is blocked, not one at each pass",
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered",
+    "when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.9
+ },
+ "G36": {
+  "defect": "the courier does not read the stored result",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the witness gives the courier's certificate its decisions, which follow on from the head a checkpoint names for decision 0 and hash one to the next, and a run's signed gate reports and stored result; reading adds no decision",
+    "a failing run whose own notice was taken out of the service's inbox still gets the courier's notice of the failure, delivered; a passing run gets none; a second pass sends nothing more",
+    "the mailbox holds each notice with its receipt, which verifies under the mailbox's key and names that notice, and a readable copy that opens with what happened; the failure's copy gives the numbers; the courier's log holds the same notices",
+    "with the mailbox down, the notice of a failure is made and waits, and the pass exits 1; with the mailbox back, the next pass delivers it, makes no other, and exits 0",
+    "a record built with the courier's log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker's command says so and exits 0 when delivery is required",
+    "a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required; a record that lacks the notice of the interruption says so, though it holds the earlier notice that the run had no outcome",
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given",
+    "a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken",
+    "a record carrying notices, checked with the three keys alone, verifies and says its notices were not checked; the command exits 1 when delivery is required, and 0 with the courier's and the mailbox's keys given",
+    "a courier reading the chain five decisions at a time, from the start, makes the notices of the interruption and the two failures, and delivers them",
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered",
+    "an attempt the gateway names oddly (\"!x\"), started and never admitted, gets a notice that it has no outcome, beside the notices of the other runs; once admitted and crossed, the witness answers for it by that name, and the courier sends nothing more of it",
+    "when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.5
+ },
+ "G37": {
+  "defect": "the mailbox admits any client the authority issued",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the mailbox refuses a notice signed by another key (403), one that is not a notice (400), a body that is not JSON (400) and a client that is not the courier (403); a notice delivered again gets the receipt first given and is kept once"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.1
+ },
+ "G38": {
+  "defect": "the mailbox signs a new receipt for a notice delivered again",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the mailbox refuses a notice signed by another key (403), one that is not a notice (400), a body that is not JSON (400) and a client that is not the courier (403); a notice delivered again gets the receipt first given and is kept once"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.5
+ },
+ "G39": {
+  "defect": "the mailbox's receipt names another notice",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the witness gives the courier's certificate its decisions, which follow on from the head a checkpoint names for decision 0 and hash one to the next, and a run's signed gate reports and stored result; reading adds no decision",
+    "a run cut off when the gate host dies gets no notice before the courier has seen it with no outcome for the time allowed, then a notice that it has none; once the gate signs that it does not know the outcome, a notice that it was interrupted; each is delivered",
+    "a failing run whose own notice was taken out of the service's inbox still gets the courier's notice of the failure, delivered; a passing run gets none; a second pass sends nothing more",
+    "the mailbox holds each notice with its receipt, which verifies under the mailbox's key and names that notice, and a readable copy that opens with what happened; the failure's copy gives the numbers; the courier's log holds the same notices",
+    "with the mailbox down, the notice of a failure is made and waits, and the pass exits 1; with the mailbox back, the next pass delivers it, makes no other, and exits 0",
+    "a courier told that the last decision it read is beyond the chain refuses the budget (a rollback), and keeps the witness's signed checkpoint of the shorter chain as the evidence",
+    "a record built with the courier's log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker's command says so and exits 0 when delivery is required",
+    "a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required; a record that lacks the notice of the interruption says so, though it holds the earlier notice that the run had no outcome",
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given",
+    "a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken",
+    "a record carrying notices, checked with the three keys alone, verifies and says its notices were not checked; the command exits 1 when delivery is required, and 0 with the courier's and the mailbox's keys given",
+    "a courier reading the chain five decisions at a time, from the start, makes the notices of the interruption and the two failures, and delivers them",
+    "a courier given decisions it cannot read (one with no number, one numbered in text, one with no operation), none where the checkpoint says there are some, or a run's reports that are not a list, refuses the budget, does not stop with an error, and delivers to the mailbox a signed notice that it has stopped",
+    "a courier that cannot reach the witness exits 1; it sends nothing until it has been blocked for the time allowed, then one signed notice that it is blocked, not one at each pass",
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered",
+    "an attempt the gateway names oddly (\"!x\"), started and never admitted, gets a notice that it has no outcome, beside the notices of the other runs; once admitted and crossed, the witness answers for it by that name, and the courier sends nothing more of it",
+    "when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.0
+ },
+ "G40": {
+  "defect": "the mailbox takes a notice whoever signed it",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the mailbox refuses a notice signed by another key (403), one that is not a notice (400), a body that is not JSON (400) and a client that is not the courier (403); a notice delivered again gets the receipt first given and is kept once",
+    "a client that connects to the mailbox and sends nothing does not hold up another; a body over 64 KiB is refused (400); a notice whose signature is spelt in capitals is refused (403) and not kept"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.6
+ },
+ "G41": {
+  "defect": "the deployment's mailbox admits any client",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the mailbox refuses a notice signed by another key (403), one that is not a notice (400), a body that is not JSON (400) and a client that is not the courier (403); a notice delivered again gets the receipt first given and is kept once"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.6
+ },
+ "G42": {
+  "defect": "the record names no courier or mailbox key",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a record built with the courier's log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker's command says so and exits 0 when delivery is required",
+    "a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required; a record that lacks the notice of the interruption says so, though it holds the earlier notice that the run had no outcome",
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given",
+    "a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken",
+    "a record carrying notices, checked with the three keys alone, verifies and says its notices were not checked; the command exits 1 when delivery is required, and 0 with the courier's and the mailbox's keys given",
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.3
+ },
+ "G43": {
+  "defect": "the console does not refuse notices delivered without the keys",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a record without notices verifies and says it has none; the command says notices were not checked and exits 1 when delivery is required; the engineer's console, given the courier's log and the two keys, writes a record that carries the notices and verifies, and refuses without the keys"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.2
+ },
+ "G44": {
+  "defect": "the courier does not read a run made INDETERMINATE",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.9
+ },
+ "G45": {
+  "defect": "a run made INDETERMINATE does not call for a notice in a record",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.0
+ },
+ "G46": {
+  "defect": "a courier that refuses a budget tells no one",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a courier given decisions it cannot read (one with no number, one numbered in text, one with no operation), none where the checkpoint says there are some, or a run's reports that are not a list, refuses the budget, does not stop with an error, and delivers to the mailbox a signed notice that it has stopped"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.8
+ },
+ "G47": {
+  "defect": "a blocked courier says so at every pass",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a courier that cannot reach the witness exits 1; it sends nothing until it has been blocked for the time allowed, then one signed notice that it is blocked, not one at each pass"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.1
+ },
+ "G48": {
+  "defect": "the mailbox does its handshakes in the accept loop",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a client that connects to the mailbox and sends nothing does not hold up another; a body over 64 KiB is refused (400); a notice whose signature is spelt in capitals is refused (403) and not kept"
+   ]
+  },
+  "errors": {},
+  "seconds": 33.7
+ },
+ "G49": {
+  "defect": "a notice's signature may be spelt in capitals",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "a client that connects to the mailbox and sends nothing does not hold up another; a body over 64 KiB is refused (400); a notice whose signature is spelt in capitals is refused (403) and not kept"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.6
+ },
+ "G50": {
+  "defect": "check 10 does not read the words a notice gives a person",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.9
+ },
+ "G52": {
+  "defect": "resuming a courier does not lift its stop",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.4
+ },
+ "G53": {
+  "defect": "the courier asks after every run and stops at the first the witness will not answer for, which the witness names narrowly",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered",
+    "an attempt the gateway names oddly (\"!x\"), started and never admitted, gets a notice that it has no outcome, beside the notices of the other runs; once admitted and crossed, the witness answers for it by that name, and the courier sends nothing more of it",
+    "when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.1
+ },
+ "G54": {
+  "defect": "a run the witness will not answer for stops the reading of the runs after it",
+  "tests_run": [
+   "R26"
+  ],
+  "caught_by": [
+   "R26"
+  ],
+  "failed_checks": {
+   "R26": [
+    "when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers"
+   ]
+  },
+  "errors": {},
+  "seconds": 18.5
+ }
+}
