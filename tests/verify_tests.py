@@ -2772,7 +2772,7 @@ def r27():
                  controls2=controls2, bad2=(bad2[0], said(bad2[1])), run2=(run2.get('outcome'), run2.get('reason_code'), run2.get('basis')), ok2=ok2,
                  refused=(refused[0], said(refused[1])), notices=(notices_before, notices_after), runs=runs, again=(again[0], said(again[1])), good=good[0], bad=bad[0], ok=ok, why=why)
         f1, f2 = (first if isinstance(first, dict) else {}), (second if isinstance(second, dict) else {})
-        checks = {'a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev':
+        checks = {'a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only /usr (and links into it), /work, /tmp and /dev':
                       (f1.get('uid'), f1.get('gid'), f1.get('groups'), f1.get('cwd'), f1.get('here')) == (65534, 65534, [], '/work', ['c.py', 'data.csv']) and e['grouped'] == 'RAN []'
                       and f1.get('root') == ['bin', 'dev', 'lib', 'lib64', 'sbin', 'tmp', 'usr', 'work'],
                   'none of the service\'s files is there to read: not the engineer\'s or the courier\'s key, the witness\'s TLS key, the ledger, the baselines, /etc/passwd, /proc or the code':
@@ -2815,7 +2815,7 @@ def r27():
                   'a gate host whose sandbox cannot be made answers UNKNOWN, says the check was not run, and sends the engineer the notice; started again as it should be, it runs checks again':
                       refused[0] == 3 and runs.get(3.5, ('',))[:2] == ('UNKNOWN', 'CHECK_ERROR') and 'the check was not run' in runs.get(3.5, ('', '', ''))[2]
                       and notices_after == notices_before + 1 and again[0] == 0 and runs.get(2.5, ('',))[0] == 'PASS',
-                  'checks that keep to their own work run as before: a design that meets the declared check passes and one that does not fails, and the record verifies':
+                  'a check that keeps to the standard library and its own files runs as before: a design that meets the declared check passes and one that does not fails, and the record verifies':
                       good[0] == 0 and bad[0] == 2 and ok}
     finally:
         s.stop()

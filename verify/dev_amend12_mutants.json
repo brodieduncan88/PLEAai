@@ -1,0 +1,621 @@
+{
+ "M0": {
+  "defect": "no change at all: the control, which must not be caught",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [],
+  "failed_checks": {},
+  "errors": {},
+  "seconds": 29.2
+ },
+ "S1": {
+  "defect": "the check shares the machine's network",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev",
+    "none of the service's files is there to read: not the engineer's or the courier's key, the witness's TLS key, the ledger, the baselines, /etc/passwd, /proc or the code",
+    "it has no network: the witness, the gate host, the database and an address outside cannot be reached",
+    "it can write only in /work and /tmp, not in the root, /usr or /dev; and the next run starts in an empty /work, with nothing kept from the one before",
+    "a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written",
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's",
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)",
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB",
+    "what the kernel counts for each user is counted against a user of the run's own, not root: a check takes inotify instances until refused, and gets exactly 128, the limit for one user, while root, outside, can still make one",
+    "two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one",
+    "a hostile check that probes the service while it works is baselined with its controls as declared, gives a failing design its FAIL, and its own words in the signed verdict say it reached nothing; the record verifies",
+    "a gate host whose sandbox cannot be made answers UNKNOWN, says the check was not run, and sends the engineer the notice; started again as it should be, it runs checks again",
+    "checks that keep to their own work run as before: a design that meets the declared check passes and one that does not fails, and the record verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 16.8
+ },
+ "S2": {
+  "defect": "the check shares the machine's processes",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev",
+    "none of the service's files is there to read: not the engineer's or the courier's key, the witness's TLS key, the ledger, the baselines, /etc/passwd, /proc or the code",
+    "it has no network: the witness, the gate host, the database and an address outside cannot be reached",
+    "it can write only in /work and /tmp, not in the root, /usr or /dev; and the next run starts in an empty /work, with nothing kept from the one before",
+    "a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written",
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's",
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)",
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB",
+    "what the kernel counts for each user is counted against a user of the run's own, not root: a check takes inotify instances until refused, and gets exactly 128, the limit for one user, while root, outside, can still make one",
+    "two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one",
+    "a hostile check that probes the service while it works is baselined with its controls as declared, gives a failing design its FAIL, and its own words in the signed verdict say it reached nothing; the record verifies",
+    "a gate host whose sandbox cannot be made answers UNKNOWN, says the check was not run, and sends the engineer the notice; started again as it should be, it runs checks again",
+    "checks that keep to their own work run as before: a design that meets the declared check passes and one that does not fails, and the record verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 17.0
+ },
+ "S3": {
+  "defect": "the check is not shut in its own root",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev",
+    "none of the service's files is there to read: not the engineer's or the courier's key, the witness's TLS key, the ledger, the baselines, /etc/passwd, /proc or the code",
+    "it has no network: the witness, the gate host, the database and an address outside cannot be reached",
+    "it can write only in /work and /tmp, not in the root, /usr or /dev; and the next run starts in an empty /work, with nothing kept from the one before",
+    "a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written",
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's",
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)",
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB",
+    "what the kernel counts for each user is counted against a user of the run's own, not root: a check takes inotify instances until refused, and gets exactly 128, the limit for one user, while root, outside, can still make one",
+    "two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one",
+    "a hostile check that probes the service while it works is baselined with its controls as declared, gives a failing design its FAIL, and its own words in the signed verdict say it reached nothing; the record verifies",
+    "a gate host whose sandbox cannot be made answers UNKNOWN, says the check was not run, and sends the engineer the notice; started again as it should be, it runs checks again",
+    "checks that keep to their own work run as before: a design that meets the declared check passes and one that does not fails, and the record verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 17.0
+ },
+ "S4": {
+  "defect": "the check keeps the run's root identity",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev",
+    "none of the service's files is there to read: not the engineer's or the courier's key, the witness's TLS key, the ledger, the baselines, /etc/passwd, /proc or the code",
+    "it has no network: the witness, the gate host, the database and an address outside cannot be reached",
+    "it can write only in /work and /tmp, not in the root, /usr or /dev; and the next run starts in an empty /work, with nothing kept from the one before",
+    "a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written",
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's",
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)",
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB",
+    "what the kernel counts for each user is counted against a user of the run's own, not root: a check takes inotify instances until refused, and gets exactly 128, the limit for one user, while root, outside, can still make one",
+    "two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one",
+    "a hostile check that probes the service while it works is baselined with its controls as declared, gives a failing design its FAIL, and its own words in the signed verdict say it reached nothing; the record verifies",
+    "a gate host whose sandbox cannot be made answers UNKNOWN, says the check was not run, and sends the engineer the notice; started again as it should be, it runs checks again",
+    "checks that keep to their own work run as before: a design that meets the declared check passes and one that does not fails, and the record verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 17.1
+ },
+ "S5": {
+  "defect": "the check keeps the service's groups: neither the launcher nor the first process gives them up",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev"
+   ]
+  },
+  "errors": {},
+  "seconds": 33.9
+ },
+ "S6": {
+  "defect": "the run has no limit on processes",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.8
+ },
+ "S7": {
+  "defect": "the run has no limit on memory",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev",
+    "none of the service's files is there to read: not the engineer's or the courier's key, the witness's TLS key, the ledger, the baselines, /etc/passwd, /proc or the code",
+    "it has no network: the witness, the gate host, the database and an address outside cannot be reached",
+    "it can write only in /work and /tmp, not in the root, /usr or /dev; and the next run starts in an empty /work, with nothing kept from the one before",
+    "a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written",
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's",
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)",
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB",
+    "what the kernel counts for each user is counted against a user of the run's own, not root: a check takes inotify instances until refused, and gets exactly 128, the limit for one user, while root, outside, can still make one",
+    "two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one",
+    "where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run's control groups, or whose machine has a file table one run could fill",
+    "a hostile check that probes the service while it works is baselined with its controls as declared, gives a failing design its FAIL, and its own words in the signed verdict say it reached nothing; the record verifies",
+    "a gate host whose sandbox cannot be made answers UNKNOWN, says the check was not run, and sends the engineer the notice; started again as it should be, it runs checks again",
+    "checks that keep to their own work run as before: a design that meets the declared check passes and one that does not fails, and the record verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 14.8
+ },
+ "S8": {
+  "defect": "the run has no limit on what it writes",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's",
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.7
+ },
+ "S9": {
+  "defect": "the run has no wall-clock limit",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written",
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's"
+   ]
+  },
+  "errors": {},
+  "seconds": 44.7
+ },
+ "S10": {
+  "defect": "the service ends nothing of a run when it ends: no kill of its groups, of the launcher's process group, or of the launcher; only the launcher's own clock ends it",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's"
+   ]
+  },
+  "errors": {},
+  "seconds": 44.7
+ },
+ "S11": {
+  "defect": "the sandbox says it is ready before it is made",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run's control groups, or whose machine has a file table one run could fill"
+   ]
+  },
+  "errors": {},
+  "seconds": 30.0
+ },
+ "S12": {
+  "defect": "the run is taken as made whether the sandbox said so or not",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run's control groups, or whose machine has a file table one run could fill"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.4
+ },
+ "S13": {
+  "defect": "a sandbox that cannot be made is not said to have kept the check from running",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a gate host whose sandbox cannot be made answers UNKNOWN, says the check was not run, and sends the engineer the notice; started again as it should be, it runs checks again"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.0
+ },
+ "S14": {
+  "defect": "the check is run with the site packages",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.6
+ },
+ "S16": {
+  "defect": "the run's files are not given to the run's identity",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev",
+    "none of the service's files is there to read: not the engineer's or the courier's key, the witness's TLS key, the ledger, the baselines, /etc/passwd, /proc or the code",
+    "it has no network: the witness, the gate host, the database and an address outside cannot be reached",
+    "it can write only in /work and /tmp, not in the root, /usr or /dev; and the next run starts in an empty /work, with nothing kept from the one before",
+    "a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written",
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's",
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)",
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB",
+    "what the kernel counts for each user is counted against a user of the run's own, not root: a check takes inotify instances until refused, and gets exactly 128, the limit for one user, while root, outside, can still make one",
+    "two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one",
+    "a hostile check that probes the service while it works is baselined with its controls as declared, gives a failing design its FAIL, and its own words in the signed verdict say it reached nothing; the record verifies",
+    "a gate host whose sandbox cannot be made answers UNKNOWN, says the check was not run, and sends the engineer the notice; started again as it should be, it runs checks again",
+    "checks that keep to their own work run as before: a design that meets the declared check passes and one that does not fails, and the record verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 17.0
+ },
+ "S17": {
+  "defect": "the check sees the machine's /etc",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev",
+    "none of the service's files is there to read: not the engineer's or the courier's key, the witness's TLS key, the ledger, the baselines, /etc/passwd, /proc or the code",
+    "a hostile check that probes the service while it works is baselined with its controls as declared, gives a failing design its FAIL, and its own words in the signed verdict say it reached nothing; the record verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.2
+ },
+ "S18": {
+  "defect": "what is installed under /usr/local is shown to the check",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.3
+ },
+ "S19": {
+  "defect": "the check sees the machine's host name",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.1
+ },
+ "S20": {
+  "defect": "a design larger than the pipe holds the clock",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's"
+   ]
+  },
+  "errors": {},
+  "seconds": 38.3
+ },
+ "S21": {
+  "defect": "every run has the same identities",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev",
+    "a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written",
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's",
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)",
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB",
+    "two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one"
+   ]
+  },
+  "errors": {},
+  "seconds": 24.7
+ },
+ "S22": {
+  "defect": "no system-call filter",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)",
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB"
+   ]
+  },
+  "errors": {},
+  "seconds": 28.9
+ },
+ "S23": {
+  "defect": "the filter lets sockets through",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.1
+ },
+ "S24": {
+  "defect": "the kernel's keyring calls are allowed",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.4
+ },
+ "S25": {
+  "defect": "the site and dist packages are shown to the check",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "runs keep nothing for one another: the kernel's keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox's; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.5
+ },
+ "S26": {
+  "defect": "the launcher's death signal is not set again after its changes of identity, which clear it: a run whose service dies goes on until the launcher's own clock",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one"
+   ]
+  },
+  "errors": {},
+  "seconds": 31.7
+ },
+ "S27": {
+  "defect": "/work is on the host's disk",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher's",
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB",
+    "two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one"
+   ]
+  },
+  "errors": {},
+  "seconds": 35.2
+ },
+ "S28": {
+  "defect": "the run's namespaces are made by root, so what the kernel counts per user is counted against root's, which every run and the machine share",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "what the kernel counts for each user is counted against a user of the run's own, not root: a check takes inotify instances until refused, and gets exactly 128, the limit for one user, while root, outside, can still make one"
+   ]
+  },
+  "errors": {},
+  "seconds": 33.6
+ },
+ "S30": {
+  "defect": "the filter lets native asynchronous I/O through",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.3
+ },
+ "S31": {
+  "defect": "the machine's file table is not looked at",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run's control groups, or whose machine has a file table one run could fill"
+   ]
+  },
+  "errors": {},
+  "seconds": 33.5
+ },
+ "S32": {
+  "defect": "the capability bounding set is not emptied",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB"
+   ]
+  },
+  "errors": {},
+  "seconds": 33.4
+ },
+ "S33": {
+  "defect": "no limit on pending signals or message-queue bytes",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB"
+   ]
+  },
+  "errors": {},
+  "seconds": 29.1
+ },
+ "S34": {
+  "defect": "the check is the first process of its process namespace, as before the fifth review: a check that runs itself again from a second thread loses its death signal and outlives its service",
+  "tests_run": [
+   "R27"
+  ],
+  "caught_by": [
+   "R27"
+  ],
+  "failed_checks": {
+   "R27": [
+    "a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher's; no process of any run's identities is left; the check sees no process of the machine, and cannot signal the namespace's first process, which is the sandbox's own",
+    "two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one"
+   ]
+  },
+  "errors": {},
+  "seconds": 31.3
+ }
+}
