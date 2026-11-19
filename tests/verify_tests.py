@@ -2429,6 +2429,28 @@ def r26():
         c_odd = step(s.courier, [root], 0, 'courier7')
         odd_steps += [step(odd_accept, 'ACCEPT_INTENT'), step(odd_step, ('RECEIPT', odd)), step(odd_accept, 'CROSS')]
         odd_after = next((x[2] for x in Store(deploy.LOCAL_DSN).audit_snapshot(root)[1]['attempts'] if x[0] == odd), None)
+        c_odd2 = step(s.courier, [root], 0, 'courier7')                                            # now admitted and crossed, it is asked after by name
+        # the witness refusing to answer for one run: the others are still read, and that one is read when it answers
+        cfg8 = json.loads(s.courier_config([root], 0, 'courier8').read_text())
+        fail_aids_all = sorted(x['notice'].get('aid') for x in courier.read_deliveries(s.dir / 'courier' / 'deliveries.jsonl', root) if x['notice'].get('outcome') == 'FAIL')
+        refused_aid = fail_aids_all[0] if fail_aids_all else None
+        def one_refused():
+            orig = courier.https
+            def fake(method, u, cfg, body=None, timeout=15.0):
+                if '/run?' in u and urllib.parse.parse_qs(urllib.parse.urlsplit(u).query).get('aid', [None])[0] == refused_aid:
+                    return 503, {'error': 'not now'}
+                return orig(method, u, cfg, body, timeout)
+            courier.https = fake
+            try:
+                return courier.one_pass(cfg8)
+            except BaseException as exc:
+                return {'error': f'{type(exc).__name__}: {exc}'}
+            finally:
+                courier.https = orig
+        s8a = one_refused(); s8b = step(courier.one_pass, cfg8)
+        isolated = ([(m.get('aid') == refused_aid, m.get('outcome')) for m in sorted(s8a.get('made', []), key=lambda m: (m.get('aid') == refused_aid, m.get('outcome')))] if isinstance(s8a, dict) else s8a,
+                    len(s8a.get('unreachable', [])) if isinstance(s8a, dict) else None,
+                    [(m.get('aid') == refused_aid, m.get('outcome')) for m in s8b.get('made', [])] if isinstance(s8b, dict) else s8b)
         odd_made = sorted((x.get('aid') == odd, x.get('outcome')) for x in (c_odd[1].get('made') or [])) if isinstance(c_odd, tuple) and isinstance(c_odd[1], dict) else c_odd
         # a record without notices, and the console
         plain = step(s.record, r.h, [r.ws / '.verify' / 'submissions.jsonl'])
@@ -2466,7 +2488,8 @@ def r26():
                  console=(console.returncode, console.stderr[:200]), console_nokeys=(console_nokeys.returncode, console_nokeys.stderr[:160]),
                  three_keys=three_keys, cli_three=cli_three, cli_five=cli_five[0], paged=(c_paged[0], made(c_paged)) if isinstance(c_paged, tuple) else c_paged,
                  bad_answers={k: (v.get('refused'), [m.get('outcome') for m in v.get('made', [])]) if isinstance(v, dict) else v for k, v in bad_answers.items()},
-                 stopped_alarms=stopped_alarms, blocked=blocked, odd=(odd_steps, odd_phase, odd_after, c_odd[0] if isinstance(c_odd, tuple) else c_odd, odd_made), words_differ=words_differ, idle=(while_idle, round(idle_seconds, 1)), too_long=too_long, upper=(upper_ans, before_upper, after_upper), indet=indet)
+                 stopped_alarms=stopped_alarms, blocked=blocked, odd=(odd_steps, odd_phase, odd_after, c_odd[0] if isinstance(c_odd, tuple) else c_odd, odd_made), words_differ=words_differ,
+                 odd2=(c_odd2[0], made(c_odd2)) if isinstance(c_odd2, tuple) else c_odd2, isolated=isolated, idle=(while_idle, round(idle_seconds, 1)), too_long=too_long, upper=(upper_ans, before_upper, after_upper), indet=indet)
         cs = e['couriers']; cut_aid = next((x['notice']['aid'] for x in log if x['notice'].get('outcome') == 'INTERRUPTED'), None)
         checks = {'the witness gives the courier\'s certificate its decisions, which follow on from the head a checkpoint names for decision 0 and hash one to the next, and a run\'s signed gate reports and stored result; reading adds no decision':
                       ch[0] == 200 and e['chain'][1] == before and isinstance(chained, list) and isinstance(live, dict) and live.get('seq') == before
@@ -2529,10 +2552,12 @@ def r26():
                   'when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered':
                       indet[0] == 137 and indet[1] == 0 and indet[2] == 'REREGISTERED_REDUCED' and indet[3] == ['INDETERMINATE'] * 3 and indet[4]
                       and [x for x in indet[5] if x[0] == 'INDETERMINATE'] == [('INDETERMINATE', True)] * 3 and all(d for _, d in indet[5]),
-                  'an attempt the gateway names oddly ("!x"), started and never admitted, gets a notice that it has no outcome, and the runs listed after it still get theirs':
+                  'an attempt the gateway names oddly ("!x"), started and never admitted, gets a notice that it has no outcome, beside the notices of the other runs; once admitted and crossed, the witness answers for it by that name, and the courier sends nothing more of it':
                       odd_steps == ['APPLIED', (200, 'APPLIED'), 'APPLIED', 'APPLIED', (200, 'APPLIED'), 'APPLIED', (200, 'APPLIED')] and odd_phase == 'INTENT_PENDING' and odd_after == 'CONSUMED'
                       and isinstance(c_odd, tuple) and c_odd[0] == 0
-                      and odd_made == [(False, 'FAIL'), (False, 'FAIL'), (False, 'INTERRUPTED'), (True, 'NO_OUTCOME')],
+                      and odd_made == [(False, 'FAIL'), (False, 'FAIL'), (False, 'INTERRUPTED'), (True, 'NO_OUTCOME')] and e['odd2'] == (0, []),
+                  'when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers':
+                      isolated[0] == [(False, 'COURIER_BLOCKED'), (False, 'FAIL'), (False, 'INTERRUPTED'), (False, 'NO_OUTCOME')] and isolated[1] == 1 and isolated[2] == [(True, 'FAIL')],
                   'a record without notices verifies and says it has none; the command says notices were not checked and exits 1 when delivery is required; the engineer\'s console, given the courier\'s log and the two keys, writes a record that carries the notices and verifies, and refuses without the keys':
                       okp and e['plain'][1] == (10, 'notices delivered (none in this record)', True) and sp.get('delivery') is None and cli_plain[0] == 1 and (cli_plain[1] or [''])[0].startswith('NOTICES: NOT CHECKED')
                       and console.returncode == 0 and console_ok and console_nokeys.returncode == 1}

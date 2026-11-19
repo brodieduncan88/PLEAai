@@ -39,8 +39,10 @@ It names the decision it was read at and that decision's hash, so a reader can t
 Delivery.  Each notice is sent to the watch's mailbox (mailbox_service.py) over HTTPS with the courier's client
 certificate.  It is delivered when the mailbox answers with a receipt signed by a mailbox key given, naming the notice.  The
 notice and its receipt are then appended to STATE_DIR/deliveries.jsonl, and a record can carry them (verify_ctl.py record
---deliveries).  A notice not delivered stays waiting and is sent again at the next pass.  A pass exits 0 if nothing is
-waiting, refused or unreachable, and 1 otherwise.
+--deliveries).  A notice not delivered stays waiting and is sent again at the next pass, and what is waiting is sent before
+the witness is asked.  A run the witness will not answer for is passed over, keeping its wait, and asked after again at the
+next pass; if the witness does not answer at all, the pass asks no more.  Each request has 60 seconds, however slowly a
+party answers.  A pass exits 0 if nothing is waiting, refused or unreachable, and 1 otherwise.
 
 What the courier refuses.  A checkpoint that is not the witness's, does not sign back its nonce, or names another decision
 than asked; another head for the last decision the courier read (a fork); decisions that are not readable, do not follow
@@ -61,6 +63,7 @@ everything else.  It needs the Python standard library and `cryptography` (throu
 """
 import argparse
 import fcntl
+import http.client
 import json
 import os
 import pathlib
@@ -92,6 +95,10 @@ class Refused(Exception):
 
 class Unreachable(Exception):
     """A party could not be asked, or did not answer as it must."""
+
+
+class Answered(Unreachable):
+    """A party answered, but not with what was asked (a status other than 200).  It is still there: go on with the rest."""
 
 
 def now() -> str:
@@ -138,7 +145,7 @@ def _https(method: str, url: str, cfg: dict, body=None, timeout: float = 15.0):
         except Exception:
             ans = {}
         return exc.code, ans if isinstance(ans, dict) else {}
-    except (urllib.error.URLError, OSError, ValueError) as exc:
+    except (urllib.error.URLError, OSError, ValueError, http.client.HTTPException) as exc:
         raise Unreachable(f'{urllib.parse.urlsplit(url).netloc} could not be asked ({type(exc).__name__})')
     if len(raw) > MAX_ANSWER:
         raise Unreachable('the answer is too long')
@@ -218,7 +225,7 @@ def run_outcome(cfg, root, attempt, upto: int) -> tuple[str, dict | None]:
         return C.run_outcome(phase, [], None, cfg['gate_keys'], root, aid, nonce), None
     status, ans = https('GET', f"{cfg['witness_url']}/run?" + q(root=root, aid=aid), cfg)
     if status != 200:
-        raise Unreachable(f'the witness answered {status} for run {aid}')
+        raise Answered(f'the witness answered {status} for run {aid}')
     if not isinstance(ans.get('evidence', []), list):
         raise Refused(f'the witness\'s reports for run {aid} are not a list')
     evidence = [e for e in ans.get('evidence') or [] if isinstance(e, dict) and type(e.get('seq')) is int and e['seq'] <= upto]
@@ -337,7 +344,13 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save) -
         try:                                                        # one run the witness will not answer for does not hide the others
             outcome, result = run_outcome(cfg, root, attempt, cp['seq'])
         except Unreachable as exc:
-            failed.append(f'{aid}: {exc}'); continue
+            seen.update({k: v for k, v in before.items() if k.startswith(f'{aid}|')})   # its waits go on, though it was not read this time
+            failed.append(f'{aid}: {exc}')
+            if isinstance(exc, Answered):
+                continue
+            for later in st.get('attempts', [])[st['attempts'].index(attempt) + 1:]:      # the witness itself is not answering: ask no more, keep every wait
+                seen.update({k: v for k, v in before.items() if k.startswith(f'{later[0]}|')})
+            break
         done = phase in FINAL and outcome != 'UNVERIFIED'
         if outcome in ('PASS', 'PENDING'):
             if done:
@@ -363,6 +376,8 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save) -
 
 def watch_pass(cfg, key, watch, st: dict, clock: float, summary: dict, save) -> None:
     root = watch['root']
+    if st.get('pending'):
+        _deliver_pending(cfg, watch, st, summary, save, quiet=True)   # what is waiting goes out before the witness is asked, however long that takes
     if st.get('stopped'):
         summary['refused'].append({'root': root, 'why': 'stopped since ' + st['stopped'] + ': see refused.jsonl, then courier.py resume'})
     else:
@@ -374,7 +389,7 @@ def watch_pass(cfg, key, watch, st: dict, clock: float, summary: dict, save) -> 
             _append(pathlib.Path(cfg['state_dir']) / 'refused.jsonl', {'time': now(), 'root': root, 'why': str(exc.args[0]), 'evidence': exc.args[1] if len(exc.args) > 1 else None})
             summary['refused'].append({'root': root, 'why': str(exc.args[0])})
             alarm(cfg, key, watch, st, 'COURIER_STOPPED', f'The courier refused what the witness said: {exc.args[0]}', summary)
-        except Exception as exc:
+        except (Unreachable, KeyError, TypeError, AttributeError, IndexError) as exc:
             if not isinstance(exc, Unreachable):                    # an answer the courier could not even read is not believed
                 st['stopped'] = now()
                 why = f'an answer of the witness could not be read ({type(exc).__name__}: {exc})'
@@ -391,7 +406,7 @@ def watch_pass(cfg, key, watch, st: dict, clock: float, summary: dict, save) -> 
     _deliver_pending(cfg, watch, st, summary, save)
 
 
-def _deliver_pending(cfg, watch, st, summary, save) -> None:
+def _deliver_pending(cfg, watch, st, summary, save, quiet: bool = False) -> None:
     root = watch['root']
     done = delivered_digests(pathlib.Path(cfg['state_dir']))
     waiting = []
@@ -399,7 +414,10 @@ def _deliver_pending(cfg, watch, st, summary, save) -> None:
         try:
             receipt = deliver(cfg, watch, notice)
         except Unreachable as exc:
-            waiting.append(notice); summary['waiting'].append({'root': root, 'aid': notice['aid'], 'outcome': notice['outcome'], 'why': str(exc)}); continue
+            waiting.append(notice)
+            if not quiet:
+                summary['waiting'].append({'root': root, 'aid': notice['aid'], 'outcome': notice['outcome'], 'why': str(exc)})
+            continue
         if C.notice_digest(notice) not in done:
             _append(pathlib.Path(cfg['state_dir']) / 'deliveries.jsonl', {'notice': notice, 'receipt': receipt}); done.add(C.notice_digest(notice))
         summary['delivered'].append({'root': root, 'aid': notice['aid'], 'outcome': notice['outcome']})
