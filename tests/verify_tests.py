@@ -2317,6 +2317,8 @@ def r26():
         moved = signed(s.courier_key, C.NOTICE_FIELDS, dict({k: n0.get(k) for k in C.NOTICE_FIELDS}, head='1' * 64))
         fail_n = next((d['notice'] for d in rec.get('deliveries', []) if d['notice'].get('outcome') == 'FAIL'), {})
         misstated = signed(s.courier_key, C.NOTICE_FIELDS, dict({k: fail_n.get(k) for k in C.NOTICE_FIELDS}, outcome='UNKNOWN'))
+        fail_rec_a = next((a for a in rec.get('attempts', []) if a.get('aid') == fail_n.get('aid')), {})
+        misstated = signed(s.courier_key, C.NOTICE_FIELDS, dict(misstated, text=C.notice_text('UNKNOWN', fail_n.get('aid'), root, fail_rec_a.get('result'), fail_n.get('seq'), fail_n.get('courier'))))   # words that agree with the false outcome
         tampered = {'notice edited': fails(with_delivery(dict(d0, notice=dict(n0, outcome='FAIL' if n0.get('outcome') != 'FAIL' else 'UNKNOWN')))),
                     'notice of another courier key': fails(with_delivery({'notice': signed(stranger_courier, C.NOTICE_FIELDS, {k: n0.get(k) for k in C.NOTICE_FIELDS}), 'receipt': d0.get('receipt')})),
                     'receipt of another key': fails(with_delivery(dict(d0, receipt=receipt_for(n0, stranger_courier)))),
@@ -2371,7 +2373,7 @@ def r26():
                 courier.https = orig
         lv = live if isinstance(live, dict) else {}
         mk = lambda key, nonce, at: sign_checkpoint(key, root, lv.get('seq'), lv.get('head'), lv.get('business'), lv.get('witness'), lv.get('time'), nonce, at, lv.get('head') if at == lv.get('seq') else '0' * 64)
-        courier_takes = {'its own nonce, the decision asked': answered(lambda n, at: mk(s.witness, n, at)), 'an old checkpoint handed back': answered(lambda n, at: lv),
+        courier_takes = {'its own nonce, the decision asked': answered(lambda n, at: mk(s.witness, n, at)), 'an old checkpoint handed back': answered(lambda n, at: mk(s.witness, 'an-earlier-nonce', at)),
                          'another decision named': answered(lambda n, at: mk(s.witness, n, at - 1)), 'signed by another key': answered(lambda n, at: mk(Signer(), n, at))}
         # the courier reading the chain a few decisions at a time, from the start
         c_paged = step(s.courier, [root], 0, 'courier4', 5)
@@ -2402,7 +2404,8 @@ def r26():
         cfg6['stall_after'] = 0; (s.dir / 'courier6.json').write_text(json.dumps(cfg6))
         p6 = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'courier.py'), 'run', '--config', str(s.dir / 'courier6.json')], capture_output=True, text=True, timeout=120)
         p6b = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'courier.py'), 'run', '--config', str(s.dir / 'courier6.json')], capture_output=True, text=True, timeout=120)
-        blocked = (p6w.returncode, early_alarms, p6.returncode, p6b.returncode, [d['notice'].get('outcome') for d in courier.read_deliveries(s.dir / 'courier6' / 'deliveries.jsonl', root)])
+        made_b = step(lambda: [m.get('outcome') for m in json.loads(p6b.stdout.strip().splitlines()[-1]).get('made', [])])
+        blocked = (p6w.returncode, early_alarms, p6.returncode, p6b.returncode, [d['notice'].get('outcome') for d in courier.read_deliveries(s.dir / 'courier6' / 'deliveries.jsonl', root)], made_b)
         # the mailbox under a client that sends nothing, a body too long, and a notice spelt another way
         import socket as _socket
         idle = _socket.create_connection(('127.0.0.1', s.ports['mailbox']), timeout=5)
@@ -2546,7 +2549,7 @@ def r26():
                       all(isinstance(v, dict) and len(v.get('refused') or []) == 1 and [m.get('outcome') for m in v.get('made', [])] == ['COURIER_STOPPED'] for v in bad_answers.values())
                       and stopped_alarms == ['COURIER_STOPPED'] * 5,
                   'a courier that cannot reach the witness exits 1; it sends nothing until it has been blocked for the time allowed, then one signed notice that it is blocked, not one at each pass':
-                      blocked == (1, 0, 1, 1, ['COURIER_BLOCKED']),
+                      blocked == (1, 0, 1, 1, ['COURIER_BLOCKED'], []),
                   'a client that connects to the mailbox and sends nothing does not hold up another; a body over 64 KiB is refused (400); a notice whose signature is spelt in capitals is refused (403) and not kept':
                       e['idle'][0] == 200 and e['idle'][1] < 5 and too_long == 400 and upper_ans == 403 and before_upper == after_upper,
                   'when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered':
