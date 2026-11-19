@@ -74,6 +74,12 @@ record's ninth check. `check_record.py --checkpoint` says whether a record is cu
 and `checkpoints.py` keeps the witness's checkpoints apart from the service, refusing a rollback or a fork. The front door
 itself is unchanged. `DECLARED_AMEND10.md` has the list, and the open items.
 
+**Second note of 19 November 2026.** `AMENDMENT_11_2026-11-19.md` adds a second path for notices to the engineer. A courier
+that reads only the witness signs a notice of each run that calls for one and delivers it to the engineer's own mailbox,
+which signs a receipt; a record can carry both, checked by its tenth check. The front door's deployment also starts the
+mailbox. The front door itself is unchanged, and so are the service's own notices. `DECLARED_AMEND11.md` has the list, and
+the open items.
+
 ## The pieces
 
 | file | what it does |
