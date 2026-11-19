@@ -1116,6 +1116,17 @@ class Store:
             conn.rollback()
         return log, _jsonable(ref.observe(state))
 
+    def audit_after(self, root_id: str, after: int, limit: int) -> list:
+        """The audit rows after sequence number `after`, at most `limit` of them, in order (verification Amendment 11: the
+        witness's reading for a courier).  An unknown root raises UnknownRoot."""
+        with self.connect() as conn:
+            if conn.execute('SELECT 1 FROM roots WHERE root_id = %s', (root_id,)).fetchone() is None:
+                raise UnknownRoot(root_id)
+            rows = conn.execute('SELECT seq, op, kind, code, observation, prev_hash, hash FROM decisions WHERE root_id = %s AND seq > %s ORDER BY seq LIMIT %s',
+                                (root_id, after, limit)).fetchall()
+        return [{'seq': s, 'op': op, 'kind': kind, 'code': code, 'observation': obs, 'prev_hash': p, 'hash': h}
+                for s, op, kind, code, obs, p, h in rows]
+
     def decision_hash(self, root_id: str, seq: int):
         with self.connect() as conn:
             row = conn.execute('SELECT hash FROM decisions WHERE root_id = %s AND seq = %s', (root_id, seq)).fetchone()

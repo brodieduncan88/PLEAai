@@ -8,6 +8,7 @@
     verify_ctl.py acknowledge HOME HASH AID --disposition "..." --key KEYFILE
     verify_ctl.py record   HOME HASH --key KEYFILE --witness-key HEX --gate-key HEX --out RECORD.json [--journal FILE ...]
                            [--witness-url URL --tls-ca CA --tls-cert CERT --tls-key KEY]   put the witness's checkpoint in the record (Amendment 10)
+                           [--deliveries LOG --courier-key HEX --mailbox-key HEX]   put the notices a courier delivered in the record (Amendment 11)
 
 baseline takes a draft card the engineer wrote (requirement, limits, load case, design space, the check's file name,
 author, reviewer and stated limits, the data files, the control cases) and a directory holding the check and its data.
@@ -235,12 +236,17 @@ def witness_checkpointer(witness_url: str, ca: str, cert: str | None, key_file: 
     return lambda root, seq: checkpoints.fetch(witness_url, ca, cert, key_file, root, None, seq)
 
 
-def record(home, baseline_hash, key: Key, witness_key, gate_key, journals=(), local_dsn: str = LOCAL_DSN, checkpointer=None) -> dict:
+def record(home, baseline_hash, key: Key, witness_key, gate_key, journals=(), local_dsn: str = LOCAL_DSN, checkpointer=None, deliveries=None) -> dict:
     """The verification record.  checkpointer (witness_checkpointer) puts the witness's checkpoint into it (Amendment 10); without
-    one the record has none, as before, and its checker says so."""
+    one the record has none, as before, and its checker says so.  deliveries ({'log': a courier's deliveries.jsonl, 'courier':
+    [hex], 'mailbox': [hex]}) puts the notices delivered to the engineer's mailbox into it, with their receipts (Amendment 11)."""
     env = load_envelope(pathlib.Path(home) / 'baselines' / baseline_hash / 'baseline.json', key.public_hex)
+    given = None
+    if deliveries is not None:
+        import courier
+        given = {'items': courier.read_deliveries(deliveries['log'], root_for(env['card'])), 'courier': deliveries['courier'], 'mailbox': deliveries['mailbox']}
     rec = build(Store(local_dsn), env, root_for(env['card']), {'witness': witness_key, 'gate': gate_key}, key, submissions(home, journals), acknowledgements(home, baseline_hash),
-                checkpointer=checkpointer)
+                checkpointer=checkpointer, deliveries=given)
     if checkpointer is not None:                   # a record whose checkpoint its own checker would refuse is not handed over
         import check_record
         cp = rec.get('checkpoint')
@@ -249,6 +255,12 @@ def record(home, baseline_hash, key: Key, witness_key, gate_key, journals=(), lo
             bad = ['it does not name the head after the record\'s last decision']
         if bad:
             raise ValueError('the witness\'s answer cannot go into the record: ' + '; '.join(bad))
+    if deliveries is not None:                     # nor a record whose notices delivered its own checker would refuse (Amendment 11)
+        import check_record
+        _, checks, _ = check_record.verify(rec, dict(rec['keys'], witness=witness_key))
+        bad = [d for n, _, good, d in checks if n == 10 and not good]
+        if bad:
+            raise ValueError('the notices delivered cannot go into the record: ' + bad[0])
     return rec
 
 
@@ -286,6 +298,8 @@ def main():
     ap.add_argument('--out'); ap.add_argument('--journal', action='append', default=[])
     ap.add_argument('--witness-url', help='record: ask the witness for a checkpoint and put it in the record (Amendment 10)')
     ap.add_argument('--tls-ca'); ap.add_argument('--tls-cert'); ap.add_argument('--tls-key')
+    ap.add_argument('--deliveries', help='record: a courier\'s deliveries.jsonl; its notices delivered for this budget go into the record (Amendment 11)')
+    ap.add_argument('--courier-key', action='append', default=[]); ap.add_argument('--mailbox-key', action='append', default=[])
     a = ap.parse_args()
     try:
         if a.action == 'keygen':
@@ -300,8 +314,11 @@ def main():
         elif a.action == 'acknowledge':
             print(json.dumps(acknowledge(a.home, a.rest[0], a.rest[1], a.disposition, key)))
         elif a.action == 'record':
+            if a.deliveries and not (a.courier_key and a.mailbox_key):
+                raise ValueError('--deliveries needs the courier\'s key and the mailbox\'s key (--courier-key, --mailbox-key)')
             rec = record(a.home, a.rest[0], key, a.witness_key, a.gate_key, a.journal,
-                         checkpointer=witness_checkpointer(a.witness_url, a.tls_ca, a.tls_cert, a.tls_key) if a.witness_url else None)
+                         checkpointer=witness_checkpointer(a.witness_url, a.tls_ca, a.tls_cert, a.tls_key) if a.witness_url else None,
+                         deliveries={'log': a.deliveries, 'courier': a.courier_key, 'mailbox': a.mailbox_key} if a.deliveries else None)
             pathlib.Path(a.out).write_text(json.dumps(rec, indent=1) + '\n'); print(json.dumps({'record': a.out, 'attempts': len(rec['attempts']), 'as_of': rec['as_of']}))
     except (BaselineInvalid, ValueError, OSError) as exc:
         print(f'refused: {exc}', file=sys.stderr); sys.exit(1)

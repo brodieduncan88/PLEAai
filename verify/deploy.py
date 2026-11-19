@@ -1,8 +1,10 @@
 """One verification service on one machine, for the demonstration, the tests and the trials.
 
 Services(directory) makes a fresh deployment under `directory`: a certificate authority, new witness and gate keys,
-the responsible engineer's key, and VERIFY_HOME.  start() runs the witness service (v1.2.1 with the checkpoint reading of verification Amendment 10) and the v1.2.1 gate host, unchanged,
-under mutual TLS, with the gate host loading verify_tools.  client_config() writes what an assistant's workspace
+the responsible engineer's key, and VERIFY_HOME.  start() runs the witness service (v1.2.1 with the readings of
+verification Amendments 10 and 11), the v1.2.1 gate host, unchanged, and the engineer's mailbox (Amendment 11), under
+mutual TLS, with the gate host loading verify_tools.  courier() runs one pass of the courier (Amendment 11), which reads
+only the witness and delivers to the mailbox.  client_config() writes what an assistant's workspace
 needs to call verify_client.py: the gateway database credential, the client certificate, the public keys and a copy
 of the signed baseline.
 
@@ -32,7 +34,7 @@ LOCAL_DSN = os.environ.get('PLEA_LOCAL_DSN', 'postgresql://plea_local:local@127.
 
 
 class Services:
-    def __init__(self, directory, witness_port: int = 8971, host_port: int = 8972, attach: bool = False):
+    def __init__(self, directory, witness_port: int = 8971, host_port: int = 8972, attach: bool = False, mailbox_port: int = 8974):
         """attach=True: use a deployment another process is running in `directory` (its engineer's key, its public keys,
         its home), to baseline, write client configurations, build records and read the inbox.  It starts nothing."""
         self.dir = pathlib.Path(directory)
@@ -46,11 +48,15 @@ class Services:
             return
         shutil.rmtree(self.dir, ignore_errors=True); self.dir.mkdir(parents=True)
         (self.home / 'baselines').mkdir(parents=True); (self.home / 'inbox').mkdir()
-        self.ports = {'witness': witness_port, 'host': host_port}
-        self.pki = TLS.init_pki(self.dir / 'pki', servers=('witness', 'host'), clients=('governor', 'keeper'), ca_name='verification-demo-ca', days=3)   # keeper: reads checkpoints (Amendment 10)
+        self.ports = {'witness': witness_port, 'host': host_port, 'mailbox': mailbox_port}
+        self.pki = TLS.init_pki(self.dir / 'pki', servers=('witness', 'host', 'mailbox'), clients=('governor', 'keeper', 'courier'), ca_name='verification-demo-ca', days=3)   # keeper: reads checkpoints (Amendment 10); courier and mailbox (Amendment 11)
         self.witness, self.gate = Signer(), GateSigner()
         self.engineer = verify_ctl.keygen(self.dir / 'engineer.key')
-        self.keys = {'witness': self.witness.public_hex, 'gate': self.gate.public_hex, 'engineer': self.engineer.public_hex}
+        import mailbox_service
+        self.courier_key, self.mailbox_key = mailbox_service.MailboxKey(), mailbox_service.MailboxKey()      # the courier's and the engineer's mailbox's (Amendment 11)
+        (self.dir / 'courier.key').write_text(self.courier_key.private_hex + '\n'); (self.dir / 'mailbox.key').write_text(self.mailbox_key.private_hex + '\n')
+        self.keys = {'witness': self.witness.public_hex, 'gate': self.gate.public_hex, 'engineer': self.engineer.public_hex,
+                     'courier': [self.courier_key.public_hex], 'mailbox': [self.mailbox_key.public_hex]}
         (self.dir / 'state.json').write_text(json.dumps({'ports': self.ports, 'pki': self.pki, 'keys': self.keys}, indent=1) + '\n')   # public keys and paths only
 
     def _tls(self, name) -> list:
@@ -69,7 +75,7 @@ class Services:
 
     def start_witness(self) -> None:
         cmd = [PY, '-B', str(HERE.parent / 'plea_gateway' / 'witness_service.py'), '--port', str(self.ports['witness']), '--dsn', WITNESS_DSN,
-               '--key', self.witness.private_hex, '--gate-key', self.gate.public_hex] + self._tls('witness') + ['--tls-allow-read', 'keeper']   # the keeper reads checkpoints; it cannot write
+               '--key', self.witness.private_hex, '--gate-key', self.gate.public_hex] + self._tls('witness') + ['--tls-allow-read', 'keeper', '--tls-allow-read', 'courier']   # they read; they cannot write
         self.procs['witness'] = subprocess.Popen(cmd, stdout=open(self.dir / 'witness.log', 'a'), stderr=subprocess.STDOUT)
         self._await('witness')
 
@@ -93,8 +99,21 @@ class Services:
         self.host_stopped_at = time.time()
         return code
 
+    def start_mailbox(self) -> None:
+        """The engineer's mailbox (Amendment 11): its own key and folder, outside the service's home; it admits the courier only."""
+        cmd = [PY, '-B', str(HERE / 'mailbox_service.py'), 'serve', '--port', str(self.ports['mailbox']), '--dir', str(self.dir / 'mailbox'),
+               '--key-file', str(self.dir / 'mailbox.key'), '--name', 'engineer-mailbox', '--courier-key', self.keys['courier'][0],
+               '--tls-cert', self.pki['mailbox'][0], '--tls-key', self.pki['mailbox'][1], '--tls-ca', self.pki['ca'], '--tls-allow', 'courier']
+        self.procs['mailbox'] = subprocess.Popen(cmd, stdout=open(self.dir / 'mailbox.log', 'a'), stderr=subprocess.STDOUT)
+        self._await('mailbox')
+
+    def stop_mailbox(self) -> None:
+        p = self.procs.get('mailbox')
+        if p is not None and p.poll() is None:
+            p.kill(); p.wait(timeout=5)
+
     def start(self, crash_at: str | None = None) -> 'Services':
-        self.start_witness(); self.start_host(crash_at); return self
+        self.start_witness(); self.start_host(crash_at); self.start_mailbox(); return self
 
     def stop(self) -> None:
         for p in self.procs.values():
@@ -131,9 +150,30 @@ class Services:
         import checkpoints
         return checkpoints.fetch(f'https://127.0.0.1:{self.ports["witness"]}', self.pki['ca'], *self.pki['keeper'], root, nonce, at)
 
-    def record(self, baseline_hash: str, journals=(), checkpoint: bool = True) -> dict:
+    def courier_config(self, roots, stall_after: float = 900, name: str = 'courier') -> pathlib.Path:
+        """The courier's configuration (Amendment 11): the witness's readings with the courier's certificate, the keys it believes,
+        and one watch for each budget, delivering to the engineer's mailbox.  Nothing in it names the service's home or database."""
+        cfg = {'name': name, 'key_file': str(self.dir / 'courier.key'), 'state_dir': str(self.dir / name), 'stall_after': stall_after,
+               'witness_url': f'https://127.0.0.1:{self.ports["witness"]}', 'ca': self.pki['ca'], 'cert': self.pki['courier'][0], 'key': self.pki['courier'][1],
+               'witness_keys': [self.keys['witness']], 'gate_keys': [self.keys['gate']],
+               'watches': [{'root': r, 'mailbox_url': f'https://127.0.0.1:{self.ports["mailbox"]}', 'mailbox_keys': self.keys['mailbox']} for r in roots]}
+        p = self.dir / f'{name}.json'; p.write_text(json.dumps(cfg, indent=1) + '\n')
+        return p
+
+    def courier(self, roots, stall_after: float = 900, name: str = 'courier') -> tuple[int, dict]:
+        """One pass of the courier, in its own process, as the engineer would run it: (exit status, its summary)."""
+        out = subprocess.run([PY, '-B', str(HERE / 'courier.py'), 'run', '--config', str(self.courier_config(roots, stall_after, name))], capture_output=True, text=True, timeout=120)
+        try:
+            return out.returncode, json.loads(out.stdout.strip().splitlines()[-1])
+        except (ValueError, IndexError):
+            return out.returncode, {'error': (out.stdout + out.stderr)[-500:]}
+
+    def deliveries(self, name: str = 'courier') -> dict:
+        return {'log': self.dir / name / 'deliveries.jsonl', 'courier': self.keys['courier'], 'mailbox': self.keys['mailbox']}
+
+    def record(self, baseline_hash: str, journals=(), checkpoint: bool = True, deliveries: bool = False) -> dict:
         return verify_ctl.record(self.home, baseline_hash, self.engineer, self.keys['witness'], self.keys['gate'], journals,
-                                 checkpointer=self.checkpointer() if checkpoint else None)
+                                 checkpointer=self.checkpointer() if checkpoint else None, deliveries=self.deliveries() if deliveries else None)
 
     def inbox(self, baseline_hash: str) -> list:
         box = self.home / 'inbox' / baseline_hash[:16]

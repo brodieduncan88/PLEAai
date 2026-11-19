@@ -140,10 +140,14 @@ def attempts_of(store, root: str, submissions: list, upto: int | None = None) ->
     return attempts, {'audit': audit, 'observation': observation}
 
 
-def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions=(), acknowledgements=(), at: str | None = None, checkpointer=None) -> dict:
+def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions=(), acknowledgements=(), at: str | None = None, checkpointer=None,
+          deliveries=None) -> dict:
     """keys: {'witness': hex, 'gate': hex}.  The record is signed by the engineer's key.  checkpointer(root, seq), where given,
     asks the witness for a checkpoint that says what the chain's head was after decision `seq`; it goes into the record, under
-    the engineer's signature (Amendment 10).  The record's checker requires it to be the witness's and to name this record's head."""
+    the engineer's signature (Amendment 10).  The record's checker requires it to be the witness's and to name this record's head.
+    deliveries, where given, is {'items': [{'notice', 'receipt'}, ...], 'courier': [hex], 'mailbox': [hex]}: the notices a courier
+    delivered to the engineer's mailbox, with the mailbox's receipts (Amendment 11).  Those for this budget that name a decision
+    in this record's chain, with its hash, go into the record, with the two keys."""
     attempts, snap = attempts_of(store, root, list(submissions))
     audit, provisioning = snap['audit'], store.provisioning(root)
     known = {a['aid'] for a in attempts}
@@ -156,5 +160,11 @@ def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions
     }
     if checkpointer is not None:
         body['checkpoint'] = checkpointer(root, body['as_of']['seq'])
+    if deliveries is not None:
+        hashes = [row['hash'] for row in audit]
+        def in_chain(n):
+            return isinstance(n, dict) and n.get('root') == root and type(n.get('seq')) is int and 1 <= n['seq'] <= len(hashes) and hashes[n['seq'] - 1] == n.get('head')
+        body['deliveries'] = [d for d in deliveries.get('items') or [] if isinstance(d, dict) and in_chain(d.get('notice'))]
+        body['keys']['courier'], body['keys']['mailbox'] = list(deliveries['courier']), list(deliveries['mailbox'])
     body = json.loads(json.dumps(body))                                # plain JSON types, exactly what a reader will parse
     return dict(body, signature={'signer': signer.public_hex, 'signature': signer.sign(canonical(body).encode())})

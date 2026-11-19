@@ -3,6 +3,7 @@
 
     check_record.py RECORD.json --witness-key HEX --gate-key HEX --engineer-key HEX   (keys obtained separately from the record)
     check_record.py RECORD.json --keys KEYS.json                                      ({"witness": HEX, "gate": HEX, "engineer": HEX})
+    ... --courier-key HEX --mailbox-key HEX   (or "courier" and "mailbox" in KEYS.json): the keys of a record's notices delivered
     check_record.py RECORD.json                                                       (keys read from the record: consistency only)
     ... --design RELEASED.json      also say whether this design file is one the record shows as meeting the declared check
 
@@ -25,7 +26,14 @@ network or database.  It recomputes every hash, checks every signature and re-do
   7  the counts: every attempt in the chained state is listed and counted;
   8  each acknowledgement is signed by the engineer and names a run in this record;
   9  the witness's checkpoint inside the record, if it has one (Amendment 10): signed by a witness key, for this budget,
-     and saying that the chain's head after the record's last decision is the record's head.
+     and saying that the chain's head after the record's last decision is the record's head;
+ 10  the notices delivered, if the record carries any (Amendment 11): each notice is signed by the courier's key, names a
+     decision of this record's chain with its hash, and says what this record's chain, gate reports and verdict say of
+     that run at that decision; each receipt is signed by the engineer's mailbox key and names that notice.
+
+It then says which runs that call for a notice to the engineer (FAIL, UNKNOWN, INTERRUPTED; and INVALID or REFUNDED,
+which must never happen) have a notice delivered, with the mailbox's signed receipt, and which have none.  A record built
+before a notice was delivered has none for it.  --require-delivery makes the exit status 1 unless every such run has one.
 
 With --checkpoint FILE it also says whether the record is current (Amendment 10).  The file is a checkpoint the witness
 signed, obtained separately from the record: from the witness, or from someone who keeps the witness's checkpoints.  The
@@ -65,6 +73,10 @@ LIVE_C = ('INTENT_PENDING', 'CONSUMED', 'NO_EFFECT', 'EFFECT', 'INDETERMINATE')
 REASONS = {'MET': 'PASS', 'LIMIT_NOT_MET': 'FAIL', 'DESIGN_OUTSIDE_BASELINE': 'FAIL', 'BASELINE_MISMATCH': 'UNKNOWN', 'CHECK_ERROR': 'UNKNOWN',
            'CHECK_OUTPUT_INVALID': 'UNKNOWN', 'RESULT_IMPLAUSIBLE': 'UNKNOWN'}
 CHECKPOINT_FIELDS = ('statement', 'root', 'seq', 'head', 'business', 'witness', 'time', 'nonce', 'at', 'head_at')
+NOTICE_FIELDS = ('statement', 'root', 'aid', 'request_key', 'outcome', 'reason_code', 'detail', 'result_digest', 'seq', 'head', 'time', 'courier', 'text')
+RECEIPT_FIELDS = ('statement', 'notice', 'root', 'aid', 'outcome', 'mailbox', 'time')
+NOTICE_OUTCOMES = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INVALID', 'REFUNDED', 'UNVERIFIED', 'NO_OUTCOME')   # what a courier sends a notice of (Amendment 11)
+DUE = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INVALID', 'REFUNDED')                                        # a run's outcome in a record that calls for a notice
 D = decimal.Decimal
 
 
@@ -131,6 +143,71 @@ def checkpoint_problems(cp, wkeys, root) -> list:
         out.append('its sequence number, head or time is not readable')
     elif (at is None) != (cp.get('head_at') is None) or (at is not None and (type(at) is not int or not 0 <= at <= seq or not isinstance(cp.get('head_at'), str) or (at == seq and cp.get('head_at') != cp.get('head')))):
         out.append('what it says of an earlier decision is not readable, or contradicts its own head')
+    return out
+
+
+def run_outcome(phase, evidence, result, gate_keys, root, aid, nonce) -> str:
+    """What a run's chained phase, the gate's reports and the stored result say of it (Amendment 11), as a courier and this
+    checker both read them.  evidence: [{'seq', 'evidence'}]; only reports signed by a gate key given, for this budget,
+    attempt and nonce, count.  UNVERIFIED: a run the gate signed an effect for, whose result (if any is given) does not hash to
+    the digest the gate signed.
+    NO_OUTCOME: admitted and crossed, with no verdict and no report that the gate does not know."""
+    gkeys, claims, digests = _keys(gate_keys), [], []
+    for item in evidence or []:
+        e = item.get('evidence') if isinstance(item, dict) else None
+        if not isinstance(e, dict) or e.get('kind') != 'EFFECT_REPORT' or e.get('signer') not in gkeys or not signed_by(e['signer'], e.get('signature', ''), evidence_message(e)):
+            continue
+        if e.get('root') != root or e.get('aid') != aid or e.get('nonce') != nonce:
+            continue
+        claims.append(e.get('claim'))
+        if e.get('claim') == 'EFFECT':
+            digests.append(e.get('result_digest'))
+    if phase == 'NO_EFFECT':
+        return 'REFUNDED'
+    if phase == 'EFFECT':
+        if not isinstance(result, dict) or sha(canonical(result)) not in digests:
+            return 'UNVERIFIED'
+        return result.get('verdict') if result.get('verdict') in ('PASS', 'FAIL', 'UNKNOWN') else 'INVALID'
+    if phase == 'CONSUMED':
+        return 'INTERRUPTED' if 'UNKNOWN' in claims else 'NO_OUTCOME'
+    return 'PENDING' if phase in LIVE_R + ('INTENT_PENDING',) else str(phase)
+
+
+def notice_digest(n) -> str:
+    """The digest a mailbox's receipt names: of the whole signed notice."""
+    return sha(canonical(n))
+
+
+def notice_problems(n, courier_keys) -> list:
+    """What is wrong with a notice as one made by a courier key given.  (Amendment 11.)"""
+    if not isinstance(n, dict):
+        return ['it is not a notice']
+    out = []
+    if n.get('statement') != 'NOTICE' or set(n) != set(NOTICE_FIELDS) | {'signer', 'signature'}:
+        out.append('it is not a notice, or has fields a notice does not have')
+    signer = n.get('signer')
+    if not isinstance(signer, str) or signer not in _keys(courier_keys) or not signed_by(signer, n.get('signature', ''), canonical({k: n.get(k) for k in NOTICE_FIELDS}).encode()):
+        out.append('it is not signed by a courier key given')
+    if n.get('outcome') not in NOTICE_OUTCOMES or type(n.get('seq')) is not int or n.get('seq') < 1 or not isinstance(n.get('head'), str) \
+            or not all(isinstance(n.get(k), str) for k in ('root', 'aid', 'courier', 'text')) or checkpoint_time(n) is None:
+        out.append('its outcome, decision, head, names or time are not readable')
+    return out
+
+
+def receipt_problems(r, mailbox_keys, n) -> list:
+    """What is wrong with a receipt as a mailbox's signed word that it holds notice n.  (Amendment 11.)"""
+    if not isinstance(r, dict):
+        return ['it is not a receipt']
+    out = []
+    if r.get('statement') != 'DELIVERED' or set(r) != set(RECEIPT_FIELDS) | {'signer', 'signature'}:
+        out.append('it is not a receipt, or has fields a receipt does not have')
+    signer = r.get('signer')
+    if not isinstance(signer, str) or signer not in _keys(mailbox_keys) or not signed_by(signer, r.get('signature', ''), canonical({k: r.get(k) for k in RECEIPT_FIELDS}).encode()):
+        out.append('it is not signed by a mailbox key given')
+    if not isinstance(n, dict) or r.get('notice') != notice_digest(n) or any(r.get(k) != n.get(k) for k in ('root', 'aid', 'outcome')):
+        out.append('it does not name this notice')
+    if not isinstance(r.get('mailbox'), str) or checkpoint_time(r) is None:
+        out.append('its mailbox or time is not readable')
     return out
 
 
@@ -332,7 +409,7 @@ def rederive(card, result, design) -> list:
 
 def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, list, dict]:
     """(every check passed, [(number, title, ok, detail)], summary).  keys: {'witness', 'gate', 'engineer'}; None reads the record's."""
-    problems = {n: [] for n in range(1, 10)}
+    problems = {n: [] for n in range(1, 11)}
     def bad(n, msg):
         problems[n].append(msg)
     pinned = keys is not None
@@ -546,10 +623,46 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
         if not problems[9] and (type(cp.get('at')) is not int or cp.get('at') != as_of.get('seq') or cp.get('head_at') != as_of.get('head')):
             bad(9, 'it does not say that the chain\'s head after this record\'s last decision is this record\'s head')
 
+    # 10 the notices delivered, if any (Amendment 11)
+    deliveries, delivered = record.get('deliveries'), {}
+    if deliveries is not None:
+        ckeys, mkeys = _keys(keys.get('courier')), _keys(keys.get('mailbox'))
+        if pinned and (not set(_keys(named.get('courier'))) <= set(ckeys) or not set(_keys(named.get('mailbox'))) <= set(mkeys)):
+            bad(10, 'the record names courier or mailbox keys other than the ones given')
+        if not ckeys or not mkeys:
+            bad(10, 'no courier or mailbox key is given')
+        elif not isinstance(deliveries, list):
+            bad(10, 'the deliveries are not a list')
+        else:
+            for i, d in enumerate(deliveries, start=1):
+                n, rc = (d.get('notice'), d.get('receipt')) if isinstance(d, dict) else (None, None)
+                where = f'delivery {i}'
+                msgs = notice_problems(n, ckeys)
+                if msgs:
+                    bad(10, f'{where}: the notice: {msgs[0]}'); continue
+                msgs = receipt_problems(rc, mkeys, n)
+                if msgs:
+                    bad(10, f'{where}: the receipt: {msgs[0]}'); continue
+                a, seq = by_aid.get(n['aid']), n['seq']
+                if n['root'] != root or a is None:
+                    bad(10, f'{where}: the notice is of a run that is not in this record'); continue
+                if not chain_ok or seq > len(audit) or audit[seq - 1]['hash'] != n['head']:
+                    bad(10, f'{where}: the notice names a decision that is not in this record\'s chain'); continue
+                then = next((x for x in audit[seq - 1]['observation'].get('attempts', []) if x[0] == n['aid']), None)
+                if then is None:
+                    bad(10, f'{where}: the run was not in the chain at the decision the notice names'); continue
+                ev = [e for e in a.get('evidence') or [] if isinstance(e.get('seq'), int) and e['seq'] <= seq]
+                res = a.get('result') if then[2] == 'EFFECT' and n['result_digest'] is not None else None   # a notice with no digest vouches for no result: UNVERIFIED
+                said = run_outcome(then[2], ev, res, gkey, root, n['aid'], then[3])
+                if n['outcome'] != said or n['request_key'] != a.get('request_key') or n['result_digest'] != (sha(canonical(res)) if isinstance(res, dict) else None):
+                    bad(10, f'{where}: the notice says {n["outcome"]} of {n["aid"]}; this record says {said} at decision {seq}'); continue
+                delivered.setdefault(n['aid'], set()).add(n['outcome'])
+
     titles = {1: 'record signature', 2: 'baseline, controls and anchor', 3: 'audit chain', 4: 'witness receipts', 5: 'runs bound to baseline and design',
               6: 'gate reports and re-derived verdicts', 7: 'counts', 8: 'acknowledgements',
-              9: 'witness checkpoint' if cp is not None else 'witness checkpoint (none in this record)'}
-    checks = [(n, titles[n], not problems[n], '; '.join(problems[n][:3]) + (f' (+{len(problems[n]) - 3} more)' if len(problems[n]) > 3 else '')) for n in range(1, 10)]
+              9: 'witness checkpoint' if cp is not None else 'witness checkpoint (none in this record)',
+              10: 'notices delivered' if deliveries is not None else 'notices delivered (none in this record)'}
+    checks = [(n, titles[n], not problems[n], '; '.join(problems[n][:3]) + (f' (+{len(problems[n]) - 3} more)' if len(problems[n]) > 3 else '')) for n in range(1, 11)]
     ok = all(c[2] for c in checks)
     acked = {a.get('aid') for a in acks}
     met = [r for r in rows_out if r['outcome'] == 'PASS']
@@ -565,7 +678,10 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
                'unknown': sum(r['outcome'] not in ('PASS', 'FAIL') for r in rows_out), 'open': sum(1 for r in rows_out if r['outcome'] != 'PASS' and not r['acknowledged']),
                'status': 'DECLARED CHECK MET' if ok and met else 'NOT VERIFIED', 'met_designs': [r['design_sha256'] for r in met], 'released': released,
                'as_of': as_of, 'keys_pinned': pinned, 'receipts': n_receipts, 'audit_rows': len(audit),
-               'checkpoint': ({k: cp.get(k) for k in ('seq', 'time', 'business', 'witness', 'at')} if isinstance(cp, dict) and not problems[9] else None)}
+               'checkpoint': ({k: cp.get(k) for k in ('seq', 'time', 'business', 'witness', 'at')} if isinstance(cp, dict) and not problems[9] else None),
+               'delivery': None if deliveries is None or problems[10] else {
+                   'due': [{'aid': r['aid'], 'outcome': r['outcome'], 'delivered': r['outcome'] in delivered.get(r['aid'], ())} for r in rows_out if r['outcome'] in DUE],
+                   'no_outcome': sorted(aid for aid, outs in delivered.items() if 'NO_OUTCOME' in outs), 'notices': len(deliveries)}}
     return ok, checks, summary
 
 
@@ -615,6 +731,14 @@ def render(ok: bool, checks: list, s: dict, current=None) -> str:
         L.append(f"The witness's checkpoint in this record, made at {cp['time']} by its clock: the chain then had {cp['seq']} decisions"
                  + (', and ended with this record\'s last.' if later == 0 else f", {later} of them after this record's last: it was out of date when it was made.")
                  + ('' if cp.get('business') == 'OPEN' and cp.get('witness') == 'ACTIVE' else f"  The budget was then {cp.get('business')}" + (' and on hold' if cp.get('witness') != 'ACTIVE' else '') + ', and took no new runs.'))
+    dv = s.get('delivery')                         # Amendment 11: notices delivered by a courier to the engineer's mailbox
+    if dv is None:
+        L.append('NOTICES: NOT CHECKED.  This record carries no notices delivered by a courier.')
+    else:
+        missing = [d for d in dv['due'] if not d['delivered']]
+        L.append(f"NOTICES: {len(dv['due']) - len(missing)} of {len(dv['due'])} runs that call for a notice have one delivered to the engineer's mailbox, with its signed receipt."
+                 + (('  NO DELIVERY EVIDENCE: ' + ', '.join(f"{d['aid']} ({d['outcome']})" for d in missing) + '.') if missing else '')
+                 + ('  A receipt says the mailbox holds the notice; it does not say the engineer read it.'))
     if current is not None:
         L.append(f'CURRENCY: {current[0]}.  ' + current[1][:1].upper() + current[1][1:])
     else:
@@ -626,10 +750,13 @@ def main():
     ap = argparse.ArgumentParser(description='Check a verification record offline.')
     ap.add_argument('record'); ap.add_argument('--keys', help='a JSON file: {"witness": HEX, "gate": HEX, "engineer": HEX}')
     ap.add_argument('--witness-key', action='append'); ap.add_argument('--gate-key'); ap.add_argument('--engineer-key')
+    ap.add_argument('--courier-key', action='append', help='a courier\'s key, for the notices delivered in the record (Amendment 11)')
+    ap.add_argument('--mailbox-key', action='append', help='the engineer\'s mailbox key, for the receipts of the notices delivered (Amendment 11)')
     ap.add_argument('--design', help='a released design file to compare with the record'); ap.add_argument('--json', action='store_true')
     ap.add_argument('--checkpoint', help='a checkpoint signed by the witness, obtained separately from the record (Amendment 10)')
     ap.add_argument('--max-age', type=float, default=None, help='with --checkpoint: the checkpoint may be this many seconds old at most (default 3600)')
     ap.add_argument('--nonce', help='with --checkpoint: the nonce the checkpoint must sign back')
+    ap.add_argument('--require-delivery', action='store_true', help='exit 1 unless every run that calls for a notice has one delivered (Amendment 11)')
     a = ap.parse_args()
     with open(a.record) as f:
         record = json.load(f)
@@ -641,6 +768,10 @@ def main():
         if not (a.witness_key and a.gate_key and a.engineer_key):
             ap.error('give all three of --witness-key, --gate-key and --engineer-key, or none')
         keys = {'witness': a.witness_key, 'gate': a.gate_key, 'engineer': a.engineer_key}
+    if keys is not None and (a.courier_key or a.mailbox_key):
+        keys = dict(keys, **({'courier': a.courier_key} if a.courier_key else {}), **({'mailbox': a.mailbox_key} if a.mailbox_key else {}))
+    elif a.courier_key or a.mailbox_key:
+        ap.error('--courier-key and --mailbox-key go with the other keys given separately (--keys, or the three --*-key)')
     design = None
     if a.design:
         with open(a.design) as f:
@@ -666,7 +797,8 @@ def main():
                           'currency': None if current is None else {'state': current[0], 'detail': current[1]}}, indent=1))
     else:
         print(render(ok, checks, s, current))
-    sys.exit(0 if ok and (a.checkpoint is None or (current is not None and current[0] == 'CURRENT')) else 1)
+    delivered_all = (s or {}).get('delivery') is not None and all(d['delivered'] for d in s['delivery']['due'])
+    sys.exit(0 if ok and (a.checkpoint is None or (current is not None and current[0] == 'CURRENT')) and (not a.require_delivery or delivered_all) else 1)
 
 
 if __name__ == '__main__':

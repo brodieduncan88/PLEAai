@@ -39,6 +39,7 @@ import verify_ctl                       # noqa: E402
 import verify_client                    # noqa: E402  (Amendment 9)
 import front_door                       # noqa: E402  (Amendment 9: its view of the requirement, in R23)
 import checkpoints                      # noqa: E402  (Amendment 10)
+import courier                          # noqa: E402  (Amendment 11)
 from plea_gateway import tls as TLS     # noqa: E402  (Amendment 10)
 from plea_gateway.receipts import Signer, sign_checkpoint   # noqa: E402  (Amendment 10)
 from plea_gateway import AuthorityError, Store      # noqa: E402
@@ -2115,7 +2116,7 @@ def r25():
                                   '--tls-cert', s.pki['keeper'][0], '--tls-key', s.pki['keeper'][1]], capture_output=True, text=True, timeout=120)
         rec_c = json.loads((here / 'rec_console.json').read_text()) if console.returncode == 0 else {}
         console_ok = bool(rec_c) and check_record.verify(rec_c, s.keys)[0] and (rec_c.get('checkpoint') or {}).get('at') == rec_c['as_of']['seq']
-        e.update(cp0={k: cp0.get(k) for k in ('seq', 'business', 'witness', 'nonce', 'at')}, reads=(before, after_reads), checks1=[(n, t, g) for n, t, g, _ in checks1][-1], bare=[(n, t, g) for n, t, g, _ in checksb][-1],
+        e.update(cp0={k: cp0.get(k) for k in ('seq', 'business', 'witness', 'nonce', 'at')}, reads=(before, after_reads), checks1=next(((n, t, g) for n, t, g, _ in checks1 if n == 9), None), bare=next(((n, t, g) for n, t, g, _ in checksb if n == 9), None),
                  summary=sum1.get('checkpoint'), at_the_time={k: v[0] for k, v in at_the_time.items()}, states={k: v[0] for k, v in states.items()}, sentences={k: v[1][:130] for k, v in states.items()},
                  cli=(cli_current[:2], cli_none[:2], cli_old[:2], cli_closed[:2]), cli_misuse=cli_misuse, cli_bad=cli_bad, cli_stale=cli_stale,
                  inside=inside, old_state=old_state, kept=kept, turned=turned, lines=lines, evidence=evidence, clean=clean, dirty=dirty, witness_says=witness_says, no_cert=no_cert, plain_http=plain_http,
@@ -2174,7 +2175,238 @@ def r25():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25}
+def r26():
+    """A courier that reads only the witness sends the engineer a notice of each run that calls for one, signed with its own key,
+    to the engineer's mailbox, which signs a receipt for it.  It does not read the service, so a notice the service did not
+    write, or that was removed from its inbox, is still sent.  A record can carry the notices and receipts, and its checker
+    says which runs have a notice delivered and which have none.  (Amendment 11.)"""
+    r = Run('R26', crash_at='verify_running'); e = {}
+    try:
+        s = r.s; root = B.root_for(r.env['card']); here = OUT / 'R26'; C = check_record
+        url, mb_url = f"https://127.0.0.1:{s.ports['witness']}", f"https://127.0.0.1:{s.ports['mailbox']}"
+        rows = lambda: len(Store(deploy.LOCAL_DSN).audit_snapshot(root)[0])
+        fails = lambda rec: [n for n, _, good, _ in C.verify(rec, s.keys)[1] if not good]
+        def step(f, *a, **kw):                                                                     # a defect that makes a step raise gives an answer, not an error of the test
+            try:
+                return f(*a, **kw)
+            except Exception as exc:
+                return ('RAISED', f'{type(exc).__name__}: {exc}')
+        def call(base, path, cert, method='GET', body=None, raw_body=None):                        # straight to a party, as a client with this certificate: (status, answer)
+            ctx = TLS.TLSClient(s.pki['ca'], *cert).context()
+            data = raw_body if raw_body is not None else (None if body is None else json.dumps(body).encode())
+            req = urllib.request.Request(base + path, data=data, method=method, headers={'Content-Type': 'application/json'})
+            try:
+                with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
+                    return resp.status, json.loads(resp.read() or b'null')
+            except urllib.error.HTTPError as exc:
+                return exc.code, None
+            except (OSError, http.client.HTTPException, ValueError) as exc:
+                return f'no answer: {type(exc).__name__}', None
+        def resign(rec):
+            body = {k: v for k, v in rec.items() if k != 'signature'}
+            return dict(body, signature={'signer': s.engineer.public_hex, 'signature': s.engineer.sign(canonical(body).encode())})
+        def signed(key, fields, body):
+            return dict(body, signer=key.public_hex, signature=key.sign(C.canonical({k: body.get(k) for k in fields}).encode()))
+        def cli(*args):
+            p = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'check_record.py'), *map(str, args)], capture_output=True, text=True, timeout=120)
+            return p.returncode, [l for l in p.stdout.splitlines() if l.startswith('NOTICES')]
+        def save(name, obj):
+            (here / name).write_text(json.dumps(obj)); return here / name
+        def run_courier(stall, name='courier'):
+            return step(s.courier, [root], stall, name)
+        def made(c):
+            return sorted(x.get('outcome') for x in (c[1].get('made') or [])) if isinstance(c, tuple) and isinstance(c[1], dict) else c
+        def delivered(c):
+            return sorted(x.get('outcome') for x in (c[1].get('delivered') or [])) if isinstance(c, tuple) and isinstance(c[1], dict) else c
+        courier_cert, keeper_cert = s.pki['courier'], s.pki['keeper']
+        keys = save('keys.json', s.keys)
+
+        # a run cut off, then answered as interrupted
+        cut = r.submit(GOOD); time.sleep(0.3); host_exit = s.procs['host'].poll()
+        c_wait = run_courier(900); c_cut = run_courier(0)
+        s.stop_host(); s.start_host()
+        again = r.submit(GOOD)
+        c_int = run_courier(0)
+        # a failing run whose own notice is taken out of the service's inbox, and a passing run
+        bad = r.submit(BAD)
+        box = s.home / 'inbox' / r.h[:16]; own = sorted(p.name for p in box.glob('*FAIL*')) if box.exists() else []
+        for p in box.glob('*FAIL*'):
+            p.unlink()                                                                              # whoever can write the inbox can remove a notice (D12)
+        good = r.submit({'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'})
+        c_fail = run_courier(0); c_again = run_courier(0)
+        held = [json.loads(p.read_text()) for p in sorted((s.dir / 'mailbox' / 'notices').glob('*.json'))]
+        texts = [p.read_text() for p in sorted((s.dir / 'mailbox' / 'notices').glob('*.txt'))]
+        log = courier.read_deliveries(s.dir / 'courier' / 'deliveries.jsonl', root)
+        cfg_text = (s.dir / 'courier.json').read_text()
+        # the mailbox down, then up
+        s.stop_mailbox(); bad2 = r.submit({'material': 'PA66-GF30', 'wall_mm': 2, 'mode': 'normal'})
+        c_down = run_courier(0); s.start_mailbox(); c_up = run_courier(0)
+
+        # the witness's readings
+        before = rows(); q = urllib.parse.quote(root, safe='')
+        cp = step(checkpoints.fetch, url, s.pki['ca'], *courier_cert, root, 'r26-reader', 0)
+        ch = call(url, f'/chain?root={q}&after=0&limit=200', courier_cert)
+        chained = step(courier.verify_rows, (ch[1] or {}).get('rows', []), 0, cp.get('head_at') if isinstance(cp, dict) else None, len((ch[1] or {}).get('rows', [])),
+                       ((ch[1] or {}).get('rows') or [{}])[-1].get('hash')) if isinstance(cp, dict) else cp
+        live = step(checkpoints.fetch, url, s.pki['ca'], *courier_cert, root, 'r26-reader-2')
+        fail_aid = next((x['notice'].get('aid') for x in log if x['notice'].get('outcome') == 'FAIL'), None)
+        run_ans = call(url, f'/run?root={q}&aid={fail_aid}', courier_cert)
+        after = rows()
+        stranger = TLS.issue(pathlib.Path(s.pki['ca_key']).read_bytes(), pathlib.Path(s.pki['ca']).read_bytes(), 'stranger', 'client', (), 3)
+        (here / 'stranger.key').write_bytes(stranger[0]); (here / 'stranger.crt').write_bytes(stranger[1]); stranger_cert = (str(here / 'stranger.crt'), str(here / 'stranger.key'))
+        witness_says = {'chain, unknown budget': call(url, f'/chain?root={q}x', courier_cert)[0], 'chain, no budget': call(url, '/chain', courier_cert)[0],
+                        'chain, after not a number': call(url, f'/chain?root={q}&after=-1', courier_cert)[0], 'chain, limit 0': call(url, f'/chain?root={q}&limit=0', courier_cert)[0],
+                        'chain, limit 201': call(url, f'/chain?root={q}&limit=201', courier_cert)[0], 'chain, control character': call(url, f'/chain?root={q}%01', courier_cert)[0],
+                        'run, unknown budget': call(url, f'/run?root={q}x&aid=a-1', courier_cert)[0], 'run, no attempt': call(url, f'/run?root={q}', courier_cert)[0],
+                        'run, attempt with a space': call(url, f'/run?root={q}&aid=a%201', courier_cert)[0],
+                        'courier writes': call(url, '/accept', courier_cert, 'POST', {'root': root, 'op': ['ACCEPT_RESERVATION', 'a-0000000000000000'], 'evidence': None})[0],
+                        'courier asks the key': call(url, '/pubkey', courier_cert)[0], 'stranger reads the chain': call(url, f'/chain?root={q}', stranger_cert)[0],
+                        'keeper reads the chain': call(url, f'/chain?root={q}&limit=1', keeper_cert)[0]}
+        # the mailbox's refusals
+        one = held[0]['notice'] if held else {}
+        import mailbox_service
+        stranger_courier = mailbox_service.MailboxKey()
+        forged = signed(stranger_courier, C.NOTICE_FIELDS, {k: one.get(k) for k in C.NOTICE_FIELDS})
+        n_files = len(list((s.dir / 'mailbox' / 'notices').glob('*.json')))
+        mailbox_says = {'another key': call(mb_url, '/deliver', courier_cert, 'POST', forged)[0], 'not a notice': call(mb_url, '/deliver', courier_cert, 'POST', {'statement': 'NOTICE'})[0],
+                        'not JSON': call(mb_url, '/deliver', courier_cert, 'POST', raw_body=b'{"no')[0], 'keeper delivers': call(mb_url, '/deliver', keeper_cert, 'POST', one)[0]}
+        again_ans = call(mb_url, '/deliver', courier_cert, 'POST', one)
+        same_receipt = again_ans[0] == 200 and again_ans[1] == held[0]['receipt'] if held else False
+        n_files_after = len(list((s.dir / 'mailbox' / 'notices').glob('*.json')))
+        # a mailbox whose key is not the one given
+        cfg3 = json.loads(s.courier_config([root], 0, 'courier3').read_text()); cfg3['watches'][0]['mailbox_keys'] = [mailbox_service.MailboxKey().public_hex]
+        (s.dir / 'courier3.json').write_text(json.dumps(cfg3))
+        p3 = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'courier.py'), 'run', '--config', str(s.dir / 'courier3.json')], capture_output=True, text=True, timeout=120)
+        c_wrongbox = (p3.returncode, step(json.loads, (p3.stdout.strip().splitlines() or ['{}'])[-1]))
+        # decisions that do not hash, follow on or end at the head
+        good_rows = (ch[1] or {}).get('rows', [])[:3]
+        start = good_rows[0]['prev_hash'] if good_rows else ''
+        bent = copy.deepcopy(good_rows); bent and bent[1]['observation'].update(note='changed')
+        rows_refused = [step(courier.verify_rows, x, 0, start, 3, good_rows[-1]['hash'] if good_rows else '') for x in (bent, good_rows[:1] + good_rows[2:], good_rows)]
+        rows_refused = [isinstance(x, tuple) and x[0] == 'RAISED' and 'Refused' in x[1] for x in rows_refused[:2]] + [isinstance(rows_refused[2], list) and len(rows_refused[2]) == 3]
+        wrong_head = step(courier.verify_rows, good_rows, 0, start, 3, '0' * 64)
+        # a fork and a rollback against what a courier read before
+        st_path = s.dir / 'courier' / 'state.json'; st = json.loads(st_path.read_text()); st['roots'][root]['head'] = '0' * 64; st_path.write_text(json.dumps(st))
+        c_fork = run_courier(0); c_fork2 = run_courier(0)
+        forks = [json.loads(l) for l in (s.dir / 'courier' / 'refused.jsonl').read_text().splitlines()] if (s.dir / 'courier' / 'refused.jsonl').exists() else []
+        c_r2 = run_courier(0, 'courier2')
+        st2_path = s.dir / 'courier2' / 'state.json'; st2 = json.loads(st2_path.read_text()); st2['roots'][root]['seq'] += 50; st2_path.write_text(json.dumps(st2))
+        c_roll = run_courier(0, 'courier2')
+        rolls = [json.loads(l) for l in (s.dir / 'courier2' / 'refused.jsonl').read_text().splitlines()] if (s.dir / 'courier2' / 'refused.jsonl').exists() else []
+
+        # the record
+        rec = step(s.record, r.h, [r.ws / '.verify' / 'submissions.jsonl'], deliveries=True)
+        rec = rec if isinstance(rec, dict) else {}
+        ok, checks, summ = C.verify(rec, s.keys) if rec else (False, [], {})
+        ten = next(((n, t, g) for n, t, g, _ in checks if n == 10), None)
+        dv = summ.get('delivery') or {}
+        f_rec = save('rec.json', rec)
+        cli_full = cli(f_rec, '--keys', keys, '--require-delivery')
+        dropped = copy.deepcopy(rec); fail_aids = [d['aid'] for d in dv.get('due', []) if d['outcome'] == 'FAIL']
+        dropped['deliveries'] = [d for d in rec.get('deliveries', []) if not (d['notice'].get('aid') == (fail_aids[:1] or [None])[0] and d['notice'].get('outcome') == 'FAIL')]
+        dropped = resign(dropped); okd, _, sd = C.verify(dropped, s.keys)
+        cli_dropped = cli(save('dropped.json', dropped), '--keys', keys, '--require-delivery')
+        d0 = (rec.get('deliveries') or [{}])[0]; n0 = d0.get('notice') or {}
+        def with_delivery(d):
+            x = copy.deepcopy(rec); x['deliveries'] = [d] + (rec.get('deliveries') or [])[1:]; return resign(x)
+        def receipt_for(n, key=None):
+            body = {'statement': 'DELIVERED', 'notice': C.notice_digest(n), 'root': n.get('root'), 'aid': n.get('aid'), 'outcome': n.get('outcome'), 'mailbox': 'engineer-mailbox', 'time': n.get('time')}
+            return signed(key or s.mailbox_key, C.RECEIPT_FIELDS, body)
+        moved = signed(s.courier_key, C.NOTICE_FIELDS, dict({k: n0.get(k) for k in C.NOTICE_FIELDS}, head='1' * 64))
+        fail_n = next((d['notice'] for d in rec.get('deliveries', []) if d['notice'].get('outcome') == 'FAIL'), {})
+        misstated = signed(s.courier_key, C.NOTICE_FIELDS, dict({k: fail_n.get(k) for k in C.NOTICE_FIELDS}, outcome='UNKNOWN'))
+        tampered = {'notice edited': fails(with_delivery(dict(d0, notice=dict(n0, outcome='FAIL' if n0.get('outcome') != 'FAIL' else 'UNKNOWN')))),
+                    'notice of another courier key': fails(with_delivery({'notice': signed(stranger_courier, C.NOTICE_FIELDS, {k: n0.get(k) for k in C.NOTICE_FIELDS}), 'receipt': d0.get('receipt')})),
+                    'receipt of another key': fails(with_delivery(dict(d0, receipt=receipt_for(n0, stranger_courier)))),
+                    'decision not in the chain': fails(with_delivery({'notice': moved, 'receipt': receipt_for(moved)})),
+                    'outcome the record does not give': fails(with_delivery({'notice': misstated, 'receipt': receipt_for(misstated)})),
+                    'keys given without the courier and mailbox': [n for n, _, g, _ in C.verify(rec, {k: s.keys[k] for k in ('witness', 'gate', 'engineer')})[1] if not g]}
+        # a notice that vouches for no result, made at the decision the gate signed an effect
+        fail_a = next((a for a in rec.get('attempts', []) if a.get('aid') == fail_n.get('aid')), {})
+        eff_seq = max((i['seq'] for i in fail_a.get('evidence') or [] if (i.get('evidence') or {}).get('claim') == 'EFFECT'), default=None)
+        early = signed(s.courier_key, C.NOTICE_FIELDS, dict({k: fail_n.get(k) for k in C.NOTICE_FIELDS}, outcome='UNVERIFIED', result_digest=None, reason_code=None, detail=None,
+                                                             seq=eff_seq, head=rec['audit'][eff_seq - 1]['hash'] if eff_seq else None))
+        x = copy.deepcopy(rec); x['deliveries'] = (rec.get('deliveries') or []) + [{'notice': early, 'receipt': receipt_for(early)}]; early_rec = resign(x)
+        okx, _, sx = C.verify(early_rec, s.keys)
+        unverified = {'no result': C.run_outcome('EFFECT', fail_a.get('evidence'), None, s.keys['gate'], root, fail_a.get('aid'), fail_a.get('nonce')),
+                      'a result changed': C.run_outcome('EFFECT', fail_a.get('evidence'), dict(fail_a.get('result') or {}, verdict='PASS'), s.keys['gate'], root, fail_a.get('aid'), fail_a.get('nonce')),
+                      'the result': C.run_outcome('EFFECT', fail_a.get('evidence'), fail_a.get('result'), s.keys['gate'], root, fail_a.get('aid'), fail_a.get('nonce'))}
+        # a record without notices, and the console
+        plain = step(s.record, r.h, [r.ws / '.verify' / 'submissions.jsonl'])
+        okp, checksp, sp = C.verify(plain, s.keys) if isinstance(plain, dict) else (False, [], {})
+        cli_plain = cli(save('plain.json', plain if isinstance(plain, dict) else {}), '--keys', keys, '--require-delivery')
+        keyfile = here / 'engineer.key'; keyfile.write_text(s.engineer.private_hex + '\n')
+        base = [PY, '-B', str(GATEWAY / 'verify' / 'verify_ctl.py'), 'record', str(s.home), r.h, '--key', str(keyfile), '--witness-key', s.keys['witness'], '--gate-key', s.keys['gate'],
+                '--journal', str(r.ws / '.verify' / 'submissions.jsonl'), '--deliveries', str(s.dir / 'courier' / 'deliveries.jsonl')]
+        console = subprocess.run(base + ['--out', str(here / 'rec_console.json'), '--courier-key', s.keys['courier'][0], '--mailbox-key', s.keys['mailbox'][0]], capture_output=True, text=True, timeout=120)
+        rec_c = json.loads((here / 'rec_console.json').read_text()) if console.returncode == 0 else {}
+        console_ok = bool(rec_c) and C.verify(rec_c, s.keys)[0] and len(rec_c.get('deliveries') or []) == len(rec.get('deliveries') or [])
+        console_nokeys = subprocess.run(base + ['--out', str(here / 'rec_console2.json')], capture_output=True, text=True, timeout=120)
+
+        e.update(host_exit=host_exit, cut=cut[0], again=again[0], bad=bad[0], good=good[0], bad2=bad2[0], own=own,
+                 couriers={k: (v[0], made(v), delivered(v)) if isinstance(v, tuple) and len(v) == 2 and isinstance(v[1], dict) else v
+                           for k, v in dict(wait=c_wait, cut=c_cut, interrupted=c_int, fail=c_fail, again=c_again, down=c_down, up=c_up, fork=c_fork, fork2=c_fork2, roll=c_roll).items()},
+                 waiting=(c_down[1].get('waiting') if isinstance(c_down, tuple) and isinstance(c_down[1], dict) else c_down), held=len(held), log=len(log),
+                 headlines=sorted(t.splitlines()[0] for t in texts), reads=(before, after), chain=(ch[0], len((ch[1] or {}).get('rows', [])), isinstance(chained, list), isinstance(live, dict) and live.get('seq')),
+                 run=(run_ans[0], len((run_ans[1] or {}).get('evidence', [])), isinstance((run_ans[1] or {}).get('result'), dict)), witness_says=witness_says, mailbox_says=mailbox_says,
+                 same_receipt=same_receipt, files=(n_files, n_files_after), wrongbox=(c_wrongbox[0], c_wrongbox[1].get('waiting', [{}])[0].get('why', '')[:90] if isinstance(c_wrongbox[1], dict) and c_wrongbox[1].get('waiting') else c_wrongbox[1]),
+                 rows_refused=rows_refused, wrong_head=str(wrong_head)[:120], forks=[(f.get('why', '')[:60], (f.get('evidence') or {}).get('statement')) for f in forks],
+                 rolls=[(f.get('why', '')[:60], (f.get('evidence') or {}).get('statement'), (f.get('evidence') or {}).get('seq')) for f in rolls],
+                 record=(ok, ten, dv), cli_full=cli_full, dropped=(okd, (sd.get('delivery') or {}).get('due')), cli_dropped=cli_dropped, tampered=tampered,
+                 unverified=unverified, early=(okx, ((sx.get('delivery') or {}).get('due'))), plain=(okp, next(((n, t, g) for n, t, g, _ in checksp if n == 10), None), sp.get('delivery')), cli_plain=cli_plain,
+                 console=(console.returncode, console.stderr[:200]), console_nokeys=(console_nokeys.returncode, console_nokeys.stderr[:160]))
+        cs = e['couriers']; cut_aid = next((x['notice']['aid'] for x in log if x['notice'].get('outcome') == 'INTERRUPTED'), None)
+        checks = {'the witness gives the courier\'s certificate its decisions, which follow on from the head a checkpoint names for decision 0 and hash one to the next, and a run\'s signed gate reports and stored result; reading adds no decision':
+                      ch[0] == 200 and e['chain'][1] == before and isinstance(chained, list) and isinstance(live, dict) and live.get('seq') == before
+                      and e['run'] == (200, 1, True) and before == after,
+                  'the witness answers 404 for a budget it does not hold and 400 for no budget, a number that is not one, a page of 0 or 201 decisions, a budget name with a control character, no run named and a run named with a space':
+                      [witness_says[k] for k in ('chain, unknown budget', 'chain, no budget', 'chain, after not a number', 'chain, limit 0', 'chain, limit 201', 'chain, control character',
+                                                 'run, unknown budget', 'run, no attempt', 'run, attempt with a space')] == [404, 400, 400, 400, 400, 400, 404, 400, 400],
+                  'the courier\'s certificate reads and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the chain (403); the keeper reads it too':
+                      (witness_says['courier writes'], witness_says['courier asks the key'], witness_says['stranger reads the chain'], witness_says['keeper reads the chain']) == (403, 403, 403, 200),
+                  'a run cut off when the gate host dies gets no notice before the courier has seen it with no outcome for the time allowed, then a notice that it has none; once the gate signs that it does not know the outcome, a notice that it was interrupted; each is delivered':
+                      host_exit == 137 and cs.get('wait', (None,))[:3] == (0, [], []) and cs.get('cut', (None,))[:3] == (0, ['NO_OUTCOME'], ['NO_OUTCOME'])
+                      and again[0] == 3 and cs.get('interrupted', (None,))[:3] == (0, ['INTERRUPTED'], ['INTERRUPTED']),
+                  'a failing run whose own notice was taken out of the service\'s inbox still gets the courier\'s notice of the failure, delivered; a passing run gets none; a second pass sends nothing more':
+                      bad[0] == 2 and len(own) == 1 and good[0] == 0 and cs.get('fail', (None,))[:3] == (0, ['FAIL'], ['FAIL']) and cs.get('again', (None,))[:3] == (0, [], []),
+                  'the mailbox holds each notice with its receipt, which verifies under the mailbox\'s key and names that notice, and a readable copy that opens with what happened; the failure\'s copy gives the numbers; the courier\'s log holds the same notices':
+                      len(held) == 3 and all(C.notice_problems(h['notice'], s.keys['courier']) == [] and C.receipt_problems(h['receipt'], s.keys['mailbox'], h['notice']) == [] for h in held)
+                      and e['headlines'] == sorted(['A RUN WAS ADMITTED AND HAS NO OUTCOME', 'DECLARED CHECK NOT MET (FAIL)', 'THE RUN WAS INTERRUPTED: ADMITTED AND COUNTED, WITH NO VERDICT'])
+                      and any('achieved 180, required at least 200' in t for t in texts) and len(log) == 3 and sorted(C.notice_digest(x['notice']) for x in log) == sorted(C.notice_digest(h['notice']) for h in held),
+                  'the courier\'s configuration names neither the service\'s home nor its database; it holds the courier\'s certificate and the witness\'s address':
+                      str(s.home) not in cfg_text and 'postgresql' not in cfg_text and s.pki['courier'][0] in cfg_text and url in cfg_text,
+                  'with the mailbox down, the notice of a failure is made and waits, and the pass exits 1; with the mailbox back, the next pass delivers it, makes no other, and exits 0':
+                      bad2[0] == 2 and cs.get('down', (None,))[:3] == (1, ['FAIL'], []) and isinstance(e['waiting'], list) and len(e['waiting']) == 1 and cs.get('up', (None,))[:3] == (0, [], ['FAIL']),
+                  'the mailbox refuses a notice signed by another key (403), one that is not a notice (400), a body that is not JSON (400) and a client that is not the courier (403); a notice delivered again gets the receipt first given and is kept once':
+                      mailbox_says == {'another key': 403, 'not a notice': 400, 'not JSON': 400, 'keeper delivers': 403} and same_receipt and n_files == n_files_after,
+                  'a courier given another key for the mailbox takes no answer of the mailbox as a receipt: nothing is delivered, the notices wait, and the pass exits 1':
+                      c_wrongbox[0] == 1 and 'not a receipt' in str(e['wrongbox'][1]),
+                  'the courier refuses decisions that were changed, skip one, or do not end at the head the checkpoint names, and takes them when they are whole':
+                      rows_refused == [True, True, True] and 'RAISED' in e['wrong_head'] and 'Refused' in e['wrong_head'],
+                  'a courier whose last head the witness contradicts refuses the budget (a fork), keeps the witness\'s signed checkpoint as the evidence, exits 1, and stays stopped at the next pass':
+                      cs.get('fork', (None,))[0] == 1 and cs.get('fork2', (None,))[0] == 1 and len(forks) == 1 and forks[0].get('why', '').startswith('FORK') and (forks[0].get('evidence') or {}).get('statement') == 'CHECKPOINT',
+                  'a courier told that the last decision it read is beyond the chain refuses the budget (a rollback), and keeps the witness\'s signed checkpoint of the shorter chain as the evidence':
+                      isinstance(c_r2, tuple) and c_r2[0] == 0 and cs.get('roll', (None,))[0] == 1 and len(rolls) == 1 and rolls[0].get('why', '').startswith('ROLLBACK')
+                      and (rolls[0].get('evidence') or {}).get('statement') == 'CHECKPOINT' and (rolls[0].get('evidence') or {}).get('seq') == after,
+                  'a record built with the courier\'s log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker\'s command says so and exits 0 when delivery is required':
+                      ok and ten == (10, 'notices delivered', True) and sorted(d['outcome'] for d in dv.get('due', [])) == ['FAIL', 'FAIL', 'INTERRUPTED'] and all(d['delivered'] for d in dv.get('due', []))
+                      and dv.get('no_outcome') == [cut_aid] and dv.get('notices') == 4 and cli_full[0] == 0 and len(cli_full[1]) == 1 and cli_full[1][0].startswith('NOTICES: 3 of 3 runs'),
+                  'a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required':
+                      okd and sorted((d['outcome'], d['delivered']) for d in e['dropped'][1] or []) == [('FAIL', False), ('FAIL', True), ('INTERRUPTED', True)]
+                      and cli_dropped[0] == 1 and 'NO DELIVERY EVIDENCE' in (cli_dropped[1] or [''])[0],
+                  'the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, a receipt signed by another key, a notice naming a decision not in the record\'s chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given':
+                      all(v == [10] for v in tampered.values()),
+                  'a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken':
+                      unverified == {'no result': 'UNVERIFIED', 'a result changed': 'UNVERIFIED', 'the result': 'FAIL'} and okx and e['early'][1] == dv.get('due'),
+                  'a record without notices verifies and says it has none; the command says notices were not checked and exits 1 when delivery is required; the engineer\'s console, given the courier\'s log and the two keys, writes a record that carries the notices and verifies, and refuses without the keys':
+                      okp and e['plain'][1] == (10, 'notices delivered (none in this record)', True) and sp.get('delivery') is None and cli_plain[0] == 1 and (cli_plain[1] or [''])[0].startswith('NOTICES: NOT CHECKED')
+                      and console.returncode == 0 and console_ok and console_nokeys.returncode == 1}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26}
 
 
 def main():
