@@ -1,0 +1,844 @@
+{
+ "M0": {
+  "defect": "no change at all: the control, which must not be caught",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [],
+  "failed_checks": {},
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C1": {
+  "defect": "the witness does not sign back the nonce",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "before any run the witness signs a checkpoint of the empty chain: no decisions, its head the provisioning record's hash, the budget open, the asker's nonce signed back; asked for the head after decision 0 it gives the same hash; both verify under the witness's key",
+    "against a checkpoint obtained separately, whose chain ends where the record does, the record is CURRENT within the age allowed, with the nonce asked signed back; with no age allowed it is only CURRENT_AT the checkpoint's time; the checker's command, which allows an hour unless told, says CURRENT and exits 0; with no checkpoint given it says the currency was not checked, and exits 0 as before",
+    "the keeper's command fetches a checkpoint with a nonce of its own making, keeps it and writes it out; its next fetch asks the witness for the head at the last number kept; a line cut off in the log is reported by the audit and does not stop the next fetch, nor does a last line that lost its line end; the log then audits clean with four checkpoints",
+    "a keeper whose log holds a longer chain than the witness now has is told of a rollback: the command exits 1, and the witness's signed checkpoint of the shorter chain is put aside as the evidence",
+    "the superseded baseline's record, built after the revision and checked against the keeper's first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer's console, given the witness's address, writes a record that carries a checkpoint and verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C2": {
+  "defect": "the witness gives the chain's head as the head after an earlier decision",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "after a later run the same record is out of date: SUPERSEDED, a true beginning of the chain, where the checkpoint names the record's head; SUPERSEDED_UNPROVEN where it does not; the command exits 1 though the record itself verifies",
+    "once the baseline is superseded, a checkpoint of its chain says the budget is no longer open, and the checker says so beside the record's currency",
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence",
+    "the log's audit is clean, and reports a fork written into it behind the keeper's back"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C3": {
+  "defect": "the witness answers for a decision beyond the chain",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a keeper whose log holds a longer chain than the witness now has is told of a rollback: the command exits 1, and the witness's signed checkpoint of the shorter chain is put aside as the evidence"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C4": {
+  "defect": "the witness takes a nonce of any shape",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the witness answers 404 for a budget it does not hold and 400 for no budget, a nonce with a space or of 65 characters, a decision beyond the chain, a number that is not one and a budget name with a control character; none of it adds a decision"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C5": {
+  "defect": "the witness gives a checkpoint to any client certificate",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the keeper's certificate reads a checkpoint (200) and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the checkpoint (403); the fetcher gives nothing with no certificate, and will not ask over plain http"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C6": {
+  "defect": "the witness reports every budget as open",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "once the baseline is superseded, a checkpoint of its chain says the budget is no longer open, and the checker says so beside the record's currency",
+    "the superseded baseline's record, built after the revision and checked against the keeper's first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer's console, given the witness's address, writes a record that carries a checkpoint and verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C29": {
+  "defect": "the keeper's certificate is admitted to everything the witness does, writing too",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the witness answers 404 for a budget it does not hold and 400 for no budget, a nonce with a space or of 65 characters, a decision beyond the chain, a number that is not one and a budget name with a control character; none of it adds a decision",
+    "the keeper's certificate reads a checkpoint (200) and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the checkpoint (403); the fetcher gives nothing with no certificate, and will not ask over plain http",
+    "a keeper whose log holds a longer chain than the witness now has is told of a rollback: the command exits 1, and the witness's signed checkpoint of the shorter chain is put aside as the evidence"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C30": {
+  "defect": "a reading name is admitted to every path the witness answers",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the keeper's certificate reads a checkpoint (200) and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the checkpoint (403); the fetcher gives nothing with no certificate, and will not ask over plain http"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C31": {
+  "defect": "the witness takes a budget name with a control character to the database",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the witness answers 404 for a budget it does not hold and 400 for no budget, a nonce with a space or of 65 characters, a decision beyond the chain, a number that is not one and a budget name with a control character; none of it adds a decision"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C7": {
+  "defect": "a checkpoint's signature is not checked",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint older than the record says nothing of it (OLDER); one older than the age allowed is STALE and one within it CURRENT; one dated more than five minutes ahead of the reader's clock is not used, and one less than that ahead is; the command exits 1 for a stale, a forked, an unusable and an older checkpoint",
+    "a checkpoint is not used (INVALID) when it signs back another nonce or none, when its number, head, time or state was edited or a field added, when its number is text or true, when it gives an earlier head with no number, when it is signed by another key, is for another budget, or is a receipt and not a checkpoint; nor is an age that is not a number, or a record with no as-of point"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C8": {
+  "defect": "a checkpoint signed by any key is taken",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint is not used (INVALID) when it signs back another nonce or none, when its number, head, time or state was edited or a field added, when its number is text or true, when it gives an earlier head with no number, when it is signed by another key, is for another budget, or is a receipt and not a checkpoint; nor is an age that is not a number, or a record with no as-of point",
+    "the checkpoint inside a record cannot be changed, exchanged or dropped unseen: edited, checks 1 and 9 fail; edited and re-signed with the engineer's key, or exchanged for a true checkpoint of an earlier point, for a true one that names no head, or for one signed by another key, check 9 alone fails; taken out and re-signed, the record verifies and says it has none",
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.1
+ },
+ "C9": {
+  "defect": "a checkpoint for another budget is taken",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint is not used (INVALID) when it signs back another nonce or none, when its number, head, time or state was edited or a field added, when its number is text or true, when it gives an earlier head with no number, when it is signed by another key, is for another budget, or is a receipt and not a checkpoint; nor is an age that is not a number, or a record with no as-of point",
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C10": {
+  "defect": "a checkpoint may carry fields the witness did not sign",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint is not used (INVALID) when it signs back another nonce or none, when its number, head, time or state was edited or a field added, when its number is text or true, when it gives an earlier head with no number, when it is signed by another key, is for another budget, or is a receipt and not a checkpoint; nor is an age that is not a number, or a record with no as-of point"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.9
+ },
+ "C32": {
+  "defect": "a sequence number that is true or text is taken as a number",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint is not used (INVALID) when it signs back another nonce or none, when its number, head, time or state was edited or a field added, when its number is text or true, when it gives an earlier head with no number, when it is signed by another key, is for another budget, or is a receipt and not a checkpoint; nor is an age that is not a number, or a record with no as-of point"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C33": {
+  "defect": "an earlier head with no number is taken",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint is not used (INVALID) when it signs back another nonce or none, when its number, head, time or state was edited or a field added, when its number is text or true, when it gives an earlier head with no number, when it is signed by another key, is for another budget, or is a receipt and not a checkpoint; nor is an age that is not a number, or a record with no as-of point"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.9
+ },
+ "C11": {
+  "defect": "the nonce asked for is not compared",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "an old checkpoint handed over again with the old record, after a later run, still reads CURRENT inside the age allowed, which is all that CURRENT says; asked with a nonce of the reader's own, it is not used",
+    "a checkpoint is not used (INVALID) when it signs back another nonce or none, when its number, head, time or state was edited or a field added, when its number is text or true, when it gives an earlier head with no number, when it is signed by another key, is for another budget, or is a receipt and not a checkpoint; nor is an age that is not a number, or a record with no as-of point"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C12": {
+  "defect": "a checkpoint of any age is current",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint older than the record says nothing of it (OLDER); one older than the age allowed is STALE and one within it CURRENT; one dated more than five minutes ahead of the reader's clock is not used, and one less than that ahead is; the command exits 1 for a stale, a forked, an unusable and an older checkpoint"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.7
+ },
+ "C34": {
+  "defect": "with no age allowed a record is called CURRENT",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "against a checkpoint obtained separately, whose chain ends where the record does, the record is CURRENT within the age allowed, with the nonce asked signed back; with no age allowed it is only CURRENT_AT the checkpoint's time; the checker's command, which allows an hour unless told, says CURRENT and exits 0; with no checkpoint given it says the currency was not checked, and exits 0 as before"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C35": {
+  "defect": "a checkpoint dated in the future is used",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint older than the record says nothing of it (OLDER); one older than the age allowed is STALE and one within it CURRENT; one dated more than five minutes ahead of the reader's clock is not used, and one less than that ahead is; the command exits 1 for a stale, a forked, an unusable and an older checkpoint"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C36": {
+  "defect": "an age that is not a number is taken",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint is not used (INVALID) when it signs back another nonce or none, when its number, head, time or state was edited or a field added, when its number is text or true, when it gives an earlier head with no number, when it is signed by another key, is for another budget, or is a receipt and not a checkpoint; nor is an age that is not a number, or a record with no as-of point"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.3
+ },
+ "C13": {
+  "defect": "the heads a checkpoint states are not compared with the record's",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint older than the record says nothing of it (OLDER); one older than the age allowed is STALE and one within it CURRENT; one dated more than five minutes ahead of the reader's clock is not used, and one less than that ahead is; the command exits 1 for a stale, a forked, an unusable and an older checkpoint",
+    "a checkpoint the witness's key signed that gives another head for a decision the record holds shows the record is of another chain (FORKED): for the record's last decision, as the chain's head or as an earlier one, and for a decision inside the record, in a checkpoint older or newer than it"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.9
+ },
+ "C14": {
+  "defect": "only the checkpoint's own head is compared, not the earlier one it names",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint the witness's key signed that gives another head for a decision the record holds shows the record is of another chain (FORKED): for the record's last decision, as the chain's head or as an earlier one, and for a decision inside the record, in a checkpoint older or newer than it"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C37": {
+  "defect": "a head is compared only at the record's last decision, not inside the record",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint the witness's key signed that gives another head for a decision the record holds shows the record is of another chain (FORKED): for the record's last decision, as the chain's head or as an earlier one, and for a decision inside the record, in a checkpoint older or newer than it"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.9
+ },
+ "C15": {
+  "defect": "a record is current though the chain has gone on",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "after a later run the same record is out of date: SUPERSEDED, a true beginning of the chain, where the checkpoint names the record's head; SUPERSEDED_UNPROVEN where it does not; the command exits 1 though the record itself verifies",
+    "once the baseline is superseded, a checkpoint of its chain says the budget is no longer open, and the checker says so beside the record's currency"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.9
+ },
+ "C16": {
+  "defect": "a checkpoint older than the record is taken as current",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a checkpoint older than the record says nothing of it (OLDER); one older than the age allowed is STALE and one within it CURRENT; one dated more than five minutes ahead of the reader's clock is not used, and one less than that ahead is; the command exits 1 for a stale, a forked, an unusable and an older checkpoint"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C38": {
+  "defect": "a record is called a true beginning of the chain on a checkpoint that does not name it",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "after a later run the same record is out of date: SUPERSEDED, a true beginning of the chain, where the checkpoint names the record's head; SUPERSEDED_UNPROVEN where it does not; the command exits 1 though the record itself verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.1
+ },
+ "C17": {
+  "defect": "the checker says nothing of a budget that is no longer open",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "once the baseline is superseded, a checkpoint of its chain says the budget is no longer open, and the checker says so beside the record's currency",
+    "the superseded baseline's record, built after the revision and checked against the keeper's first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer's console, given the witness's address, writes a record that carries a checkpoint and verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.7
+ },
+ "C18": {
+  "defect": "the command exits 0 on a record that is not current",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "after a later run the same record is out of date: SUPERSEDED, a true beginning of the chain, where the checkpoint names the record's head; SUPERSEDED_UNPROVEN where it does not; the command exits 1 though the record itself verifies",
+    "a checkpoint older than the record says nothing of it (OLDER); one older than the age allowed is STALE and one within it CURRENT; one dated more than five minutes ahead of the reader's clock is not used, and one less than that ahead is; the command exits 1 for a stale, a forked, an unusable and an older checkpoint"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.2
+ },
+ "C39": {
+  "defect": "the command takes the witness's key from the record when judging currency",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the command refuses to be misused (exit 2): an age or a nonce with no checkpoint, a checkpoint with the keys read from the record itself, an age that is not a number, a checkpoint file with no name"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C40": {
+  "defect": "the command ignores an age or a nonce given with no checkpoint",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the command refuses to be misused (exit 2): an age or a nonce with no checkpoint, a checkpoint with the keys read from the record itself, an age that is not a number, a checkpoint file with no name"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C41": {
+  "defect": "the command allows a checkpoint of any age unless told",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "against a checkpoint obtained separately, whose chain ends where the record does, the record is CURRENT within the age allowed, with the nonce asked signed back; with no age allowed it is only CURRENT_AT the checkpoint's time; the checker's command, which allows an hour unless told, says CURRENT and exits 0; with no checkpoint given it says the currency was not checked, and exits 0 as before",
+    "a checkpoint older than the record says nothing of it (OLDER); one older than the age allowed is STALE and one within it CURRENT; one dated more than five minutes ahead of the reader's clock is not used, and one less than that ahead is; the command exits 1 for a stale, a forked, an unusable and an older checkpoint"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.9
+ },
+ "C19": {
+  "defect": "the checkpoint inside a record is not checked",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the checkpoint inside a record cannot be changed, exchanged or dropped unseen: edited, checks 1 and 9 fail; edited and re-signed with the engineer's key, or exchanged for a true checkpoint of an earlier point, for a true one that names no head, or for one signed by another key, check 9 alone fails; taken out and re-signed, the record verifies and says it has none"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C20": {
+  "defect": "the checkpoint inside a record need not name the record's head",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the checkpoint inside a record cannot be changed, exchanged or dropped unseen: edited, checks 1 and 9 fail; edited and re-signed with the engineer's key, or exchanged for a true checkpoint of an earlier point, for a true one that names no head, or for one signed by another key, check 9 alone fails; taken out and re-signed, the record verifies and says it has none"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.7
+ },
+ "C21": {
+  "defect": "the checkpoint inside a record need not be of the record's last decision",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the checkpoint inside a record cannot be changed, exchanged or dropped unseen: edited, checks 1 and 9 fail; edited and re-signed with the engineer's key, or exchanged for a true checkpoint of an earlier point, for a true one that names no head, or for one signed by another key, check 9 alone fails; taken out and re-signed, the record verifies and says it has none"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.7
+ },
+ "C22": {
+  "defect": "a record is built without the witness's checkpoint",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a record carries the witness's checkpoint, which names the record's own last decision and head; the record verifies with a ninth check, the witness checkpoint; a record built without one still verifies, and its ninth check says it has none",
+    "the superseded baseline's record, built after the revision and checked against the keeper's first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer's console, given the witness's address, writes a record that carries a checkpoint and verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.9
+ },
+ "C23": {
+  "defect": "the record's checkpoint does not name the record's last decision",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a record carries the witness's checkpoint, which names the record's own last decision and head; the record verifies with a ninth check, the witness checkpoint; a record built without one still verifies, and its ninth check says it has none",
+    "against a checkpoint obtained separately, whose chain ends where the record does, the record is CURRENT within the age allowed, with the nonce asked signed back; with no age allowed it is only CURRENT_AT the checkpoint's time; the checker's command, which allows an hour unless told, says CURRENT and exits 0; with no checkpoint given it says the currency was not checked, and exits 0 as before",
+    "after a later run the same record is out of date: SUPERSEDED, a true beginning of the chain, where the checkpoint names the record's head; SUPERSEDED_UNPROVEN where it does not; the command exits 1 though the record itself verifies",
+    "a checkpoint older than the record says nothing of it (OLDER); one older than the age allowed is STALE and one within it CURRENT; one dated more than five minutes ahead of the reader's clock is not used, and one less than that ahead is; the command exits 1 for a stale, a forked, an unusable and an older checkpoint",
+    "the superseded baseline's record, built after the revision and checked against the keeper's first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer's console, given the witness's address, writes a record that carries a checkpoint and verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "C24": {
+  "defect": "the keeper takes a rollback",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence",
+    "a keeper whose log holds a longer chain than the witness now has is told of a rollback: the command exits 1, and the witness's signed checkpoint of the shorter chain is put aside as the evidence"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.7
+ },
+ "C25": {
+  "defect": "the keeper takes a fork of the head",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence",
+    "the log's audit is clean, and reports a fork written into it behind the keeper's back"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C26": {
+  "defect": "the keeper does not compare earlier heads",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence",
+    "the log's audit is clean, and reports a fork written into it behind the keeper's back"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.7
+ },
+ "C27": {
+  "defect": "the keeper keeps a checkpoint the witness did not sign",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence",
+    "the superseded baseline's record, built after the revision and checked against the keeper's first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer's console, given the witness's address, writes a record that carries a checkpoint and verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.7
+ },
+ "C28": {
+  "defect": "the keeper's audit does not see a fork in the log",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the log's audit is clean, and reports a fork written into it behind the keeper's back"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C42": {
+  "defect": "the keeper throws away a checkpoint that contradicts its log",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence",
+    "a keeper whose log holds a longer chain than the witness now has is told of a rollback: the command exits 1, and the witness's signed checkpoint of the shorter chain is put aside as the evidence"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ },
+ "C43": {
+  "defect": "the keeper's command does not tie a checkpoint to the last one kept",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the keeper's command fetches a checkpoint with a nonce of its own making, keeps it and writes it out; its next fetch asks the witness for the head at the last number kept; a line cut off in the log is reported by the audit and does not stop the next fetch, nor does a last line that lost its line end; the log then audits clean with four checkpoints"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.1
+ },
+ "C44": {
+  "defect": "the keeper's command asks with no nonce unless given one",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the keeper's command fetches a checkpoint with a nonce of its own making, keeps it and writes it out; its next fetch asks the witness for the head at the last number kept; a line cut off in the log is reported by the audit and does not stop the next fetch, nor does a last line that lost its line end; the log then audits clean with four checkpoints",
+    "the superseded baseline's record, built after the revision and checked against the keeper's first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer's console, given the witness's address, writes a record that carries a checkpoint and verifies"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.9
+ },
+ "C45": {
+  "defect": "a line cut off in the log stops the keeper for good",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the keeper's command fetches a checkpoint with a nonce of its own making, keeps it and writes it out; its next fetch asks the witness for the head at the last number kept; a line cut off in the log is reported by the audit and does not stop the next fetch, nor does a last line that lost its line end; the log then audits clean with four checkpoints"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.9
+ },
+ "C46": {
+  "defect": "the fetcher asks over plain http if told to",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the keeper's certificate reads a checkpoint (200) and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the checkpoint (403); the fetcher gives nothing with no certificate, and will not ask over plain http"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.7
+ },
+ "C47": {
+  "defect": "the keeper keeps a checkpoint for another budget or nonce than it asked",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.7
+ },
+ "C48": {
+  "defect": "the keeper keeps a checkpoint that does not answer for the last number kept",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence",
+    "the log's audit is clean, and reports a fork written into it behind the keeper's back"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.7
+ },
+ "C49": {
+  "defect": "a rollback the witness admits to leaves no signed evidence",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "a keeper whose log holds a longer chain than the witness now has is told of a rollback: the command exits 1, and the witness's signed checkpoint of the shorter chain is put aside as the evidence"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.6
+ },
+ "C50": {
+  "defect": "a last line that lost its line end is run together with the next",
+  "tests_run": [
+   "R25"
+  ],
+  "caught_by": [
+   "R25"
+  ],
+  "failed_checks": {
+   "R25": [
+    "the keeper's command fetches a checkpoint with a nonce of its own making, keeps it and writes it out; its next fetch asks the witness for the head at the last number kept; a line cut off in the log is reported by the audit and does not stop the next fetch, nor does a last line that lost its line end; the log then audits clean with four checkpoints"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.8
+ }
+}
