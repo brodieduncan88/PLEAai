@@ -123,7 +123,7 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
                             rows.append(row)
                         return self._send(200, {'root': root, 'after': int(after), 'rows': rows})
                     aid = q.get('aid', [None])[-1]
-                    if not aid or not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', aid):
+                    if not aid or len(aid) > 512 or re.search(r'[\x00-\x1f\x7f]', aid):      # any attempt the chain can hold
                         return self._send(400, {'error': 'malformed request'})
                     if not store.root_exists(root):
                         raise UnknownRoot(root)

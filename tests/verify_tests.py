@@ -2258,7 +2258,7 @@ def r26():
                         'chain, after not a number': call(url, f'/chain?root={q}&after=-1', courier_cert)[0], 'chain, limit 0': call(url, f'/chain?root={q}&limit=0', courier_cert)[0],
                         'chain, limit 201': call(url, f'/chain?root={q}&limit=201', courier_cert)[0], 'chain, control character': call(url, f'/chain?root={q}%01', courier_cert)[0],
                         'run, unknown budget': call(url, f'/run?root={q}x&aid=a-1', courier_cert)[0], 'run, no attempt': call(url, f'/run?root={q}', courier_cert)[0],
-                        'run, attempt with a space': call(url, f'/run?root={q}&aid=a%201', courier_cert)[0],
+                        'run, attempt with a control character': call(url, f'/run?root={q}&aid=a%011', courier_cert)[0],
                         'courier writes': call(url, '/accept', courier_cert, 'POST', {'root': root, 'op': ['ACCEPT_RESERVATION', 'a-0000000000000000'], 'evidence': None})[0],
                         'courier asks the key': call(url, '/pubkey', courier_cert)[0], 'stranger reads the chain': call(url, f'/chain?root={q}', stranger_cert)[0],
                         'keeper reads the chain': call(url, f'/chain?root={q}&limit=1', keeper_cert)[0]}
@@ -2326,8 +2326,9 @@ def r26():
                     'a receipt for another notice': fails(with_delivery(dict(d0, receipt=((rec.get('deliveries') or [{}, {}])[1:2] or [{}])[0].get('receipt')))),
                     'a notice for another budget': fails(with_delivery({'notice': signed(s.courier_key, C.NOTICE_FIELDS, dict({k: n0.get(k) for k in C.NOTICE_FIELDS}, root=root + 'x')),
                                                                        'receipt': receipt_for(signed(s.courier_key, C.NOTICE_FIELDS, dict({k: n0.get(k) for k in C.NOTICE_FIELDS}, root=root + 'x')))})),
-                    'words changed': fails(with_delivery({'notice': signed(s.courier_key, C.NOTICE_FIELDS, dict({k: fail_n.get(k) for k in C.NOTICE_FIELDS}, text='DECLARED CHECK MET\n' + str(fail_n.get('text')))),
-                                                          'receipt': receipt_for(signed(s.courier_key, C.NOTICE_FIELDS, dict({k: fail_n.get(k) for k in C.NOTICE_FIELDS}, text='DECLARED CHECK MET\n' + str(fail_n.get('text')))))}))}
+                    'words changed': fails(with_delivery({'notice': signed(s.courier_key, C.NOTICE_FIELDS, dict({k: fail_n.get(k) for k in C.NOTICE_FIELDS}, text=str(fail_n.get('text')).replace('achieved 180', 'achieved 210'))),
+                                                          'receipt': receipt_for(signed(s.courier_key, C.NOTICE_FIELDS, dict({k: fail_n.get(k) for k in C.NOTICE_FIELDS}, text=str(fail_n.get('text')).replace('achieved 180', 'achieved 210'))))}))}
+        words_differ = 'achieved 180' in str(fail_n.get('text'))
         three = C.verify(rec, {k: s.keys[k] for k in ('witness', 'gate', 'engineer')})
         three_keys = (three[0], next(((n, tt, g) for n, tt, g, _ in three[1] if n == 10), None), (three[2].get('delivery') or {}).get('unchecked'))
         cli_three = cli(f_rec, '--witness-key', s.keys['witness'], '--gate-key', s.keys['gate'], '--engineer-key', s.keys['engineer'], '--require-delivery')
@@ -2337,7 +2338,7 @@ def r26():
         fail_a = next((a for a in rec.get('attempts', []) if a.get('aid') == fail_n.get('aid')), {})
         eff_seq = max((i['seq'] for i in fail_a.get('evidence') or [] if (i.get('evidence') or {}).get('claim') == 'EFFECT'), default=None)
         early = signed(s.courier_key, C.NOTICE_FIELDS, dict({k: fail_n.get(k) for k in C.NOTICE_FIELDS}, outcome='UNVERIFIED', result_digest=None, reason_code=None, detail=None,
-                                                             text=f"{C.HEADLINES['UNVERIFIED']}\nRun {fail_n.get('aid')} on budget {root}.\nNo stored result matched yet.",
+                                                             text=C.notice_text('UNVERIFIED', fail_n.get('aid'), root, None, eff_seq, fail_n.get('courier')),
                                                              seq=eff_seq, head=rec['audit'][eff_seq - 1]['hash'] if eff_seq else None))
         x = copy.deepcopy(rec); x['deliveries'] = (rec.get('deliveries') or []) + [{'notice': early, 'receipt': receipt_for(early)}]; early_rec = resign(x)
         okx, _, sx = C.verify(early_rec, s.keys)
@@ -2376,10 +2377,10 @@ def r26():
         c_paged = step(s.courier, [root], 0, 'courier4', 5)
         # what the witness says cannot be read: the courier refuses it, stops, and tells the mailbox
         cfg5 = json.loads(s.courier_config([root], 0, 'courier5').read_text())
-        def malformed(answer):
+        def malformed(answer, path='/chain?'):
             orig = courier.https
             def fake(method, u, cfg, body=None, timeout=15.0):
-                return (200, answer) if '/chain?' in u else orig(method, u, cfg, body, timeout)
+                return (200, answer) if path in u else orig(method, u, cfg, body, timeout)
             courier.https = fake
             try:
                 state = s.dir / 'courier5' / 'state.json'
@@ -2389,14 +2390,19 @@ def r26():
                 return f'RAISED {type(exc).__name__}: {exc}'
             finally:
                 courier.https = orig
-        bad_answers = {k: malformed(v) for k, v in (('a decision with no number', {'rows': [{}]}), ('a number that is text', {'rows': [{'seq': '1'}]}), ('no decisions', {'rows': []}))}
+        bad_answers = {k: malformed(v) for k, v in (('a decision with no number', {'rows': [{}]}), ('a number that is text', {'rows': [{'seq': '1'}]}), ('no decisions', {'rows': []}),
+                                                    ('a decision with no operation', {'rows': [{'seq': 1, 'observation': {}, 'kind': 'APPLIED', 'code': 'X', 'prev_hash': '', 'hash': ''}]}))}
+        bad_answers['reports that are not a list'] = malformed({'evidence': 5, 'result': None}, '/run?')
         stopped_alarms = [d['notice'].get('outcome') for d in courier.read_deliveries(s.dir / 'courier5' / 'deliveries.jsonl', root)]
         # a witness the courier cannot reach
-        cfg6 = json.loads(s.courier_config([root], 0, 'courier6').read_text()); cfg6['witness_url'] = 'https://127.0.0.1:8979'
+        cfg6 = json.loads(s.courier_config([root], 3600, 'courier6').read_text()); cfg6['witness_url'] = 'https://127.0.0.1:8979'
         (s.dir / 'courier6.json').write_text(json.dumps(cfg6))
+        p6w = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'courier.py'), 'run', '--config', str(s.dir / 'courier6.json')], capture_output=True, text=True, timeout=120)
+        early_alarms = len(courier.read_deliveries(s.dir / 'courier6' / 'deliveries.jsonl', root))
+        cfg6['stall_after'] = 0; (s.dir / 'courier6.json').write_text(json.dumps(cfg6))
         p6 = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'courier.py'), 'run', '--config', str(s.dir / 'courier6.json')], capture_output=True, text=True, timeout=120)
         p6b = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'courier.py'), 'run', '--config', str(s.dir / 'courier6.json')], capture_output=True, text=True, timeout=120)
-        blocked = (p6.returncode, p6b.returncode, [d['notice'].get('outcome') for d in courier.read_deliveries(s.dir / 'courier6' / 'deliveries.jsonl', root)])
+        blocked = (p6w.returncode, early_alarms, p6.returncode, p6b.returncode, [d['notice'].get('outcome') for d in courier.read_deliveries(s.dir / 'courier6' / 'deliveries.jsonl', root)])
         # the mailbox under a client that sends nothing, a body too long, and a notice spelt another way
         import socket as _socket
         idle = _socket.create_connection(('127.0.0.1', s.ports['mailbox']), timeout=5)
@@ -2409,6 +2415,21 @@ def r26():
         before_upper = len(list((s.dir / 'mailbox' / 'notices').glob('*.json')))
         upper_ans = call(mb_url, '/deliver', courier_cert, 'POST', upper)[0]
         after_upper = len(list((s.dir / 'mailbox' / 'notices').glob('*.json')))
+        # an attempt the gateway names oddly, started and never admitted: its notice comes, and it hides no other run
+        local = Store(deploy.LOCAL_DSN); gov = s.pki['governor']; odd = '!x'
+        def odd_step(op):
+            d, _ = local.apply(root, op); return d.kind
+        def odd_accept(op):
+            st_, ans = call(url, '/accept', gov, 'POST', {'root': root, 'op': [op, odd], 'evidence': None})
+            if st_ == 200 and ans.get('kind') in ('APPLIED', 'DUPLICATE'):
+                local.put_receipt(root, odd, ans['seq'], ans['receipt'], op)
+            return st_ if ans is None else (st_, ans.get('kind'))
+        odd_steps = [step(odd_step, ('RESERVE', odd, 'verify:odd')), step(odd_accept, 'ACCEPT_RESERVATION'), step(odd_step, ('TOKEN', odd)), step(odd_step, ('START', odd, 'n-odd'))]
+        odd_phase = next((x[2] for x in Store(deploy.LOCAL_DSN).audit_snapshot(root)[1]['attempts'] if x[0] == odd), None)
+        c_odd = step(s.courier, [root], 0, 'courier7')
+        odd_steps += [step(odd_accept, 'ACCEPT_INTENT'), step(odd_step, ('RECEIPT', odd)), step(odd_accept, 'CROSS')]
+        odd_after = next((x[2] for x in Store(deploy.LOCAL_DSN).audit_snapshot(root)[1]['attempts'] if x[0] == odd), None)
+        odd_made = sorted((x.get('aid') == odd, x.get('outcome')) for x in (c_odd[1].get('made') or [])) if isinstance(c_odd, tuple) and isinstance(c_odd[1], dict) else c_odd
         # a record without notices, and the console
         plain = step(s.record, r.h, [r.ws / '.verify' / 'submissions.jsonl'])
         okp, checksp, sp = C.verify(plain, s.keys) if isinstance(plain, dict) else (False, [], {})
@@ -2445,14 +2466,14 @@ def r26():
                  console=(console.returncode, console.stderr[:200]), console_nokeys=(console_nokeys.returncode, console_nokeys.stderr[:160]),
                  three_keys=three_keys, cli_three=cli_three, cli_five=cli_five[0], paged=(c_paged[0], made(c_paged)) if isinstance(c_paged, tuple) else c_paged,
                  bad_answers={k: (v.get('refused'), [m.get('outcome') for m in v.get('made', [])]) if isinstance(v, dict) else v for k, v in bad_answers.items()},
-                 stopped_alarms=stopped_alarms, blocked=blocked, idle=(while_idle, round(idle_seconds, 1)), too_long=too_long, upper=(upper_ans, before_upper, after_upper), indet=indet)
+                 stopped_alarms=stopped_alarms, blocked=blocked, odd=(odd_steps, odd_phase, odd_after, c_odd[0] if isinstance(c_odd, tuple) else c_odd, odd_made), words_differ=words_differ, idle=(while_idle, round(idle_seconds, 1)), too_long=too_long, upper=(upper_ans, before_upper, after_upper), indet=indet)
         cs = e['couriers']; cut_aid = next((x['notice']['aid'] for x in log if x['notice'].get('outcome') == 'INTERRUPTED'), None)
         checks = {'the witness gives the courier\'s certificate its decisions, which follow on from the head a checkpoint names for decision 0 and hash one to the next, and a run\'s signed gate reports and stored result; reading adds no decision':
                       ch[0] == 200 and e['chain'][1] == before and isinstance(chained, list) and isinstance(live, dict) and live.get('seq') == before
                       and e['run'] == (200, 1, True) and before == after,
-                  'the witness answers 404 for a budget it does not hold and 400 for no budget, a number that is not one, a page of 0 or 201 decisions, a budget name with a control character, no run named and a run named with a space':
+                  'the witness answers 404 for a budget it does not hold and 400 for no budget, a number that is not one, a page of 0 or 201 decisions, a budget name with a control character, no run named and a run named with a control character':
                       [witness_says[k] for k in ('chain, unknown budget', 'chain, no budget', 'chain, after not a number', 'chain, limit 0', 'chain, limit 201', 'chain, control character',
-                                                 'run, unknown budget', 'run, no attempt', 'run, attempt with a space')] == [404, 400, 400, 400, 400, 400, 404, 400, 400],
+                                                 'run, unknown budget', 'run, no attempt', 'run, attempt with a control character')] == [404, 400, 400, 400, 400, 400, 404, 400, 400],
                   'the courier\'s certificate reads and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the chain (403), and so is the keeper, which reads checkpoints only':
                       (witness_says['courier writes'], witness_says['courier asks the key'], witness_says['stranger reads the chain'], witness_says['keeper reads the chain']) == (403, 403, 403, 403),
                   'a run cut off when the gate host dies gets no notice before the courier has seen it with no outcome for the time allowed, then a notice that it has none; once the gate signs that it does not know the outcome, a notice that it was interrupted; each is delivered':
@@ -2487,7 +2508,7 @@ def r26():
                       and cli_dropped[0] == 1 and 'NO DELIVERY EVIDENCE' in (cli_dropped[1] or [''])[0]
                       and oki and [d['delivered'] for d in e['no_int'][1] or [] if d['outcome'] == 'INTERRUPTED'] == [False],
                   'the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record\'s chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given':
-                      all(v == [10] for v in tampered.values()),
+                      all(v == [10] for v in tampered.values()) and words_differ,
                   'a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken':
                       unverified == {'no result': 'UNVERIFIED', 'a result changed': 'UNVERIFIED', 'the result': 'FAIL', 'a report not the gate\'s': 'UNVERIFIED', 'a report for another nonce': 'UNVERIFIED'}
                       and okx and e['early'][1] == dv.get('due'),
@@ -2498,16 +2519,20 @@ def r26():
                       and cli_three[0] == 1 and (cli_three[1] or [''])[0].startswith('NOTICES: NOT CHECKED.  The record carries') and cli_five[0] == 0,
                   'a courier reading the chain five decisions at a time, from the start, makes the notices of the interruption and the two failures, and delivers them':
                       isinstance(c_paged, tuple) and c_paged[0] == 0 and made(c_paged) == ['FAIL', 'FAIL', 'INTERRUPTED'],
-                  'a courier given decisions it cannot read (one with no number, one numbered in text) or none where the checkpoint says there are some refuses the budget, does not stop with an error, and delivers to the mailbox a signed notice that it has stopped':
+                  'a courier given decisions it cannot read (one with no number, one numbered in text, one with no operation), none where the checkpoint says there are some, or a run\'s reports that are not a list, refuses the budget, does not stop with an error, and delivers to the mailbox a signed notice that it has stopped':
                       all(isinstance(v, dict) and len(v.get('refused') or []) == 1 and [m.get('outcome') for m in v.get('made', [])] == ['COURIER_STOPPED'] for v in bad_answers.values())
-                      and stopped_alarms == ['COURIER_STOPPED'] * 3,
-                  'a courier that cannot reach the witness exits 1 and delivers one signed notice that it is blocked, not one at each pass':
-                      blocked == (1, 1, ['COURIER_BLOCKED']),
+                      and stopped_alarms == ['COURIER_STOPPED'] * 5,
+                  'a courier that cannot reach the witness exits 1; it sends nothing until it has been blocked for the time allowed, then one signed notice that it is blocked, not one at each pass':
+                      blocked == (1, 0, 1, 1, ['COURIER_BLOCKED']),
                   'a client that connects to the mailbox and sends nothing does not hold up another; a body over 64 KiB is refused (400); a notice whose signature is spelt in capitals is refused (403) and not kept':
                       e['idle'][0] == 200 and e['idle'][1] < 5 and too_long == 400 and upper_ans == 403 and before_upper == after_upper,
-                  'when the control plane re-registers the budget, the run cut off before and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows both delivered':
-                      indet[0] == 137 and indet[1] == 0 and indet[2] == 'REREGISTERED_REDUCED' and indet[3] == ['INDETERMINATE', 'INDETERMINATE'] and indet[4]
-                      and [x for x in indet[5] if x[0] == 'INDETERMINATE'] == [('INDETERMINATE', True)] * 2 and all(d for _, d in indet[5]),
+                  'when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered':
+                      indet[0] == 137 and indet[1] == 0 and indet[2] == 'REREGISTERED_REDUCED' and indet[3] == ['INDETERMINATE'] * 3 and indet[4]
+                      and [x for x in indet[5] if x[0] == 'INDETERMINATE'] == [('INDETERMINATE', True)] * 3 and all(d for _, d in indet[5]),
+                  'an attempt the gateway names oddly ("!x"), started and never admitted, gets a notice that it has no outcome, and the runs listed after it still get theirs':
+                      odd_steps == ['APPLIED', (200, 'APPLIED'), 'APPLIED', 'APPLIED', (200, 'APPLIED'), 'APPLIED', (200, 'APPLIED')] and odd_phase == 'INTENT_PENDING' and odd_after == 'CONSUMED'
+                      and isinstance(c_odd, tuple) and c_odd[0] == 0
+                      and odd_made == [(False, 'FAIL'), (False, 'FAIL'), (False, 'INTERRUPTED'), (True, 'NO_OUTCOME')],
                   'a record without notices verifies and says it has none; the command says notices were not checked and exits 1 when delivery is required; the engineer\'s console, given the courier\'s log and the two keys, writes a record that carries the notices and verifies, and refuses without the keys':
                       okp and e['plain'][1] == (10, 'notices delivered (none in this record)', True) and sp.get('delivery') is None and cli_plain[0] == 1 and (cli_plain[1] or [''])[0].startswith('NOTICES: NOT CHECKED')
                       and console.returncode == 0 and console_ok and console_nokeys.returncode == 1}

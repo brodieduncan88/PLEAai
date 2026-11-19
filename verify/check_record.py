@@ -29,8 +29,8 @@ network or database.  It recomputes every hash, checks every signature and re-do
      and saying that the chain's head after the record's last decision is the record's head;
  10  the notices delivered, if the record carries any (Amendment 11): each notice is signed by the courier's key, names a
      decision of this record's chain with its hash, and says what this record's chain, gate reports and verdict say of
-     that run at that decision: its outcome, the digest of its verdict, the reason code and detail it quotes, and the
-     first line of its words; each receipt is signed by the engineer's mailbox key and names that notice.  With keys given
+     that run at that decision: its outcome, the digest of its verdict, the reason code and detail it quotes, and its
+     words, which are made again here and compared; each receipt is signed by the engineer's mailbox key and names that notice.  With keys given
      separately but none for the courier and the mailbox, the notices are not checked, and the record is judged without them.
 
 It then says which runs that call for a notice to the engineer (FAIL, UNKNOWN, INTERRUPTED; and INVALID or REFUNDED,
@@ -83,7 +83,7 @@ NOTICE_OUTCOMES = RUN_NOTICES + ALARMS
 DUE = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INDETERMINATE', 'INVALID', 'REFUNDED')        # a run's outcome in a record that calls for a notice
 HEADLINES = {'FAIL': 'DECLARED CHECK NOT MET (FAIL)', 'UNKNOWN': 'NO VERDICT: THE CHECK DID NOT DECIDE (UNKNOWN)',
              'INTERRUPTED': 'THE RUN WAS INTERRUPTED: ADMITTED AND COUNTED, WITH NO VERDICT',
-             'INDETERMINATE': 'THE RUN WAS MADE INDETERMINATE BY THE CONTROL PLANE: ADMITTED AND COUNTED, WITH NO VERDICT',
+             'INDETERMINATE': 'THE RUN WAS MADE INDETERMINATE BY THE CONTROL PLANE: FROZEN AND COUNTED, WITH NO VERDICT RECORDED',
              'INVALID': 'THE GATE SIGNED A RESULT THAT HAS NO VERDICT', 'REFUNDED': 'THE RUN WAS REFUNDED, WHICH A VERIFICATION RUN MUST NEVER BE',
              'UNVERIFIED': 'THE STORED RESULT DOES NOT MATCH THE GATE\'S SIGNATURE', 'NO_OUTCOME': 'A RUN WAS ADMITTED AND HAS NO OUTCOME',
              'COURIER_STOPPED': 'THE COURIER HAS STOPPED READING THIS BUDGET: WHAT THE WITNESS SAID CANNOT BE BELIEVED',
@@ -191,6 +191,76 @@ def notice_detail(result):
     """What a notice quotes of a result's detail: no control characters, at most 400 characters; None if there is none."""
     d = ''.join(ch if ch >= ' ' and ch != '\x7f' else ' ' for ch in str((result or {}).get('detail') or ''))[:400] if isinstance(result, dict) else ''
     return d or None
+
+
+WHY = {'INTERRUPTED': 'The gate signed that it does not know the outcome: the run is counted and will not be run again.  If the gate learns the verdict later, another notice follows.',
+       'INDETERMINATE': 'The control plane re-registered the budget: the run is frozen and counted, and the witness records no verdict for it.',
+       'NO_OUTCOME': 'It was started, or admitted and crossed, and the witness holds no outcome for it; the courier has seen it so for longer than it waits.',
+       'UNVERIFIED': 'The gate signed that the check ran, but for longer than it waits the courier has found no stored result that hashes to the digest the gate signed.',
+       'REFUNDED': 'The witness recorded the run as refunded.'}
+
+
+def notice_numbers(result) -> str:
+    """A verdict's achieved and required values, as a notice gives them."""
+    out = []
+    for c in (result.get('criteria') if isinstance(result, dict) else None) or []:
+        if isinstance(c, dict) and c.get('achieved') is not None:
+            cmp_ = c.get('comparison'); word = {'<=': 'at most', '>=': 'at least'}.get(cmp_, str(cmp_)) if isinstance(cmp_, str) else str(cmp_)
+            out.append(f"{c.get('id')} achieved {c.get('achieved')}, required {word} {c.get('limit')} {c.get('units') or ''}".strip())
+    return '; '.join(out)[:2000]
+
+
+def notice_text(outcome, aid, root, result, seq, courier) -> str:
+    """The words of a courier's notice of a run: made from what the notice states and the verdict it names, so a record's
+    checker can make them again and compare.  (Amendment 11.)"""
+    r = result if isinstance(result, dict) else {}
+    if r.get('reason_code'):
+        numbers, detail = notice_numbers(r), notice_detail(r)
+        why = f"Reason: {r.get('reason_code')}.  " + (f'{numbers}.  ' if numbers else '') + (detail or '')
+    else:
+        why = WHY.get(outcome, '')
+    return (f"{HEADLINES[outcome]}\nRun {aid} on budget {root}.\n{why}\n"
+            f"This notice was made by the courier {courier} from the witness's chain at decision {seq} and the gate's signed reports.  "
+            'The verification service did not write it.  It does not say the check is correct.')
+
+
+def delivery_problem(d, root, audit, attempts_by_aid, gate_key, courier_keys, mailbox_keys, chain_ok: bool = True):
+    """(None, notice) if a delivery is a true courier notice of a run of this record, with the mailbox's receipt for it, and
+    says what this record says of that run at the decision it names; otherwise (what is wrong, notice).  (Amendment 11.)"""
+    n, rc = (d.get('notice'), d.get('receipt')) if isinstance(d, dict) else (None, None)
+    msgs = notice_problems(n, courier_keys)
+    if msgs:
+        return f'the notice: {msgs[0]}', n
+    msgs = receipt_problems(rc, mailbox_keys, n)
+    if msgs:
+        return f'the receipt: {msgs[0]}', n
+    a, seq = attempts_by_aid.get(n['aid']), n['seq']
+    if n['root'] != root or a is None or n['outcome'] in ALARMS:
+        return 'the notice is of a run that is not in this record', n
+    if not chain_ok or not 1 <= seq <= len(audit) or audit[seq - 1]['hash'] != n['head']:
+        return 'the notice names a decision that is not in this record\'s chain', n
+    then = next((x for x in audit[seq - 1]['observation'].get('attempts', []) if x[0] == n['aid']), None)
+    if then is None:
+        return 'the run was not in the chain at the decision the notice names', n
+    ev = [e for e in a.get('evidence') or [] if isinstance(e.get('seq'), int) and e['seq'] <= seq]
+    res = a.get('result') if then[2] == 'EFFECT' and n['result_digest'] is not None else None   # a notice with no digest vouches for no result: UNVERIFIED
+    said = run_outcome(then[2], ev, res, gate_key, root, n['aid'], then[3])
+    if n['outcome'] != said or n['request_key'] != a.get('request_key') or n['result_digest'] != (sha(canonical(res)) if isinstance(res, dict) else None):
+        return f'the notice says {n["outcome"]} of {n["aid"]}; this record says {said} at decision {seq}', n
+    if n['reason_code'] != (res or {}).get('reason_code') or n['detail'] != notice_detail(res) or n['text'] != notice_text(n['outcome'], n['aid'], root, res, seq, n['courier']):
+        return f'what the notice gives a person to read is not what this record says of {n["aid"]}', n
+    return None, n
+
+
+def kept_deliveries(body: dict, keys: dict) -> list:
+    """The deliveries of a record body that check 10 would take, once each.  For the record's builder."""
+    by_aid = {a.get('aid'): a for a in body.get('attempts') or []}
+    out, seen = [], set()
+    for d in body.get('deliveries') or []:
+        why, n = delivery_problem(d, body['root'], body['audit'], by_aid, keys['gate'], keys.get('courier'), keys.get('mailbox'))
+        if why is None and notice_digest(n) not in seen:
+            seen.add(notice_digest(n)); out.append({'notice': n, 'receipt': d['receipt']})
+    return out
 
 
 def _hex(value, n: int) -> bool:
@@ -663,30 +733,9 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
             bad(10, 'the deliveries are not a list')
         else:
             for i, d in enumerate(deliveries, start=1):
-                n, rc = (d.get('notice'), d.get('receipt')) if isinstance(d, dict) else (None, None)
-                where = f'delivery {i}'
-                msgs = notice_problems(n, ckeys)
-                if msgs:
-                    bad(10, f'{where}: the notice: {msgs[0]}'); continue
-                msgs = receipt_problems(rc, mkeys, n)
-                if msgs:
-                    bad(10, f'{where}: the receipt: {msgs[0]}'); continue
-                a, seq = by_aid.get(n['aid']), n['seq']
-                if n['root'] != root or a is None or n['outcome'] in ALARMS:
-                    bad(10, f'{where}: the notice is of a run that is not in this record'); continue
-                if not chain_ok or seq > len(audit) or audit[seq - 1]['hash'] != n['head']:
-                    bad(10, f'{where}: the notice names a decision that is not in this record\'s chain'); continue
-                then = next((x for x in audit[seq - 1]['observation'].get('attempts', []) if x[0] == n['aid']), None)
-                if then is None:
-                    bad(10, f'{where}: the run was not in the chain at the decision the notice names'); continue
-                ev = [e for e in a.get('evidence') or [] if isinstance(e.get('seq'), int) and e['seq'] <= seq]
-                res = a.get('result') if then[2] == 'EFFECT' and n['result_digest'] is not None else None   # a notice with no digest vouches for no result: UNVERIFIED
-                said = run_outcome(then[2], ev, res, gkey, root, n['aid'], then[3])
-                if n['outcome'] != said or n['request_key'] != a.get('request_key') or n['result_digest'] != (sha(canonical(res)) if isinstance(res, dict) else None):
-                    bad(10, f'{where}: the notice says {n["outcome"]} of {n["aid"]}; this record says {said} at decision {seq}'); continue
-                if n['reason_code'] != (res or {}).get('reason_code') or n['detail'] != notice_detail(res) \
-                        or n['text'].split('\n')[0] != HEADLINES[n['outcome']] or f"Run {n['aid']} on budget {root}." not in n['text']:
-                    bad(10, f'{where}: what the notice gives a person to read is not what this record says of {n["aid"]}'); continue
+                why, n = delivery_problem(d, root, audit, by_aid, gkey, ckeys, mkeys, chain_ok)
+                if why is not None:
+                    bad(10, f'delivery {i}: {why}'); continue
                 delivered.setdefault(n['aid'], set()).add(n['outcome'])
 
     titles = {1: 'record signature', 2: 'baseline, controls and anchor', 3: 'audit chain', 4: 'witness receipts', 5: 'runs bound to baseline and design',

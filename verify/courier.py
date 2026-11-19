@@ -5,6 +5,7 @@
     courier.py run --config CONFIG [--every S]   one pass over every budget watched (or a pass every S seconds)
     courier.py status --config CONFIG            what has been sent, delivered and is waiting
     courier.py resume --config CONFIG --root R   read budget R again from its start, after a refusal has been looked into
+                                                 (notices already sent, for a run and an outcome, are not sent again)
 
 CONFIG is a JSON file the engineer writes:
 
@@ -67,6 +68,7 @@ import secrets
 import ssl
 import sys
 import tempfile
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -103,9 +105,27 @@ def _context(ca, cert, key) -> ssl.SSLContext:
     return ctx
 
 
+DEADLINE = 60.0                                                         # seconds for one whole request, however slowly a party answers
+
+
 def https(method: str, url: str, cfg: dict, body=None, timeout: float = 15.0):
-    """(status, answer) from a party, over HTTPS with the courier's client certificate; the answer is a JSON object.
-    Raises Unreachable."""
+    """(status, answer) from a party, over HTTPS with the courier's client certificate; the answer is a JSON object.  The
+    whole request has DEADLINE seconds.  Raises Unreachable."""
+    box = {}
+    def ask():
+        try:
+            box['answer'] = _https(method, url, cfg, body, timeout)
+        except BaseException as exc:
+            box['error'] = exc
+    worker = threading.Thread(target=ask, daemon=True); worker.start(); worker.join(DEADLINE)
+    if worker.is_alive():
+        raise Unreachable(f'{urllib.parse.urlsplit(url).netloc} did not answer within {int(DEADLINE)} seconds')
+    if 'error' in box:
+        raise box['error']
+    return box['answer']
+
+
+def _https(method: str, url: str, cfg: dict, body=None, timeout: float = 15.0):
     if urllib.parse.urlsplit(url).scheme != 'https':
         raise Unreachable('a party is asked over https only')
     req = urllib.request.Request(url, method=method, data=None if body is None else json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
@@ -159,7 +179,8 @@ def verify_rows(rows, after: int, prev: str, upto: int, head: str) -> list:
     """The decisions after `after` up to `upto`, each following on from `prev` and hashing to itself, the last to `head`."""
     out, n = [], after
     for row in rows:
-        if not isinstance(row, dict) or type(row.get('seq')) is not int or row['seq'] != n + 1 or not isinstance(row.get('observation'), dict):
+        if not isinstance(row, dict) or type(row.get('seq')) is not int or row['seq'] != n + 1 or not isinstance(row.get('observation'), dict) \
+                or not all(k in row for k in ('op', 'kind', 'code', 'prev_hash', 'hash')):
             raise Refused(f'the witness gave {row.get("seq") if isinstance(row, dict) else type(row).__name__!r} where decision {n + 1} was due, or a decision that is not readable')
         if row.get('prev_hash') != prev or C.chain_hash(prev, row) != row.get('hash'):
             raise Refused(f'decision {n + 1} does not follow on from the one before it, or does not hash to itself')
@@ -176,7 +197,7 @@ def chain(cfg, root, after: int, prev: str, cp):
     Only the last is kept: a page is checked and let go before the next is asked."""
     n, last = after, None
     while n < cp['seq']:
-        status, page = https('GET', f"{cfg['witness_url']}/chain?" + q(root=root, after=n, limit=int(cfg.get('page', PAGE))), cfg)
+        status, page = https('GET', f"{cfg['witness_url']}/chain?" + q(root=root, after=n, limit=max(1, min(PAGE, int(cfg.get('page', PAGE))))), cfg)
         if status != 200:
             raise Unreachable(f'the witness answered {status} to the chain')
         rows = page.get('rows')
@@ -193,9 +214,13 @@ def chain(cfg, root, after: int, prev: str, cp):
 def run_outcome(cfg, root, attempt, upto: int) -> tuple[str, dict | None]:
     """(outcome, result) of one run, from the witness's reports and stored result, believed only as far as they check."""
     aid, _req, phase, nonce = attempt[:4]
+    if phase not in ('EFFECT', 'CONSUMED'):                          # the chain alone says what these are
+        return C.run_outcome(phase, [], None, cfg['gate_keys'], root, aid, nonce), None
     status, ans = https('GET', f"{cfg['witness_url']}/run?" + q(root=root, aid=aid), cfg)
     if status != 200:
         raise Unreachable(f'the witness answered {status} for run {aid}')
+    if not isinstance(ans.get('evidence', []), list):
+        raise Refused(f'the witness\'s reports for run {aid} are not a list')
     evidence = [e for e in ans.get('evidence') or [] if isinstance(e, dict) and type(e.get('seq')) is int and e['seq'] <= upto]
     stored = ans.get('result')
     result = stored.get('value') if phase == 'EFFECT' and isinstance(stored, dict) and stored.get('outcome', 'value') == 'value' else None
@@ -207,19 +232,11 @@ def make_notice(cfg, key: CourierKey, root, attempt, outcome, result, seq, head,
     aid, req = (attempt[0], attempt[1]) if attempt else ('', None)
     r = result if isinstance(result, dict) else {}
     detail = C.notice_detail(result)
-    numbers = '; '.join(f"{c.get('id')} achieved {c.get('achieved')}, required {({'<=': 'at most', '>=': 'at least'}).get(c.get('comparison'), c.get('comparison'))} {c.get('limit')} {c.get('units') or ''}".strip()
-                        for c in r.get('criteria') or [] if isinstance(c, dict) and c.get('achieved') is not None)
-    why = (f"Reason: {r.get('reason_code')}.  " + (f'{numbers}.  ' if numbers else '') + (detail or '') if r.get('reason_code') else
-           {'INTERRUPTED': 'The gate signed that it does not know the outcome: the run is counted and will not be run again.  If the gate learns the verdict later, another notice follows.',
-            'INDETERMINATE': 'The control plane re-registered the budget: the run is counted, frozen and will not be run again.',
-            'NO_OUTCOME': f'Its intent was accepted, or it was admitted and crossed, and the courier has seen it with no outcome for {int(waited or 0)} seconds.',
-            'UNVERIFIED': f'The gate signed that the check ran, but for {int(waited or 0)} seconds the courier has found no stored result that hashes to the digest the gate signed.',
-            'REFUNDED': 'The witness recorded the run as refunded.'}.get(outcome, why_alarm or ''))
-    subject = f"Run {aid} on budget {root}." if aid else f"Budget {root}."
-    text = (f"{C.HEADLINES[outcome]}\n{subject}\n{why}\n"
-            + (f"This notice was made by the courier {cfg['name']} from the witness's chain at decision {seq} and the gate's signed reports.  "
-               'The verification service did not write it.  It does not say the check is correct.' if aid else
-               f"This notice was made by the courier {cfg['name']}.  Until this is looked into, no notice of this budget's runs will come from the courier."))
+    if attempt:
+        text = C.notice_text(outcome, aid, root, result, seq, cfg['name'])
+    else:
+        text = (f"{C.HEADLINES[outcome]}\nBudget {root}.\n{why_alarm or ''}\n"
+                f"This notice was made by the courier {cfg['name']}.  Until this is looked into, no notice of this budget's runs will come from the courier.")
     body = {'statement': 'NOTICE', 'root': root, 'aid': aid, 'request_key': req, 'outcome': outcome, 'reason_code': r.get('reason_code'),
             'detail': detail, 'result_digest': C.sha(C.canonical(result)) if isinstance(result, dict) else None,
             'seq': seq, 'head': head, 'time': now(), 'courier': cfg['name'], 'text': text}
@@ -257,8 +274,11 @@ def _write_whole(path: pathlib.Path, data: str) -> None:
 
 
 def _append(path: pathlib.Path, obj) -> None:
+    new = not path.exists()
     with open(path, 'a', encoding='utf-8') as f:
         f.write(json.dumps(obj, sort_keys=True) + '\n'); f.flush(); os.fsync(f.fileno())
+    if new:
+        _sync_dir(path.parent)
 
 
 def delivered_digests(state_dir: pathlib.Path) -> set:
@@ -308,27 +328,37 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save) -
     if last is not None:
         st['attempts'] = [list(x[:4]) for x in last['observation'].get('attempts', []) if isinstance(x, list) and len(x) >= 4]
     st['seq'], st['head'] = cp['seq'], cp['head']
-    sent, final, seen = st.setdefault('sent', []), st.setdefault('final', []), st.setdefault('first_seen', {})
+    sent, final, before = st.setdefault('sent', []), st.setdefault('final', []), st.get('first_seen', {})
+    seen, failed = {}, []                                            # a wait counts only while the run is seen in that state, pass after pass
     for attempt in st.get('attempts', []):
         aid, phase = attempt[0], attempt[2]
         if aid in final or phase not in READ:
             continue
-        outcome, result = run_outcome(cfg, root, attempt, cp['seq'])
-        if phase in FINAL and outcome != 'UNVERIFIED' and aid not in final:
-            final.append(aid)
+        try:                                                        # one run the witness will not answer for does not hide the others
+            outcome, result = run_outcome(cfg, root, attempt, cp['seq'])
+        except Unreachable as exc:
+            failed.append(f'{aid}: {exc}'); continue
+        done = phase in FINAL and outcome != 'UNVERIFIED'
         if outcome in ('PASS', 'PENDING'):
+            if done:
+                final.append(aid)
             continue
         waited = None
         if outcome in WAIT:                                          # what may yet change: no outcome yet, or a result not yet stored
-            waited = clock - seen.setdefault(f'{aid}|{outcome}', clock)
+            mark = f'{aid}|{outcome}|{phase}'
+            seen[mark] = before.get(mark, clock); waited = clock - seen[mark]
             if waited < float(cfg.get('stall_after', 900)):
                 continue
             result = None                                          # the courier vouches for no result it could not match
-        if f'{aid}|{outcome}' in sent:
-            continue
-        st.setdefault('pending', []).append(make_notice(cfg, key, root, attempt, outcome, result, cp['seq'], cp['head'], waited))
-        sent.append(f'{aid}|{outcome}'); summary['made'].append({'root': root, 'aid': aid, 'outcome': outcome})
+        if f'{aid}|{outcome}' not in sent:
+            st.setdefault('pending', []).append(make_notice(cfg, key, root, attempt, outcome, result, cp['seq'], cp['head'], waited))
+            sent.append(f'{aid}|{outcome}'); summary['made'].append({'root': root, 'aid': aid, 'outcome': outcome})
+        if done:
+            final.append(aid)                                      # final only once its notice is made
         save()                                                     # a notice made is kept before anything else
+    st['first_seen'] = seen
+    if failed:
+        raise Unreachable(f'{len(failed)} runs could not be read: ' + '; '.join(failed[:3]))
 
 
 def watch_pass(cfg, key, watch, st: dict, clock: float, summary: dict, save) -> None:
@@ -344,13 +374,25 @@ def watch_pass(cfg, key, watch, st: dict, clock: float, summary: dict, save) -> 
             _append(pathlib.Path(cfg['state_dir']) / 'refused.jsonl', {'time': now(), 'root': root, 'why': str(exc.args[0]), 'evidence': exc.args[1] if len(exc.args) > 1 else None})
             summary['refused'].append({'root': root, 'why': str(exc.args[0])})
             alarm(cfg, key, watch, st, 'COURIER_STOPPED', f'The courier refused what the witness said: {exc.args[0]}', summary)
-        except Unreachable as exc:
+        except Exception as exc:
+            if not isinstance(exc, Unreachable):                    # an answer the courier could not even read is not believed
+                st['stopped'] = now()
+                why = f'an answer of the witness could not be read ({type(exc).__name__}: {exc})'
+                _append(pathlib.Path(cfg['state_dir']) / 'refused.jsonl', {'time': now(), 'root': root, 'why': why, 'evidence': None})
+                summary['refused'].append({'root': root, 'why': why})
+                alarm(cfg, key, watch, st, 'COURIER_STOPPED', f'The courier refused what the witness said: {why}', summary)
+                save(); return _deliver_pending(cfg, watch, st, summary, save)
             since = st.setdefault('blocked_since', clock)
             summary['unreachable'].append({'root': root, 'why': str(exc)})
             if clock - since >= float(cfg.get('stall_after', 900)) and not st.get('blocked_sent'):
                 st['blocked_sent'] = True
                 alarm(cfg, key, watch, st, 'COURIER_BLOCKED', f'For {int(clock - since)} seconds the courier has not been able to read the witness: {exc}', summary)
         save()
+    _deliver_pending(cfg, watch, st, summary, save)
+
+
+def _deliver_pending(cfg, watch, st, summary, save) -> None:
+    root = watch['root']
     done = delivered_digests(pathlib.Path(cfg['state_dir']))
     waiting = []
     for notice in st.get('pending', []):
@@ -393,7 +435,7 @@ def resume(cfg, root) -> dict:
         state = load_state(sd); st = state['roots'].get(root)
         if st is None:
             raise ValueError(f'the courier holds nothing for {root}')
-        for k in ('stopped', 'seq', 'head', 'attempts', 'blocked_since', 'blocked_sent'):
+        for k in ('stopped', 'seq', 'head', 'attempts', 'blocked_since', 'blocked_sent', 'final', 'first_seen'):
             st.pop(k, None)
         _write_whole(sd / 'state.json', json.dumps(state, indent=1, sort_keys=True) + '\n')
     return {'resumed': root}

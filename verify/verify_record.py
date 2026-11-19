@@ -174,5 +174,6 @@ def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions
             seen.add(check_record.notice_digest(n)); kept.append({'notice': n, 'receipt': r})
         body['deliveries'] = kept
         body['keys']['courier'], body['keys']['mailbox'] = ckeys, mkeys
+        body['deliveries'] = check_record.kept_deliveries(body, dict(body['keys'], gate=keys['gate']))   # and only those its checker would take
     body = json.loads(json.dumps(body))                                # plain JSON types, exactly what a reader will parse
     return dict(body, signature={'signer': signer.public_hex, 'signature': signer.sign(canonical(body).encode())})

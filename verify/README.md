@@ -61,16 +61,18 @@ The service writes its own notice of a failing run into an inbox it controls, an
 or change it. A courier (`courier.py`) is a second path. It has its own key and certificate, and reads only the witness:
 the decisions since it last looked, checked against a checkpoint it asked for with its own nonce, and each run's gate
 reports and stored result, believed only if the gate signed them. For each run that failed, did not decide, was
-interrupted, or has had no outcome for 15 minutes, it signs a notice and delivers it to the engineer's mailbox
-(`mailbox_service.py`), which keeps it and signs a receipt. A record can carry the notices and receipts:
+interrupted, was made indeterminate by the control plane, or has had no outcome for 15 minutes, it signs a notice and
+delivers it to the engineer's mailbox (`mailbox_service.py`), which keeps it and signs a receipt. If the courier stops
+believing the witness, or cannot reach it, it tells the mailbox that too. A record can carry the notices and receipts:
 
     python3 courier.py run --config courier.json
     python3 verify_ctl.py record HOME HASH ... --deliveries STATE_DIR/deliveries.jsonl --courier-key HEX --mailbox-key HEX
-    python3 check_record.py record.json --keys keys.json --require-delivery
+    python3 check_record.py record.json --keys keys.json --require-delivery     (keys.json with "courier" and "mailbox")
 
 The checker's tenth check verifies each notice and receipt against the record, and it prints which runs that call for a
 notice have one delivered and which have none. A receipt says the mailbox holds the notice, not that the engineer read it.
-The courier sees what the witness records; a witness that tells it one consistent false chain is believed.
+The courier sees what the witness records; a witness that tells it one consistent false chain is believed. A courier that
+is not running tells no one: nothing yet notices its silence.
 
 `DECLARED_VERIFY.md` states what the tests were expected to show before the official run; `REPORT_VERIFY.md` gives
 the results of the tests and of the trial. `experiment/PROTOCOL.md` is the trial's protocol, frozen before it ran.
