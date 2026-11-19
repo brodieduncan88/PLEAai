@@ -4,10 +4,10 @@
     verify_ctl.py keygen KEYFILE
     verify_ctl.py baseline HOME --from DIR --card DRAFT.json --key KEYFILE [--runs 1000] [--alongside-reason "..."]
     verify_ctl.py revise   HOME --from DIR --card DRAFT.json --key KEYFILE --supersedes HASH --reason "..."
-    verify_ctl.py record   HOME HASH --key KEYFILE --witness-key HEX --gate-key HEX --out RECORD.json [--witness-url URL --tls-ca CA --tls-cert CERT --tls-key KEY]
     verify_ctl.py status   HOME HASH
     verify_ctl.py acknowledge HOME HASH AID --disposition "..." --key KEYFILE
     verify_ctl.py record   HOME HASH --key KEYFILE --witness-key HEX --gate-key HEX --out RECORD.json [--journal FILE ...]
+                           [--witness-url URL --tls-ca CA --tls-cert CERT --tls-key KEY]   put the witness's checkpoint in the record (Amendment 10)
 
 baseline takes a draft card the engineer wrote (requirement, limits, load case, design space, the check's file name,
 author, reviewer and stated limits, the data files, the control cases) and a directory holding the check and its data.
@@ -239,8 +239,17 @@ def record(home, baseline_hash, key: Key, witness_key, gate_key, journals=(), lo
     """The verification record.  checkpointer (witness_checkpointer) puts the witness's checkpoint into it (Amendment 10); without
     one the record has none, as before, and its checker says so."""
     env = load_envelope(pathlib.Path(home) / 'baselines' / baseline_hash / 'baseline.json', key.public_hex)
-    return build(Store(local_dsn), env, root_for(env['card']), {'witness': witness_key, 'gate': gate_key}, key, submissions(home, journals), acknowledgements(home, baseline_hash),
-                 checkpointer=checkpointer)
+    rec = build(Store(local_dsn), env, root_for(env['card']), {'witness': witness_key, 'gate': gate_key}, key, submissions(home, journals), acknowledgements(home, baseline_hash),
+                checkpointer=checkpointer)
+    if checkpointer is not None:                   # a record whose checkpoint its own checker would refuse is not handed over
+        import check_record
+        cp = rec.get('checkpoint')
+        bad = check_record.checkpoint_problems(cp, witness_key, rec['root'])
+        if not bad and (cp.get('at') != rec['as_of']['seq'] or cp.get('head_at') != rec['as_of']['head']):
+            bad = ['it does not name the head after the record\'s last decision']
+        if bad:
+            raise ValueError('the witness\'s answer cannot go into the record: ' + '; '.join(bad))
+    return rec
 
 
 def status(home, baseline_hash, engineer_key: str, local_dsn: str = LOCAL_DSN) -> str:
@@ -296,10 +305,6 @@ def main():
             pathlib.Path(a.out).write_text(json.dumps(rec, indent=1) + '\n'); print(json.dumps({'record': a.out, 'attempts': len(rec['attempts']), 'as_of': rec['as_of']}))
     except (BaselineInvalid, ValueError, OSError) as exc:
         print(f'refused: {exc}', file=sys.stderr); sys.exit(1)
-    except Exception as exc:
-        if type(exc).__name__ != 'CheckpointRefused':
-            raise
-        print(f'refused: no record was written: {exc}', file=sys.stderr); sys.exit(1)
 
 
 if __name__ == '__main__':

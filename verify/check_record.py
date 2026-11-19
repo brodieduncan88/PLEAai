@@ -31,8 +31,11 @@ With --checkpoint FILE it also says whether the record is current (Amendment 10)
 signed, obtained separately from the record: from the witness, or from someone who keeps the witness's checkpoints.  The
 record is CURRENT if the checkpoint's chain is exactly the record's; SUPERSEDED if the chain has gone on since, and the
 checkpoint says the record's head is where that chain was; FORKED if the two disagree about the same decision.  --max-age
-SECONDS refuses a checkpoint older than that by this computer's clock, and --nonce N one that does not sign back N.  The
-exit status is 0 only if the record verifies and, where a checkpoint was given, it is current.
+SECONDS is how old the checkpoint may be by this computer's clock (an hour unless given); one dated in the future is not
+used.  --nonce N refuses one that does not sign back N.  CURRENT therefore means: current when the checkpoint was made, at
+most that long ago.  An old checkpoint replayed inside that time still reads CURRENT; to rule that out, ask the witness
+with a nonce of your own choosing and give it here.  The keys must be given separately.  The exit status is 0 only if the
+record verifies and, where a checkpoint was given, it is CURRENT.
 
 It then states the status.  NOT VERIFIED is the default: the status is "declared check met" only if a listed run's
 verdict is PASS, and only for that exact design.
@@ -115,17 +118,18 @@ def checkpoint_problems(cp, wkeys, root) -> list:
     """What is wrong with a checkpoint as a statement by a pinned witness about this budget.  (Amendment 10.)"""
     if not isinstance(cp, dict):
         return ['it is not a checkpoint']
-    out = []
-    if cp.get('statement') != 'CHECKPOINT':
-        out.append('it is not a checkpoint')
-    if cp.get('signer') not in wkeys or not signed_by(cp.get('signer'), cp.get('signature', ''), canonical({k: cp.get(k) for k in CHECKPOINT_FIELDS}).encode()):
+    wkeys, out = _keys(wkeys), []
+    if cp.get('statement') != 'CHECKPOINT' or set(cp) != set(CHECKPOINT_FIELDS) | {'signer', 'signature'}:
+        out.append('it is not a checkpoint, or has fields a checkpoint does not have')
+    signer = cp.get('signer')
+    if not isinstance(signer, str) or signer not in wkeys or not signed_by(signer, cp.get('signature', ''), canonical({k: cp.get(k) for k in CHECKPOINT_FIELDS}).encode()):
         out.append('it is not signed by a witness key given')
     if cp.get('root') != root:
         out.append('it is for another budget')
     seq, at = cp.get('seq'), cp.get('at')
     if type(seq) is not int or seq < 0 or not isinstance(cp.get('head'), str) or checkpoint_time(cp) is None:
         out.append('its sequence number, head or time is not readable')
-    elif at is not None and (type(at) is not int or not 0 <= at <= seq or not isinstance(cp.get('head_at'), str) or (at == seq and cp.get('head_at') != cp.get('head'))):
+    elif (at is None) != (cp.get('head_at') is None) or (at is not None and (type(at) is not int or not 0 <= at <= seq or not isinstance(cp.get('head_at'), str) or (at == seq and cp.get('head_at') != cp.get('head')))):
         out.append('what it says of an earlier decision is not readable, or contradicts its own head')
     return out
 
@@ -134,41 +138,78 @@ def checkpoint_time(cp):
     """The checkpoint's time as seconds since 1970, or None."""
     try:
         return calendar.timegm(time.strptime(cp.get('time'), '%Y-%m-%dT%H:%M:%SZ'))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, AttributeError):
         return None
+
+
+def record_head_at(record: dict, n: int):
+    """The head of the record's own chain after decision n, or None if the record does not hold it."""
+    try:
+        if n == 0:
+            return record['provisioning']['hash']
+        row = record['audit'][n - 1]
+        return row['hash'] if row['seq'] == n else None
+    except (KeyError, IndexError, TypeError):
+        return None
+
+
+CLOCK_SKEW = 300.0        # seconds a checkpoint's time may be ahead of this computer's clock
 
 
 def currency(record: dict, cp, witness_keys, now=None, max_age=None, nonce=None) -> tuple[str, str]:
     """(state, sentence): whether a record is current, by a checkpoint obtained separately from it.  (Amendment 10.)
-    CURRENT, SUPERSEDED, SUPERSEDED_UNPROVEN, FORKED, OLDER, STALE or INVALID.  Only CURRENT says the record is the latest, and
-    only as of the checkpoint's time, by the witness's clock."""
+
+    CURRENT              the checkpoint's chain ends where the record does, and the checkpoint is no older than max_age;
+    CURRENT_AT           the same, but no max_age was given: the record was current when the checkpoint was made, and how
+                         long ago that was is not judged.  An old checkpoint replayed with an old record reads like this;
+    SUPERSEDED           the chain has gone on, and the checkpoint says the record's head is where the chain was;
+    SUPERSEDED_UNPROVEN  the chain has gone on, and the checkpoint does not say what its head was at the record's point;
+    FORKED               the checkpoint and the record give different heads for the same decision;
+    OLDER                the checkpoint is from before the record and agrees with it as far as it goes: it says nothing more;
+    STALE                it would be current, but the checkpoint is older than max_age;
+    INVALID              the checkpoint cannot be used.
+
+    Only CURRENT says the record is the latest, and only as of the checkpoint's time by the witness's clock.  The record is
+    taken as given: verify it first."""
     try:
         root, seq, head = record['root'], record['as_of']['seq'], record['as_of']['head']
     except (KeyError, TypeError):
         return 'INVALID', 'the record has no as-of sequence number and head to compare'
-    bad = checkpoint_problems(cp, _keys(witness_keys), root)
+    if type(seq) is not int or seq < 0 or not isinstance(head, str):
+        return 'INVALID', 'the record has no as-of sequence number and head to compare'
+    bad = checkpoint_problems(cp, witness_keys, root)
     if bad:
         return 'INVALID', 'the checkpoint cannot be used: ' + '; '.join(bad)
     if nonce is not None and cp.get('nonce') != nonce:
         return 'INVALID', 'the checkpoint does not sign back the nonce given, so it may have been made before it was asked for'
+    if max_age is not None and not (isinstance(max_age, (int, float)) and 0 <= max_age < float('inf')):
+        return 'INVALID', 'the age allowed is not a number of seconds'
+    now = time.time() if now is None else now
+    age = now - checkpoint_time(cp)
+    if age < -CLOCK_SKEW:
+        return 'INVALID', f"the checkpoint is dated {cp['time']}, which is in the future by this computer's clock: one of the two clocks is wrong, and its age cannot be judged"
     when = f"at {cp['time']} by the witness's clock"
     closed = '' if cp.get('business') == 'OPEN' and cp.get('witness') == 'ACTIVE' else \
         f"  The budget was then {cp.get('business')}" + (' and on hold' if cp.get('witness') != 'ACTIVE' else '') + ': it was superseded or closed, or is held, and takes no new runs as it stands.'
+    forked = lambda n: ('FORKED', f"the witness's chain and the record's disagree at sequence number {n}: this record is not of the chain the witness holds")
+    for n, h in ((cp['seq'], cp['head']), (cp.get('at'), cp.get('head_at'))):          # every head the checkpoint states, against the record's own chain
+        if n is not None and n <= seq:
+            mine = head if n == seq else record_head_at(record, n)
+            if mine is not None and mine != h:
+                return forked(n)
     if cp['seq'] < seq:
         return 'OLDER', f"the checkpoint is older than the record (sequence number {cp['seq']}, the record's is {seq}): it says nothing of whether the record is current"
     if cp['seq'] == seq:
-        if cp['head'] != head:
-            return 'FORKED', f"the witness's chain and the record's disagree at sequence number {seq}: this record is not of the chain the witness holds"
-        if max_age is not None and (time.time() if now is None else now) - checkpoint_time(cp) > max_age:
+        if max_age is None:
+            return 'CURRENT_AT', f"the record was current {when}.  How long ago that was is not judged here: give the age allowed (--max-age) to have it judged." + closed
+        if age > max_age:
             return 'STALE', f"the record was current {when}, which is more than {int(max_age)} seconds ago: get a newer checkpoint" + closed
-        return 'CURRENT', f"the record was current {when}: the witness's chain ended at this record's sequence number {seq}, with its head." + closed
+        return 'CURRENT', f"the record was current {when}, {max(0, int(age))} seconds ago by this computer's clock: the witness's chain ended at this record's sequence number {seq}, with its head." + closed
     later = cp['seq'] - seq
+    out_of_date = f"the record is out of date: {when} the witness's chain had {later} later decision{'s' if later != 1 else ''} (sequence number {cp['seq']}).  "
     if cp.get('at') == seq:
-        if cp.get('head_at') != head:
-            return 'FORKED', f"the witness's chain and the record's disagree at sequence number {seq}: this record is not of the chain the witness holds"
-        return 'SUPERSEDED', f"the record is out of date: {when} the witness's chain had {later} later decision{'s' if later != 1 else ''} (sequence number {cp['seq']}).  The record is a true beginning of that chain.  Ask for the current record." + closed
-    return 'SUPERSEDED_UNPROVEN', (f"the record is out of date: {when} the witness's chain had {later} later decision{'s' if later != 1 else ''} (sequence number {cp['seq']}).  "
-                                   'This checkpoint does not say whether the record is a beginning of that chain.  Ask for the current record.' + closed)
+        return 'SUPERSEDED', out_of_date + 'The record is a true beginning of that chain.  Ask for the current record.' + closed
+    return 'SUPERSEDED_UNPROVEN', out_of_date + 'This checkpoint does not say whether the record is a beginning of that chain.  Ask for the current record.' + closed
 
 
 def request_key(arguments) -> str:
@@ -500,7 +541,7 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
     if cp is not None:
         for msg in checkpoint_problems(cp, wkeys, root):
             bad(9, msg)
-        if not problems[9] and (cp.get('at') != as_of.get('seq') or cp.get('head_at') != as_of.get('head')):
+        if not problems[9] and (type(cp.get('at')) is not int or cp.get('at') != as_of.get('seq') or cp.get('head_at') != as_of.get('head')):
             bad(9, 'it does not say that the chain\'s head after this record\'s last decision is this record\'s head')
 
     titles = {1: 'record signature', 2: 'baseline, controls and anchor', 3: 'audit chain', 4: 'witness receipts', 5: 'runs bound to baseline and design',
@@ -570,7 +611,8 @@ def render(ok: bool, checks: list, s: dict, current=None) -> str:
     if cp:                                         # Amendment 10: the witness's own word on the chain when the record was made
         later = cp['seq'] - cp['at']
         L.append(f"The witness's checkpoint in this record, made at {cp['time']} by its clock: the chain then had {cp['seq']} decisions"
-                 + (', and ended with this record\'s last.' if later == 0 else f", {later} of them after this record's last: it was out of date when it was made."))
+                 + (', and ended with this record\'s last.' if later == 0 else f", {later} of them after this record's last: it was out of date when it was made.")
+                 + ('' if cp.get('business') == 'OPEN' and cp.get('witness') == 'ACTIVE' else f"  The budget was then {cp.get('business')}" + (' and on hold' if cp.get('witness') != 'ACTIVE' else '') + ', and took no new runs.'))
     if current is not None:
         L.append(f'CURRENCY: {current[0]}.  ' + current[1][:1].upper() + current[1][1:])
     else:
@@ -584,7 +626,8 @@ def main():
     ap.add_argument('--witness-key', action='append'); ap.add_argument('--gate-key'); ap.add_argument('--engineer-key')
     ap.add_argument('--design', help='a released design file to compare with the record'); ap.add_argument('--json', action='store_true')
     ap.add_argument('--checkpoint', help='a checkpoint signed by the witness, obtained separately from the record (Amendment 10)')
-    ap.add_argument('--max-age', type=float, help='refuse a checkpoint older than this many seconds'); ap.add_argument('--nonce', help='the nonce the checkpoint must sign back')
+    ap.add_argument('--max-age', type=float, default=None, help='with --checkpoint: the checkpoint may be this many seconds old at most (default 3600)')
+    ap.add_argument('--nonce', help='with --checkpoint: the nonce the checkpoint must sign back')
     a = ap.parse_args()
     with open(a.record) as f:
         record = json.load(f)
@@ -602,16 +645,26 @@ def main():
             design = json.load(f)
     ok, checks, s = verify(record, keys, design)
     current = None
-    if a.checkpoint and ok:
-        with open(a.checkpoint) as f:
-            cp = json.load(f)
-        current = currency(record, cp, (keys or record['keys'])['witness'], None, a.max_age, a.nonce)
+    if a.checkpoint is None and (a.max_age is not None or a.nonce is not None):
+        ap.error('--max-age and --nonce are about a checkpoint: give --checkpoint')
+    if a.checkpoint is not None:
+        if keys is None:
+            ap.error('--checkpoint needs the keys given separately from the record (--keys, or the three --*-key): a record cannot vouch for its own witness')
+        if a.max_age is not None and not 0 <= a.max_age < float('inf'):
+            ap.error('--max-age is a number of seconds, nought or more')
+        try:
+            with open(a.checkpoint) as f:
+                cp = json.load(f)
+        except (OSError, ValueError) as exc:
+            ap.error(f'the checkpoint file cannot be read ({type(exc).__name__})')
+        if ok:
+            current = currency(record, cp, keys['witness'], None, 3600.0 if a.max_age is None else a.max_age, a.nonce)
     if a.json:
         print(json.dumps({'verified': ok, 'checks': [{'check': n, 'title': t, 'ok': o, 'detail': d} for n, t, o, d in checks], 'summary': s,
                           'currency': None if current is None else {'state': current[0], 'detail': current[1]}}, indent=1))
     else:
         print(render(ok, checks, s, current))
-    sys.exit(0 if ok and (current is None or current[0] == 'CURRENT') else 1)
+    sys.exit(0 if ok and (a.checkpoint is None or (current is not None and current[0] == 'CURRENT')) else 1)
 
 
 if __name__ == '__main__':

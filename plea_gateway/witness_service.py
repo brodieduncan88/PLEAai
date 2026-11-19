@@ -17,6 +17,7 @@ GET  /checkpoint?root=R[&nonce=N][&at=K]      (verification Amendment 10)
                number of decisions recorded and head the hash of the last (of the provisioning record when seq is 0).
                nonce (1 to 64 of A-Z a-z 0-9 _ -) is signed back.  at=K asks also for head_at, the head after decision K.
                It reads; it changes nothing and adds no decision.  400 malformed  404 unknown root
+               --tls-allow-read NAME admits a client certificate to this path alone: it cannot POST /accept.
 
 TLS (v0.5): with --tls-cert, --tls-key and --tls-ca the service speaks HTTPS and requires a client certificate issued
 by --tls-ca; --tls-allow NAME (repeatable) admits only those client names.  Without them it speaks plain HTTP on
@@ -45,9 +46,10 @@ from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args,
 from plea_gateway.witness import EVIDENCE_OPS, binding_for, derive_op    # noqa: E402
 
 
-def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, allow=()):
+def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, allow=(), read_allow=()):
     class Handler(TLSHandlerMixin, BaseHTTPRequestHandler):
         tls_allow = tuple(allow)                                      # v0.5: client names admitted over TLS
+        tls_read = tuple(read_allow)                                  # verification Amendment 10: names admitted to GET /checkpoint only
 
         def log_message(self, *args):                                 # quiet
             pass
@@ -58,16 +60,17 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
             self.send_header('Content-Length', str(len(body))); self.end_headers(); self.wfile.write(body)
 
         def do_GET(self):
-            if not self.peer_allowed():
+            url = urllib.parse.urlsplit(self.path)
+            reading = url.path == '/checkpoint' and self.peer_name in self.tls_read      # a reading name is admitted to this one path, and to nothing that writes
+            if not (self.peer_allowed() or reading):
                 return self._send(403, {'error': f'client {self.peer_name!r} is not allowed'})
             if self.path == '/pubkey':
                 return self._send(200, {'public_key': signer.public_hex, 'gate_keys': list(gate_keys),
                                         'tls': isinstance(self.connection, ssl.SSLSocket), 'peer': self.peer_name})
-            url = urllib.parse.urlsplit(self.path)
             if url.path == '/checkpoint':                             # verification Amendment 10: a signed reading, no decision
                 q = urllib.parse.parse_qs(url.query, keep_blank_values=True)
                 root, nonce, at = q.get('root', [None])[-1], q.get('nonce', [None])[-1], q.get('at', [None])[-1]
-                if not root or len(root) > 512 or (nonce is not None and not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', nonce)) \
+                if not root or len(root) > 512 or re.search(r'[\x00-\x1f\x7f]', root) or (nonce is not None and not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', nonce)) \
                         or (at is not None and not re.fullmatch(r'[0-9]{1,12}', at)):
                     return self._send(400, {'error': 'malformed request'})
                 try:
@@ -77,8 +80,7 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
                         at = int(at)
                         if at > seq:
                             return self._send(400, {'error': 'at is beyond the chain'})
-                        head_at = head if at == seq else (store.provisioning(root) or {}).get('hash') if at == 0 else \
-                            next((r['hash'] for r in store.audit(root) if r['seq'] == at), None)
+                        head_at = head if at == seq else (store.provisioning(root) or {}).get('hash') if at == 0 else store.decision_hash(root, at)   # one row
                         if head_at is None:
                             return self._send(400, {'error': 'no decision at that number'})
                 except UnknownRoot:
@@ -134,9 +136,10 @@ def main():
     ap.add_argument('--key', default=os.environ.get('PLEA_WITNESS_KEY')); ap.add_argument('--chaos', action='store_true')
     ap.add_argument('--gate-key', action='append', default=[], help='a gate public key to pin (hex); repeatable')
     ap.add_argument('--bind', default='127.0.0.1'); add_server_args(ap)
+    ap.add_argument('--tls-allow-read', action='append', default=[], help='a client name admitted to GET /checkpoint only (verification Amendment 10); repeatable')
     a = ap.parse_args()
     signer = Signer(a.key); tls = server_from_args(a)
-    server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(Store(a.dsn), signer, tuple(a.gate_key), a.chaos, tuple(a.tls_allow))), tls)
+    server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(Store(a.dsn), signer, tuple(a.gate_key), a.chaos, tuple(a.tls_allow), tuple(a.tls_allow_read))), tls)
     print(json.dumps({'listening': a.port, 'public_key': signer.public_hex, 'gate_keys': a.gate_key, 'chaos': a.chaos,
                       'tls': tls is not None, 'tls_allow': a.tls_allow}), flush=True)
     server.serve_forever()
