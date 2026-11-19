@@ -67,6 +67,7 @@ from __future__ import annotations
 import ctypes
 import ctypes.util
 import glob
+import json
 import os
 import platform
 import pwd
@@ -167,16 +168,20 @@ class Cgroups:
         """Kill every process in the run's groups, until none is left; then remove the groups.  The group is frozen (as far as
         the kernel freezes it within a second) while its processes are named and killed, so that none can fork or exit and
         no number read is another process's by the time it is used."""
+        _trace('kill_all.begin')
         for _ in range(500):
             if self.freezer is not None:
                 _write(self.freezer / 'freezer.state', 'FROZEN')
+                waited, state = 0, '?'
                 for _ in range(1000):                                   # freezing is not immediate: wait until it is done
                     try:
-                        if (self.freezer / 'freezer.state').read_text().strip() == 'FROZEN':
+                        state = (self.freezer / 'freezer.state').read_text().strip()
+                        if state == 'FROZEN':
                             break
                     except OSError:
-                        break
-                    time.sleep(0.001)
+                        state = 'unreadable'; break
+                    time.sleep(0.001); waited += 1
+                _trace('kill_all.freeze', polls=waited, state=state, freezer=str(self.freezer))
             pids = set()
             for d in self.dirs:
                 try:
@@ -193,6 +198,7 @@ class Cgroups:
             if not pids:
                 break
             time.sleep(0.01)
+        _trace('kill_all.emptied')
         for d in self.dirs:
             _write(d / 'memory.force_empty', '0') if (d / 'memory.force_empty').exists() else None   # what the kernel keeps charged to the run is freed, not handed to the service's group
             for _ in range(200):
@@ -203,6 +209,18 @@ class Cgroups:
                 except OSError:
                     time.sleep(0.01)
         self.dirs = []
+
+
+TRACE = os.environ.get('VERIFY_SANDBOX_TRACE')                           # diagnostic branch only: a file to append timings to; unset, nothing is written
+
+
+def _trace(event: str, **more) -> None:
+    if TRACE:
+        try:
+            with open(TRACE, 'a') as f:
+                f.write(json.dumps(dict(t=round(time.time(), 4), pid=os.getpid(), thread=threading.get_ident() % 100000, event=event, **more)) + '\n')
+        except OSError:
+            pass
 
 
 def _write(path, text: str) -> None:
@@ -268,10 +286,13 @@ def _free_ids() -> int:
 # ---------------------------------------------------------------------------------------------------- the service's side
 def run(files: dict, script: str, stdin: bytes, timeout: float = 30.0, limits: dict | None = None, _no_unshare: bool = False) -> Outcome:
     """Run `script` (one of `files`, name -> bytes) in a new sandbox, with `stdin`, and throw the sandbox away."""
+    _trace('run.begin', cgroup=open('/proc/self/cgroup').read().replace('\n', ' ')[:300])
     if not AT_ONCE.acquire(timeout=timeout):
         return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'too many checks are running at once')
     try:
-        return _run(files, script, stdin, timeout, dict(LIMITS, **(limits or {})), _no_unshare)
+        o = _run(files, script, stdin, timeout, dict(LIMITS, **(limits or {})), _no_unshare)
+        _trace('run.end', state=o.state)
+        return o
     finally:
         AT_ONCE.release()
 
@@ -313,10 +334,12 @@ def _run(files: dict, script: str, stdin: bytes, timeout: float, limits: dict, _
             return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', f'the check\'s files could not be put in the sandbox: {exc}'[:200])
         for d in (base, work, jail):
             os.chown(d, uid, uid)                                       # the run's root reads them; nobody else can
+        _trace('run.ids')
         try:
             groups = Cgroups(f'verify-sandbox-{uid}-{int(time.time())}', limits['memory_bytes'], limits['processes'])   # its name says when it was made
         except OSError as exc:
             return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', f'the sandbox\'s control groups could not be made: {exc}'[:200])
+        _trace('run.groups')
         ready_r, ready_w = os.pipe(); out_r, out_w = os.pipe(); in_r, in_w = os.pipe()
         cmd = [python_for_checks(), '-I', '-S', os.path.abspath(__file__), '--inside', str(jail), str(work), str(ready_w), str(out_w), str(in_r), _ns_inodes(),
                ','.join(str(limits[k]) for k in ('cpu_seconds', 'memory_bytes', 'processes', 'file_bytes', 'open_files', 'tmp_bytes', 'tmp_files')), str(timeout + GRACE), str(uid)] \
@@ -341,6 +364,7 @@ def _run(files: dict, script: str, stdin: bytes, timeout: float, limits: dict, _
             pass                                                        # the launcher will find its maps missing, and refuse
         finally:
             os.close(out_r); os.close(in_w)
+        _trace('run.go')
         return _supervise(proc, ready_r, stdin, timeout, groups)
     finally:
         if groups is not None:
@@ -398,7 +422,9 @@ def _supervise(proc, ready_fd, stdin: bytes, timeout: float, groups) -> Outcome:
         if reading and deadline - time.monotonic() <= (0 if not events else -LATE):   # what is already in is read first, for at most LATE seconds
             state = 'TIMEOUT'; break
     sel.close()
+    _trace('supervise.read', state=state)
     groups.kill_all()
+    _trace('supervise.killed')
     try:
         os.killpg(proc.pid, signal.SIGKILL)
     except (ProcessLookupError, PermissionError):
