@@ -24,6 +24,7 @@ import http.client
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -65,7 +66,10 @@ class Run:
 
     def __init__(self, tag: str, crash_at: str | None = None, card: dict | None = None):
         self.s = deploy.Services(OUT / tag).start(crash_at)
-        self.env = self.s.baseline(CASE, card or draft())
+        try:
+            self.env = self.s.baseline(CASE, card or draft())
+        except BaseException:
+            self.s.stop(); raise                                         # a test that cannot baseline leaves no service behind (Amendment 12)
         self.h = self.env['baseline_sha256']
         self.ws = OUT / tag / 'workspace'
         self.cfg = self.s.client_config(self.ws, self.h)
@@ -2575,15 +2579,26 @@ def r27():
     nobody's identity, limits on time, memory, processes and output, and nothing kept after it.  A check that tries to read
     the service's keys, reach its database or the witness, write outside its folder, or outlive its run cannot; and if the
     sandbox cannot be made, the check is not run.  (Amendment 12.)"""
-    r = Run('R27'); e = {}
+    s = deploy.Services(OUT / 'R27').start(); e = {}
     try:
         import sandbox
-        s = r.s; here = OUT / 'R27'; req = r.env['card']['requirement']
+        here = OUT / 'R27'
         def step(f, *a, **kw):
             try:
                 return f(*a, **kw)
             except Exception as exc:
                 return ('RAISED', f'{type(exc).__name__}: {exc}')
+        env = step(s.baseline, CASE, draft())                                                   # baselining runs the controls in the sandbox: a broken sandbox fails the checks below
+        h = env.get('baseline_sha256') if isinstance(env, dict) else None
+        req = (env.get('card') or {}).get('requirement') if isinstance(env, dict) else json.loads((CASE / 'card.json').read_text())['requirement']
+        cfg = s.client_config(OUT / 'R27' / 'workspace', h) if h else None
+        submit = lambda design: s.submit(cfg, design) if cfg else (None, 'no baseline')
+        def checked():
+            rec = step(s.record, h, [OUT / 'R27' / 'workspace' / '.verify' / 'submissions.jsonl']) if h else None
+            if not isinstance(rec, dict):
+                return False, [str(rec)], {}
+            ok, checks, summ = check_record.verify(rec, s.keys)
+            return ok, [f'{n} {t}: {d}' for n, t, good, d in checks if not good], summ
         def boxed(src, stdin=b'{}', **kw):                                                     # one run of a script in the sandbox: (state, exit status, what it printed)
             o = step(sandbox.run, {'c.py': src.encode(), 'data.csv': b'a,b\n1,2\n'}, 'c.py', stdin, **kw)
             return (o.state, o.returncode, o.stdout.decode(errors='replace')[:2000], o.stderr.decode(errors='replace')[-300:], o.detail) if not isinstance(o, tuple) else o
@@ -2631,6 +2646,9 @@ def r27():
                   'keyring, next run': boxed("import ctypes\nlibc = ctypes.CDLL(None, use_errno=True)\nlibc.syscall.restype = ctypes.c_long\n"
                                              "r = libc.syscall(249, b'user', b'r27-kept', None, ctypes.c_int(0))\nprint('found' if r > 0 else 'not found')"),
                   'host': boxed("import os, socket\ntry:\n    import cryptography; site = 'imported'\nexcept ImportError:\n    site = 'ImportError'\nprint(socket.gethostname(), sorted(os.listdir('/usr/local')), site)"),
+                  'calls': boxed("import json, os, socket, sys\nr = {}\nfor name, fam in (('vsock', 40), ('packet', 17), ('netlink', 16), ('unix', 1)):\n    try:\n        socket.socket(fam, socket.SOCK_RAW if fam in (16, 17) else socket.SOCK_STREAM).close(); r[name] = 'made'\n"
+                                 "    except OSError as e:\n        r[name] = e.errno\nst = os.statvfs('/work'); r['work_bytes'] = st.f_frsize * st.f_blocks\n"
+                                 "sys.path.append('/usr/lib/python3/dist-packages')\ntry:\n    import yaml; r['dist'] = 'imported'\nexcept ImportError:\n    r['dist'] = 'ImportError'\nprint(json.dumps(r))"),
                   'memory': boxed("x = bytearray(2 * 1024 ** 3)\nprint('got it')"),
                   'output': boxed("import sys\nwhile True:\n    sys.stdout.write('x' * 65536)"),
                   'spin': boxed("while True:\n    pass", timeout=3),
@@ -2643,6 +2661,27 @@ def r27():
             rows = [l.split() for l in subprocess.run(['ps', '-eo', 'uid=,stat='], capture_output=True, text=True).stdout.splitlines()]
             run_left = [u for u, *st in rows if u.isdigit() and int(u) >= sandbox.UID_BASE and not (st and st[0].startswith('Z'))]
             if not run_left:
+                break
+            time.sleep(0.1)
+        # two runs, watched from outside: their host ids differ
+        def ids_during(sleep_s):
+            seen, box = set(), {}
+            th = threading.Thread(target=lambda: box.update(o=boxed(f"import time\ntime.sleep({sleep_s})")))
+            th.start()
+            while th.is_alive():
+                for l in subprocess.run(['ps', '-eo', 'uid='], capture_output=True, text=True).stdout.split():
+                    if l.isdigit() and int(l) >= sandbox.UID_BASE:
+                        seen.add(int(l))
+                time.sleep(0.1)
+            th.join(); return sorted(seen)
+        e['host_ids'] = [ids_during(1.5), ids_during(1.5)]
+        # the service killed in the middle of a run: the run ends by itself
+        dying = subprocess.Popen([PY, '-B', '-c', "import sys; sys.path.insert(0, sys.argv[1]); import sandbox; sandbox.run({'c.py': b'import time\\ntime.sleep(60)'}, 'c.py', b'', timeout=3)", str(GATEWAY / 'verify')])
+        time.sleep(1.5); dying.kill(); dying.wait()
+        for _ in range(100):
+            rows = [l.split() for l in subprocess.run(['ps', '-eo', 'uid=,stat='], capture_output=True, text=True).stdout.splitlines()]
+            e['orphans'] = [u for u, *st in rows if u.isdigit() and int(u) >= sandbox.UID_BASE and not (st and st[0].startswith('Z'))]
+            if not e['orphans']:
                 break
             time.sleep(0.1)
         # an unshare(1) that makes no namespaces: the launcher refuses, and the check is not run
@@ -2671,14 +2710,14 @@ def r27():
         controls2 = [(c.get('name'), c.get('verdict')) for c in (env2.get('controls_run') if isinstance(env2, dict) else []) or []]
         # the gate host started with that unshare(1): the run is UNKNOWN, the check is not run, and the engineer is told
         s.stop_host(); s.start_host(extra_env={'VERIFY_SANDBOX_CGROUP_ROOT': str(here / 'no-cgroups')})
-        notices_before = len(r.s.inbox(r.h))
-        refused = r.submit({'material': 'PPS-GF40', 'wall_mm': 3.5, 'mode': 'normal'})
-        notices_after = len(r.s.inbox(r.h))
+        notices_before = len(s.inbox(h)) if h else 0
+        refused = submit({'material': 'PPS-GF40', 'wall_mm': 3.5, 'mode': 'normal'})
+        notices_after = len(s.inbox(h)) if h else 0
         s.stop_host(); s.start_host()
-        again = r.submit({'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'})
-        ok, why, summ = r.checked()
+        again = submit({'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'})
+        ok, why, summ = checked()
         runs = {(x['design'] or {}).get('wall_mm'): (x['outcome'], x['reason_code'], x['detail'][:160]) for x in summ.get('runs', [])}
-        good = r.submit(GOOD); bad = r.submit(BAD)
+        good = submit(GOOD); bad = submit(BAD)
         e.update(first=first, second=second, limits={k: v[:4] if isinstance(v, tuple) else v for k, v in limits.items()}, survivors=survivors, run_left=run_left, fail_closed=fail_closed,
                  controls2=controls2, bad2=(bad2[0], head(bad2[1])), run2=(run2.get('outcome'), run2.get('reason_code'), run2.get('basis')), ok2=ok2,
                  refused=(refused[0], head(refused[1])), notices=(notices_before, notices_after), runs=runs, again=(again[0], head(again[1])), good=good[0], bad=bad[0], ok=ok, why=why)
@@ -2704,9 +2743,14 @@ def r27():
                       limits['memory, many processes'][0] == 'RAN' and limits['memory, many processes'][2].split().count('alive') <= 1
                       and limits['disk, many files'][0] == 'RAN' and int((limits['disk, many files'][2].split() or ['99'])[0]) < 7 and limits['disk, many files'][2].split()[-1:] == ['OSError']
                       and limits['a design larger than the pipe'][0] == 'TIMEOUT',
-                  'runs share nothing: a key one run puts in its kernel keyring is not there for the next; the host name is the sandbox\'s; /usr/local is hidden; and the check has no site packages':
-                      limits['keyring, first run'][2].strip() == 'added' and limits['keyring, next run'][2].strip() == 'not found'
-                      and limits['host'][2].strip() == 'sandbox [] ImportError',
+                  'runs share nothing: the kernel\'s keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox\'s; /usr/local is hidden; and the check has no site packages, not even by adding their folder':
+                      limits['keyring, first run'][2].strip() == 'refused 38' and limits['keyring, next run'][2].strip() == 'not found'
+                      and limits['host'][2].strip() == 'sandbox [] ImportError' and (printed(limits['calls']) or {}).get('dist') == 'ImportError',
+                  'the check can make sockets only of the local and internet families: vsock (which no network namespace closes), packet and netlink sockets are refused; /work is in memory, at most 64 MiB':
+                      isinstance(printed(limits['calls']), dict) and {k: printed(limits['calls'])[k] for k in ('vsock', 'packet', 'netlink', 'unix')} == {'vsock': 97, 'packet': 97, 'netlink': 97, 'unix': 'made'}
+                      and 0 < printed(limits['calls'])['work_bytes'] <= (64 << 20),
+                  'two runs have different host identities, and a run whose service dies ends by itself, with every process it started':
+                      len(e['host_ids']) == 2 and e['host_ids'][0] and e['host_ids'][1] and not set(e['host_ids'][0]) & set(e['host_ids'][1]) and e['orphans'] == [],
                   'where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run\'s control groups':
                       isinstance(fail_closed[0], list) and fail_closed[0][0] == 'SANDBOX_UNAVAILABLE' and 'not the first process of a new process namespace' in fail_closed[0][1] and fail_closed[1] is False
                       and isinstance(fail_closed[2], list) and fail_closed[2][0] == 'SANDBOX_UNAVAILABLE' and 'control groups' in fail_closed[2][1],
@@ -2719,7 +2763,7 @@ def r27():
                   'checks that keep to their own work run as before: a design that meets the declared check passes and one that does not fails, and the record verifies':
                       good[0] == 0 and bad[0] == 2 and ok}
     finally:
-        r.stop()
+        s.stop()
     return checks, e
 
 

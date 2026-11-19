@@ -80,10 +80,14 @@ is not running tells no one: nothing yet notices its silence.
 A check is code the customer supplies, and each run of it gets a sandbox of its own (`sandbox.py`): two host user ids
 chosen for that run alone; new user, mount, process, network, IPC and host-name namespaces; a read-only root holding only
 the Python installation, with the check and its data copied into a /work in memory; no network, no other process, none of
-the service's files; memory and process control groups (1 GiB and 64 processes for the run), and limits on time, file
-size and output. When the run ends, everything it started is killed and the sandbox is thrown away. If it cannot be made,
-the check is not run and the verdict is UNKNOWN. The check gets the Python standard library only. The service must run as
-root, with cgroup v1 memory and pids controllers. There is no system-call filter: a kernel flaw would be a way out.
+the service's files; memory, process and freezer control groups (1 GiB and 64 processes for the run), and limits on
+time, file size and output. The check runs as an unprivileged id with no capabilities and a session keyring of its own. A
+small system-call filter allows sockets only of the local and internet families (not vsock, which a network namespace
+does not close) and refuses the keyring, io_uring, bpf, perf and userfaultfd calls. When the run ends, or the service that
+started it dies, everything it started is killed and the sandbox is thrown away. If it cannot be made, the check is not
+run and the verdict is UNKNOWN. The check gets the Python standard library only. The service must run as root on x86-64,
+with cgroup v1 memory, pids and freezer controllers. The filter narrows the calls a check can make; it does not close
+them: a flaw in the kernel's other calls would still be a way out. The sandbox is no virtual machine.
 
 `DECLARED_VERIFY.md` states what the tests were expected to show before the official run; `REPORT_VERIFY.md` gives
 the results of the tests and of the trial. `experiment/PROTOCOL.md` is the trial's protocol, frozen before it ran.
