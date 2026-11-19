@@ -11,6 +11,12 @@ POST /accept   {"root": r, "op": [...], "evidence": {...} | null}
                -> 200 {"kind", "code", "seq", "hash", "applied": [...the labelled op...], "receipt": {...signed...}}
                400 malformed input or a supplied label  403 the database refused the role  404 unknown root
 GET  /pubkey   {"public_key": hex, "gate_keys": [hex, ...], "tls": bool, "peer": the client's certificate name or null}
+GET  /checkpoint?root=R[&nonce=N][&at=K]      (verification Amendment 10)
+               -> 200 a signed statement of root R's chain as the witness reads it now: {"statement": "CHECKPOINT", "root",
+               "seq", "head", "business", "witness", "time", "nonce", "at", "head_at", "signer", "signature"}.  seq is the
+               number of decisions recorded and head the hash of the last (of the provisioning record when seq is 0).
+               nonce (1 to 64 of A-Z a-z 0-9 _ -) is signed back.  at=K asks also for head_at, the head after decision K.
+               It reads; it changes nothing and adds no decision.  400 malformed  404 unknown root
 
 TLS (v0.5): with --tls-cert, --tls-key and --tls-ca the service speaks HTTPS and requires a client certificate issued
 by --tls-ca; --tls-allow NAME (repeatable) admits only those client names.  Without them it speaks plain HTTP on
@@ -24,13 +30,16 @@ import argparse
 import json
 import os
 import pathlib
+import re
 import ssl
 import sys
+import time
+import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from plea_gateway import plea_budget_ref as ref                          # noqa: E402
-from plea_gateway.receipts import WITNESSED, Signer                      # noqa: E402
+from plea_gateway.receipts import WITNESSED, Signer, sign_checkpoint     # noqa: E402
 from plea_gateway.store import AuthorityError, Store, UnknownRoot        # noqa: E402
 from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args, wrap_server   # noqa: E402
 from plea_gateway.witness import EVIDENCE_OPS, binding_for, derive_op    # noqa: E402
@@ -54,6 +63,30 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
             if self.path == '/pubkey':
                 return self._send(200, {'public_key': signer.public_hex, 'gate_keys': list(gate_keys),
                                         'tls': isinstance(self.connection, ssl.SSLSocket), 'peer': self.peer_name})
+            url = urllib.parse.urlsplit(self.path)
+            if url.path == '/checkpoint':                             # verification Amendment 10: a signed reading, no decision
+                q = urllib.parse.parse_qs(url.query, keep_blank_values=True)
+                root, nonce, at = q.get('root', [None])[-1], q.get('nonce', [None])[-1], q.get('at', [None])[-1]
+                if not root or len(root) > 512 or (nonce is not None and not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', nonce)) \
+                        or (at is not None and not re.fullmatch(r'[0-9]{1,12}', at)):
+                    return self._send(400, {'error': 'malformed request'})
+                try:
+                    state, seq, head = store.state(root)
+                    head_at = None
+                    if at is not None:
+                        at = int(at)
+                        if at > seq:
+                            return self._send(400, {'error': 'at is beyond the chain'})
+                        head_at = head if at == seq else (store.provisioning(root) or {}).get('hash') if at == 0 else \
+                            next((r['hash'] for r in store.audit(root) if r['seq'] == at), None)
+                        if head_at is None:
+                            return self._send(400, {'error': 'no decision at that number'})
+                except UnknownRoot:
+                    return self._send(404, {'error': 'unknown root'})
+                except AuthorityError as exc:
+                    return self._send(403, {'error': str(exc)})
+                return self._send(200, sign_checkpoint(signer, root, seq, head, state.business.value, state.witness.value,
+                                                       time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), nonce, at, head_at))
             self._send(404, {'error': 'not found'})
 
         def do_POST(self):

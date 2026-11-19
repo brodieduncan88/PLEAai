@@ -23,7 +23,16 @@ network or database.  It recomputes every hash, checks every signature and re-do
      the baselined limits: design-space membership, every comparison, every margin, the plausible range, the reason
      code.  No run was refunded.  A run without a verdict carries no result;
   7  the counts: every attempt in the chained state is listed and counted;
-  8  each acknowledgement is signed by the engineer and names a run in this record.
+  8  each acknowledgement is signed by the engineer and names a run in this record;
+  9  the witness's checkpoint inside the record, if it has one (Amendment 10): signed by a witness key, for this budget,
+     and saying that the chain's head after the record's last decision is the record's head.
+
+With --checkpoint FILE it also says whether the record is current (Amendment 10).  The file is a checkpoint the witness
+signed, obtained separately from the record: from the witness, or from someone who keeps the witness's checkpoints.  The
+record is CURRENT if the checkpoint's chain is exactly the record's; SUPERSEDED if the chain has gone on since, and the
+checkpoint says the record's head is where that chain was; FORKED if the two disagree about the same decision.  --max-age
+SECONDS refuses a checkpoint older than that by this computer's clock, and --nonce N one that does not sign back N.  The
+exit status is 0 only if the record verifies and, where a checkpoint was given, it is current.
 
 It then states the status.  NOT VERIFIED is the default: the status is "declared check met" only if a listed run's
 verdict is PASS, and only for that exact design.
@@ -31,14 +40,17 @@ verdict is PASS, and only for that exact design.
 What it cannot tell you.  Whether the check is correct, whether the requirement is complete, whether the design sent
 is the part that was built, or whether work was done outside the service.  One party holds the witness, gate and
 engineer keys in the demonstration, so that party is trusted.  A record is a statement as of its sequence number: an
-older record omits later runs and still verifies.  Without keys given separately, the keys are read from the record
+older record omits later runs and still verifies; only a checkpoint obtained separately says whether it is current, and
+that is the witness's word, as old as the checkpoint.  Without keys given separately, the keys are read from the record
 itself, which shows only that the record is consistent, not who made it.
 """
 import argparse
+import calendar
 import decimal
 import hashlib
 import json
 import sys
+import time
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
@@ -49,6 +61,7 @@ LIVE_R = ('RESERVING', 'RESERVED', 'TOKEN')
 LIVE_C = ('INTENT_PENDING', 'CONSUMED', 'NO_EFFECT', 'EFFECT', 'INDETERMINATE')
 REASONS = {'MET': 'PASS', 'LIMIT_NOT_MET': 'FAIL', 'DESIGN_OUTSIDE_BASELINE': 'FAIL', 'BASELINE_MISMATCH': 'UNKNOWN', 'CHECK_ERROR': 'UNKNOWN',
            'CHECK_OUTPUT_INVALID': 'UNKNOWN', 'RESULT_IMPLAUSIBLE': 'UNKNOWN'}
+CHECKPOINT_FIELDS = ('statement', 'root', 'seq', 'head', 'business', 'witness', 'time', 'nonce', 'at', 'head_at')
 D = decimal.Decimal
 
 
@@ -96,6 +109,66 @@ def receipt_message(r) -> bytes:
 
 def evidence_message(e) -> bytes:
     return canonical({k: e.get(k) for k in ('kind', 'root', 'aid', 'nonce', 'claim', 'result_digest')}).encode()
+
+
+def checkpoint_problems(cp, wkeys, root) -> list:
+    """What is wrong with a checkpoint as a statement by a pinned witness about this budget.  (Amendment 10.)"""
+    if not isinstance(cp, dict):
+        return ['it is not a checkpoint']
+    out = []
+    if cp.get('statement') != 'CHECKPOINT':
+        out.append('it is not a checkpoint')
+    if cp.get('signer') not in wkeys or not signed_by(cp.get('signer'), cp.get('signature', ''), canonical({k: cp.get(k) for k in CHECKPOINT_FIELDS}).encode()):
+        out.append('it is not signed by a witness key given')
+    if cp.get('root') != root:
+        out.append('it is for another budget')
+    seq, at = cp.get('seq'), cp.get('at')
+    if type(seq) is not int or seq < 0 or not isinstance(cp.get('head'), str) or checkpoint_time(cp) is None:
+        out.append('its sequence number, head or time is not readable')
+    elif at is not None and (type(at) is not int or not 0 <= at <= seq or not isinstance(cp.get('head_at'), str) or (at == seq and cp.get('head_at') != cp.get('head'))):
+        out.append('what it says of an earlier decision is not readable, or contradicts its own head')
+    return out
+
+
+def checkpoint_time(cp):
+    """The checkpoint's time as seconds since 1970, or None."""
+    try:
+        return calendar.timegm(time.strptime(cp.get('time'), '%Y-%m-%dT%H:%M:%SZ'))
+    except (TypeError, ValueError):
+        return None
+
+
+def currency(record: dict, cp, witness_keys, now=None, max_age=None, nonce=None) -> tuple[str, str]:
+    """(state, sentence): whether a record is current, by a checkpoint obtained separately from it.  (Amendment 10.)
+    CURRENT, SUPERSEDED, SUPERSEDED_UNPROVEN, FORKED, OLDER, STALE or INVALID.  Only CURRENT says the record is the latest, and
+    only as of the checkpoint's time, by the witness's clock."""
+    try:
+        root, seq, head = record['root'], record['as_of']['seq'], record['as_of']['head']
+    except (KeyError, TypeError):
+        return 'INVALID', 'the record has no as-of sequence number and head to compare'
+    bad = checkpoint_problems(cp, _keys(witness_keys), root)
+    if bad:
+        return 'INVALID', 'the checkpoint cannot be used: ' + '; '.join(bad)
+    if nonce is not None and cp.get('nonce') != nonce:
+        return 'INVALID', 'the checkpoint does not sign back the nonce given, so it may have been made before it was asked for'
+    when = f"at {cp['time']} by the witness's clock"
+    closed = '' if cp.get('business') == 'OPEN' and cp.get('witness') == 'ACTIVE' else \
+        f"  The budget was then {cp.get('business')}" + (' and on hold' if cp.get('witness') != 'ACTIVE' else '') + ': it was superseded or closed, or is held, and takes no new runs as it stands.'
+    if cp['seq'] < seq:
+        return 'OLDER', f"the checkpoint is older than the record (sequence number {cp['seq']}, the record's is {seq}): it says nothing of whether the record is current"
+    if cp['seq'] == seq:
+        if cp['head'] != head:
+            return 'FORKED', f"the witness's chain and the record's disagree at sequence number {seq}: this record is not of the chain the witness holds"
+        if max_age is not None and (time.time() if now is None else now) - checkpoint_time(cp) > max_age:
+            return 'STALE', f"the record was current {when}, which is more than {int(max_age)} seconds ago: get a newer checkpoint" + closed
+        return 'CURRENT', f"the record was current {when}: the witness's chain ended at this record's sequence number {seq}, with its head." + closed
+    later = cp['seq'] - seq
+    if cp.get('at') == seq:
+        if cp.get('head_at') != head:
+            return 'FORKED', f"the witness's chain and the record's disagree at sequence number {seq}: this record is not of the chain the witness holds"
+        return 'SUPERSEDED', f"the record is out of date: {when} the witness's chain had {later} later decision{'s' if later != 1 else ''} (sequence number {cp['seq']}).  The record is a true beginning of that chain.  Ask for the current record." + closed
+    return 'SUPERSEDED_UNPROVEN', (f"the record is out of date: {when} the witness's chain had {later} later decision{'s' if later != 1 else ''} (sequence number {cp['seq']}).  "
+                                   'This checkpoint does not say whether the record is a beginning of that chain.  Ask for the current record.' + closed)
 
 
 def request_key(arguments) -> str:
@@ -216,7 +289,7 @@ def rederive(card, result, design) -> list:
 
 def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, list, dict]:
     """(every check passed, [(number, title, ok, detail)], summary).  keys: {'witness', 'gate', 'engineer'}; None reads the record's."""
-    problems = {n: [] for n in range(1, 9)}
+    problems = {n: [] for n in range(1, 10)}
     def bad(n, msg):
         problems[n].append(msg)
     pinned = keys is not None
@@ -422,9 +495,18 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
         elif ack.get('signer') != ekey or not signed_by(ekey, ack.get('signature', ''), msg):
             bad(8, f'{ack.get("aid")}: not signed by the engineer\'s key')
 
+    # 9 the witness's checkpoint inside the record, if any (Amendment 10)
+    cp = record.get('checkpoint')
+    if cp is not None:
+        for msg in checkpoint_problems(cp, wkeys, root):
+            bad(9, msg)
+        if not problems[9] and (cp.get('at') != as_of.get('seq') or cp.get('head_at') != as_of.get('head')):
+            bad(9, 'it does not say that the chain\'s head after this record\'s last decision is this record\'s head')
+
     titles = {1: 'record signature', 2: 'baseline, controls and anchor', 3: 'audit chain', 4: 'witness receipts', 5: 'runs bound to baseline and design',
-              6: 'gate reports and re-derived verdicts', 7: 'counts', 8: 'acknowledgements'}
-    checks = [(n, titles[n], not problems[n], '; '.join(problems[n][:3]) + (f' (+{len(problems[n]) - 3} more)' if len(problems[n]) > 3 else '')) for n in range(1, 9)]
+              6: 'gate reports and re-derived verdicts', 7: 'counts', 8: 'acknowledgements',
+              9: 'witness checkpoint' if cp is not None else 'witness checkpoint (none in this record)'}
+    checks = [(n, titles[n], not problems[n], '; '.join(problems[n][:3]) + (f' (+{len(problems[n]) - 3} more)' if len(problems[n]) > 3 else '')) for n in range(1, 10)]
     ok = all(c[2] for c in checks)
     acked = {a.get('aid') for a in acks}
     met = [r for r in rows_out if r['outcome'] == 'PASS']
@@ -439,11 +521,12 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
                'runs': rows_out, 'official_runs': len(rows_out), 'met': len(met), 'not_met': sum(r['outcome'] == 'FAIL' for r in rows_out),
                'unknown': sum(r['outcome'] not in ('PASS', 'FAIL') for r in rows_out), 'open': sum(1 for r in rows_out if r['outcome'] != 'PASS' and not r['acknowledged']),
                'status': 'DECLARED CHECK MET' if ok and met else 'NOT VERIFIED', 'met_designs': [r['design_sha256'] for r in met], 'released': released,
-               'as_of': as_of, 'keys_pinned': pinned, 'receipts': n_receipts, 'audit_rows': len(audit)}
+               'as_of': as_of, 'keys_pinned': pinned, 'receipts': n_receipts, 'audit_rows': len(audit),
+               'checkpoint': ({k: cp.get(k) for k in ('seq', 'time', 'business', 'witness', 'at')} if isinstance(cp, dict) and not problems[9] else None)}
     return ok, checks, summary
 
 
-def render(ok: bool, checks: list, s: dict) -> str:
+def render(ok: bool, checks: list, s: dict, current=None) -> str:
     L = [f"  {'ok  ' if good else 'FAIL'} {n}  {title}" + (f': {detail}' if detail else '') for n, title, good, detail in checks]
     if not s:
         return '\n'.join(L + ['', 'FAILED: do not rely on this record.'])
@@ -483,6 +566,15 @@ def render(ok: bool, checks: list, s: dict) -> str:
           'It does not say the check is correct, the requirement is complete, or the design is safe.',
           'The check does not cover: ' + '; '.join(s['check'].get('stated_limits') or []) + '.',
           'A record is a statement as of its sequence number.  Ask the responsible engineer for the current one.']
+    cp = s.get('checkpoint')
+    if cp:                                         # Amendment 10: the witness's own word on the chain when the record was made
+        later = cp['seq'] - cp['at']
+        L.append(f"The witness's checkpoint in this record, made at {cp['time']} by its clock: the chain then had {cp['seq']} decisions"
+                 + (', and ended with this record\'s last.' if later == 0 else f", {later} of them after this record's last: it was out of date when it was made."))
+    if current is not None:
+        L.append(f'CURRENCY: {current[0]}.  ' + current[1][:1].upper() + current[1][1:])
+    else:
+        L.append('CURRENCY: NOT CHECKED.  Give a checkpoint obtained separately from this record (--checkpoint) to see whether it is current.')
     return '\n'.join(L)
 
 
@@ -491,6 +583,8 @@ def main():
     ap.add_argument('record'); ap.add_argument('--keys', help='a JSON file: {"witness": HEX, "gate": HEX, "engineer": HEX}')
     ap.add_argument('--witness-key', action='append'); ap.add_argument('--gate-key'); ap.add_argument('--engineer-key')
     ap.add_argument('--design', help='a released design file to compare with the record'); ap.add_argument('--json', action='store_true')
+    ap.add_argument('--checkpoint', help='a checkpoint signed by the witness, obtained separately from the record (Amendment 10)')
+    ap.add_argument('--max-age', type=float, help='refuse a checkpoint older than this many seconds'); ap.add_argument('--nonce', help='the nonce the checkpoint must sign back')
     a = ap.parse_args()
     with open(a.record) as f:
         record = json.load(f)
@@ -507,11 +601,17 @@ def main():
         with open(a.design) as f:
             design = json.load(f)
     ok, checks, s = verify(record, keys, design)
+    current = None
+    if a.checkpoint and ok:
+        with open(a.checkpoint) as f:
+            cp = json.load(f)
+        current = currency(record, cp, (keys or record['keys'])['witness'], None, a.max_age, a.nonce)
     if a.json:
-        print(json.dumps({'verified': ok, 'checks': [{'check': n, 'title': t, 'ok': o, 'detail': d} for n, t, o, d in checks], 'summary': s}, indent=1))
+        print(json.dumps({'verified': ok, 'checks': [{'check': n, 'title': t, 'ok': o, 'detail': d} for n, t, o, d in checks], 'summary': s,
+                          'currency': None if current is None else {'state': current[0], 'detail': current[1]}}, indent=1))
     else:
-        print(render(ok, checks, s))
-    sys.exit(0 if ok else 1)
+        print(render(ok, checks, s, current))
+    sys.exit(0 if ok and (current is None or current[0] == 'CURRENT') else 1)
 
 
 if __name__ == '__main__':

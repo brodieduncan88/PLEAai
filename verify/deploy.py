@@ -1,7 +1,7 @@
 """One verification service on one machine, for the demonstration, the tests and the trials.
 
 Services(directory) makes a fresh deployment under `directory`: a certificate authority, new witness and gate keys,
-the responsible engineer's key, and VERIFY_HOME.  start() runs the v1.2.1 witness service and gate host, unchanged,
+the responsible engineer's key, and VERIFY_HOME.  start() runs the witness service (v1.2.1 with the checkpoint reading of verification Amendment 10) and the v1.2.1 gate host, unchanged,
 under mutual TLS, with the gate host loading verify_tools.  client_config() writes what an assistant's workspace
 needs to call verify_client.py: the gateway database credential, the client certificate, the public keys and a copy
 of the signed baseline.
@@ -47,7 +47,7 @@ class Services:
         shutil.rmtree(self.dir, ignore_errors=True); self.dir.mkdir(parents=True)
         (self.home / 'baselines').mkdir(parents=True); (self.home / 'inbox').mkdir()
         self.ports = {'witness': witness_port, 'host': host_port}
-        self.pki = TLS.init_pki(self.dir / 'pki', servers=('witness', 'host'), clients=('governor',), ca_name='verification-demo-ca', days=3)
+        self.pki = TLS.init_pki(self.dir / 'pki', servers=('witness', 'host'), clients=('governor', 'keeper'), ca_name='verification-demo-ca', days=3)   # keeper: reads checkpoints (Amendment 10)
         self.witness, self.gate = Signer(), GateSigner()
         self.engineer = verify_ctl.keygen(self.dir / 'engineer.key')
         self.keys = {'witness': self.witness.public_hex, 'gate': self.gate.public_hex, 'engineer': self.engineer.public_hex}
@@ -69,7 +69,7 @@ class Services:
 
     def start_witness(self) -> None:
         cmd = [PY, '-B', str(HERE.parent / 'plea_gateway' / 'witness_service.py'), '--port', str(self.ports['witness']), '--dsn', WITNESS_DSN,
-               '--key', self.witness.private_hex, '--gate-key', self.gate.public_hex] + self._tls('witness')
+               '--key', self.witness.private_hex, '--gate-key', self.gate.public_hex] + self._tls('witness') + ['--tls-allow', 'keeper']
         self.procs['witness'] = subprocess.Popen(cmd, stdout=open(self.dir / 'witness.log', 'a'), stderr=subprocess.STDOUT)
         self._await('witness')
 
@@ -122,8 +122,18 @@ class Services:
         out = subprocess.run([PY, '-B', str(HERE / 'verify_client.py'), '--config', str(config), 'submit', str(f)], capture_output=True, text=True, timeout=120)
         return out.returncode, out.stdout + out.stderr
 
-    def record(self, baseline_hash: str, journals=()) -> dict:
-        return verify_ctl.record(self.home, baseline_hash, self.engineer, self.keys['witness'], self.keys['gate'], journals)
+    def checkpointer(self):
+        """Asks the witness, with the keeper's certificate, for the checkpoint a record carries.  (Amendment 10.)"""
+        return verify_ctl.witness_checkpointer(f'https://127.0.0.1:{self.ports["witness"]}', self.pki['ca'], *self.pki['keeper'])
+
+    def checkpoint(self, root: str, nonce: str | None = None, at: int | None = None) -> dict:
+        """A checkpoint of one budget, as someone outside the service would fetch it.  (Amendment 10.)"""
+        import checkpoints
+        return checkpoints.fetch(f'https://127.0.0.1:{self.ports["witness"]}', self.pki['ca'], *self.pki['keeper'], root, nonce, at)
+
+    def record(self, baseline_hash: str, journals=(), checkpoint: bool = True) -> dict:
+        return verify_ctl.record(self.home, baseline_hash, self.engineer, self.keys['witness'], self.keys['gate'], journals,
+                                 checkpointer=self.checkpointer() if checkpoint else None)
 
     def inbox(self, baseline_hash: str) -> list:
         box = self.home / 'inbox' / baseline_hash[:16]

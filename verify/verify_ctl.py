@@ -4,6 +4,7 @@
     verify_ctl.py keygen KEYFILE
     verify_ctl.py baseline HOME --from DIR --card DRAFT.json --key KEYFILE [--runs 1000] [--alongside-reason "..."]
     verify_ctl.py revise   HOME --from DIR --card DRAFT.json --key KEYFILE --supersedes HASH --reason "..."
+    verify_ctl.py record   HOME HASH --key KEYFILE --witness-key HEX --gate-key HEX --out RECORD.json [--witness-url URL --tls-ca CA --tls-cert CERT --tls-key KEY]
     verify_ctl.py status   HOME HASH
     verify_ctl.py acknowledge HOME HASH AID --disposition "..." --key KEYFILE
     verify_ctl.py record   HOME HASH --key KEYFILE --witness-key HEX --gate-key HEX --out RECORD.json [--journal FILE ...]
@@ -228,9 +229,18 @@ def submissions(home, journals=()) -> list:
     return out
 
 
-def record(home, baseline_hash, key: Key, witness_key, gate_key, journals=(), local_dsn: str = LOCAL_DSN) -> dict:
+def witness_checkpointer(witness_url: str, ca: str, cert: str | None, key_file: str | None):
+    """A function for record(): asks the witness for a checkpoint that names the head after the record's last decision.  (Amendment 10.)"""
+    import checkpoints
+    return lambda root, seq: checkpoints.fetch(witness_url, ca, cert, key_file, root, None, seq)
+
+
+def record(home, baseline_hash, key: Key, witness_key, gate_key, journals=(), local_dsn: str = LOCAL_DSN, checkpointer=None) -> dict:
+    """The verification record.  checkpointer (witness_checkpointer) puts the witness's checkpoint into it (Amendment 10); without
+    one the record has none, as before, and its checker says so."""
     env = load_envelope(pathlib.Path(home) / 'baselines' / baseline_hash / 'baseline.json', key.public_hex)
-    return build(Store(local_dsn), env, root_for(env['card']), {'witness': witness_key, 'gate': gate_key}, key, submissions(home, journals), acknowledgements(home, baseline_hash))
+    return build(Store(local_dsn), env, root_for(env['card']), {'witness': witness_key, 'gate': gate_key}, key, submissions(home, journals), acknowledgements(home, baseline_hash),
+                 checkpointer=checkpointer)
 
 
 def status(home, baseline_hash, engineer_key: str, local_dsn: str = LOCAL_DSN) -> str:
@@ -265,6 +275,8 @@ def main():
     ap.add_argument('--supersedes'); ap.add_argument('--reason'); ap.add_argument('--disposition'); ap.add_argument('--witness-key'); ap.add_argument('--gate-key')
     ap.add_argument('--alongside-reason', help='why a second baseline for a requirement already held is not a revision of it (Amendment 9)')
     ap.add_argument('--out'); ap.add_argument('--journal', action='append', default=[])
+    ap.add_argument('--witness-url', help='record: ask the witness for a checkpoint and put it in the record (Amendment 10)')
+    ap.add_argument('--tls-ca'); ap.add_argument('--tls-cert'); ap.add_argument('--tls-key')
     a = ap.parse_args()
     try:
         if a.action == 'keygen':
@@ -279,10 +291,15 @@ def main():
         elif a.action == 'acknowledge':
             print(json.dumps(acknowledge(a.home, a.rest[0], a.rest[1], a.disposition, key)))
         elif a.action == 'record':
-            rec = record(a.home, a.rest[0], key, a.witness_key, a.gate_key, a.journal)
+            rec = record(a.home, a.rest[0], key, a.witness_key, a.gate_key, a.journal,
+                         checkpointer=witness_checkpointer(a.witness_url, a.tls_ca, a.tls_cert, a.tls_key) if a.witness_url else None)
             pathlib.Path(a.out).write_text(json.dumps(rec, indent=1) + '\n'); print(json.dumps({'record': a.out, 'attempts': len(rec['attempts']), 'as_of': rec['as_of']}))
     except (BaselineInvalid, ValueError, OSError) as exc:
         print(f'refused: {exc}', file=sys.stderr); sys.exit(1)
+    except Exception as exc:
+        if type(exc).__name__ != 'CheckpointRefused':
+            raise
+        print(f'refused: no record was written: {exc}', file=sys.stderr); sys.exit(1)
 
 
 if __name__ == '__main__':

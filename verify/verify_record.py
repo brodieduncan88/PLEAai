@@ -140,8 +140,10 @@ def attempts_of(store, root: str, submissions: list, upto: int | None = None) ->
     return attempts, {'audit': audit, 'observation': observation}
 
 
-def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions=(), acknowledgements=(), at: str | None = None) -> dict:
-    """keys: {'witness': hex, 'gate': hex}.  The record is signed by the engineer's key."""
+def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions=(), acknowledgements=(), at: str | None = None, checkpointer=None) -> dict:
+    """keys: {'witness': hex, 'gate': hex}.  The record is signed by the engineer's key.  checkpointer(root, seq), where given,
+    asks the witness for a checkpoint that says what the chain's head was after decision `seq`; it goes into the record, under
+    the engineer's signature (Amendment 10).  The record's checker requires it to be the witness's and to name this record's head."""
     attempts, snap = attempts_of(store, root, list(submissions))
     audit, provisioning = snap['audit'], store.provisioning(root)
     known = {a['aid'] for a in attempts}
@@ -152,5 +154,7 @@ def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions
         'acknowledgements': [a for a in acknowledgements if a.get('aid') in known],
         'as_of': {'time': at or now(), 'seq': len(audit), 'head': audit[-1]['hash'] if audit else (provisioning or {}).get('hash')},
     }
+    if checkpointer is not None:
+        body['checkpoint'] = checkpointer(root, body['as_of']['seq'])
     body = json.loads(json.dumps(body))                                # plain JSON types, exactly what a reader will parse
     return dict(body, signature={'signer': signer.public_hex, 'signature': signer.sign(canonical(body).encode())})

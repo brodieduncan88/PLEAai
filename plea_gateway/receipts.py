@@ -73,6 +73,26 @@ class Signer:
         return Receipt(root, aid, seq, list(op), kind, code, digest, self.public_hex, self._key.sign(unsigned.message()).hex(), binding)
 
 
+CHECKPOINT_FIELDS = ('statement', 'root', 'seq', 'head', 'business', 'witness', 'time', 'nonce', 'at', 'head_at')
+
+
+def checkpoint_message(c: dict) -> bytes:
+    """What the witness signs in a checkpoint (Amendment 10): the canonical JSON of its ten fields.  A receipt's message
+    always has an "aid" and no "statement", so neither can be passed off as the other."""
+    return json.dumps({k: c.get(k) for k in CHECKPOINT_FIELDS}, sort_keys=True, separators=(',', ':')).encode()
+
+
+def sign_checkpoint(signer: 'Signer', root: str, seq: int, head: str, business: str, witness: str, time: str,
+                    nonce: str | None = None, at: int | None = None, head_at: str | None = None) -> dict:
+    """A witness-signed statement of a budget's chain as the witness reads it now (Amendment 10): the number of decisions
+    recorded (seq), the hash of the last (head), the budget's two states, and the witness's clock.  nonce is the asker's,
+    signed back, so the asker knows the statement was made after it chose the nonce.  at and head_at say what the chain's
+    head was after decision number `at`, so that an older record can be shown to be a beginning of this chain."""
+    c = {'statement': 'CHECKPOINT', 'root': root, 'seq': seq, 'head': head, 'business': business, 'witness': witness, 'time': time,
+         'nonce': nonce, 'at': at, 'head_at': head_at}
+    return dict(c, signer=signer.public_hex, signature=signer._key.sign(checkpoint_message(c)).hex())
+
+
 def _pinned(keys) -> tuple:
     return (keys,) if isinstance(keys, str) else tuple(keys)
 

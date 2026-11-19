@@ -77,8 +77,9 @@ class FrontServices(deploy.Services):
     def revoke(self, job: str) -> dict:
         return front_ctl.revoke(self.home, job, self.engineer)
 
-    def record(self, baseline_hash: str, journals=()) -> dict:
-        return front_ctl.record(self.home, baseline_hash, self.engineer, self.keys['witness'], self.keys['gate'], journals)
+    def record(self, baseline_hash: str, journals=(), checkpoint: bool = True) -> dict:
+        return front_ctl.record(self.home, baseline_hash, self.engineer, self.keys['witness'], self.keys['gate'], journals,
+                                checkpointer=self.checkpointer() if checkpoint else None)
 
     # ------------------------------------------------------------------ the assistant's side
     def client(self, job_dir) -> FrontClient:
