@@ -31,6 +31,8 @@ evidence: nobody outside has reviewed or attacked it.
 | `verify_record.py` | The signed baseline envelope and the signed record. |
 | `check_record.py` | Checks a record offline. Stands alone: standard library and `cryptography` only. With `--checkpoint`, says whether the record is current against a checkpoint the witness signed. |
 | `checkpoints.py` | A second party's log of the witness's checkpoints: refuses a rollback or a fork, and keeps the evidence. Standard library and `cryptography` only. |
+| `courier.py` | Notices to the engineer that the service does not write: reads only the witness, signs each notice with its own key, delivers it to the engineer's mailbox. |
+| `mailbox_service.py` | The engineer's mailbox: keeps each notice a courier delivers and signs a receipt for it. |
 | `deploy.py` | One service on one machine, for the demo, the tests and the trials. |
 | `cases/pump-station-submain/` | The worked case: a 400 V sub-main that no allowed cable can make comply. |
 | `experiment/` | The trial of what assistants do with that job, with and without the service. |
@@ -52,6 +54,23 @@ checker:
 FORKED, OLDER, STALE or INVALID, and exits 0 only for CURRENT. With no age given it allows an hour. CURRENT says only that the checkpoint was made within the age allowed and ends where the
 record does: a checkpoint handed over by someone else, not fetched with your own nonce, may be an old one replayed.
 The witness is still one party: a witness that lies the same way to everyone is not caught.
+
+## Notices the service does not write (Amendment 11, 19 November 2026)
+
+The service writes its own notice of a failing run into an inbox it controls, and whoever can write that inbox can remove
+or change it. A courier (`courier.py`) is a second path. It has its own key and certificate, and reads only the witness:
+the decisions since it last looked, checked against a checkpoint it asked for with its own nonce, and each run's gate
+reports and stored result, believed only if the gate signed them. For each run that failed, did not decide, was
+interrupted, or has had no outcome for 15 minutes, it signs a notice and delivers it to the engineer's mailbox
+(`mailbox_service.py`), which keeps it and signs a receipt. A record can carry the notices and receipts:
+
+    python3 courier.py run --config courier.json
+    python3 verify_ctl.py record HOME HASH ... --deliveries STATE_DIR/deliveries.jsonl --courier-key HEX --mailbox-key HEX
+    python3 check_record.py record.json --keys keys.json --require-delivery
+
+The checker's tenth check verifies each notice and receipt against the record, and it prints which runs that call for a
+notice have one delivered and which have none. A receipt says the mailbox holds the notice, not that the engineer read it.
+The courier sees what the witness records; a witness that tells it one consistent false chain is believed.
 
 `DECLARED_VERIFY.md` states what the tests were expected to show before the official run; `REPORT_VERIFY.md` gives
 the results of the tests and of the trial. `experiment/PROTOCOL.md` is the trial's protocol, frozen before it ran.

@@ -2305,6 +2305,8 @@ def r26():
         dropped = copy.deepcopy(rec); fail_aids = [d['aid'] for d in dv.get('due', []) if d['outcome'] == 'FAIL']
         dropped['deliveries'] = [d for d in rec.get('deliveries', []) if not (d['notice'].get('aid') == (fail_aids[:1] or [None])[0] and d['notice'].get('outcome') == 'FAIL')]
         dropped = resign(dropped); okd, _, sd = C.verify(dropped, s.keys)
+        no_int = copy.deepcopy(rec); no_int['deliveries'] = [d for d in rec.get('deliveries', []) if d['notice'].get('outcome') != 'INTERRUPTED']
+        no_int = resign(no_int); oki, _, si = C.verify(no_int, s.keys)
         cli_dropped = cli(save('dropped.json', dropped), '--keys', keys, '--require-delivery')
         d0 = (rec.get('deliveries') or [{}])[0]; n0 = d0.get('notice') or {}
         def with_delivery(d):
@@ -2320,6 +2322,10 @@ def r26():
                     'receipt of another key': fails(with_delivery(dict(d0, receipt=receipt_for(n0, stranger_courier)))),
                     'decision not in the chain': fails(with_delivery({'notice': moved, 'receipt': receipt_for(moved)})),
                     'outcome the record does not give': fails(with_delivery({'notice': misstated, 'receipt': receipt_for(misstated)})),
+                    'a field added to the notice': fails(with_delivery({'notice': dict(n0, note='read this'), 'receipt': receipt_for(dict(n0, note='read this'))})),
+                    'a receipt for another notice': fails(with_delivery(dict(d0, receipt=((rec.get('deliveries') or [{}, {}])[1:2] or [{}])[0].get('receipt')))),
+                    'a notice for another budget': fails(with_delivery({'notice': signed(s.courier_key, C.NOTICE_FIELDS, dict({k: n0.get(k) for k in C.NOTICE_FIELDS}, root=root + 'x')),
+                                                                       'receipt': receipt_for(signed(s.courier_key, C.NOTICE_FIELDS, dict({k: n0.get(k) for k in C.NOTICE_FIELDS}, root=root + 'x')))})),
                     'keys given without the courier and mailbox': [n for n, _, g, _ in C.verify(rec, {k: s.keys[k] for k in ('witness', 'gate', 'engineer')})[1] if not g]}
         # a notice that vouches for no result, made at the decision the gate signed an effect
         fail_a = next((a for a in rec.get('attempts', []) if a.get('aid') == fail_n.get('aid')), {})
@@ -2331,6 +2337,34 @@ def r26():
         unverified = {'no result': C.run_outcome('EFFECT', fail_a.get('evidence'), None, s.keys['gate'], root, fail_a.get('aid'), fail_a.get('nonce')),
                       'a result changed': C.run_outcome('EFFECT', fail_a.get('evidence'), dict(fail_a.get('result') or {}, verdict='PASS'), s.keys['gate'], root, fail_a.get('aid'), fail_a.get('nonce')),
                       'the result': C.run_outcome('EFFECT', fail_a.get('evidence'), fail_a.get('result'), s.keys['gate'], root, fail_a.get('aid'), fail_a.get('nonce'))}
+        ev0 = [i for i in fail_a.get('evidence') or [] if (i.get('evidence') or {}).get('claim') == 'EFFECT'][:1]
+        gate2 = mailbox_service.MailboxKey()
+        def regate(item, **change):
+            e2 = dict(item['evidence'], **change); e2['signer'] = gate2.public_hex if 'signer' not in change else e2['signer']
+            e2['signature'] = gate2.sign(C.evidence_message(e2)) if 'signer' not in change else e2['signature']
+            return dict(item, evidence=e2)
+        unverified.update({'a report not the gate\'s': C.run_outcome('EFFECT', [regate(i) for i in ev0], fail_a.get('result'), s.keys['gate'], root, fail_a.get('aid'), fail_a.get('nonce')),
+                           'a report for another nonce': C.run_outcome('EFFECT', ev0, fail_a.get('result'), s.keys['gate'], root, fail_a.get('aid'), 'n-another')})
+        # the courier's own refusal of checkpoints, with the witness's answers replaced in process
+        ccfg = json.loads((s.dir / 'courier.json').read_text())
+        def answered(make):
+            orig = courier.https
+            def fake(method, u, cfg, body=None, timeout=15.0):
+                qs = urllib.parse.parse_qs(urllib.parse.urlsplit(u).query)
+                return 200, make(qs.get('nonce', [None])[0], int(qs.get('at', ['0'])[0]))
+            courier.https = fake
+            try:
+                return courier.checkpoint(ccfg, root, live['seq'])
+            except courier.Refused as exc:
+                return 'refused: ' + str(exc.args[0])
+            except Exception as exc:
+                return f'RAISED {type(exc).__name__}: {exc}'
+            finally:
+                courier.https = orig
+        lv = live if isinstance(live, dict) else {}
+        mk = lambda key, nonce, at: sign_checkpoint(key, root, lv.get('seq'), lv.get('head'), lv.get('business'), lv.get('witness'), lv.get('time'), nonce, at, lv.get('head') if at == lv.get('seq') else '0' * 64)
+        courier_takes = {'its own nonce, the decision asked': answered(lambda n, at: mk(s.witness, n, at)), 'an old checkpoint handed back': answered(lambda n, at: lv),
+                         'another decision named': answered(lambda n, at: mk(s.witness, n, at - 1)), 'signed by another key': answered(lambda n, at: mk(Signer(), n, at))}
         # a record without notices, and the console
         plain = step(s.record, r.h, [r.ws / '.verify' / 'submissions.jsonl'])
         okp, checksp, sp = C.verify(plain, s.keys) if isinstance(plain, dict) else (False, [], {})
@@ -2353,7 +2387,7 @@ def r26():
                  rows_refused=rows_refused, wrong_head=str(wrong_head)[:120], forks=[(f.get('why', '')[:60], (f.get('evidence') or {}).get('statement')) for f in forks],
                  rolls=[(f.get('why', '')[:60], (f.get('evidence') or {}).get('statement'), (f.get('evidence') or {}).get('seq')) for f in rolls],
                  record=(ok, ten, dv), cli_full=cli_full, dropped=(okd, (sd.get('delivery') or {}).get('due')), cli_dropped=cli_dropped, tampered=tampered,
-                 unverified=unverified, early=(okx, ((sx.get('delivery') or {}).get('due'))), plain=(okp, next(((n, t, g) for n, t, g, _ in checksp if n == 10), None), sp.get('delivery')), cli_plain=cli_plain,
+                 unverified=unverified, courier_takes={k: v if isinstance(v, str) else 'TAKEN' for k, v in courier_takes.items()}, no_int=(oki, (si.get('delivery') or {}).get('due')), early=(okx, ((sx.get('delivery') or {}).get('due'))), plain=(okp, next(((n, t, g) for n, t, g, _ in checksp if n == 10), None), sp.get('delivery')), cli_plain=cli_plain,
                  console=(console.returncode, console.stderr[:200]), console_nokeys=(console_nokeys.returncode, console_nokeys.stderr[:160]))
         cs = e['couriers']; cut_aid = next((x['notice']['aid'] for x in log if x['notice'].get('outcome') == 'INTERRUPTED'), None)
         checks = {'the witness gives the courier\'s certificate its decisions, which follow on from the head a checkpoint names for decision 0 and hash one to the next, and a run\'s signed gate reports and stored result; reading adds no decision':
@@ -2391,13 +2425,17 @@ def r26():
                   'a record built with the courier\'s log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker\'s command says so and exits 0 when delivery is required':
                       ok and ten == (10, 'notices delivered', True) and sorted(d['outcome'] for d in dv.get('due', [])) == ['FAIL', 'FAIL', 'INTERRUPTED'] and all(d['delivered'] for d in dv.get('due', []))
                       and dv.get('no_outcome') == [cut_aid] and dv.get('notices') == 4 and cli_full[0] == 0 and len(cli_full[1]) == 1 and cli_full[1][0].startswith('NOTICES: 3 of 3 runs'),
-                  'a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required':
+                  'a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required; a record that lacks the notice of the interruption says so, though it holds the earlier notice that the run had no outcome':
                       okd and sorted((d['outcome'], d['delivered']) for d in e['dropped'][1] or []) == [('FAIL', False), ('FAIL', True), ('INTERRUPTED', True)]
-                      and cli_dropped[0] == 1 and 'NO DELIVERY EVIDENCE' in (cli_dropped[1] or [''])[0],
-                  'the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, a receipt signed by another key, a notice naming a decision not in the record\'s chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given':
+                      and cli_dropped[0] == 1 and 'NO DELIVERY EVIDENCE' in (cli_dropped[1] or [''])[0]
+                      and oki and [d['delivered'] for d in e['no_int'][1] or [] if d['outcome'] == 'INTERRUPTED'] == [False],
+                  'the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record\'s chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given':
                       all(v == [10] for v in tampered.values()),
                   'a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken':
-                      unverified == {'no result': 'UNVERIFIED', 'a result changed': 'UNVERIFIED', 'the result': 'FAIL'} and okx and e['early'][1] == dv.get('due'),
+                      unverified == {'no result': 'UNVERIFIED', 'a result changed': 'UNVERIFIED', 'the result': 'FAIL', 'a report not the gate\'s': 'UNVERIFIED', 'a report for another nonce': 'UNVERIFIED'}
+                      and okx and e['early'][1] == dv.get('due'),
+                  'the courier takes a checkpoint signed by the witness that signs back its own nonce and names the decision it asked about, and refuses an old one handed back, one naming another decision, and one signed by another key':
+                      e['courier_takes']['its own nonce, the decision asked'] == 'TAKEN' and all(str(e['courier_takes'][k]).startswith('refused') for k in ('an old checkpoint handed back', 'another decision named', 'signed by another key')),
                   'a record without notices verifies and says it has none; the command says notices were not checked and exits 1 when delivery is required; the engineer\'s console, given the courier\'s log and the two keys, writes a record that carries the notices and verifies, and refuses without the keys':
                       okp and e['plain'][1] == (10, 'notices delivered (none in this record)', True) and sp.get('delivery') is None and cli_plain[0] == 1 and (cli_plain[1] or [''])[0].startswith('NOTICES: NOT CHECKED')
                       and console.returncode == 0 and console_ok and console_nokeys.returncode == 1}
