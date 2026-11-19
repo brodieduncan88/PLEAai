@@ -2584,8 +2584,8 @@ def r27():
                 return f(*a, **kw)
             except Exception as exc:
                 return ('RAISED', f'{type(exc).__name__}: {exc}')
-        def boxed(src, **kw):                                                                  # one run of a script in the sandbox: (state, exit status, what it printed)
-            o = step(sandbox.run, {'c.py': src.encode(), 'data.csv': b'a,b\n1,2\n'}, 'c.py', b'{}', **kw)
+        def boxed(src, stdin=b'{}', **kw):                                                     # one run of a script in the sandbox: (state, exit status, what it printed)
+            o = step(sandbox.run, {'c.py': src.encode(), 'data.csv': b'a,b\n1,2\n'}, 'c.py', stdin, **kw)
             return (o.state, o.returncode, o.stdout.decode(errors='replace')[:2000], o.stderr.decode(errors='replace')[-300:], o.detail) if not isinstance(o, tuple) else o
         def printed(o):
             try:
@@ -2620,22 +2620,38 @@ def r27():
         first = printed(boxed(probe + "print(json.dumps(found))"))
         second = printed(boxed(probe + "print(json.dumps(found))"))
         mark = f'r27-{uuid.uuid4().hex[:8]}'
-        limits = {'fork bomb': boxed("import os\nn = 0\ntry:\n    while True:\n        if os.fork() == 0:\n            import time; time.sleep(30); os._exit(0)\n        n += 1\nexcept Exception as e:\n    print(n, type(e).__name__)"),
+        limits = {'fork bomb': boxed("import os\nn = 0\ntry:\n    while n < 300:\n        if os.fork() == 0:\n            import time; time.sleep(30); os._exit(0)\n        n += 1\n    print(n, 'no limit')\nexcept Exception as e:\n    print(n, type(e).__name__)"),
+                  'escape': boxed(f"import os, sys, time\nos.setsid()\nfor i in range(3):\n    if os.fork() == 0:\n        os.execv(sys.executable, [sys.executable, '-c', 'import time; time.sleep(120)', '{mark}-e'])\nos.execv(sys.executable, [sys.executable, '-c', 'import time; time.sleep(120)', '{mark}-e'])", timeout=2),
+                  'memory, many processes': boxed("import os, sys, time\nfor i in range(6):\n    if os.fork() == 0:\n        x = bytearray(900 * 1024 ** 2); time.sleep(3); print('alive', flush=True); os._exit(0)\n"
+                                                  "x = bytearray(900 * 1024 ** 2)\ntime.sleep(3)\nprint('alive', flush=True)\ntime.sleep(1)", timeout=10),
+                  'disk, many files': boxed("n = 0\ntry:\n    while n < 40:\n        open(f'/work/f{n}', 'wb').write(b'x' * (10 << 20)); n += 1\n    print(n, 'no limit')\nexcept Exception as e:\n    print(n, type(e).__name__)"),
+                  'a design larger than the pipe': boxed("import time\ntime.sleep(20)", stdin=b'x' * 500000, timeout=3),
+                  'keyring, first run': boxed("import ctypes\nlibc = ctypes.CDLL(None, use_errno=True)\nlibc.syscall.restype = ctypes.c_long\n"
+                                              "r = libc.syscall(248, b'user', b'r27-kept', b'secret', 6, ctypes.c_int(-4))\nprint('added' if r > 0 else 'refused %d' % ctypes.get_errno())"),
+                  'keyring, next run': boxed("import ctypes\nlibc = ctypes.CDLL(None, use_errno=True)\nlibc.syscall.restype = ctypes.c_long\n"
+                                             "r = libc.syscall(249, b'user', b'r27-kept', None, ctypes.c_int(0))\nprint('found' if r > 0 else 'not found')"),
+                  'host': boxed("import os, socket\ntry:\n    import cryptography; site = 'imported'\nexcept ImportError:\n    site = 'ImportError'\nprint(socket.gethostname(), sorted(os.listdir('/usr/local')), site)"),
                   'memory': boxed("x = bytearray(2 * 1024 ** 3)\nprint('got it')"),
                   'output': boxed("import sys\nwhile True:\n    sys.stdout.write('x' * 65536)"),
                   'spin': boxed("while True:\n    pass", timeout=3),
                   'disk': boxed("f = open('/work/big', 'wb')\ntry:\n    f.write(b'x' * (100 << 20)); print('wrote')\nexcept Exception as e:\n    print(type(e).__name__)"),
-                  'left behind': boxed(f"import os, sys, time\nif os.fork() == 0:\n    os.setsid(); sys.argv[0] = '{mark}'\n    os.execv('/usr/bin/python3', ['/usr/bin/python3', '-c', 'import time; time.sleep(120)', '{mark}'])\nprint('parent done')"),
+                  'left behind': boxed(f"import os, sys, time\nif os.fork() == 0:\n    os.setsid(); sys.argv[0] = '{mark}'\n    os.execv(sys.executable, [sys.executable, '-c', 'import time; time.sleep(120)', '{mark}'])\nprint('parent done')"),
                   'others': boxed("import os\nr = []\nfor pid in (2, 50, 300, 4000):\n    try:\n        os.kill(pid, 0); r.append('seen')\n    except Exception as e:\n        r.append(type(e).__name__)\nprint(r)")}
         time.sleep(0.5)
         survivors = subprocess.run(['pgrep', '-f', mark], capture_output=True, text=True).stdout.split()
+        for _ in range(30):                                                                     # no live process of any run's own identities is left (a zombie waits only to be reaped)
+            rows = [l.split() for l in subprocess.run(['ps', '-eo', 'uid=,stat='], capture_output=True, text=True).stdout.splitlines()]
+            run_left = [u for u, *st in rows if u.isdigit() and int(u) >= sandbox.UID_BASE and not (st and st[0].startswith('Z'))]
+            if not run_left:
+                break
+            time.sleep(0.1)
         # an unshare(1) that makes no namespaces: the launcher refuses, and the check is not run
-        fake = here / 'fake_unshare'; fake.write_text('#!/bin/sh\nwhile [ "${1#--}" != "$1" ]; do shift; done\nexec "$@"\n'); fake.chmod(0o755)
         ran_marker = pathlib.Path(tempfile.gettempdir()) / f'{mark}-ran'
-        closed = subprocess.run([PY, '-B', '-c', "import sys, json; sys.path.insert(0, sys.argv[1]); import sandbox; o = sandbox.run({'c.py': sys.argv[2].encode()}, 'c.py', b'{}'); "
-                                 "print(json.dumps([o.state, o.detail]))", str(GATEWAY / 'verify'), f"open({str(ran_marker)!r}, 'w').write('ran')"],
-                                capture_output=True, text=True, timeout=60, env=dict(os.environ, VERIFY_SANDBOX_UNSHARE=str(fake)))
-        fail_closed = (step(json.loads, (closed.stdout.strip().splitlines() or ['null'])[-1]), ran_marker.exists())
+        o = step(sandbox.run, {'c.py': f"open({str(ran_marker)!r}, 'w').write('ran')".encode()}, 'c.py', b'{}', _no_unshare=True)
+        no_groups = subprocess.run([PY, '-B', '-c', "import sys, json; sys.path.insert(0, sys.argv[1]); import sandbox; o = sandbox.run({'c.py': sys.argv[2].encode()}, 'c.py', b'{}'); "
+                                    "print(json.dumps([o.state, o.detail]))", str(GATEWAY / 'verify'), f"open({str(ran_marker)!r}, 'w').write('ran')"],
+                                   capture_output=True, text=True, timeout=60, env=dict(os.environ, VERIFY_SANDBOX_CGROUP_ROOT=str(here / 'no-cgroups')))
+        fail_closed = ([o.state, o.detail] if not isinstance(o, tuple) else o, ran_marker.exists(), step(json.loads, (no_groups.stdout.strip().splitlines() or ['null'])[-1]))
         # a hostile check, baselined and run through the gate: it does its work, and what it found goes into the signed verdict
         hdir = here / 'hostile_case'; shutil.copytree(CASE, hdir)
         honest = (CASE / 'check.py').read_text()
@@ -2654,7 +2670,7 @@ def r27():
         run2 = (s2.get('runs') or [{}])[0]
         controls2 = [(c.get('name'), c.get('verdict')) for c in (env2.get('controls_run') if isinstance(env2, dict) else []) or []]
         # the gate host started with that unshare(1): the run is UNKNOWN, the check is not run, and the engineer is told
-        s.stop_host(); s.start_host(extra_env={'VERIFY_SANDBOX_UNSHARE': str(fake)})
+        s.stop_host(); s.start_host(extra_env={'VERIFY_SANDBOX_CGROUP_ROOT': str(here / 'no-cgroups')})
         notices_before = len(r.s.inbox(r.h))
         refused = r.submit({'material': 'PPS-GF40', 'wall_mm': 3.5, 'mode': 'normal'})
         notices_after = len(r.s.inbox(r.h))
@@ -2663,7 +2679,7 @@ def r27():
         ok, why, summ = r.checked()
         runs = {(x['design'] or {}).get('wall_mm'): (x['outcome'], x['reason_code'], x['detail'][:160]) for x in summ.get('runs', [])}
         good = r.submit(GOOD); bad = r.submit(BAD)
-        e.update(first=first, second=second, limits={k: v[:3] if isinstance(v, tuple) else v for k, v in limits.items()}, survivors=survivors, fail_closed=fail_closed,
+        e.update(first=first, second=second, limits={k: v[:4] if isinstance(v, tuple) else v for k, v in limits.items()}, survivors=survivors, run_left=run_left, fail_closed=fail_closed,
                  controls2=controls2, bad2=(bad2[0], head(bad2[1])), run2=(run2.get('outcome'), run2.get('reason_code'), run2.get('basis')), ok2=ok2,
                  refused=(refused[0], head(refused[1])), notices=(notices_before, notices_after), runs=runs, again=(again[0], head(again[1])), good=good[0], bad=bad[0], ok=ok, why=why)
         f1, f2 = (first if isinstance(first, dict) else {}), (second if isinstance(second, dict) else {})
@@ -2681,10 +2697,19 @@ def r27():
                       limits['fork bomb'][0] == 'RAN' and limits['fork bomb'][2].split()[-1:] == ['BlockingIOError'] and int((limits['fork bomb'][2].split() or ['999'])[0]) < 64
                       and limits['memory'][:2] == ('RAN', 1) and 'MemoryError' in limits['memory'][3] and limits['output'][0] == 'OUTPUT_TOO_LONG' and limits['spin'][0] == 'TIMEOUT'
                       and limits['disk'][0] in ('RAN',) and 'wrote' not in limits['disk'][2],
-                  'a process the check leaves behind ends with the run; the check sees no other process and can signal none':
-                      limits['left behind'][:2] == ('RAN', 0) and survivors == [] and limits['others'][2].strip() == "['ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError']",
-                  'where the sandbox cannot be made (an unshare that makes no namespaces), the launcher refuses, the outcome says the sandbox was not made, and the check is not run':
-                      isinstance(fail_closed[0], list) and fail_closed[0][0] == 'SANDBOX_UNAVAILABLE' and 'not the first process of a new process namespace' in fail_closed[0][1] and fail_closed[1] is False,
+                  'a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children; no process of any run\'s identities is left; the check sees no other process and can signal none':
+                      limits['left behind'][:2] == ('RAN', 0) and limits['escape'][0] == 'TIMEOUT' and survivors == [] and run_left == []
+                      and limits['others'][2].strip() == "['ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError']",
+                  'what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds does not stop the clock':
+                      limits['memory, many processes'][0] == 'RAN' and limits['memory, many processes'][2].split().count('alive') <= 1
+                      and limits['disk, many files'][0] == 'RAN' and int((limits['disk, many files'][2].split() or ['99'])[0]) < 7 and limits['disk, many files'][2].split()[-1:] == ['OSError']
+                      and limits['a design larger than the pipe'][0] == 'TIMEOUT',
+                  'runs share nothing: a key one run puts in its kernel keyring is not there for the next; the host name is the sandbox\'s; /usr/local is hidden; and the check has no site packages':
+                      limits['keyring, first run'][2].strip() == 'added' and limits['keyring, next run'][2].strip() == 'not found'
+                      and limits['host'][2].strip() == 'sandbox [] ImportError',
+                  'where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run\'s control groups':
+                      isinstance(fail_closed[0], list) and fail_closed[0][0] == 'SANDBOX_UNAVAILABLE' and 'not the first process of a new process namespace' in fail_closed[0][1] and fail_closed[1] is False
+                      and isinstance(fail_closed[2], list) and fail_closed[2][0] == 'SANDBOX_UNAVAILABLE' and 'control groups' in fail_closed[2][1],
                   'a hostile check that probes the service while it works is baselined with its controls as declared, gives a failing design its FAIL, and its own words in the signed verdict say it reached nothing; the record verifies':
                       controls2 and all(v in ('PASS', 'FAIL') for _, v in controls2) and bad2[0] == 2 and run2.get('outcome') == 'FAIL'
                       and run2.get('basis') == "uid 65534; reached nothing of the service" and ok2,

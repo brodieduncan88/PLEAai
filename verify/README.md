@@ -33,6 +33,7 @@ evidence: nobody outside has reviewed or attacked it.
 | `checkpoints.py` | A second party's log of the witness's checkpoints: refuses a rollback or a fork, and keeps the evidence. Standard library and `cryptography` only. |
 | `courier.py` | Notices to the engineer that the service does not write: reads only the witness, signs each notice with its own key, delivers it to the engineer's mailbox. |
 | `mailbox_service.py` | The engineer's mailbox: keeps each notice a courier delivers and signs a receipt for it. |
+| `sandbox.py` | The disposable sandbox each run of a check is made in, and thrown away after. |
 | `deploy.py` | One service on one machine, for the demo, the tests and the trials. |
 | `cases/pump-station-submain/` | The worked case: a 400 V sub-main that no allowed cable can make comply. |
 | `experiment/` | The trial of what assistants do with that job, with and without the service. |
@@ -73,6 +74,16 @@ The checker's tenth check verifies each notice and receipt against the record, a
 notice have one delivered and which have none. A receipt says the mailbox holds the notice, not that the engineer read it.
 The courier sees what the witness records; a witness that tells it one consistent false chain is believed. A courier that
 is not running tells no one: nothing yet notices its silence.
+
+## The check's sandbox (Amendment 12, 19 November 2026)
+
+A check is code the customer supplies, and each run of it gets a sandbox of its own (`sandbox.py`): two host user ids
+chosen for that run alone; new user, mount, process, network, IPC and host-name namespaces; a read-only root holding only
+the Python installation, with the check and its data copied into a /work in memory; no network, no other process, none of
+the service's files; memory and process control groups (1 GiB and 64 processes for the run), and limits on time, file
+size and output. When the run ends, everything it started is killed and the sandbox is thrown away. If it cannot be made,
+the check is not run and the verdict is UNKNOWN. The check gets the Python standard library only. The service must run as
+root, with cgroup v1 memory and pids controllers. There is no system-call filter: a kernel flaw would be a way out.
 
 `DECLARED_VERIFY.md` states what the tests were expected to show before the official run; `REPORT_VERIFY.md` gives
 the results of the tests and of the trial. `experiment/PROTOCOL.md` is the trial's protocol, frozen before it ran.
