@@ -1726,7 +1726,33 @@ def f35():
     return checks, e
 
 
-TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35}
+def f36():
+    """An answer does not take longer with every run already made on the baseline: of 25 designs sent one after another through
+    the front door, the last five are answered about as fast as the first five, and each answer counts the runs so far.
+    (Amendment 13.)"""
+    r = Run('F36'); e = {}
+    try:
+        seconds, totals, outcomes = [], [], []
+        for i in range(25):
+            d = {'material': 'PA66-GF30', 'wall_mm': round(3 + i / 1000, 3), 'mode': 'normal'}
+            t0 = time.monotonic(); status, answer = raw(r.job, 'POST', '/submit', json.dumps({'design': d}).encode()); seconds.append(round(time.monotonic() - t0, 3))
+            totals.append((answer.get('runs') or {}).get('total') if isinstance(answer, dict) else None); outcomes.append(answer.get('outcome') if isinstance(answer, dict) else None)
+        middle = lambda xs: sorted(xs)[len(xs) // 2]
+        ok, why, s = r.checked()
+        e.update(seconds=seconds, first_five=middle(seconds[:5]), last_five=middle(seconds[-5:]), grew_by=round(middle(seconds[-5:]) - middle(seconds[:5]), 3), totals=totals,
+                 outcomes=sorted(set(map(str, outcomes))), record_verifies=ok, why=why, not_met=s.get('not_met'), notices=r.notices())
+        checks = {'25 designs sent one after another each get their FAIL, and each answer counts the runs so far, 1 to 25':
+                      outcomes == ['FAIL'] * 25 and totals == list(range(1, 26)),
+                  'the last five are answered about as fast as the first five: their middle time is less than a quarter of a second more (it was a second more before)':
+                      e['grew_by'] < 0.25,
+                  'every failure has its notice, and the record verifies with all 25':
+                      e['notices'] == 25 and ok and s.get('not_met') == 25}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35, 'F36': f36}
 
 
 def main():

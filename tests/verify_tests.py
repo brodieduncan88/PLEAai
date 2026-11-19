@@ -2822,7 +2822,87 @@ def r27():
     return {k: bool(v) for k, v in checks.items()}, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27}
+# ====================================================================== Amendment 13: an answer does not slow with the runs already made
+def _attempts_one_by_one(store, root: str, submissions: list, upto: int | None = None) -> list:
+    """The attempts as verify_record.attempts_of read them before Amendment 13: each attempt by itself, through the store's own
+    evidence_for, get_receipt and get_result.  Kept here as what the new reading must equal."""
+    import verify_record as VR
+    audit, observation = store.audit_snapshot(root)
+    upto = len(audit) if upto is None else upto
+    by_key = {VR.request_key(a): a for a in submissions}
+    attempts = []
+    for aid, req, phase, nonce, _receipt, _crossed in observation['attempts']:
+        evidence = [{'seq': x['seq'], 'evidence': x['evidence']} for x in store.evidence_for(root, aid) if x['seq'] <= upto]
+        receipts = {}
+        for op in VR.RECEIPT_OPS:
+            got = store.get_receipt(root, aid, op)
+            if got is not None and got.get('seq', 0) <= upto:
+                receipts[op] = got
+        stored = store.get_result(root, aid)
+        result = stored.get('value') if isinstance(stored, dict) and stored.get('outcome', 'value') == 'value' and phase == 'EFFECT' else None
+        arguments = by_key.get(req)
+        if arguments is None and isinstance(result, dict) and 'design' in result:
+            guess = VR.arguments_for(result.get('baseline_sha256'), result['design'])
+            arguments = guess if VR.request_key(guess) == req else None
+        attempts.append({'aid': aid, 'request_key': req, 'arguments': arguments, 'phase': phase, 'nonce': nonce,
+                         'outcome': VR.outcome_of(phase, evidence, result), 'receipts': receipts, 'evidence': evidence, 'result': result})
+    return attempts
+
+
+def r28():
+    """The reading of a baseline's runs, which every answer makes, costs the same whatever the number of runs already made: it opens
+    the same number of connections to the store for 14 runs as for 2, and gives exactly what reading each run by itself gives.
+    (Amendment 13.)"""
+    r = Run('R28'); e = {}
+    try:
+        import verify_record as VR
+
+        class Counted(Store):                                            # the store, counting the connections it opens
+            opened = 0
+
+            def connect(self):
+                type(self).opened += 1
+                return super().connect()
+
+        store = Counted(deploy.LOCAL_DSN)
+        journal = lambda: [json.loads(l) for l in (r.ws / '.verify' / 'submissions.jsonl').read_text().splitlines()]
+
+        def measure():
+            root = r.record()['root']
+            Counted.opened = 0
+            new, snap = VR.attempts_of(store, root, journal())
+            opened = Counted.opened
+            old = _attempts_one_by_one(store, root, journal())
+            half = len(snap['audit']) // 2
+            new_half, _ = VR.attempts_of(store, root, journal(), upto=half)
+            old_half = _attempts_one_by_one(store, root, journal(), upto=half)
+            Counted.opened = 0; old_again = _attempts_one_by_one(store, root, journal()); opened_old = Counted.opened
+            return {'runs': len(new), 'opened': opened, 'opened_one_by_one': opened_old, 'same': canonical(new) == canonical(old) == canonical(old_again),
+                    'same_cut': canonical(new_half) == canonical(old_half), 'cut_at': half, 'cut_differs': canonical(new_half) != canonical(new),
+                    'outcomes': sorted(a['outcome'] for a in new), 'with_evidence': sum(bool(a['evidence']) for a in new), 'with_receipts': sum(len(a['receipts']) for a in new)}
+
+        first = [r.submit(d)[0] for d in (BAD, GOOD)]
+        few = measure()
+        more = [r.submit({'material': 'PA66-GF30', 'wall_mm': round(3.1 + i / 10, 1), 'mode': 'normal'})[0] for i in range(11)]
+        outside = r.submit({'material': 'PA66-GF30', 'wall_mm': 99, 'mode': 'normal'})[0]          # outside the design space: a FAIL with no check run
+        many = measure()
+        ok, why, s = r.checked(GOOD)
+        e.update(first=first, more=more, outside=outside, few=few, many=many, record_verifies=ok, why=why, counts=(s.get('official_runs'), s.get('met'), s.get('not_met')))
+        checks = {'the runs are there to read: 2, then 14, each with its evidence and its receipts, and the record verifies':
+                      first == [2, 0] and more == [2] * 11 and outside == 2 and few['runs'] == 2 and many['runs'] == 14 and many['with_evidence'] == 14
+                      and many['with_receipts'] >= 14 and ok and e['counts'] == (14, 1, 13),
+                  'the reading gives exactly what reading each run by itself gives, for 2 runs and for 14':
+                      few['same'] and many['same'],
+                  'and so does a reading cut at an earlier decision, which is not the whole reading':
+                      few['same_cut'] and many['same_cut'] and many['cut_differs'] and 0 < many['cut_at'],
+                  'it opens the same number of connections to the store for 14 runs as for 2, where reading each run by itself opens more for every run':
+                      few['opened'] == many['opened'] and 0 < many['opened'] <= 3 and many['opened_one_by_one'] > few['opened_one_by_one'] > few['opened']}
+    finally:
+        r.stop()
+    return {k: bool(v) for k, v in checks.items()}, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28}
 
 
 def main():

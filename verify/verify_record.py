@@ -115,21 +115,41 @@ def acknowledgement_message(root: str, aid: str, outcome: str, disposition: str,
     return canonical({'root': root, 'aid': aid, 'outcome': outcome, 'disposition': disposition, 'time': time}).encode()
 
 
+def _stored_for(store, root: str) -> tuple[dict, dict, dict]:
+    """What the store holds for every attempt of one budget: its evidence ({aid: [(seq, evidence), ...]} in order of seq), its
+    receipts ({(aid, op): receipt}) and its results ({aid: result}).  Read in one transaction on one connection, whatever the
+    number of attempts.  Before Amendment 13 each attempt was read by itself, through five connections of its own, so that an
+    answer took longer with every run already made on the baseline.  The rows are those the store's own evidence_for,
+    get_receipt and get_result give, one attempt at a time."""
+    evidence, receipts, results = {}, {}, {}
+    with store.connect() as conn:
+        conn.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY')     # the three readings are of one moment
+        for aid, seq, e in conn.execute('SELECT aid, seq, evidence FROM evidence WHERE root_id = %s ORDER BY seq', (root,)).fetchall():
+            evidence.setdefault(aid, []).append((seq, e))
+        for aid, op, r in conn.execute('SELECT aid, op, receipt FROM receipts WHERE root_id = %s', (root,)).fetchall():
+            receipts[(aid, op)] = r
+        for aid, r in conn.execute('SELECT aid, result FROM results WHERE root_id = %s', (root,)).fetchall():
+            results[aid] = r
+        conn.rollback()
+    return evidence, receipts, results
+
+
 def attempts_of(store, root: str, submissions: list, upto: int | None = None) -> tuple[list, dict]:
     """(attempts, observation) from one snapshot.  submissions: candidate {baseline_sha256, design} objects from any
     source; each is used only if it hashes to an attempt's request key, so the source need not be trusted."""
     audit, observation = store.audit_snapshot(root)
     upto = len(audit) if upto is None else upto
     by_key = {request_key(a): a for a in submissions}
+    all_evidence, all_receipts, all_results = _stored_for(store, root)
     attempts = []
     for aid, req, phase, nonce, _receipt, _crossed in observation['attempts']:
-        evidence = [{'seq': e['seq'], 'evidence': e['evidence']} for e in store.evidence_for(root, aid) if e['seq'] <= upto]
+        evidence = [{'seq': seq, 'evidence': e} for seq, e in all_evidence.get(aid, []) if seq <= upto]
         receipts = {}
         for op in RECEIPT_OPS:
-            r = store.get_receipt(root, aid, op)
+            r = all_receipts.get((aid, op))
             if r is not None and r.get('seq', 0) <= upto:
                 receipts[op] = r
-        stored = store.get_result(root, aid)
+        stored = all_results.get(aid)
         result = stored.get('value') if isinstance(stored, dict) and stored.get('outcome', 'value') == 'value' and phase == 'EFFECT' else None
         arguments = by_key.get(req)
         if arguments is None and isinstance(result, dict) and 'design' in result:
