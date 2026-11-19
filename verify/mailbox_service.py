@@ -22,7 +22,9 @@ engineer gave it, at the time it states by its own clock.  It does not show that
 engineer's signed acknowledgement of a run does (verify_ctl.py acknowledge).  The mailbox is as independent of the service
 as the account and machine it runs on: in the demonstration that is the same machine as everything else.
 
-It speaks only HTTPS with a client certificate issued by --tls-ca; --tls-allow limits which client names it admits.  It
+It speaks only HTTPS with a client certificate issued by --tls-ca; --tls-allow limits which client names it admits.  Each
+connection is handled in its own thread, handshake included, and let go after 15 seconds of silence.  A notice's signature
+must be written in lower-case hexadecimal, so one notice cannot be delivered twice under two spellings.  It
 needs the Python standard library and `cryptography` (through check_record.py), and nothing from the gateway.
 """
 import argparse
@@ -124,8 +126,22 @@ class Mailbox:
 
 def make_handler(box: Mailbox, allow=()):
     class Handler(BaseHTTPRequestHandler):
+        timeout = 15                                                  # a client that sends nothing is let go
+
         def log_message(self, *args):
             pass
+
+        def setup(self):                                              # the handshake in this thread, never in the accept loop
+            super().setup()
+            self.tls_failed = False
+            try:
+                self.connection.do_handshake()
+            except (ssl.SSLError, OSError):
+                self.tls_failed = True
+
+        def handle(self):
+            if not self.tls_failed:
+                super().handle()
 
         def _send(self, status: int, payload: dict):
             body = json.dumps(payload).encode()
@@ -167,7 +183,7 @@ def serve(a) -> None:
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); ctx.minimum_version = ssl.TLSVersion.TLSv1_2
     ctx.load_cert_chain(a.tls_cert, a.tls_key); ctx.load_verify_locations(cafile=a.tls_ca); ctx.verify_mode = ssl.CERT_REQUIRED
     server = ThreadingHTTPServer((a.bind, a.port), make_handler(box, tuple(a.tls_allow)))
-    server.socket = ctx.wrap_socket(server.socket, server_side=True)
+    server.socket = ctx.wrap_socket(server.socket, server_side=True, do_handshake_on_connect=False)
     print(json.dumps({'mailbox': a.name, 'port': a.port, 'public_key': key.public_hex, 'courier_keys': a.courier_key, 'tls_allow': a.tls_allow}), flush=True)
     server.serve_forever()
 

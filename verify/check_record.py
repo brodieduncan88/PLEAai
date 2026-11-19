@@ -29,7 +29,9 @@ network or database.  It recomputes every hash, checks every signature and re-do
      and saying that the chain's head after the record's last decision is the record's head;
  10  the notices delivered, if the record carries any (Amendment 11): each notice is signed by the courier's key, names a
      decision of this record's chain with its hash, and says what this record's chain, gate reports and verdict say of
-     that run at that decision; each receipt is signed by the engineer's mailbox key and names that notice.
+     that run at that decision: its outcome, the digest of its verdict, the reason code and detail it quotes, and the
+     first line of its words; each receipt is signed by the engineer's mailbox key and names that notice.  With keys given
+     separately but none for the courier and the mailbox, the notices are not checked, and the record is judged without them.
 
 It then says which runs that call for a notice to the engineer (FAIL, UNKNOWN, INTERRUPTED; and INVALID or REFUNDED,
 which must never happen) have a notice delivered, with the mailbox's signed receipt, and which have none.  A record built
@@ -75,8 +77,17 @@ REASONS = {'MET': 'PASS', 'LIMIT_NOT_MET': 'FAIL', 'DESIGN_OUTSIDE_BASELINE': 'F
 CHECKPOINT_FIELDS = ('statement', 'root', 'seq', 'head', 'business', 'witness', 'time', 'nonce', 'at', 'head_at')
 NOTICE_FIELDS = ('statement', 'root', 'aid', 'request_key', 'outcome', 'reason_code', 'detail', 'result_digest', 'seq', 'head', 'time', 'courier', 'text')
 RECEIPT_FIELDS = ('statement', 'notice', 'root', 'aid', 'outcome', 'mailbox', 'time')
-NOTICE_OUTCOMES = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INVALID', 'REFUNDED', 'UNVERIFIED', 'NO_OUTCOME')   # what a courier sends a notice of (Amendment 11)
-DUE = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INVALID', 'REFUNDED')                                        # a run's outcome in a record that calls for a notice
+RUN_NOTICES = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INDETERMINATE', 'INVALID', 'REFUNDED', 'UNVERIFIED', 'NO_OUTCOME')   # a courier's notices of a run (Amendment 11)
+ALARMS = ('COURIER_STOPPED', 'COURIER_BLOCKED')                                         # a courier's notices about itself: of no run, never in a record
+NOTICE_OUTCOMES = RUN_NOTICES + ALARMS
+DUE = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INDETERMINATE', 'INVALID', 'REFUNDED')        # a run's outcome in a record that calls for a notice
+HEADLINES = {'FAIL': 'DECLARED CHECK NOT MET (FAIL)', 'UNKNOWN': 'NO VERDICT: THE CHECK DID NOT DECIDE (UNKNOWN)',
+             'INTERRUPTED': 'THE RUN WAS INTERRUPTED: ADMITTED AND COUNTED, WITH NO VERDICT',
+             'INDETERMINATE': 'THE RUN WAS MADE INDETERMINATE BY THE CONTROL PLANE: ADMITTED AND COUNTED, WITH NO VERDICT',
+             'INVALID': 'THE GATE SIGNED A RESULT THAT HAS NO VERDICT', 'REFUNDED': 'THE RUN WAS REFUNDED, WHICH A VERIFICATION RUN MUST NEVER BE',
+             'UNVERIFIED': 'THE STORED RESULT DOES NOT MATCH THE GATE\'S SIGNATURE', 'NO_OUTCOME': 'A RUN WAS ADMITTED AND HAS NO OUTCOME',
+             'COURIER_STOPPED': 'THE COURIER HAS STOPPED READING THIS BUDGET: WHAT THE WITNESS SAID CANNOT BE BELIEVED',
+             'COURIER_BLOCKED': 'THE COURIER CANNOT READ THIS BUDGET FROM THE WITNESS'}
 D = decimal.Decimal
 
 
@@ -151,7 +162,8 @@ def run_outcome(phase, evidence, result, gate_keys, root, aid, nonce) -> str:
     checker both read them.  evidence: [{'seq', 'evidence'}]; only reports signed by a gate key given, for this budget,
     attempt and nonce, count.  UNVERIFIED: a run the gate signed an effect for, whose result (if any is given) does not hash to
     the digest the gate signed.
-    NO_OUTCOME: admitted and crossed, with no verdict and no report that the gate does not know."""
+    NO_OUTCOME: its intent accepted, or admitted and crossed, with no verdict and no report that the gate does not know.
+    INDETERMINATE: the control plane made it so (a re-registration); it is counted and frozen, with no verdict."""
     gkeys, claims, digests = _keys(gate_keys), [], []
     for item in evidence or []:
         e = item.get('evidence') if isinstance(item, dict) else None
@@ -170,7 +182,19 @@ def run_outcome(phase, evidence, result, gate_keys, root, aid, nonce) -> str:
         return result.get('verdict') if result.get('verdict') in ('PASS', 'FAIL', 'UNKNOWN') else 'INVALID'
     if phase == 'CONSUMED':
         return 'INTERRUPTED' if 'UNKNOWN' in claims else 'NO_OUTCOME'
-    return 'PENDING' if phase in LIVE_R + ('INTENT_PENDING',) else str(phase)
+    if phase == 'INTENT_PENDING':
+        return 'NO_OUTCOME'
+    return 'PENDING' if phase in LIVE_R else str(phase)
+
+
+def notice_detail(result):
+    """What a notice quotes of a result's detail: no control characters, at most 400 characters; None if there is none."""
+    d = ''.join(ch if ch >= ' ' and ch != '\x7f' else ' ' for ch in str((result or {}).get('detail') or ''))[:400] if isinstance(result, dict) else ''
+    return d or None
+
+
+def _hex(value, n: int) -> bool:
+    return isinstance(value, str) and len(value) == n and all(c in '0123456789abcdef' for c in value)
 
 
 def notice_digest(n) -> str:
@@ -186,9 +210,10 @@ def notice_problems(n, courier_keys) -> list:
     if n.get('statement') != 'NOTICE' or set(n) != set(NOTICE_FIELDS) | {'signer', 'signature'}:
         out.append('it is not a notice, or has fields a notice does not have')
     signer = n.get('signer')
-    if not isinstance(signer, str) or signer not in _keys(courier_keys) or not signed_by(signer, n.get('signature', ''), canonical({k: n.get(k) for k in NOTICE_FIELDS}).encode()):
+    if not _hex(signer, 64) or not _hex(n.get('signature'), 128) or signer not in _keys(courier_keys) \
+            or not signed_by(signer, n.get('signature', ''), canonical({k: n.get(k) for k in NOTICE_FIELDS}).encode()):
         out.append('it is not signed by a courier key given')
-    if n.get('outcome') not in NOTICE_OUTCOMES or type(n.get('seq')) is not int or n.get('seq') < 1 or not isinstance(n.get('head'), str) \
+    if n.get('outcome') not in NOTICE_OUTCOMES or type(n.get('seq')) is not int or n.get('seq') < 0 or not isinstance(n.get('head'), str) \
             or not all(isinstance(n.get(k), str) for k in ('root', 'aid', 'courier', 'text')) or checkpoint_time(n) is None:
         out.append('its outcome, decision, head, names or time are not readable')
     return out
@@ -202,7 +227,8 @@ def receipt_problems(r, mailbox_keys, n) -> list:
     if r.get('statement') != 'DELIVERED' or set(r) != set(RECEIPT_FIELDS) | {'signer', 'signature'}:
         out.append('it is not a receipt, or has fields a receipt does not have')
     signer = r.get('signer')
-    if not isinstance(signer, str) or signer not in _keys(mailbox_keys) or not signed_by(signer, r.get('signature', ''), canonical({k: r.get(k) for k in RECEIPT_FIELDS}).encode()):
+    if not _hex(signer, 64) or not _hex(r.get('signature'), 128) or signer not in _keys(mailbox_keys) \
+            or not signed_by(signer, r.get('signature', ''), canonical({k: r.get(k) for k in RECEIPT_FIELDS}).encode()):
         out.append('it is not signed by a mailbox key given')
     if not isinstance(n, dict) or r.get('notice') != notice_digest(n) or any(r.get(k) != n.get(k) for k in ('root', 'aid', 'outcome')):
         out.append('it does not name this notice')
@@ -624,13 +650,15 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
             bad(9, 'it does not say that the chain\'s head after this record\'s last decision is this record\'s head')
 
     # 10 the notices delivered, if any (Amendment 11)
-    deliveries, delivered = record.get('deliveries'), {}
-    if deliveries is not None:
-        ckeys, mkeys = _keys(keys.get('courier')), _keys(keys.get('mailbox'))
+    deliveries, delivered, unchecked = record.get('deliveries'), {}, None
+    ckeys, mkeys = _keys(keys.get('courier')), _keys(keys.get('mailbox'))
+    if deliveries is not None and pinned and (not ckeys or not mkeys):
+        unchecked = 'no courier and mailbox keys were given with the others'      # optional evidence, not checked: the rest of the record stands
+    elif deliveries is not None:
         if pinned and (not set(_keys(named.get('courier'))) <= set(ckeys) or not set(_keys(named.get('mailbox'))) <= set(mkeys)):
             bad(10, 'the record names courier or mailbox keys other than the ones given')
         if not ckeys or not mkeys:
-            bad(10, 'no courier or mailbox key is given')
+            bad(10, 'the record names no courier or mailbox key')
         elif not isinstance(deliveries, list):
             bad(10, 'the deliveries are not a list')
         else:
@@ -644,7 +672,7 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
                 if msgs:
                     bad(10, f'{where}: the receipt: {msgs[0]}'); continue
                 a, seq = by_aid.get(n['aid']), n['seq']
-                if n['root'] != root or a is None:
+                if n['root'] != root or a is None or n['outcome'] in ALARMS:
                     bad(10, f'{where}: the notice is of a run that is not in this record'); continue
                 if not chain_ok or seq > len(audit) or audit[seq - 1]['hash'] != n['head']:
                     bad(10, f'{where}: the notice names a decision that is not in this record\'s chain'); continue
@@ -656,12 +684,15 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
                 said = run_outcome(then[2], ev, res, gkey, root, n['aid'], then[3])
                 if n['outcome'] != said or n['request_key'] != a.get('request_key') or n['result_digest'] != (sha(canonical(res)) if isinstance(res, dict) else None):
                     bad(10, f'{where}: the notice says {n["outcome"]} of {n["aid"]}; this record says {said} at decision {seq}'); continue
+                if n['reason_code'] != (res or {}).get('reason_code') or n['detail'] != notice_detail(res) \
+                        or n['text'].split('\n')[0] != HEADLINES[n['outcome']] or f"Run {n['aid']} on budget {root}." not in n['text']:
+                    bad(10, f'{where}: what the notice gives a person to read is not what this record says of {n["aid"]}'); continue
                 delivered.setdefault(n['aid'], set()).add(n['outcome'])
 
     titles = {1: 'record signature', 2: 'baseline, controls and anchor', 3: 'audit chain', 4: 'witness receipts', 5: 'runs bound to baseline and design',
               6: 'gate reports and re-derived verdicts', 7: 'counts', 8: 'acknowledgements',
               9: 'witness checkpoint' if cp is not None else 'witness checkpoint (none in this record)',
-              10: 'notices delivered' if deliveries is not None else 'notices delivered (none in this record)'}
+              10: 'notices delivered (none in this record)' if deliveries is None else (f'notices delivered (not checked: {unchecked})' if unchecked else 'notices delivered')}
     checks = [(n, titles[n], not problems[n], '; '.join(problems[n][:3]) + (f' (+{len(problems[n]) - 3} more)' if len(problems[n]) > 3 else '')) for n in range(1, 11)]
     ok = all(c[2] for c in checks)
     acked = {a.get('aid') for a in acks}
@@ -679,9 +710,9 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
                'status': 'DECLARED CHECK MET' if ok and met else 'NOT VERIFIED', 'met_designs': [r['design_sha256'] for r in met], 'released': released,
                'as_of': as_of, 'keys_pinned': pinned, 'receipts': n_receipts, 'audit_rows': len(audit),
                'checkpoint': ({k: cp.get(k) for k in ('seq', 'time', 'business', 'witness', 'at')} if isinstance(cp, dict) and not problems[9] else None),
-               'delivery': None if deliveries is None or problems[10] else {
+               'delivery': None if deliveries is None or problems[10] else {'unchecked': unchecked, 'notices': len(deliveries) if isinstance(deliveries, list) else 0} if unchecked else {
                    'due': [{'aid': r['aid'], 'outcome': r['outcome'], 'delivered': r['outcome'] in delivered.get(r['aid'], ())} for r in rows_out if r['outcome'] in DUE],
-                   'no_outcome': sorted(aid for aid, outs in delivered.items() if 'NO_OUTCOME' in outs), 'notices': len(deliveries)}}
+                   'no_outcome': sorted(aid for aid, outs in delivered.items() if 'NO_OUTCOME' in outs), 'notices': len({notice_digest(d.get('notice')) for d in deliveries})}}
     return ok, checks, summary
 
 
@@ -734,6 +765,8 @@ def render(ok: bool, checks: list, s: dict, current=None) -> str:
     dv = s.get('delivery')                         # Amendment 11: notices delivered by a courier to the engineer's mailbox
     if dv is None:
         L.append('NOTICES: NOT CHECKED.  This record carries no notices delivered by a courier.')
+    elif dv.get('unchecked'):
+        L.append(f"NOTICES: NOT CHECKED.  The record carries {dv['notices']} notices delivered by a courier, but {dv['unchecked']} (--courier-key, --mailbox-key).")
     else:
         missing = [d for d in dv['due'] if not d['delivered']]
         L.append(f"NOTICES: {len(dv['due']) - len(missing)} of {len(dv['due'])} runs that call for a notice have one delivered to the engineer's mailbox, with its signed receipt."
@@ -797,7 +830,7 @@ def main():
                           'currency': None if current is None else {'state': current[0], 'detail': current[1]}}, indent=1))
     else:
         print(render(ok, checks, s, current))
-    delivered_all = (s or {}).get('delivery') is not None and all(d['delivered'] for d in s['delivery']['due'])
+    delivered_all = bool((s or {}).get('delivery')) and not s['delivery'].get('unchecked') and all(d['delivered'] for d in s['delivery']['due'])
     sys.exit(0 if ok and (a.checkpoint is None or (current is not None and current[0] == 'CURRENT')) and (not a.require_delivery or delivered_all) else 1)
 
 

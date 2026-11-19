@@ -146,8 +146,8 @@ def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions
     asks the witness for a checkpoint that says what the chain's head was after decision `seq`; it goes into the record, under
     the engineer's signature (Amendment 10).  The record's checker requires it to be the witness's and to name this record's head.
     deliveries, where given, is {'items': [{'notice', 'receipt'}, ...], 'courier': [hex], 'mailbox': [hex]}: the notices a courier
-    delivered to the engineer's mailbox, with the mailbox's receipts (Amendment 11).  Those for this budget that name a decision
-    in this record's chain, with its hash, go into the record, with the two keys."""
+    delivered to the engineer's mailbox, with the mailbox's receipts (Amendment 11).  Those of runs of this budget, signed by the
+    keys given, that name a decision in this record's chain with its hash, go into the record once each, with the two keys."""
     attempts, snap = attempts_of(store, root, list(submissions))
     audit, provisioning = snap['audit'], store.provisioning(root)
     known = {a['aid'] for a in attempts}
@@ -161,10 +161,18 @@ def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions
     if checkpointer is not None:
         body['checkpoint'] = checkpointer(root, body['as_of']['seq'])
     if deliveries is not None:
-        hashes = [row['hash'] for row in audit]
-        def in_chain(n):
-            return isinstance(n, dict) and n.get('root') == root and type(n.get('seq')) is int and 1 <= n['seq'] <= len(hashes) and hashes[n['seq'] - 1] == n.get('head')
-        body['deliveries'] = [d for d in deliveries.get('items') or [] if isinstance(d, dict) and in_chain(d.get('notice'))]
-        body['keys']['courier'], body['keys']['mailbox'] = list(deliveries['courier']), list(deliveries['mailbox'])
+        import check_record
+        as_list = lambda k: [k] if isinstance(k, str) else list(k)
+        ckeys, mkeys = as_list(deliveries['courier']), as_list(deliveries['mailbox'])
+        hashes, kept, seen = [row['hash'] for row in audit], [], set()
+        for d in deliveries.get('items') or []:                    # notices of runs of this budget, up to this record's last decision, signed as they must be, once each
+            n, r = (d.get('notice'), d.get('receipt')) if isinstance(d, dict) else (None, None)
+            if check_record.notice_problems(n, ckeys) or check_record.receipt_problems(r, mkeys, n) or n['outcome'] in check_record.ALARMS or n['root'] != root:
+                continue
+            if not 1 <= n['seq'] <= len(hashes) or hashes[n['seq'] - 1] != n['head'] or check_record.notice_digest(n) in seen:
+                continue
+            seen.add(check_record.notice_digest(n)); kept.append({'notice': n, 'receipt': r})
+        body['deliveries'] = kept
+        body['keys']['courier'], body['keys']['mailbox'] = ckeys, mkeys
     body = json.loads(json.dumps(body))                                # plain JSON types, exactly what a reader will parse
     return dict(body, signature={'signer': signer.public_hex, 'signature': signer.sign(canonical(body).encode())})

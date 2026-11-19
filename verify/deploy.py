@@ -75,7 +75,7 @@ class Services:
 
     def start_witness(self) -> None:
         cmd = [PY, '-B', str(HERE.parent / 'plea_gateway' / 'witness_service.py'), '--port', str(self.ports['witness']), '--dsn', WITNESS_DSN,
-               '--key', self.witness.private_hex, '--gate-key', self.gate.public_hex] + self._tls('witness') + ['--tls-allow-read', 'keeper', '--tls-allow-read', 'courier']   # they read; they cannot write
+               '--key', self.witness.private_hex, '--gate-key', self.gate.public_hex] + self._tls('witness') + ['--tls-allow-read', 'keeper', '--tls-allow-chain', 'courier']   # they read (the keeper checkpoints, the courier the chain); they cannot write
         self.procs['witness'] = subprocess.Popen(cmd, stdout=open(self.dir / 'witness.log', 'a'), stderr=subprocess.STDOUT)
         self._await('witness')
 
@@ -150,19 +150,19 @@ class Services:
         import checkpoints
         return checkpoints.fetch(f'https://127.0.0.1:{self.ports["witness"]}', self.pki['ca'], *self.pki['keeper'], root, nonce, at)
 
-    def courier_config(self, roots, stall_after: float = 900, name: str = 'courier') -> pathlib.Path:
+    def courier_config(self, roots, stall_after: float = 900, name: str = 'courier', page: int = 200) -> pathlib.Path:
         """The courier's configuration (Amendment 11): the witness's readings with the courier's certificate, the keys it believes,
         and one watch for each budget, delivering to the engineer's mailbox.  Nothing in it names the service's home or database."""
-        cfg = {'name': name, 'key_file': str(self.dir / 'courier.key'), 'state_dir': str(self.dir / name), 'stall_after': stall_after,
+        cfg = {'name': name, 'key_file': str(self.dir / 'courier.key'), 'state_dir': str(self.dir / name), 'stall_after': stall_after, 'page': page,
                'witness_url': f'https://127.0.0.1:{self.ports["witness"]}', 'ca': self.pki['ca'], 'cert': self.pki['courier'][0], 'key': self.pki['courier'][1],
                'witness_keys': [self.keys['witness']], 'gate_keys': [self.keys['gate']],
                'watches': [{'root': r, 'mailbox_url': f'https://127.0.0.1:{self.ports["mailbox"]}', 'mailbox_keys': self.keys['mailbox']} for r in roots]}
         p = self.dir / f'{name}.json'; p.write_text(json.dumps(cfg, indent=1) + '\n')
         return p
 
-    def courier(self, roots, stall_after: float = 900, name: str = 'courier') -> tuple[int, dict]:
+    def courier(self, roots, stall_after: float = 900, name: str = 'courier', page: int = 200) -> tuple[int, dict]:
         """One pass of the courier, in its own process, as the engineer would run it: (exit status, its summary)."""
-        out = subprocess.run([PY, '-B', str(HERE / 'courier.py'), 'run', '--config', str(self.courier_config(roots, stall_after, name))], capture_output=True, text=True, timeout=120)
+        out = subprocess.run([PY, '-B', str(HERE / 'courier.py'), 'run', '--config', str(self.courier_config(roots, stall_after, name, page))], capture_output=True, text=True, timeout=120)
         try:
             return out.returncode, json.loads(out.stdout.strip().splitlines()[-1])
         except (ValueError, IndexError):

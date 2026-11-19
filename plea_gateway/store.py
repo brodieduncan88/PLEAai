@@ -1116,6 +1116,11 @@ class Store:
             conn.rollback()
         return log, _jsonable(ref.observe(state))
 
+    def root_exists(self, root_id: str) -> bool:
+        """Whether the store holds this root (verification Amendment 11: one rule for the witness's readings)."""
+        with self.connect() as conn:
+            return conn.execute('SELECT 1 FROM roots WHERE root_id = %s', (root_id,)).fetchone() is not None
+
     def audit_after(self, root_id: str, after: int, limit: int) -> list:
         """The audit rows after sequence number `after`, at most `limit` of them, in order (verification Amendment 11: the
         witness's reading for a courier).  An unknown root raises UnknownRoot."""

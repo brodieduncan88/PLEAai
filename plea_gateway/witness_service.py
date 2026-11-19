@@ -19,13 +19,16 @@ GET  /checkpoint?root=R[&nonce=N][&at=K]      (verification Amendment 10)
                It reads; it changes nothing and adds no decision.  400 malformed  404 unknown root
 GET  /chain?root=R&after=K[&limit=N]       (verification Amendment 11)
                -> 200 {"root", "after", "rows": [...]}: root R's audit rows after decision K, at most N (1 to 200, 100 unless
-               given), in order, each {"seq", "op", "kind", "code", "observation", "prev_hash", "hash"}.  Unsigned: a reader
-               checks them against a checkpoint, whose head the last row's hash must be.  400 malformed  404 unknown root
+               given), in order, each {"seq", "op", "kind", "code", "observation", "prev_hash", "hash"}, and fewer once the
+               answer passes 4 MiB (at least one).  Unsigned: a reader checks them against a checkpoint, whose head the last
+               row's hash must be.  400 malformed  404 unknown root
 GET  /run?root=R&aid=A                      (verification Amendment 11)
                -> 200 {"root", "aid", "evidence": [{"seq", "evidence", "derived"}, ...], "result": stored or null}: the gate's
                signed reports the witness verified for attempt A, and the result stored for it.  Unsigned: a reader checks
                the reports against the gate's key and the result against the digest a report signs.  400 malformed
-               --tls-allow-read NAME admits a client certificate to these three readings alone: it cannot POST /accept.
+               404 unknown root
+               --tls-allow-read NAME admits a client certificate to GET /checkpoint alone, and --tls-allow-chain NAME to the
+               three readings: neither can POST /accept or GET /pubkey.
 
 TLS (v0.5): with --tls-cert, --tls-key and --tls-ca the service speaks HTTPS and requires a client certificate issued
 by --tls-ca; --tls-allow NAME (repeatable) admits only those client names.  Without them it speaks plain HTTP on
@@ -54,13 +57,15 @@ from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args,
 from plea_gateway.witness import EVIDENCE_OPS, binding_for, derive_op    # noqa: E402
 
 
-READINGS = ('/checkpoint', '/chain', '/run')                            # what a reading name may ask (Amendments 10 and 11)
+READINGS = ('/checkpoint', '/chain', '/run')                            # what a chain-reading name may ask (Amendment 11)
+CHAIN_BYTES = 4 * 1024 * 1024                                           # a page of decisions stops growing past this
 
 
-def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, allow=(), read_allow=()):
+def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, allow=(), read_allow=(), chain_allow=()):
     class Handler(TLSHandlerMixin, BaseHTTPRequestHandler):
         tls_allow = tuple(allow)                                      # v0.5: client names admitted over TLS
-        tls_read = tuple(read_allow)                                  # verification Amendments 10 and 11: names admitted to the readings only
+        tls_read = tuple(read_allow)                                  # verification Amendment 10: names admitted to GET /checkpoint only
+        tls_chain = tuple(chain_allow)                                # verification Amendment 11: names admitted to the three readings only
 
         def log_message(self, *args):                                 # quiet
             pass
@@ -72,7 +77,7 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
 
         def do_GET(self):
             url = urllib.parse.urlsplit(self.path)
-            reading = url.path in READINGS and self.peer_name in self.tls_read           # a reading name is admitted to the readings, and to nothing that writes
+            reading = (url.path == '/checkpoint' and self.peer_name in self.tls_read) or (url.path in READINGS and self.peer_name in self.tls_chain)   # never to what writes
             if not (reading or self.fully_allowed()):
                 return self._send(403, {'error': f'client {self.peer_name!r} is not allowed'})
             if self.path == '/pubkey':
@@ -110,11 +115,17 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
                         after, limit = q.get('after', ['0'])[-1], q.get('limit', ['100'])[-1]
                         if not re.fullmatch(r'[0-9]{1,12}', after) or not re.fullmatch(r'[0-9]{1,3}', limit) or not 1 <= int(limit) <= 200:
                             return self._send(400, {'error': 'malformed request'})
-                        return self._send(200, {'root': root, 'after': int(after), 'rows': store.audit_after(root, int(after), int(limit))})
+                        rows, size = [], 0
+                        for row in store.audit_after(root, int(after), int(limit)):
+                            size += len(json.dumps(row))
+                            if rows and size > CHAIN_BYTES:
+                                break
+                            rows.append(row)
+                        return self._send(200, {'root': root, 'after': int(after), 'rows': rows})
                     aid = q.get('aid', [None])[-1]
                     if not aid or not re.fullmatch(r'[A-Za-z0-9_-]{1,64}', aid):
                         return self._send(400, {'error': 'malformed request'})
-                    if store.provisioning(root) is None:
+                    if not store.root_exists(root):
                         raise UnknownRoot(root)
                     return self._send(200, {'root': root, 'aid': aid, 'evidence': store.evidence_for(root, aid), 'result': store.get_result(root, aid)})
                 except UnknownRoot:
@@ -126,7 +137,7 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
         def fully_allowed(self) -> bool:
             """Admitted to everything the witness does.  A name given only as a reading name is not, even where no --tls-allow
             list is set and every other certificate is."""
-            return self.peer_allowed() and not (self.peer_name in self.tls_read and self.peer_name not in self.tls_allow)
+            return self.peer_allowed() and not ((self.peer_name in self.tls_read or self.peer_name in self.tls_chain) and self.peer_name not in self.tls_allow)
 
         def do_POST(self):
             if not self.fully_allowed():
@@ -173,12 +184,13 @@ def main():
     ap.add_argument('--key', default=os.environ.get('PLEA_WITNESS_KEY')); ap.add_argument('--chaos', action='store_true')
     ap.add_argument('--gate-key', action='append', default=[], help='a gate public key to pin (hex); repeatable')
     ap.add_argument('--bind', default='127.0.0.1'); add_server_args(ap)
-    ap.add_argument('--tls-allow-read', action='append', default=[], help='a client name admitted to the readings only: GET /checkpoint (verification Amendment 10), /chain and /run (Amendment 11); repeatable')
+    ap.add_argument('--tls-allow-read', action='append', default=[], help='a client name admitted to GET /checkpoint only (verification Amendment 10); repeatable')
+    ap.add_argument('--tls-allow-chain', action='append', default=[], help='a client name admitted to GET /checkpoint, /chain and /run only (verification Amendment 11); repeatable')
     a = ap.parse_args()
     signer = Signer(a.key); tls = server_from_args(a)
-    server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(Store(a.dsn), signer, tuple(a.gate_key), a.chaos, tuple(a.tls_allow), tuple(a.tls_allow_read))), tls)
+    server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(Store(a.dsn), signer, tuple(a.gate_key), a.chaos, tuple(a.tls_allow), tuple(a.tls_allow_read), tuple(a.tls_allow_chain))), tls)
     print(json.dumps({'listening': a.port, 'public_key': signer.public_hex, 'gate_keys': a.gate_key, 'chaos': a.chaos,
-                      'tls': tls is not None, 'tls_allow': a.tls_allow, 'tls_allow_read': a.tls_allow_read}), flush=True)
+                      'tls': tls is not None, 'tls_allow': a.tls_allow, 'tls_allow_read': a.tls_allow_read, 'tls_allow_chain': a.tls_allow_chain}), flush=True)
     server.serve_forever()
 
 
