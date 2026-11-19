@@ -2635,7 +2635,7 @@ def r27():
         first = printed(boxed(probe + "print(json.dumps(found))"))
         second = printed(boxed(probe + "print(json.dumps(found))"))
         mark = f'r27-{uuid.uuid4().hex[:8]}'
-        t0 = time.monotonic(); piped = boxed("import time\ntime.sleep(20)", stdin=b'x' * 500000, timeout=3); e['piped_seconds'] = round(time.monotonic() - t0, 2)
+        t0 = time.monotonic(); piped = boxed("import sys, time\nsys.stdin.buffer.read(8192)\ntime.sleep(20)", stdin=b'x' * 500000, timeout=3); e['piped_seconds'] = round(time.monotonic() - t0, 2)   # it reads a little, so the pipe has room again, then stops
         grouped = subprocess.run([PY, '-B', '-c', "import sys; sys.path.insert(0, sys.argv[1]); import sandbox; o = sandbox.run({'c.py': b'import os; print(os.getgroups())'}, 'c.py', b''); print(o.state, o.stdout.decode().strip())",
                                   str(GATEWAY / 'verify')], capture_output=True, text=True, timeout=60, extra_groups=[4242])   # a service that holds a group of its own: the check holds none
         e['grouped'] = grouped.stdout.strip()
@@ -2750,7 +2750,7 @@ def r27():
                   'a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children; no process of any run\'s identities is left; the check sees no other process and can signal none':
                       limits['left behind'][:2] == ('RAN', 0) and limits['escape'][0] == 'TIMEOUT' and survivors == [] and run_left == []
                       and limits['others'][2].strip() == "['ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError']",
-                  'what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds does not stop the clock: that run ends at its own time, not later at the launcher\'s':
+                  'what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher\'s':
                       limits['memory, many processes'][0] == 'RAN' and limits['memory, many processes'][2].split().count('alive') <= 1
                       and limits['disk, many files'][0] == 'RAN' and int((limits['disk, many files'][2].split() or ['99'])[0]) < 7 and limits['disk, many files'][2].split()[-1:] == ['OSError']
                       and limits['a design larger than the pipe'][0] == 'TIMEOUT' and e['piped_seconds'] < 5,
