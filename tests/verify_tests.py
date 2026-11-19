@@ -23,6 +23,7 @@ import copy
 import http.client
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -2569,7 +2570,135 @@ def r26():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26}
+def r27():
+    """Each run of a check is made a disposable sandbox of its own: no network, no other process, none of the service's files,
+    nobody's identity, limits on time, memory, processes and output, and nothing kept after it.  A check that tries to read
+    the service's keys, reach its database or the witness, write outside its folder, or outlive its run cannot; and if the
+    sandbox cannot be made, the check is not run.  (Amendment 12.)"""
+    r = Run('R27'); e = {}
+    try:
+        import sandbox
+        s = r.s; here = OUT / 'R27'; req = r.env['card']['requirement']
+        def step(f, *a, **kw):
+            try:
+                return f(*a, **kw)
+            except Exception as exc:
+                return ('RAISED', f'{type(exc).__name__}: {exc}')
+        def boxed(src, **kw):                                                                  # one run of a script in the sandbox: (state, exit status, what it printed)
+            o = step(sandbox.run, {'c.py': src.encode(), 'data.csv': b'a,b\n1,2\n'}, 'c.py', b'{}', **kw)
+            return (o.state, o.returncode, o.stdout.decode(errors='replace')[:2000], o.stderr.decode(errors='replace')[-300:], o.detail) if not isinstance(o, tuple) else o
+        def printed(o):
+            try:
+                return json.loads(o[2])
+            except Exception:
+                return o
+        secrets = [str(s.dir / 'engineer.key'), str(s.dir / 'courier.key'), str(s.pki['witness'][1]), str(s.home / 'ledger.jsonl'), str(s.home / 'baselines'),
+                   '/etc/passwd', '/proc/self/environ', '/root', str(GATEWAY / 'verify' / 'deploy.py')]
+        probe = ("import json, os, socket\n"
+                 "def read(p):\n"
+                 "    try:\n"
+                 "        return 'listed' if os.path.isdir(p) and os.listdir(p) is not None else ('read' if open(p, 'rb').read(1) is not None else 'read')\n"
+                 "    except Exception as e:\n"
+                 "        return type(e).__name__\n"
+                 "def reach(h, p):\n"
+                 "    s = socket.socket(); s.settimeout(2)\n"
+                 "    try:\n"
+                 "        s.connect((h, p)); return 'connected'\n"
+                 "    except Exception as e:\n"
+                 "        return type(e).__name__\n"
+                 "def write(p):\n"
+                 "    try:\n"
+                 "        open(p, 'w').write('x'); return 'written'\n"
+                 "    except Exception as e:\n"
+                 "        return type(e).__name__\n"
+                 f"SECRETS = {secrets!r}\n"
+                 f"PORTS = [('127.0.0.1', {s.ports['witness']}), ('127.0.0.1', {s.ports['host']}), ('127.0.0.1', 5432), ('8.8.8.8', 53)]\n"
+                 "found = {'uid': os.getuid(), 'gid': os.getgid(), 'groups': os.getgroups(), 'cwd': os.getcwd(), 'root': sorted(os.listdir('/')),\n"
+                 "         'here': sorted(os.listdir('.')), 'read': {p: read(p) for p in SECRETS}, 'reach': [reach(h, p) for h, p in PORTS],\n"
+                 "         'kept': os.path.exists('/work/kept-from-before'), 'write': {p: write(p) for p in ('/x', '/usr/x', '/dev/x', '/work/kept-from-before', '/tmp/x')}}\n")
+        # what a check sees and can do, run straight in the sandbox
+        first = printed(boxed(probe + "print(json.dumps(found))"))
+        second = printed(boxed(probe + "print(json.dumps(found))"))
+        mark = f'r27-{uuid.uuid4().hex[:8]}'
+        limits = {'fork bomb': boxed("import os\nn = 0\ntry:\n    while True:\n        if os.fork() == 0:\n            import time; time.sleep(30); os._exit(0)\n        n += 1\nexcept Exception as e:\n    print(n, type(e).__name__)"),
+                  'memory': boxed("x = bytearray(2 * 1024 ** 3)\nprint('got it')"),
+                  'output': boxed("import sys\nwhile True:\n    sys.stdout.write('x' * 65536)"),
+                  'spin': boxed("while True:\n    pass", timeout=3),
+                  'disk': boxed("f = open('/work/big', 'wb')\ntry:\n    f.write(b'x' * (100 << 20)); print('wrote')\nexcept Exception as e:\n    print(type(e).__name__)"),
+                  'left behind': boxed(f"import os, sys, time\nif os.fork() == 0:\n    os.setsid(); sys.argv[0] = '{mark}'\n    os.execv('/usr/bin/python3', ['/usr/bin/python3', '-c', 'import time; time.sleep(120)', '{mark}'])\nprint('parent done')"),
+                  'others': boxed("import os\nr = []\nfor pid in (2, 50, 300, 4000):\n    try:\n        os.kill(pid, 0); r.append('seen')\n    except Exception as e:\n        r.append(type(e).__name__)\nprint(r)")}
+        time.sleep(0.5)
+        survivors = subprocess.run(['pgrep', '-f', mark], capture_output=True, text=True).stdout.split()
+        # an unshare(1) that makes no namespaces: the launcher refuses, and the check is not run
+        fake = here / 'fake_unshare'; fake.write_text('#!/bin/sh\nwhile [ "${1#--}" != "$1" ]; do shift; done\nexec "$@"\n'); fake.chmod(0o755)
+        ran_marker = pathlib.Path(tempfile.gettempdir()) / f'{mark}-ran'
+        closed = subprocess.run([PY, '-B', '-c', "import sys, json; sys.path.insert(0, sys.argv[1]); import sandbox; o = sandbox.run({'c.py': sys.argv[2].encode()}, 'c.py', b'{}'); "
+                                 "print(json.dumps([o.state, o.detail]))", str(GATEWAY / 'verify'), f"open({str(ran_marker)!r}, 'w').write('ran')"],
+                                capture_output=True, text=True, timeout=60, env=dict(os.environ, VERIFY_SANDBOX_UNSHARE=str(fake)))
+        fail_closed = (step(json.loads, (closed.stdout.strip().splitlines() or ['null'])[-1]), ran_marker.exists())
+        # a hostile check, baselined and run through the gate: it does its work, and what it found goes into the signed verdict
+        hdir = here / 'hostile_case'; shutil.copytree(CASE, hdir)
+        honest = (CASE / 'check.py').read_text()
+        (hdir / 'check.py').write_text(probe.replace("import json, os, socket\n", "import json, os, socket, csv, pathlib, sys\n") +
+                                       "design = json.load(sys.stdin)\n"
+                                       "rows = {r['material']: r for r in csv.DictReader(open(pathlib.Path(__file__).parent / 'materials.csv'))}\n"
+                                       "value = float(rows[design['material']]['max_service_c'])\n"
+                                       "seen = [k for k, v in found['read'].items() if v in ('read', 'listed')] + [str(i) for i, v in enumerate(found['reach']) if v == 'connected']\n"
+                                       "print(json.dumps({'achieved': {'service_temperature': value}, 'basis': f\"uid {found['uid']}; reached {seen or 'nothing'} of the service\"}))\n")
+        env2 = step(s.baseline, hdir, draft(requirement=dict(req, id='REQ-SANDBOX-027')))
+        h2 = env2.get('baseline_sha256') if isinstance(env2, dict) else None
+        cfg2 = s.client_config(here / 'ws2', h2) if h2 else None
+        bad2 = s.submit(cfg2, BAD) if cfg2 else ('no baseline', env2)
+        rec2 = step(s.record, h2, [here / 'ws2' / '.verify' / 'submissions.jsonl']) if h2 else {}
+        ok2, _, s2 = check_record.verify(rec2, s.keys) if isinstance(rec2, dict) and rec2 else (False, [], {})
+        run2 = (s2.get('runs') or [{}])[0]
+        controls2 = [(c.get('name'), c.get('verdict')) for c in (env2.get('controls_run') if isinstance(env2, dict) else []) or []]
+        # the gate host started with that unshare(1): the run is UNKNOWN, the check is not run, and the engineer is told
+        s.stop_host(); s.start_host(extra_env={'VERIFY_SANDBOX_UNSHARE': str(fake)})
+        notices_before = len(r.s.inbox(r.h))
+        refused = r.submit({'material': 'PPS-GF40', 'wall_mm': 3.5, 'mode': 'normal'})
+        notices_after = len(r.s.inbox(r.h))
+        s.stop_host(); s.start_host()
+        again = r.submit({'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'})
+        ok, why, summ = r.checked()
+        runs = {(x['design'] or {}).get('wall_mm'): (x['outcome'], x['reason_code'], x['detail'][:160]) for x in summ.get('runs', [])}
+        good = r.submit(GOOD); bad = r.submit(BAD)
+        e.update(first=first, second=second, limits={k: v[:3] if isinstance(v, tuple) else v for k, v in limits.items()}, survivors=survivors, fail_closed=fail_closed,
+                 controls2=controls2, bad2=(bad2[0], head(bad2[1])), run2=(run2.get('outcome'), run2.get('reason_code'), run2.get('basis')), ok2=ok2,
+                 refused=(refused[0], head(refused[1])), notices=(notices_before, notices_after), runs=runs, again=(again[0], head(again[1])), good=good[0], bad=bad[0], ok=ok, why=why)
+        f1, f2 = (first if isinstance(first, dict) else {}), (second if isinstance(second, dict) else {})
+        checks = {'a check runs as nobody (user and group 65534, no other group), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev':
+                      (f1.get('uid'), f1.get('gid'), f1.get('groups'), f1.get('cwd'), f1.get('here')) == (65534, 65534, [], '/work', ['c.py', 'data.csv'])
+                      and f1.get('root') == ['bin', 'dev', 'lib', 'lib64', 'sbin', 'tmp', 'usr', 'work'],
+                  'none of the service\'s files is there to read: not the engineer\'s or the courier\'s key, the witness\'s TLS key, the ledger, the baselines, /etc/passwd, /proc or the code':
+                      bool(f1.get('read')) and all(v == 'FileNotFoundError' for v in f1['read'].values()),
+                  'it has no network: the witness, the gate host, the database and an address outside cannot be reached':
+                      f1.get('reach') is not None and len(f1['reach']) == 4 and all(v != 'connected' for v in f1['reach']),
+                  'it can write only in /work and /tmp, not in the root, /usr or /dev; and the next run starts in an empty /work, with nothing kept from the one before':
+                      f1.get('write') == {'/x': 'OSError', '/usr/x': 'OSError', '/dev/x': 'OSError', '/work/kept-from-before': 'written', '/tmp/x': 'written'}
+                      and f1.get('kept') is False and f2.get('kept') is False,
+                  'a fork bomb stops at the process limit; asking for 2 GiB of memory fails; more than 1 MiB of output ends the run; a loop is stopped at the time allowed; a file of 100 MiB cannot be written':
+                      limits['fork bomb'][0] == 'RAN' and limits['fork bomb'][2].split()[-1:] == ['BlockingIOError'] and int((limits['fork bomb'][2].split() or ['999'])[0]) < 64
+                      and limits['memory'][:2] == ('RAN', 1) and 'MemoryError' in limits['memory'][3] and limits['output'][0] == 'OUTPUT_TOO_LONG' and limits['spin'][0] == 'TIMEOUT'
+                      and limits['disk'][0] in ('RAN',) and 'wrote' not in limits['disk'][2],
+                  'a process the check leaves behind ends with the run; the check sees no other process and can signal none':
+                      limits['left behind'][:2] == ('RAN', 0) and survivors == [] and limits['others'][2].strip() == "['ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError']",
+                  'where the sandbox cannot be made (an unshare that makes no namespaces), the launcher refuses, the outcome says the sandbox was not made, and the check is not run':
+                      isinstance(fail_closed[0], list) and fail_closed[0][0] == 'SANDBOX_UNAVAILABLE' and 'not the first process of a new process namespace' in fail_closed[0][1] and fail_closed[1] is False,
+                  'a hostile check that probes the service while it works is baselined with its controls as declared, gives a failing design its FAIL, and its own words in the signed verdict say it reached nothing; the record verifies':
+                      controls2 and all(v in ('PASS', 'FAIL') for _, v in controls2) and bad2[0] == 2 and run2.get('outcome') == 'FAIL'
+                      and run2.get('basis') == "uid 65534; reached nothing of the service" and ok2,
+                  'a gate host whose sandbox cannot be made answers UNKNOWN, says the check was not run, and sends the engineer the notice; started again as it should be, it runs checks again':
+                      refused[0] == 3 and runs.get(3.5, ('',))[:2] == ('UNKNOWN', 'CHECK_ERROR') and 'the check was not run' in runs.get(3.5, ('', '', ''))[2]
+                      and notices_after == notices_before + 1 and again[0] == 0 and runs.get(2.5, ('',))[0] == 'PASS',
+                  'checks that keep to their own work run as before: a design that meets the declared check passes and one that does not fails, and the record verifies':
+                      good[0] == 0 and bad[0] == 2 and ok}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27}
 
 
 def main():

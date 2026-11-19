@@ -22,8 +22,10 @@ be shown to be inside the design space.
 
   1  the design must be inside the design space, or the verdict is FAIL / DESIGN_OUTSIDE_BASELINE and the check is not run;
   2  the check and every input must hash to the card's values, or the verdict is UNKNOWN / BASELINE_MISMATCH;
-  3  the verified bytes are copied to an empty directory and run there as a separate process with no credentials, the
-     design on standard input; a crash, a timeout or a non-zero exit is UNKNOWN / CHECK_ERROR;
+  3  the verified bytes are copied to an empty directory and run there in a disposable sandbox of their own (sandbox.py,
+     Amendment 12): no network, no other process, none of the machine's files but the Python installation, nobody's identity,
+     and limits on time, memory, processes and output; the design on standard input.  A crash, a timeout, too much output
+     or a non-zero exit is UNKNOWN / CHECK_ERROR, and so is a sandbox that cannot be made: the check is then not run;
   4  the check must print one JSON object {"achieved": {criterion id: number}, "basis": "one sentence"}; anything else,
      or a value that is not a finite number, is UNKNOWN / CHECK_OUTPUT_INVALID;
   5  a value outside the criterion's plausible range is UNKNOWN / RESULT_IMPLAUSIBLE (zero, a sign error, a unit slip);
@@ -33,16 +35,16 @@ be shown to be inside the design space.
 UNKNOWN is never a pass.  A verdict says only that the declared check returned numbers that do or do not meet the
 baselined limits.  It does not say the check is right, the requirement is complete, or the part is safe.
 
-Standard library only.
+Standard library only (and sandbox.py beside it).
 """
 import decimal
 import hashlib
 import json
 import os
 import pathlib
-import subprocess
 import sys
-import tempfile
+
+import sandbox                                                          # Amendment 12: the check's own disposable sandbox
 
 FORMAT = 'verification-baseline/1'
 VERDICT_FORMAT = 'verification-verdict/1'
@@ -327,16 +329,13 @@ def evaluate(directory, card: dict, design, control: bool = False) -> dict:
         if sha256_hex(data) != want:
             return _verdict(card, design, 'BASELINE_MISMATCH', _blank(card), detail=f'{name} no longer matches the baseline (it was changed after baselining)')
         files[name] = data
-    with tempfile.TemporaryDirectory(prefix='verify-run-') as tmp:
-        for name, data in files.items():
-            (pathlib.Path(tmp) / name).write_bytes(data)                 # the bytes run are the bytes hashed
-        try:
-            run = subprocess.run([sys.executable, '-I', card['check']['file']], input=json.dumps(design).encode(), capture_output=True, cwd=tmp,
-                                 timeout=CHECK_TIMEOUT, env={'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8'})
-        except subprocess.TimeoutExpired:
-            return _verdict(card, design, 'CHECK_ERROR', _blank(card), detail=f'the check did not finish within {CHECK_TIMEOUT:.0f} s')
-        except OSError as exc:
-            return _verdict(card, design, 'CHECK_ERROR', _blank(card), detail=f'the check could not be started: {exc}'[:200])
+    run = sandbox.run(files, card['check']['file'], json.dumps(design).encode(), timeout=CHECK_TIMEOUT)   # the bytes run are the bytes hashed (Amendment 12: in a sandbox of its own)
+    if run.state == 'SANDBOX_UNAVAILABLE':
+        return _verdict(card, design, 'CHECK_ERROR', _blank(card), detail=f'the check was not run: {run.detail}'[:300])
+    if run.state == 'TIMEOUT':
+        return _verdict(card, design, 'CHECK_ERROR', _blank(card), detail=f'the check did not finish within {CHECK_TIMEOUT:.0f} s')
+    if run.state == 'OUTPUT_TOO_LONG':
+        return _verdict(card, design, 'CHECK_ERROR', _blank(card), detail=f'the check printed more than {sandbox.MAX_OUTPUT} bytes')
     if run.returncode != 0:
         tail = run.stderr.decode(errors='replace').strip().splitlines()[-1:] or ['no message']
         return _verdict(card, design, 'CHECK_ERROR', _blank(card), detail=f'the check exited with status {run.returncode}: {tail[0]}'[:300])
