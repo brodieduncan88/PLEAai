@@ -2577,8 +2577,8 @@ def r26():
 def r27():
     """Each run of a check is made a disposable sandbox of its own: no network, no other process, none of the service's files,
     nobody's identity, limits on time, memory, processes and output, and nothing kept after it.  A check that tries to read
-    the service's keys, reach its database or the witness, write outside its folder, or outlive its run cannot; and if the
-    sandbox cannot be made, the check is not run.  (Amendment 12.)"""
+    the service's keys, reach its database or the witness, write outside its /work and /tmp, or outlive its run cannot; and
+    if the sandbox cannot be made, the check is not run.  (Amendment 12.)"""
     s = deploy.Services(OUT / 'R27').start(); e = {}
     try:
         import sandbox
@@ -2652,7 +2652,11 @@ def r27():
                   'host': boxed("import os, socket, sys\ntry:\n    import cryptography; site = 'imported'\nexcept ImportError:\n    site = 'ImportError'\nprint(socket.gethostname(), sorted(os.listdir('/usr/local')), site, sys.flags.no_site, sys.flags.isolated)"),
                   'calls': boxed("import json, os, socket, sys\nr = {}\nfor name, fam in (('vsock', 40), ('packet', 17), ('netlink', 16), ('unix', 1), ('inet', 2)):\n    try:\n        socket.socket(fam, socket.SOCK_RAW if fam in (16, 17) else socket.SOCK_STREAM).close(); r[name] = 'made'\n"
                                  "    except OSError as e:\n        r[name] = e.errno\ntry:\n    socket.socketpair(); r['pair'] = 'made'\nexcept OSError as e:\n    r['pair'] = e.errno\nst = os.statvfs('/work'); r['work_bytes'] = st.f_frsize * st.f_blocks\n"
-                                 "sys.path.append('/usr/lib/python3/dist-packages')\ntry:\n    import yaml; r['dist'] = 'imported'\nexcept ImportError:\n    r['dist'] = 'ImportError'\nprint(json.dumps(r))"),
+                                 "sys.path.append('/usr/lib/python3/dist-packages')\ntry:\n    import yaml; r['dist'] = 'imported'\nexcept ImportError:\n    r['dist'] = 'ImportError'\n"
+                                 "import ctypes, resource\nlibc = ctypes.CDLL(None, use_errno=True); libc.syscall.restype = ctypes.c_long; ctx = ctypes.c_ulong(0)\n"
+                                 "r['aio'] = [libc.syscall(206, 1, ctypes.byref(ctx)), ctypes.get_errno()]\nr['deathsig'] = [libc.prctl(1, 0, 0, 0, 0), ctypes.get_errno()]\n"
+                                 "r['bounding'] = [c for c in range(64) if libc.prctl(23, c, 0, 0, 0) == 1]\n"
+                                 "r['rlimits'] = [resource.getrlimit(resource.RLIMIT_SIGPENDING)[0], resource.getrlimit(resource.RLIMIT_MSGQUEUE)[0]]\nprint(json.dumps(r))"),
                   'memory': boxed("x = bytearray(2 * 1024 ** 3)\nprint('got it')"),
                   'output': boxed("import sys\nwhile True:\n    sys.stdout.write('x' * 65536)"),
                   'spin': boxed("while True:\n    pass", timeout=3),
@@ -2683,7 +2687,7 @@ def r27():
         def run_procs():
             rows = [l.split() for l in subprocess.run(['ps', '-eo', 'uid=,stat='], capture_output=True, text=True).stdout.splitlines()]
             return [u for u, *st in rows if u.isdigit() and int(u) >= sandbox.UID_BASE and not (st and st[0].startswith('Z'))]
-        dying = subprocess.Popen([PY, '-B', '-c', "import sys; sys.path.insert(0, sys.argv[1]); import sandbox; sandbox.run({'c.py': b'import time\\ntime.sleep(60)'}, 'c.py', b'', timeout=30)", str(GATEWAY / 'verify')])
+        dying = subprocess.Popen([PY, '-B', '-c', "import sys; sys.path.insert(0, sys.argv[1]); import sandbox; sandbox.run({'c.py': b'import ctypes, time\\nctypes.CDLL(None).prctl(1, 0, 0, 0, 0)\\ntime.sleep(60)'}, 'c.py', b'', timeout=30)", str(GATEWAY / 'verify')])   # it tries to clear its death signal first
         for _ in range(100):                                            # until the check is running as the run's user
             if any(int(u) % 2 == 1 for u in run_procs()):                # the run's user is its root's id + 1, odd
                 break
@@ -2695,13 +2699,32 @@ def r27():
             if not e['orphans']:
                 break
             time.sleep(0.1)
+        # what the kernel counts per user: a check takes all the inotify instances it may, and root, outside, can still make one
+        held = {}
+        th = threading.Thread(target=lambda: held.update(o=boxed("import ctypes, os, time\npids = []\nfor i in range(3):\n    pid = os.fork()\n    if pid == 0:\n"
+                                                                  "        libc = ctypes.CDLL(None, use_errno=True); n = 0\n        while libc.inotify_init1(0) >= 0:\n            n += 1\n"
+                                                                  "        print(n, ctypes.get_errno(), flush=True); time.sleep(4); os._exit(0)\n    pids.append(pid)\nfor p in pids:\n    os.waitpid(p, 0)", timeout=8)))
+        th.start(); time.sleep(2.5)
+        import ctypes
+        libc = ctypes.CDLL(None, use_errno=True); fd = libc.inotify_init1(0); e['root_inotify'] = [fd >= 0, ctypes.get_errno()]
+        if fd >= 0:
+            os.close(fd)
+        th.join(); e['inotify'] = held.get('o')
+        taken = [int(l.split()[0]) for l in (e['inotify'][2] if isinstance(e['inotify'], tuple) and len(e['inotify']) > 2 else '').splitlines() if l.split() and l.split()[0].isdigit()]
+        e['inotify_taken'] = sum(taken)
         # a launcher that makes no namespaces: it refuses, and the check is not run; nor is it where the control groups cannot be made
         ran_marker = pathlib.Path(tempfile.gettempdir()) / f'{mark}-ran'
         o = step(sandbox.run, {'c.py': f"open({str(ran_marker)!r}, 'w').write('ran')".encode()}, 'c.py', b'{}', _no_unshare=True)
         no_groups = subprocess.run([PY, '-B', '-c', "import sys, json; sys.path.insert(0, sys.argv[1]); import sandbox; o = sandbox.run({'c.py': sys.argv[2].encode()}, 'c.py', b'{}'); "
                                     "print(json.dumps([o.state, o.detail]))", str(GATEWAY / 'verify'), f"open({str(ran_marker)!r}, 'w').write('ran')"],
                                    capture_output=True, text=True, timeout=60, env=dict(os.environ, VERIFY_SANDBOX_CGROUP_ROOT=str(here / 'no-cgroups')))
-        fail_closed = ([o.state, o.detail] if not isinstance(o, tuple) else o, ran_marker.exists(), step(json.loads, (no_groups.stdout.strip().splitlines() or ['null'])[-1]))
+        small = here / 'file-max'; small.write_text('1644500\n'); was = sandbox.FILE_MAX_PATH; sandbox.FILE_MAX_PATH = str(small)
+        try:                                                            # a machine whose file table one run could fill
+            o3 = step(sandbox.run, {'c.py': f"open({str(ran_marker)!r}, 'w').write('ran')".encode()}, 'c.py', b'{}')
+        finally:
+            sandbox.FILE_MAX_PATH = was
+        fail_closed = ([o.state, o.detail] if not isinstance(o, tuple) else o, ran_marker.exists(), step(json.loads, (no_groups.stdout.strip().splitlines() or ['null'])[-1]),
+                       [o3.state, o3.detail] if not isinstance(o3, tuple) else o3)
         # a hostile check, baselined and run through the gate: it does its work, and what it found goes into the signed verdict
         hdir = here / 'hostile_case'; shutil.copytree(CASE, hdir)
         honest = (CASE / 'check.py').read_text()
@@ -2754,17 +2777,22 @@ def r27():
                       limits['memory, many processes'][0] == 'RAN' and limits['memory, many processes'][2].split().count('alive') <= 1
                       and limits['disk, many files'][0] == 'RAN' and int((limits['disk, many files'][2].split() or ['99'])[0]) < 7 and limits['disk, many files'][2].split()[-1:] == ['OSError']
                       and limits['a design larger than the pipe'][0] == 'TIMEOUT' and e['piped_seconds'] < 5,
-                  'runs share nothing: the kernel\'s keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox\'s; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)':
+                  'runs keep nothing for one another: the kernel\'s keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox\'s; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)':
                       limits['keyring, first run'][2].strip() == 'refused 38' and limits['keyring, next run'][2].strip() == 'not found'
                       and limits['host'][2].strip() == 'sandbox [] ImportError 1 1' and (printed(limits['calls']) or {}).get('dist') == 'ImportError',
-                  'the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; /work is in memory, at most 64 MiB':
+                  'the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS) or clear its death signal (EPERM); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB':
                       isinstance(printed(limits['calls']), dict) and {k: printed(limits['calls']).get(k) for k in ('vsock', 'packet', 'netlink', 'unix', 'inet', 'pair')} == dict.fromkeys(('vsock', 'packet', 'netlink', 'unix', 'inet', 'pair'), 97)
-                      and 0 < printed(limits['calls'])['work_bytes'] <= (64 << 20),
-                  'two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started':
+                      and 0 < printed(limits['calls'])['work_bytes'] <= (64 << 20)
+                      and printed(limits['calls']).get('aio') == [-1, 38] and printed(limits['calls']).get('deathsig') == [-1, 1]
+                      and printed(limits['calls']).get('bounding') == [] and printed(limits['calls']).get('rlimits') == [64, 0],
+                  'what the kernel counts for each user is counted against the run\'s own id, not root\'s: a check that takes every inotify instance it may (128, the limit for one user) leaves root, outside, able to make one':
+                      isinstance(e['inotify'], tuple) and e['inotify'][0] == 'RAN' and 0 < e['inotify_taken'] <= 128 and e['root_inotify'][0] is True,
+                  'two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check tried to clear its death signal':
                       len(e['host_ids']) == 2 and e['host_ids'][0] and e['host_ids'][1] and not set(e['host_ids'][0]) & set(e['host_ids'][1]) and e['running_before_kill'] and e['orphans'] == [],
-                  'where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run\'s control groups':
+                  'where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run\'s control groups, or whose machine has a file table one run could fill':
                       isinstance(fail_closed[0], list) and fail_closed[0][0] == 'SANDBOX_UNAVAILABLE' and 'not the first process of a new process namespace' in fail_closed[0][1] and fail_closed[1] is False
-                      and isinstance(fail_closed[2], list) and fail_closed[2][0] == 'SANDBOX_UNAVAILABLE' and 'control groups' in fail_closed[2][1],
+                      and isinstance(fail_closed[2], list) and fail_closed[2][0] == 'SANDBOX_UNAVAILABLE' and 'control groups' in fail_closed[2][1]
+                      and isinstance(fail_closed[3], list) and fail_closed[3][0] == 'SANDBOX_UNAVAILABLE' and 'file table' in fail_closed[3][1],
                   'a hostile check that probes the service while it works is baselined with its controls as declared, gives a failing design its FAIL, and its own words in the signed verdict say it reached nothing; the record verifies':
                       controls2 and all(v in ('PASS', 'FAIL') for _, v in controls2) and bad2[0] == 2 and run2.get('outcome') == 'FAIL'
                       and run2.get('basis') == "uid 65534; reached nothing of the service" and ok2,

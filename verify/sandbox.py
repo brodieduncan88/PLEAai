@@ -8,7 +8,9 @@ and thrown away after it:
 
   - identities of its own: a new user namespace whose root and whose unprivileged user are two host user ids chosen for this
     run alone, so that no other run, and no process of the machine, shares them: not their process count, not their kernel
-    keyring, not the right to trace or signal them;
+    keyring, not the right to trace or signal them.  The namespace is made by the first of these ids, not by root, so what
+    the kernel counts for each user (inotify and fanotify use, message queues, pending signals) is counted against the run's
+    own id, not against root's, which the machine's other processes share;
   - new mount, process, network, IPC and host-name namespaces: the check sees no other process, has no network at all (not
     even loopback), and its mounts are its own;
   - a root of its own: an empty, read-only file system holding the Python installation (/usr, read-only throughout, with
@@ -19,22 +21,28 @@ and thrown away after it:
   - the unprivileged user of that namespace, with no other group and no capabilities (its bounding set emptied), no way to
     gain any (no new privileges), and a session keyring of its own, not the service's;
   - a small system-call filter (seccomp, x86-64 only): no sockets of any family, so no vsock, which a network namespace does
-    not close, and no Unix sockets, whose queued data the memory group does not count; the keyring, io_uring, bpf, perf and
-    userfaultfd calls are refused (ENOSYS); any other architecture's calls, or the x32 calls, end the process;
+    not close, and no Unix sockets, whose queued data the memory group does not count; the keyring, io_uring, native
+    asynchronous I/O (whose limit is the machine's), bpf, perf and userfaultfd calls are refused (ENOSYS); the check cannot
+    clear its own death signal (EPERM); any other architecture's calls, or the x32 calls, end the process;
   - a memory, a process and a freezer control group of its own (cgroup v1): its processes, together, use at most 1 GiB of memory (its
     files in /work and /tmp included) and number at most 64; and limits on each process's CPU time, memory, file size and
-    open files, no core dumps, the size of what it prints, and the wall-clock time of the run.  When the run ends, every
+    open file descriptors, pending signals and message-queue bytes, no core dumps, the size of what it prints, and the
+    wall-clock time of the run.  When the run ends, every
     process in its control groups is frozen and killed, and the groups and the folder are removed.  If the service dies
     during a run, the launcher is killed with it, and its first process, and so every process of the run, with the
-    launcher; the launcher also keeps its own clock; the groups and folders a killed service leaves are removed by a later run, once ten minutes old.
+    launcher; the launcher also keeps its own clock.  The groups and folders a killed service leaves are removed by a later
+    run of the same service, once ten minutes old, thawed first if the service died while they were frozen.  Before a run's memory group is removed, what
+    the kernel keeps charged to it (its page cache, its file names looked up) is freed, not handed on to the service's group.
 
 The check is run by the Python standard library alone (python -I -S): no site packages, no environment from the service.
 
 If the sandbox cannot be made, the check is not run, and the run says why: the outcome is SANDBOX_UNAVAILABLE.  Nothing ever
 falls back to running a check outside it.  The sandbox needs the service to run as root (to choose the run's identities and
-make its control groups); otherwise every run is SANDBOX_UNAVAILABLE.  Nothing is mounted, and nothing run, unless the
-process doing it is the first of new user, mount, process, network, IPC and host-name namespaces, none of them its parent's,
-with no network but a loopback, and with the run's own two ids mapped.  It says that the sandbox is ready on a pipe the check does not inherit,
+make its control groups); otherwise every run is SANDBOX_UNAVAILABLE.  So is every run on a machine whose file table
+(fs.file-max) is below 2^40: a run can keep files open through memory mappings, beyond its limit on descriptors, and only
+its memory bounds how many, so a smaller table could be filled by one run.  Nothing is mounted, and nothing run, unless the
+process doing it is the first of new user, mount, process, network, IPC and host-name namespaces, none of them the
+service's, with no network but a loopback, and with the run's own two ids mapped.  It says that the sandbox is ready on a pipe the check does not inherit,
 and, if the check cannot be started, says that too, so a check cannot pretend that it was or was not run.
 
 What it does not do.  Its filter narrows the kernel's interface; it does not close it: the check can still make every
@@ -44,7 +52,7 @@ share of the CPU beyond its time limit, nor on its disk reads; many runs at once
 under /usr is visible as it is.  Programs that need /proc or /dev/shm (multiprocessing) do not work.  In the demonstration
 the service itself runs as root on the same machine.
 
-    sandbox.py --inside JAIL WORK FD_READY FD_SYNC_OUT FD_SYNC_IN NS_INODES LIMITS [--no-unshare] -- PROGRAM ARGS...
+    sandbox.py --inside JAIL WORK FD_READY FD_SYNC_OUT FD_SYNC_IN NS_INODES LIMITS ALLOWED_SECONDS OWNER_UID [--no-unshare] -- PROGRAM ARGS...
         the launcher, run by run(); --no-unshare is for a test, to show that a launcher outside new namespaces refuses
 
 Standard library only.
@@ -77,6 +85,8 @@ READY, EXEC_FAILED = b'SANDBOX-READY\n', b'SANDBOX-EXEC-FAILED\n'
 UID_BASE, UID_SPAN = 2_000_400_000, 1 << 25                           # host ids for runs, above the usual directory-service and container ranges: two each, at random
 GRACE = 5.0                                                             # seconds the launcher allows past the run's own time before it ends the run itself
 STALE = 600.0                                                           # a run's leftovers older than this are swept away
+FILE_MAX_PATH, FILE_MAX_FLOOR = '/proc/sys/fs/file-max', 1 << 40          # the machine's file table: beyond what any run's memory could fill
+LATE = 0.5                                                              # seconds past the run's time that output still waiting may hold the clock
 AT_ONCE = threading.BoundedSemaphore(4)                                 # runs at once, in one service
 CGROUP_ROOT = os.environ.get('VERIFY_SANDBOX_CGROUP_ROOT', '/sys/fs/cgroup')   # a test may point this elsewhere, to show the run fails closed
 NAMESPACES = ('user', 'mnt', 'pid', 'net', 'ipc', 'uts')
@@ -111,7 +121,7 @@ def _ns_inodes() -> str:
 
 # ---------------------------------------------------------------------------------------------------- control groups
 class Cgroups:
-    """A memory, a process and a freezer control group of this run's own, beside the service's (cgroup v1)."""
+    """A memory, a process and a freezer control group of this run's own, within the service's (cgroup v1)."""
 
     def __init__(self, name: str, memory: int, processes: int):
         self.dirs = []
@@ -122,11 +132,15 @@ class Cgroups:
                 mine[c] = path
         self.freezer = None
         try:
-            for ctrl, settings in (('memory', {'memory.limit_in_bytes': memory}), ('pids', {'pids.max': processes}), ('freezer', {})):
+            parents = {}
+            for ctrl in ('memory', 'pids', 'freezer'):
                 if ctrl not in mine:
                     raise OSError(f'no {ctrl} control group')
-                parent = pathlib.Path(CGROUP_ROOT) / ctrl / mine[ctrl].lstrip('/')
-                sweep(parent)
+                parents[ctrl] = pathlib.Path(CGROUP_ROOT) / ctrl / mine[ctrl].lstrip('/')
+            for ctrl in ('freezer', 'memory', 'pids'):                    # thawed first, so that the others empty in the same sweep
+                sweep(parents[ctrl])
+            for ctrl, settings in (('memory', {'memory.limit_in_bytes': memory}), ('pids', {'pids.max': processes}), ('freezer', {})):
+                parent = parents[ctrl]
                 d = parent / name
                 d.mkdir()
                 self.dirs.append(d)
@@ -174,6 +188,7 @@ class Cgroups:
                 break
             time.sleep(0.01)
         for d in self.dirs:
+            _write(d / 'memory.force_empty', '0') if (d / 'memory.force_empty').exists() else None   # what the kernel keeps charged to the run is freed, not handed to the service's group
             for _ in range(200):
                 try:
                     d.rmdir(); break
@@ -193,7 +208,7 @@ def _write(path, text: str) -> None:
 
 def sweep(parent: pathlib.Path) -> None:
     """Remove what runs older than STALE left behind (a service that died during a run): their groups, after killing anything
-    still in them, and their folders."""
+    still in them, and thawing them if they were left frozen; and their folders."""
     now = time.time()
     for d in parent.glob('verify-sandbox-*'):
         try:
@@ -204,7 +219,17 @@ def sweep(parent: pathlib.Path) -> None:
                     os.kill(int(p), signal.SIGKILL)
                 except (ProcessLookupError, ValueError):
                     pass
-            d.rmdir()
+            if (d / 'freezer.state').exists():
+                _write(d / 'freezer.state', 'THAWED')                   # a service killed while the run was frozen: thawed, the killed die
+            if (d / 'memory.force_empty').exists():
+                _write(d / 'memory.force_empty', '0')
+            for _ in range(100):
+                try:
+                    d.rmdir(); break
+                except FileNotFoundError:
+                    break
+                except OSError:
+                    time.sleep(0.01)
         except OSError:
             pass
     for f in glob.glob(os.path.join(tempfile.gettempdir(), 'verify-sandbox-*')):
@@ -254,6 +279,12 @@ def _run(files: dict, script: str, stdin: bytes, timeout: float, limits: dict, _
         return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'the sandbox needs the service to run as root, to give each run identities and control groups of its own')
     if platform.machine() != 'x86_64':
         return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'the sandbox\'s system-call filter is written for x86-64 only')
+    try:
+        file_max = int(open(FILE_MAX_PATH).read().split()[0])
+    except (OSError, ValueError, IndexError):
+        file_max = 0
+    if file_max < FILE_MAX_FLOOR:
+        return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', f'the machine\'s file table (fs.file-max, {file_max}) is small enough for one run to fill; the sandbox needs at least 2^40')
     def fit(name) -> bool:
         try:
             return isinstance(name, str) and '/' not in name and '\0' not in name and name not in ('', '.', '..') and not name.startswith('-') and len(name.encode()) <= 200
@@ -286,7 +317,7 @@ def _run(files: dict, script: str, stdin: bytes, timeout: float, limits: dict, _
             return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', f'the sandbox\'s control groups could not be made: {exc}'[:200])
         ready_r, ready_w = os.pipe(); out_r, out_w = os.pipe(); in_r, in_w = os.pipe()
         cmd = [python_for_checks(), '-I', '-S', os.path.abspath(__file__), '--inside', str(jail), str(work), str(ready_w), str(out_w), str(in_r), _ns_inodes(),
-               ','.join(str(limits[k]) for k in ('cpu_seconds', 'memory_bytes', 'processes', 'file_bytes', 'open_files', 'tmp_bytes', 'tmp_files')), str(timeout + GRACE)] \
+               ','.join(str(limits[k]) for k in ('cpu_seconds', 'memory_bytes', 'processes', 'file_bytes', 'open_files', 'tmp_bytes', 'tmp_files')), str(timeout + GRACE), str(uid)] \
               + (['--no-unshare'] if _no_unshare else []) + ['--', python_for_checks(), '-I', '-S', f'/work/{script}']
         try:
             proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, pass_fds=(ready_w, out_w, in_r),
@@ -362,7 +393,7 @@ def _supervise(proc, ready_fd, stdin: bytes, timeout: float, groups) -> Outcome:
             key.data.extend(chunk)
             if len(key.data) > MAX_OUTPUT:
                 state = 'OUTPUT_TOO_LONG'; reading = 0; break
-        if reading and not events and deadline - time.monotonic() <= 0:   # every event already in is read before the clock is looked at
+        if reading and deadline - time.monotonic() <= (0 if not events else -LATE):   # what is already in is read first, for at most LATE seconds
             state = 'TIMEOUT'; break
     sel.close()
     groups.kill_all()
@@ -418,18 +449,21 @@ def _mount(libc, source, target, fstype, flags, data=None) -> None:
 def _seccomp_program() -> bytes:
     """A small system-call filter, for x86-64: no sockets of any family (socket and socketpair refused, EAFNOSUPPORT), so no
     vsock, which a network namespace does not close, and no Unix sockets, whose queued data the memory group does not count;
-    and no keyring, io_uring, bpf, perf or userfaultfd calls (ENOSYS).  Any other architecture, or the x32 calls, end the
-    process.  Everything else is allowed: this narrows the way out, it does not close it."""
+    and no keyring, io_uring, native asynchronous I/O, bpf, perf or userfaultfd calls (ENOSYS); and prctl may not change the
+    death signal (EPERM), which is all that ends a run whose service has died.  Any other architecture, or the x32 calls,
+    end the process.  Everything else is allowed: this narrows the way out, it does not close it."""
     LD, JEQ, JGE, RET = 0x20, 0x15, 0x35, 0x06
     ALLOW, KILL = 0x7fff0000, 0x80000000
     errno = lambda e: 0x00050000 | e
-    denied = (248, 249, 250, 298, 321, 323, 425, 426, 427)               # add_key, request_key, keyctl, perf_event_open, bpf, userfaultfd, io_uring_*
+    denied = (248, 249, 250, 298, 321, 323, 425, 426, 427,               # add_key, request_key, keyctl, perf_event_open, bpf, userfaultfd, io_uring_*
+              206, 207, 208, 209, 210, 333)                              # io_setup, io_destroy, io_getevents, io_submit, io_cancel, io_pgetevents: one machine-wide limit
     prog = [(LD, 0, 0, 4), (JEQ, 1, 0, 0xc000003e), (RET, 0, 0, KILL), (LD, 0, 0, 0), (JGE, 0, 1, 0x40000000), (RET, 0, 0, KILL)]
     for nr in denied:
         prog += [(JEQ, 0, 1, nr), (RET, 0, 0, errno(38))]                # ENOSYS
     for nr in (41, 53):                                                 # socket, socketpair: refused for every family
         prog += [(JEQ, 0, 1, nr), (RET, 0, 0, errno(97))]               # EAFNOSUPPORT
-    prog += [(RET, 0, 0, ALLOW)]
+    prog += [(JEQ, 0, 3, 157), (LD, 0, 0, 16), (JEQ, 0, 1, 1), (RET, 0, 0, errno(1)),   # prctl(PR_SET_PDEATHSIG, ...): EPERM (its option is an int: the low word)
+             (RET, 0, 0, ALLOW)]
     return b''.join(code.to_bytes(2, 'little') + bytes([jt, jf]) + k.to_bytes(4, 'little') for code, jt, jf, k in prog)
 
 
@@ -497,7 +531,8 @@ def jail_and_exec(libc, jail: str, work: str, ready_fd: int, parent_ns: str, lim
     _check(libc.sethostname(b'sandbox', 7), 'sethostname')
     os.chroot(jail); os.chdir('/work')
     for res, value in ((resource.RLIMIT_CPU, cpu), (resource.RLIMIT_AS, mem), (resource.RLIMIT_FSIZE, fsize), (resource.RLIMIT_NOFILE, nofile),
-                       (resource.RLIMIT_CORE, 0), (resource.RLIMIT_NPROC, nproc), (resource.RLIMIT_MEMLOCK, 0)):
+                       (resource.RLIMIT_CORE, 0), (resource.RLIMIT_NPROC, nproc), (resource.RLIMIT_MEMLOCK, 0),
+                       (resource.RLIMIT_SIGPENDING, 64), (resource.RLIMIT_MSGQUEUE, 0)):
         resource.setrlimit(res, (value, value))
     libc.syscall.restype = ctypes.c_long
     if libc.syscall(SYS_KEYCTL, KEYCTL_JOIN_SESSION_KEYRING, None, 0, 0, 0) < 0:   # a new session keyring: not the service's
@@ -523,7 +558,7 @@ def jail_and_exec(libc, jail: str, work: str, ready_fd: int, parent_ns: str, lim
 
 def launcher(a: list) -> None:
     sep = a.index('--')
-    jail, work, ready_fd, out_fd, in_fd, parent_ns, limits, allowed = a[1], a[2], int(a[3]), int(a[4]), int(a[5]), a[6], [int(x) for x in a[7].split(',')], float(a[8])
+    jail, work, ready_fd, out_fd, in_fd, parent_ns, limits, allowed, owner = a[1], a[2], int(a[3]), int(a[4]), int(a[5]), a[6], [int(x) for x in a[7].split(',')], float(a[8]), int(a[9])
     program, no_unshare = a[sep + 1:], '--no-unshare' in a[:sep]
     for fd in (ready_fd, out_fd, in_fd):
         os.set_inheritable(fd, False)
@@ -532,7 +567,13 @@ def launcher(a: list) -> None:
     _check(libc.prctl(PR_SET_PDEATHSIG, signal.SIGKILL, 0, 0, 0), 'pdeathsig')   # if the service dies, so does the run
     if os.getppid() != parent:
         raise OSError('the service ended before the sandbox was made')
-    _write('/proc/self/oom_score_adj', '1000')                          # under memory pressure, the run goes before the service
+    _write('/proc/self/oom_score_adj', '1000')                          # the kernel's first choice when it must kill to free memory: the run, not the service
+    os.setgroups([]); os.setresgid(owner, owner, owner); os.setresuid(owner, owner, owner)   # the run's own id makes its namespaces: what the kernel counts per user is the run's
+    if os.getresuid() != (owner,) * 3 or os.getresgid() != (owner,) * 3:
+        raise OSError('the run\'s own identity could not be taken')
+    _check(libc.prctl(PR_SET_PDEATHSIG, signal.SIGKILL, 0, 0, 0), 'pdeathsig')   # cleared by taking the run's id, so set again
+    if os.getppid() != parent:
+        raise OSError('the service ended before the sandbox was made')
     if not no_unshare:
         _check(libc.unshare(CLONE_NEWUSER | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWNET | CLONE_NEWIPC | CLONE_NEWUTS), 'unshare')
     os.write(out_fd, b'UNSHARED\n')                                      # the service writes this run's two ids into the new user namespace
