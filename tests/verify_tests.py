@@ -2654,7 +2654,7 @@ def r27():
                                  "    except OSError as e:\n        r[name] = e.errno\ntry:\n    socket.socketpair(); r['pair'] = 'made'\nexcept OSError as e:\n    r['pair'] = e.errno\nst = os.statvfs('/work'); r['work_bytes'] = st.f_frsize * st.f_blocks\n"
                                  "sys.path.append('/usr/lib/python3/dist-packages')\ntry:\n    import yaml; r['dist'] = 'imported'\nexcept ImportError:\n    r['dist'] = 'ImportError'\n"
                                  "import ctypes, resource\nlibc = ctypes.CDLL(None, use_errno=True); libc.syscall.restype = ctypes.c_long; ctx = ctypes.c_ulong(0)\n"
-                                 "r['aio'] = [libc.syscall(206, 1, ctypes.byref(ctx)), ctypes.get_errno()]\nr['deathsig'] = [libc.prctl(1, 0, 0, 0, 0), ctypes.get_errno()]\n"
+                                 "r['aio'] = [libc.syscall(206, 1, ctypes.byref(ctx)), ctypes.get_errno()]\n"
                                  "r['bounding'] = [c for c in range(64) if libc.prctl(23, c, 0, 0, 0) == 1]\n"
                                  "r['rlimits'] = [resource.getrlimit(resource.RLIMIT_SIGPENDING)[0], resource.getrlimit(resource.RLIMIT_MSGQUEUE)[0]]\nprint(json.dumps(r))"),
                   'memory': boxed("x = bytearray(2 * 1024 ** 3)\nprint('got it')"),
@@ -2662,7 +2662,7 @@ def r27():
                   'spin': boxed("while True:\n    pass", timeout=3),
                   'disk': boxed("f = open('/work/big', 'wb')\ntry:\n    f.write(b'x' * (100 << 20)); print('wrote')\nexcept Exception as e:\n    print(type(e).__name__)"),
                   'left behind': boxed(f"import os, sys, time\nif os.fork() == 0:\n    os.setsid(); sys.argv[0] = '{mark}'\n    os.execv(sys.executable, [sys.executable, '-c', 'import time; time.sleep(120)', '{mark}'])\nprint('parent done')"),
-                  'others': boxed("import os\nr = []\nfor pid in (2, 50, 300, 4000):\n    try:\n        os.kill(pid, 0); r.append('seen')\n    except Exception as e:\n        r.append(type(e).__name__)\nprint(r)")}
+                  'others': boxed("import os\nr = []\nfor pid in (1, 50, 300, 4000):\n    try:\n        os.kill(pid, 0); r.append('seen')\n    except Exception as e:\n        r.append(type(e).__name__)\nprint(r)")}
         time.sleep(0.5)
         survivors = subprocess.run(['pgrep', '-f', mark], capture_output=True, text=True).stdout.split()
         for _ in range(30):                                                                     # no live process of any run's own identities is left (a zombie waits only to be reaped)
@@ -2687,11 +2687,26 @@ def r27():
         def run_procs():
             rows = [l.split() for l in subprocess.run(['ps', '-eo', 'uid=,stat='], capture_output=True, text=True).stdout.splitlines()]
             return [u for u, *st in rows if u.isdigit() and int(u) >= sandbox.UID_BASE and not (st and st[0].startswith('Z'))]
-        dying = subprocess.Popen([PY, '-B', '-c', "import sys; sys.path.insert(0, sys.argv[1]); import sandbox; sandbox.run({'c.py': b'import ctypes, time\\nctypes.CDLL(None).prctl(1, 0, 0, 0, 0)\\ntime.sleep(60)'}, 'c.py', b'', timeout=30)", str(GATEWAY / 'verify')])   # it tries to clear its death signal first
-        for _ in range(100):                                            # until the check is running as the run's user
-            if any(int(u) % 2 == 1 for u in run_procs()):                # the run's user is its root's id + 1, odd
+        def cmdline(p):
+            try:
+                return pathlib.Path(f'/proc/{p}/cmdline').read_bytes()
+            except OSError:
+                return b''
+        def run_pids():
+            rows = [l.split() for l in subprocess.run(['ps', '-eo', 'pid=,uid=,stat='], capture_output=True, text=True).stdout.splitlines()]
+            out = []
+            for p, u, *st in rows:
+                if u.isdigit() and int(u) >= sandbox.UID_BASE and int(u) % 2 == 1 and not (st and st[0].startswith('Z')) and os.path.exists(f'/proc/{p}/cmdline'):
+                    out.append(p)
+            return out
+        DYING = ("import ctypes, os, sys, threading, time\nif sys.argv[1:] != ['again']:\n    ctypes.CDLL(None).prctl(1, 0, 0, 0, 0)\n"   # it clears its death signal, then runs itself again from a second thread, which starts without one
+                 "    threading.Thread(target=os.execv, args=(sys.executable, [sys.executable, '-I', '-S', '/work/c.py', 'again'])).start(); time.sleep(5)\nelse:\n    time.sleep(60)")
+        dying = subprocess.Popen([PY, '-B', '-c', "import sys; sys.path.insert(0, sys.argv[1]); import sandbox; sandbox.run({'c.py': sys.argv[2].encode()}, 'c.py', b'', timeout=30)", str(GATEWAY / 'verify'), DYING])
+        for _ in range(100):                                            # until the check has done both: its process now runs the script again, as 'again'
+            if any(b'again' in cmdline(p) for p in run_pids()):
                 break
             time.sleep(0.05)
+        e['tried_before_kill'] = any(b'again' in cmdline(p) for p in run_pids())
         e['running_before_kill'] = bool(run_procs())
         dying.kill(); dying.wait()
         for _ in range(20):                                             # two seconds: long before the launcher's own clock (30 + 5 s) would end the run
@@ -2770,9 +2785,9 @@ def r27():
                       limits['fork bomb'][0] == 'RAN' and limits['fork bomb'][2].split()[-1:] == ['BlockingIOError'] and int((limits['fork bomb'][2].split() or ['999'])[0]) < 64
                       and limits['memory'][:2] == ('RAN', 1) and 'MemoryError' in limits['memory'][3] and limits['output'][0] == 'OUTPUT_TOO_LONG' and limits['spin'][0] == 'TIMEOUT'
                       and limits['disk'][0] in ('RAN',) and 'wrote' not in limits['disk'][2],
-                  'a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children; no process of any run\'s identities is left; the check sees no other process and can signal none':
+                  'a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children; no process of any run\'s identities is left; the check sees no process of the machine, and cannot signal the namespace\'s first process, which is the sandbox\'s own':
                       limits['left behind'][:2] == ('RAN', 0) and limits['escape'][0] == 'TIMEOUT' and survivors == [] and run_left == []
-                      and limits['others'][2].strip() == "['ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError']",
+                      and limits['others'][2].strip() == "['PermissionError', 'ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError']",
                   'what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher\'s':
                       limits['memory, many processes'][0] == 'RAN' and limits['memory, many processes'][2].split().count('alive') <= 1
                       and limits['disk, many files'][0] == 'RAN' and int((limits['disk, many files'][2].split() or ['99'])[0]) < 7 and limits['disk, many files'][2].split()[-1:] == ['OSError']
@@ -2780,15 +2795,15 @@ def r27():
                   'runs keep nothing for one another: the kernel\'s keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox\'s; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)':
                       limits['keyring, first run'][2].strip() == 'refused 38' and limits['keyring, next run'][2].strip() == 'not found'
                       and limits['host'][2].strip() == 'sandbox [] ImportError 1 1' and (printed(limits['calls']) or {}).get('dist') == 'ImportError',
-                  'the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS) or clear its death signal (EPERM); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB':
+                  'the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; nor can it set up native asynchronous I/O (ENOSYS); its capability bounding set is empty; it may queue 64 signals and no message-queue bytes; /work is in memory, at most 64 MiB':
                       isinstance(printed(limits['calls']), dict) and {k: printed(limits['calls']).get(k) for k in ('vsock', 'packet', 'netlink', 'unix', 'inet', 'pair')} == dict.fromkeys(('vsock', 'packet', 'netlink', 'unix', 'inet', 'pair'), 97)
                       and 0 < printed(limits['calls'])['work_bytes'] <= (64 << 20)
-                      and printed(limits['calls']).get('aio') == [-1, 38] and printed(limits['calls']).get('deathsig') == [-1, 1]
+                      and printed(limits['calls']).get('aio') == [-1, 38]
                       and printed(limits['calls']).get('bounding') == [] and printed(limits['calls']).get('rlimits') == [64, 0],
-                  'what the kernel counts for each user is counted against the run\'s own id, not root\'s: a check that takes every inotify instance it may (128, the limit for one user) leaves root, outside, able to make one':
-                      isinstance(e['inotify'], tuple) and e['inotify'][0] == 'RAN' and 0 < e['inotify_taken'] <= 128 and e['root_inotify'][0] is True,
-                  'two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check tried to clear its death signal':
-                      len(e['host_ids']) == 2 and e['host_ids'][0] and e['host_ids'][1] and not set(e['host_ids'][0]) & set(e['host_ids'][1]) and e['running_before_kill'] and e['orphans'] == [],
+                  'what the kernel counts for each user is counted against a user of the run\'s own, not root: a check takes inotify instances until refused, and gets exactly 128, the limit for one user, while root, outside, can still make one':
+                      isinstance(e['inotify'], tuple) and e['inotify'][0] == 'RAN' and e['inotify_taken'] == 128 and e['root_inotify'][0] is True,
+                  'two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had cleared its death signal and run itself again from a second thread, which starts without one':
+                      len(e['host_ids']) == 2 and e['host_ids'][0] and e['host_ids'][1] and not set(e['host_ids'][0]) & set(e['host_ids'][1]) and e['running_before_kill'] and e['tried_before_kill'] and e['orphans'] == [],
                   'where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run\'s control groups, or whose machine has a file table one run could fill':
                       isinstance(fail_closed[0], list) and fail_closed[0][0] == 'SANDBOX_UNAVAILABLE' and 'not the first process of a new process namespace' in fail_closed[0][1] and fail_closed[1] is False
                       and isinstance(fail_closed[2], list) and fail_closed[2][0] == 'SANDBOX_UNAVAILABLE' and 'control groups' in fail_closed[2][1]

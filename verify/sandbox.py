@@ -18,19 +18,23 @@ and thrown away after it:
     /dev/null, /dev/zero and /dev/urandom.  /work holds copies of the check and its data files, the bytes that were hashed.
     Nothing else of the machine is there: not the service's home, its keys, its database credentials, its journals or its
     inbox, not /etc, not /proc.  The host name is "sandbox";
-  - the unprivileged user of that namespace, with no other group and no capabilities (its bounding set emptied), no way to
-    gain any (no new privileges), and a session keyring of its own, not the service's;
+  - the check runs as the unprivileged user of that namespace, with no other group and no capabilities (its bounding set
+    emptied), no way to gain any (no new privileges), and a session keyring of its own, not the service's; it cannot
+    trace or signal the namespace's first process, which runs as the namespace's root;
   - a small system-call filter (seccomp, x86-64 only): no sockets of any family, so no vsock, which a network namespace does
     not close, and no Unix sockets, whose queued data the memory group does not count; the keyring, io_uring, native
-    asynchronous I/O (whose limit is the machine's), bpf, perf and userfaultfd calls are refused (ENOSYS); the check cannot
-    clear its own death signal (EPERM); any other architecture's calls, or the x32 calls, end the process;
+    asynchronous I/O (whose limit is the machine's), bpf, perf and userfaultfd calls are refused (ENOSYS); any other
+    architecture's calls, or the x32 calls, end the process;
   - a memory, a process and a freezer control group of its own (cgroup v1): its processes, together, use at most 1 GiB of memory (its
     files in /work and /tmp included) and number at most 64; and limits on each process's CPU time, memory, file size and
     open file descriptors, pending signals and message-queue bytes, no core dumps, the size of what it prints, and the
     wall-clock time of the run.  When the run ends, every
-    process in its control groups is frozen and killed, and the groups and the folder are removed.  If the service dies
-    during a run, the launcher is killed with it, and its first process, and so every process of the run, with the
-    launcher; the launcher also keeps its own clock.  The groups and folders a killed service leaves are removed by a later
+    process in its control groups is frozen and killed, and the groups and the folder are removed.  The first process of
+    the run's process namespace is the sandbox's own, not the check: it makes the jail, starts the check as its child,
+    reaps what the check leaves, and ends when the check ends, and every process of the namespace ends with it.  If the
+    service dies during a run, the launcher is killed with it, and that first process with the launcher, so the run ends
+    whatever the check has done to its own threads or death signal; unless the service dies while the run is frozen for
+    its kill: then its processes stay frozen until the sweep below.  The launcher also keeps its own clock.  The groups and folders a killed service leaves are removed by a later
     run of the same service, once ten minutes old, thawed first if the service died while they were frozen.  Before a run's memory group is removed, what
     the kernel keeps charged to it (its page cache, its file names looked up) is freed, not handed on to the service's group.
 
@@ -93,7 +97,7 @@ NAMESPACES = ('user', 'mnt', 'pid', 'net', 'ipc', 'uts')
 
 CLONE_NEWNS, CLONE_NEWUTS, CLONE_NEWIPC, CLONE_NEWUSER, CLONE_NEWPID, CLONE_NEWNET = 0x20000, 0x4000000, 0x8000000, 0x10000000, 0x20000000, 0x40000000
 MS_RDONLY, MS_NOSUID, MS_NODEV, MS_NOEXEC, MS_REMOUNT, MS_BIND, MS_REC, MS_PRIVATE = 1, 2, 4, 8, 32, 4096, 16384, 1 << 18
-PR_SET_PDEATHSIG, PR_SET_NO_NEW_PRIVS, PR_CAPBSET_DROP, PR_SET_SECCOMP = 1, 38, 24, 22
+PR_SET_PDEATHSIG, PR_SET_NO_NEW_PRIVS, PR_CAPBSET_DROP, PR_SET_SECCOMP, PR_SET_DUMPABLE = 1, 38, 24, 22, 4
 SYS_KEYCTL, KEYCTL_JOIN_SESSION_KEYRING = 250, 1
 
 
@@ -212,7 +216,8 @@ def sweep(parent: pathlib.Path) -> None:
     now = time.time()
     for d in parent.glob('verify-sandbox-*'):
         try:
-            if now - d.stat().st_mtime < STALE:
+            made = d.name.rsplit('-', 1)[-1]
+            if now - (int(made) if made.isdigit() and len(made) >= 10 else d.stat().st_mtime) < STALE:   # the time in its name: the kernel does not keep a group's mtime
                 continue
             for p in (d / 'cgroup.procs').read_text().split():
                 try:
@@ -312,7 +317,7 @@ def _run(files: dict, script: str, stdin: bytes, timeout: float, limits: dict, _
         for d in (base, work, jail):
             os.chown(d, uid, uid)                                       # the run's root reads them; nobody else can
         try:
-            groups = Cgroups(f'verify-sandbox-{uid}', limits['memory_bytes'], limits['processes'])
+            groups = Cgroups(f'verify-sandbox-{uid}-{int(time.time())}', limits['memory_bytes'], limits['processes'])   # its name says when it was made
         except OSError as exc:
             return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', f'the sandbox\'s control groups could not be made: {exc}'[:200])
         ready_r, ready_w = os.pipe(); out_r, out_w = os.pipe(); in_r, in_w = os.pipe()
@@ -449,9 +454,8 @@ def _mount(libc, source, target, fstype, flags, data=None) -> None:
 def _seccomp_program() -> bytes:
     """A small system-call filter, for x86-64: no sockets of any family (socket and socketpair refused, EAFNOSUPPORT), so no
     vsock, which a network namespace does not close, and no Unix sockets, whose queued data the memory group does not count;
-    and no keyring, io_uring, native asynchronous I/O, bpf, perf or userfaultfd calls (ENOSYS); and prctl may not change the
-    death signal (EPERM), which is all that ends a run whose service has died.  Any other architecture, or the x32 calls,
-    end the process.  Everything else is allowed: this narrows the way out, it does not close it."""
+    and no keyring, io_uring, native asynchronous I/O, bpf, perf or userfaultfd calls (ENOSYS).  Any other architecture, or
+    the x32 calls, end the process.  Everything else is allowed: this narrows the way out, it does not close it."""
     LD, JEQ, JGE, RET = 0x20, 0x15, 0x35, 0x06
     ALLOW, KILL = 0x7fff0000, 0x80000000
     errno = lambda e: 0x00050000 | e
@@ -462,8 +466,7 @@ def _seccomp_program() -> bytes:
         prog += [(JEQ, 0, 1, nr), (RET, 0, 0, errno(38))]                # ENOSYS
     for nr in (41, 53):                                                 # socket, socketpair: refused for every family
         prog += [(JEQ, 0, 1, nr), (RET, 0, 0, errno(97))]               # EAFNOSUPPORT
-    prog += [(JEQ, 0, 3, 157), (LD, 0, 0, 16), (JEQ, 0, 1, 1), (RET, 0, 0, errno(1)),   # prctl(PR_SET_PDEATHSIG, ...): EPERM (its option is an int: the low word)
-             (RET, 0, 0, ALLOW)]
+    prog += [(RET, 0, 0, ALLOW)]
     return b''.join(code.to_bytes(2, 'little') + bytes([jt, jf]) + k.to_bytes(4, 'little') for code, jt, jf, k in prog)
 
 
@@ -530,6 +533,28 @@ def jail_and_exec(libc, jail: str, work: str, ready_fd: int, parent_ns: str, lim
     _mount(libc, None, jail, None, MS_REMOUNT | MS_RDONLY | MS_NOSUID | MS_NODEV)    # the root itself cannot be written
     _check(libc.sethostname(b'sandbox', 7), 'sethostname')
     os.chroot(jail); os.chdir('/work')
+    check = os.fork()                                                   # the check is not the first process of the namespace: this stays, and is the sandbox's own
+    if check == 0:
+        try:
+            _start_check(libc, ready_fd, limits, program)
+        except BaseException as exc:
+            sys.stderr.write(f'sandbox: {exc}\n'); sys.stderr.flush()
+        os._exit(125)
+    os.close(ready_fd)
+    _check(libc.prctl(PR_SET_DUMPABLE, 0, 0, 0, 0), 'dumpable')
+    while True:                                                         # it reaps what the check leaves; when the check ends, it ends, and the namespace with it
+        try:
+            pid, status = os.waitpid(-1, 0)
+        except ChildProcessError:
+            os._exit(125)
+        if pid == check:
+            os._exit(os.waitstatus_to_exitcode(status) & 0xff if os.WIFEXITED(status) else 128 + os.WTERMSIG(status))
+
+
+def _start_check(libc, ready_fd: int, limits: list, program: list) -> None:
+    """In the jail, as the check's own process: its limits, its keyring, no capabilities, the unprivileged id, the filter, and
+    the check.  Its death signal is not relied on: the end of the namespace's first process ends it, whatever it does."""
+    cpu, mem, nproc, fsize, nofile, tmpb, tmpn = limits
     for res, value in ((resource.RLIMIT_CPU, cpu), (resource.RLIMIT_AS, mem), (resource.RLIMIT_FSIZE, fsize), (resource.RLIMIT_NOFILE, nofile),
                        (resource.RLIMIT_CORE, 0), (resource.RLIMIT_NPROC, nproc), (resource.RLIMIT_MEMLOCK, 0),
                        (resource.RLIMIT_SIGPENDING, 64), (resource.RLIMIT_MSGQUEUE, 0)):
