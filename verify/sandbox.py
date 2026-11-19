@@ -18,23 +18,23 @@ and thrown away after it:
     inbox, not /etc, not /proc.  The host name is "sandbox";
   - the unprivileged user of that namespace, with no other group and no capabilities (its bounding set emptied), no way to
     gain any (no new privileges), and a session keyring of its own, not the service's;
-  - a small system-call filter (seccomp, x86-64 only): sockets only of the local and internet families, so not vsock, which
-    a network namespace does not close, nor packet or netlink; the keyring, io_uring, bpf, perf and userfaultfd calls are
-    refused (ENOSYS); any other architecture's calls, or the x32 calls, end the process;
+  - a small system-call filter (seccomp, x86-64 only): no sockets of any family, so no vsock, which a network namespace does
+    not close, and no Unix sockets, whose queued data the memory group does not count; the keyring, io_uring, bpf, perf and
+    userfaultfd calls are refused (ENOSYS); any other architecture's calls, or the x32 calls, end the process;
   - a memory, a process and a freezer control group of its own (cgroup v1): its processes, together, use at most 1 GiB of memory (its
     files in /work and /tmp included) and number at most 64; and limits on each process's CPU time, memory, file size and
     open files, no core dumps, the size of what it prints, and the wall-clock time of the run.  When the run ends, every
     process in its control groups is frozen and killed, and the groups and the folder are removed.  If the service dies
-    during a run, the launcher keeps its own deadline and is killed with its parent, its first process with it, so the run
-    ends all the same; the groups and folders a killed service leaves are removed by a later run, once ten minutes old.
+    during a run, the launcher is killed with it, and its first process, and so every process of the run, with the
+    launcher; the launcher also keeps its own clock; the groups and folders a killed service leaves are removed by a later run, once ten minutes old.
 
 The check is run by the Python standard library alone (python -I -S): no site packages, no environment from the service.
 
 If the sandbox cannot be made, the check is not run, and the run says why: the outcome is SANDBOX_UNAVAILABLE.  Nothing ever
 falls back to running a check outside it.  The sandbox needs the service to run as root (to choose the run's identities and
-make its control groups); otherwise every run is SANDBOX_UNAVAILABLE.  The launcher does nothing unless it is the first
-process of new user, mount, process, network, IPC and host-name namespaces, none of them its parent's, with no network but a
-loopback, and with the run's own two ids mapped.  It says that the sandbox is ready on a pipe the check does not inherit,
+make its control groups); otherwise every run is SANDBOX_UNAVAILABLE.  Nothing is mounted, and nothing run, unless the
+process doing it is the first of new user, mount, process, network, IPC and host-name namespaces, none of them its parent's,
+with no network but a loopback, and with the run's own two ids mapped.  It says that the sandbox is ready on a pipe the check does not inherit,
 and, if the check cannot be started, says that too, so a check cannot pretend that it was or was not run.
 
 What it does not do.  Its filter narrows the kernel's interface; it does not close it: the check can still make every
@@ -111,7 +111,7 @@ def _ns_inodes() -> str:
 
 # ---------------------------------------------------------------------------------------------------- control groups
 class Cgroups:
-    """A memory and a process control group of this run's own, beside the service's (cgroup v1)."""
+    """A memory, a process and a freezer control group of this run's own, beside the service's (cgroup v1)."""
 
     def __init__(self, name: str, memory: int, processes: int):
         self.dirs = []
@@ -144,11 +144,19 @@ class Cgroups:
             (d / 'cgroup.procs').write_text(str(pid))
 
     def kill_all(self) -> None:
-        """Kill every process in the run's groups, until none is left; then remove the groups.  The group is frozen while its
-        processes are named and killed, so no number read can be another process's by the time it is used."""
+        """Kill every process in the run's groups, until none is left; then remove the groups.  The group is frozen (as far as
+        the kernel freezes it within a second) while its processes are named and killed, so that none can fork or exit and
+        no number read is another process's by the time it is used."""
         for _ in range(500):
             if self.freezer is not None:
                 _write(self.freezer / 'freezer.state', 'FROZEN')
+                for _ in range(1000):                                   # freezing is not immediate: wait until it is done
+                    try:
+                        if (self.freezer / 'freezer.state').read_text().strip() == 'FROZEN':
+                            break
+                    except OSError:
+                        break
+                    time.sleep(0.001)
             pids = set()
             for d in self.dirs:
                 try:
@@ -246,8 +254,13 @@ def _run(files: dict, script: str, stdin: bytes, timeout: float, limits: dict, _
         return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'the sandbox needs the service to run as root, to give each run identities and control groups of its own')
     if platform.machine() != 'x86_64':
         return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'the sandbox\'s system-call filter is written for x86-64 only')
+    def fit(name) -> bool:
+        try:
+            return isinstance(name, str) and '/' not in name and '\0' not in name and name not in ('', '.', '..') and not name.startswith('-') and len(name.encode()) <= 200
+        except UnicodeError:
+            return False
     for name in files:
-        if not isinstance(name, str) or '/' in name or '\0' in name or name in ('', '.', '..') or name.startswith('-') or len(name.encode()) > 200:
+        if not fit(name):
             return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', f'a file name the sandbox does not take: {name!r}'[:200])
     if script not in files:
         return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'the check is not among its files')
@@ -403,8 +416,9 @@ def _mount(libc, source, target, fstype, flags, data=None) -> None:
 
 
 def _seccomp_program() -> bytes:
-    """A small system-call filter, for x86-64: sockets only of the local (Unix) and internet families (no vsock, packet or
-    netlink), and no keyring, io_uring, bpf, perf or userfaultfd calls; any other architecture, or the x32 calls, end the
+    """A small system-call filter, for x86-64: no sockets of any family (socket and socketpair refused, EAFNOSUPPORT), so no
+    vsock, which a network namespace does not close, and no Unix sockets, whose queued data the memory group does not count;
+    and no keyring, io_uring, bpf, perf or userfaultfd calls (ENOSYS).  Any other architecture, or the x32 calls, end the
     process.  Everything else is allowed: this narrows the way out, it does not close it."""
     LD, JEQ, JGE, RET = 0x20, 0x15, 0x35, 0x06
     ALLOW, KILL = 0x7fff0000, 0x80000000
@@ -413,9 +427,9 @@ def _seccomp_program() -> bytes:
     prog = [(LD, 0, 0, 4), (JEQ, 1, 0, 0xc000003e), (RET, 0, 0, KILL), (LD, 0, 0, 0), (JGE, 0, 1, 0x40000000), (RET, 0, 0, KILL)]
     for nr in denied:
         prog += [(JEQ, 0, 1, nr), (RET, 0, 0, errno(38))]                # ENOSYS
-    prog += [(JEQ, 1, 0, 41), (JEQ, 0, 6, 53),                          # socket, socketpair: look at the family
-             (LD, 0, 0, 16), (JEQ, 3, 0, 1), (JEQ, 2, 0, 2), (JEQ, 1, 0, 10), (RET, 0, 0, errno(97)),   # AF_UNIX, AF_INET, AF_INET6; else EAFNOSUPPORT
-             (RET, 0, 0, ALLOW), (RET, 0, 0, ALLOW)]
+    for nr in (41, 53):                                                 # socket, socketpair: refused for every family
+        prog += [(JEQ, 0, 1, nr), (RET, 0, 0, errno(97))]               # EAFNOSUPPORT
+    prog += [(RET, 0, 0, ALLOW)]
     return b''.join(code.to_bytes(2, 'little') + bytes([jt, jf]) + k.to_bytes(4, 'little') for code, jt, jf, k in prog)
 
 
@@ -514,7 +528,10 @@ def launcher(a: list) -> None:
     for fd in (ready_fd, out_fd, in_fd):
         os.set_inheritable(fd, False)
     libc = _libc()
+    parent = os.getppid()
     _check(libc.prctl(PR_SET_PDEATHSIG, signal.SIGKILL, 0, 0, 0), 'pdeathsig')   # if the service dies, so does the run
+    if os.getppid() != parent:
+        raise OSError('the service ended before the sandbox was made')
     _write('/proc/self/oom_score_adj', '1000')                          # under memory pressure, the run goes before the service
     if not no_unshare:
         _check(libc.unshare(CLONE_NEWUSER | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWNET | CLONE_NEWIPC | CLONE_NEWUTS), 'unshare')
@@ -525,6 +542,9 @@ def launcher(a: list) -> None:
     os.close(in_fd)
     if not no_unshare:
         os.setresgid(0, 0, 0); os.setresuid(0, 0, 0)                     # the run's root: its own host id, not the service's
+    _check(libc.prctl(PR_SET_PDEATHSIG, signal.SIGKILL, 0, 0, 0), 'pdeathsig')   # cleared by the change of identity, so set again
+    if os.getppid() != parent:                                          # the service died before it was set again
+        raise OSError('the service ended before the sandbox was made')
     child = os.fork()                                                   # the first process of the new process namespace
     if child == 0:
         try:

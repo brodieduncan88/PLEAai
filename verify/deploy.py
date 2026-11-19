@@ -85,7 +85,7 @@ class Services:
         env = dict(os.environ, VERIFY_HOME=str(self.home), VERIFY_ENGINEER_KEYS=self.engineer.public_hex); env.pop('PLEA_CRASH_AT', None)
         if crash_at:
             env['PLEA_CRASH_AT'] = crash_at
-        env.update(extra_env or {})                                     # Amendment 12: a test may name another unshare(1), to show a check is then not run
+        env.update(extra_env or {})                                     # Amendment 12: a test may point the sandbox at control groups that do not exist, to show a check is then not run
         cmd = [PY, '-B', str(HERE.parent / 'plea_gateway' / 'gate_host.py'), '--port', str(self.ports['host']), '--tools', 'verify_tools', '--key', self.gate.private_hex,
                '--state', str(self.dir / 'gate_host.sqlite'), '--lease', '1.0', '--witness-key', self.witness.public_hex] + self._tls('host')
         self.procs['host'] = subprocess.Popen(cmd, cwd=str(HERE), stdout=open(self.dir / 'host.log', 'a'), stderr=subprocess.STDOUT, env=env)

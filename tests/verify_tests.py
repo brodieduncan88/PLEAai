@@ -2616,9 +2616,8 @@ def r27():
                  "    except Exception as e:\n"
                  "        return type(e).__name__\n"
                  "def reach(h, p):\n"
-                 "    s = socket.socket(); s.settimeout(2)\n"
                  "    try:\n"
-                 "        s.connect((h, p)); return 'connected'\n"
+                 "        s = socket.socket(); s.settimeout(2); s.connect((h, p)); return 'connected'\n"
                  "    except Exception as e:\n"
                  "        return type(e).__name__\n"
                  "def write(p):\n"
@@ -2646,8 +2645,8 @@ def r27():
                   'keyring, next run': boxed("import ctypes\nlibc = ctypes.CDLL(None, use_errno=True)\nlibc.syscall.restype = ctypes.c_long\n"
                                              "r = libc.syscall(249, b'user', b'r27-kept', None, ctypes.c_int(0))\nprint('found' if r > 0 else 'not found')"),
                   'host': boxed("import os, socket\ntry:\n    import cryptography; site = 'imported'\nexcept ImportError:\n    site = 'ImportError'\nprint(socket.gethostname(), sorted(os.listdir('/usr/local')), site)"),
-                  'calls': boxed("import json, os, socket, sys\nr = {}\nfor name, fam in (('vsock', 40), ('packet', 17), ('netlink', 16), ('unix', 1)):\n    try:\n        socket.socket(fam, socket.SOCK_RAW if fam in (16, 17) else socket.SOCK_STREAM).close(); r[name] = 'made'\n"
-                                 "    except OSError as e:\n        r[name] = e.errno\nst = os.statvfs('/work'); r['work_bytes'] = st.f_frsize * st.f_blocks\n"
+                  'calls': boxed("import json, os, socket, sys\nr = {}\nfor name, fam in (('vsock', 40), ('packet', 17), ('netlink', 16), ('unix', 1), ('inet', 2)):\n    try:\n        socket.socket(fam, socket.SOCK_RAW if fam in (16, 17) else socket.SOCK_STREAM).close(); r[name] = 'made'\n"
+                                 "    except OSError as e:\n        r[name] = e.errno\ntry:\n    socket.socketpair(); r['pair'] = 'made'\nexcept OSError as e:\n    r['pair'] = e.errno\nst = os.statvfs('/work'); r['work_bytes'] = st.f_frsize * st.f_blocks\n"
                                  "sys.path.append('/usr/lib/python3/dist-packages')\ntry:\n    import yaml; r['dist'] = 'imported'\nexcept ImportError:\n    r['dist'] = 'ImportError'\nprint(json.dumps(r))"),
                   'memory': boxed("x = bytearray(2 * 1024 ** 3)\nprint('got it')"),
                   'output': boxed("import sys\nwhile True:\n    sys.stdout.write('x' * 65536)"),
@@ -2675,16 +2674,23 @@ def r27():
                 time.sleep(0.1)
             th.join(); return sorted(seen)
         e['host_ids'] = [ids_during(1.5), ids_during(1.5)]
-        # the service killed in the middle of a run: the run ends by itself
-        dying = subprocess.Popen([PY, '-B', '-c', "import sys; sys.path.insert(0, sys.argv[1]); import sandbox; sandbox.run({'c.py': b'import time\\ntime.sleep(60)'}, 'c.py', b'', timeout=3)", str(GATEWAY / 'verify')])
-        time.sleep(1.5); dying.kill(); dying.wait()
-        for _ in range(100):
+        # the service killed in the middle of a run: the run ends with it
+        def run_procs():
             rows = [l.split() for l in subprocess.run(['ps', '-eo', 'uid=,stat='], capture_output=True, text=True).stdout.splitlines()]
-            e['orphans'] = [u for u, *st in rows if u.isdigit() and int(u) >= sandbox.UID_BASE and not (st and st[0].startswith('Z'))]
+            return [u for u, *st in rows if u.isdigit() and int(u) >= sandbox.UID_BASE and not (st and st[0].startswith('Z'))]
+        dying = subprocess.Popen([PY, '-B', '-c', "import sys; sys.path.insert(0, sys.argv[1]); import sandbox; sandbox.run({'c.py': b'import time\\ntime.sleep(60)'}, 'c.py', b'', timeout=30)", str(GATEWAY / 'verify')])
+        for _ in range(100):                                            # until the check is running as the run's user
+            if any(int(u) % 2 == 1 for u in run_procs()):                # the run's user is its root's id + 1, odd
+                break
+            time.sleep(0.05)
+        e['running_before_kill'] = bool(run_procs())
+        dying.kill(); dying.wait()
+        for _ in range(20):                                             # two seconds: long before the launcher's own clock (30 + 5 s) would end the run
+            e['orphans'] = run_procs()
             if not e['orphans']:
                 break
             time.sleep(0.1)
-        # an unshare(1) that makes no namespaces: the launcher refuses, and the check is not run
+        # a launcher that makes no namespaces: it refuses, and the check is not run; nor is it where the control groups cannot be made
         ran_marker = pathlib.Path(tempfile.gettempdir()) / f'{mark}-ran'
         o = step(sandbox.run, {'c.py': f"open({str(ran_marker)!r}, 'w').write('ran')".encode()}, 'c.py', b'{}', _no_unshare=True)
         no_groups = subprocess.run([PY, '-B', '-c', "import sys, json; sys.path.insert(0, sys.argv[1]); import sandbox; o = sandbox.run({'c.py': sys.argv[2].encode()}, 'c.py', b'{}'); "
@@ -2708,7 +2714,7 @@ def r27():
         ok2, _, s2 = check_record.verify(rec2, s.keys) if isinstance(rec2, dict) and rec2 else (False, [], {})
         run2 = (s2.get('runs') or [{}])[0]
         controls2 = [(c.get('name'), c.get('verdict')) for c in (env2.get('controls_run') if isinstance(env2, dict) else []) or []]
-        # the gate host started with that unshare(1): the run is UNKNOWN, the check is not run, and the engineer is told
+        # the gate host started where the control groups cannot be made: the run is UNKNOWN, the check is not run, and the engineer is told
         s.stop_host(); s.start_host(extra_env={'VERIFY_SANDBOX_CGROUP_ROOT': str(here / 'no-cgroups')})
         notices_before = len(s.inbox(h)) if h else 0
         refused = submit({'material': 'PPS-GF40', 'wall_mm': 3.5, 'mode': 'normal'})
@@ -2746,11 +2752,11 @@ def r27():
                   'runs share nothing: the kernel\'s keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox\'s; /usr/local is hidden; and the check has no site packages, not even by adding their folder':
                       limits['keyring, first run'][2].strip() == 'refused 38' and limits['keyring, next run'][2].strip() == 'not found'
                       and limits['host'][2].strip() == 'sandbox [] ImportError' and (printed(limits['calls']) or {}).get('dist') == 'ImportError',
-                  'the check can make sockets only of the local and internet families: vsock (which no network namespace closes), packet and netlink sockets are refused; /work is in memory, at most 64 MiB':
-                      isinstance(printed(limits['calls']), dict) and {k: printed(limits['calls'])[k] for k in ('vsock', 'packet', 'netlink', 'unix')} == {'vsock': 97, 'packet': 97, 'netlink': 97, 'unix': 'made'}
+                  'the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; /work is in memory, at most 64 MiB':
+                      isinstance(printed(limits['calls']), dict) and {k: printed(limits['calls']).get(k) for k in ('vsock', 'packet', 'netlink', 'unix', 'inet', 'pair')} == dict.fromkeys(('vsock', 'packet', 'netlink', 'unix', 'inet', 'pair'), 97)
                       and 0 < printed(limits['calls'])['work_bytes'] <= (64 << 20),
-                  'two runs have different host identities, and a run whose service dies ends by itself, with every process it started':
-                      len(e['host_ids']) == 2 and e['host_ids'][0] and e['host_ids'][1] and not set(e['host_ids'][0]) & set(e['host_ids'][1]) and e['orphans'] == [],
+                  'two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started':
+                      len(e['host_ids']) == 2 and e['host_ids'][0] and e['host_ids'][1] and not set(e['host_ids'][0]) & set(e['host_ids'][1]) and e['running_before_kill'] and e['orphans'] == [],
                   'where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run\'s control groups':
                       isinstance(fail_closed[0], list) and fail_closed[0][0] == 'SANDBOX_UNAVAILABLE' and 'not the first process of a new process namespace' in fail_closed[0][1] and fail_closed[1] is False
                       and isinstance(fail_closed[2], list) and fail_closed[2][0] == 'SANDBOX_UNAVAILABLE' and 'control groups' in fail_closed[2][1],
