@@ -231,13 +231,7 @@ def sweep(parent: pathlib.Path) -> None:
                 _write(d / 'freezer.state', 'THAWED')                   # a service killed while the run was frozen: thawed, the killed die
             if (d / 'memory.force_empty').exists():
                 _write(d / 'memory.force_empty', '0')
-            for _ in range(100):
-                try:
-                    d.rmdir(); break
-                except FileNotFoundError:
-                    break
-                except OSError:
-                    time.sleep(0.01)
+            d.rmdir()                                                   # once: a group not yet empty is tried again by a later run, which does not wait for it
         except OSError:
             pass
     for f in glob.glob(os.path.join(tempfile.gettempdir(), 'verify-sandbox-*')):
