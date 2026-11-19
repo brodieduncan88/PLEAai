@@ -29,11 +29,29 @@ evidence: nobody outside has reviewed or attacked it.
 | `verify_client.py` | The assistant's command: `show`, `submit`, `status`. Holds no signing key. |
 | `verify_ctl.py` | The engineer's console: baseline, revise, acknowledge, record. A second baseline for a requirement it already holds is a revision, or needs a reason that goes into the signed card. |
 | `verify_record.py` | The signed baseline envelope and the signed record. |
-| `check_record.py` | Checks a record offline. Stands alone: standard library and `cryptography` only. |
+| `check_record.py` | Checks a record offline. Stands alone: standard library and `cryptography` only. With `--checkpoint`, says whether the record is current against a checkpoint the witness signed. |
+| `checkpoints.py` | A second party's log of the witness's checkpoints: refuses a rollback or a fork, and keeps the evidence. Standard library and `cryptography` only. |
 | `deploy.py` | One service on one machine, for the demo, the tests and the trials. |
 | `cases/pump-station-submain/` | The worked case: a 400 V sub-main that no allowed cable can make comply. |
 | `experiment/` | The trial of what assistants do with that job, with and without the service. |
 | `../tests/verify_tests.py` | Tests R1 to R13 of the plug-in itself. |
+
+## Is this the latest record? (Amendment 10, 19 November 2026)
+
+A record is a statement as of its own last decision, and an older record still verifies. The witness service now signs a
+checkpoint of a baseline's chain on request (`GET /checkpoint?root=...`): how many decisions it holds, the hash of the
+last, the budget's state and the witness's clock, with a nonce of the asker's signed back. A record built with
+`--witness-url` carries one, and the checker's ninth check requires it to be the witness's and to name the record's own
+head. To ask whether a record is the latest, fetch a checkpoint yourself, with a nonce of your own, and give it to the
+checker:
+
+    python3 checkpoints.py fetch --witness-url URL --ca CA --cert CERT --key KEY --root ROOT --witness-key HEX --out cp.json --log log.jsonl
+    python3 check_record.py record.json --keys keys.json --checkpoint cp.json --nonce NONCE --max-age 600
+
+`fetch` makes its own nonce and writes it in `cp.json`. The checker prints CURRENT, SUPERSEDED, SUPERSEDED_UNPROVEN,
+FORKED, OLDER, STALE or INVALID, and exits 0 only for CURRENT. With no age given it allows an hour. CURRENT says only that the checkpoint was made within the age allowed and ends where the
+record does: a checkpoint handed over by someone else, not fetched with your own nonce, may be an old one replayed.
+The witness is still one party: a witness that lies the same way to everyone is not caught.
 
 `DECLARED_VERIFY.md` states what the tests were expected to show before the official run; `REPORT_VERIFY.md` gives
 the results of the tests and of the trial. `experiment/PROTOCOL.md` is the trial's protocol, frozen before it ran.
