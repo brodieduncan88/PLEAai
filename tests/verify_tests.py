@@ -19,6 +19,7 @@ import os
 import pathlib
 import re
 import shutil
+import copy
 import subprocess
 import sys
 import time
@@ -33,6 +34,9 @@ import deploy                           # noqa: E402
 import verify_ctl                       # noqa: E402
 import verify_client                    # noqa: E402  (Amendment 9)
 import front_door                       # noqa: E402  (Amendment 9: its view of the requirement, in R23)
+import checkpoints                      # noqa: E402  (Amendment 10)
+from plea_gateway import tls as TLS     # noqa: E402  (Amendment 10)
+from plea_gateway.receipts import Signer, sign_checkpoint   # noqa: E402  (Amendment 10)
 from plea_gateway import AuthorityError, Store      # noqa: E402
 from verify_record import Key, canonical, envelope_message, load_envelope, sign_envelope   # noqa: E402
 
@@ -1970,7 +1974,120 @@ def r24():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24}
+def r25():
+    """The witness signs a checkpoint of a baseline's chain: how many decisions it holds, the hash of the last, and its clock.  A record carries one, and its checker requires it to be the witness's and to name the record's own head.  Against a checkpoint obtained separately, the checker says whether a record is current, out of date or of another chain; and a log of checkpoints kept apart from the service refuses a rollback or a fork.  (Amendment 10.)"""
+    r = Run('R25'); e = {}
+    try:
+        s = r.s; root = B.root_for(r.env['card']); wk = s.keys['witness']; here = OUT / 'R25'
+        rows = lambda: len(Store(deploy.LOCAL_DSN).audit_snapshot(root)[0])
+        cur = lambda rec, cp, **kw: check_record.currency(rec, cp, wk, **kw)
+        signed = lambda **f: sign_checkpoint(s.witness, **f)                                  # what only the witness's key can sign
+        fails = lambda rec: [n for n, _, good, _ in check_record.verify(rec, s.keys)[1] if not good]
+        def resign(rec):
+            body = {k: v for k, v in rec.items() if k != 'signature'}
+            return dict(body, signature={'signer': s.engineer.public_hex, 'signature': s.engineer.sign(canonical(body).encode())})
+        def refused(f, *a):
+            try:
+                f(*a); return None
+            except checkpoints.CheckpointRefused as exc:
+                return str(exc)
+        def cli(*args):
+            p = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'check_record.py'), *map(str, args)], capture_output=True, text=True, timeout=120)
+            return p.returncode, [l for l in p.stdout.splitlines() if l.startswith('CURRENCY')]
+
+        prov = Store(deploy.LOCAL_DSN).provisioning(root)
+        cp0 = s.checkpoint(root, 'first-ask_1')
+        r.submit(BAD)
+        before = rows(); five = [s.checkpoint(root) for _ in range(5)]; after_reads = rows()
+        rec1 = r.record(); ok1, checks1, sum1 = check_record.verify(rec1, s.keys)
+        bare = s.record(r.h, [r.ws / '.verify' / 'submissions.jsonl'], checkpoint=False); okb, checksb, sumb = check_record.verify(bare, s.keys)
+        cp1 = s.checkpoint(root, 'n-1'); (here / 'rec1.json').write_text(json.dumps(rec1)); (here / 'cp1.json').write_text(json.dumps(cp1))
+        (here / 'keys.json').write_text(json.dumps(s.keys))
+        cli_current = cli(here / 'rec1.json', '--keys', here / 'keys.json', '--checkpoint', here / 'cp1.json', '--nonce', 'n-1')
+        cli_none = cli(here / 'rec1.json', '--keys', here / 'keys.json')
+        r.submit(GOOD)
+        cp2 = s.checkpoint(root); cp2at = s.checkpoint(root, None, rec1['as_of']['seq'])
+        (here / 'cp2at.json').write_text(json.dumps(cp2at)); cli_old = cli(here / 'rec1.json', '--keys', here / 'keys.json', '--checkpoint', here / 'cp2at.json')
+        rec2 = r.record()
+        n1, h1 = rec1['as_of']['seq'], rec1['as_of']['head']
+        when = dict(business='OPEN', witness='ACTIVE', time=cp1['time'])
+        states = {'current': cur(rec1, cp1, nonce='n-1'), 'later, no word on this record': cur(rec1, cp2), 'later, names this record': cur(rec1, cp2at), 'older': cur(rec2, cp1),
+                  'stale': cur(rec1, cp1, max_age=60, now=check_record.checkpoint_time(cp1) + 61), 'fresh enough': cur(rec1, cp1, max_age=60, now=check_record.checkpoint_time(cp1) + 59),
+                  'other nonce': cur(rec1, cp1, nonce='n-2'), 'no nonce signed': cur(rec1, cp2, nonce='n-1'),
+                  'edited': cur(rec1, dict(cp1, seq=cp1['seq'] + 8)), 'another key': cur(rec1, sign_checkpoint(Signer(), root=root, seq=n1, head=h1, **when)),
+                  'another budget': cur(rec1, signed(root=root + 'x', seq=n1, head=h1, **when)), 'not a checkpoint': cur(rec1, rec1['attempts'][0]['receipts']['CROSS']),
+                  'fork, same number': cur(rec1, signed(root=root, seq=n1, head='0' * 64, **when)),
+                  'fork, earlier head': cur(rec1, signed(root=root, seq=n1 + 8, head='1' * 64, at=n1, head_at='0' * 64, **when))}
+        edited = copy.deepcopy(rec2); edited['checkpoint']['head_at'] = '0' * 64
+        earlier = copy.deepcopy(rec2); earlier['checkpoint'] = cp2at                                       # a true checkpoint, of an earlier point in the chain
+        foreign = copy.deepcopy(rec2); foreign['checkpoint'] = sign_checkpoint(Signer(), **{k: rec2['checkpoint'][k] for k in ('root', 'seq', 'head', 'business', 'witness', 'time', 'nonce', 'at', 'head_at')})
+        inside = {'edited': fails(edited), 'edited, re-signed': fails(resign(edited)), 'earlier point, re-signed': fails(resign(earlier)), 'another key, re-signed': fails(resign(foreign)),
+                  'taken out, re-signed': fails(resign({k: v for k, v in rec2.items() if k != 'checkpoint'}))}
+        rev = verify_ctl.revise(s.home, CASE, draft(requirement=dict(r.env['card']['requirement'], revision='B')), s.engineer, r.h, 'The bracket was strengthened (CR-31).')
+        cp_old = s.checkpoint(root); old_state = cur(rec2, cp_old)
+        log = here / 'keeper' / 'checkpoints.jsonl'
+        kept = [refused(checkpoints.keep, log, c, wk) for c in (cp0, cp1, cp2at, cp_old)]
+        turned = {'rollback': refused(checkpoints.keep, log, cp1, wk), 'fork': refused(checkpoints.keep, log, signed(root=root, seq=cp_old['seq'], head='0' * 64, **when), wk),
+                  'fork of an earlier head': refused(checkpoints.keep, log, signed(root=root, seq=cp_old['seq'] + 8, head='1' * 64, at=n1, head_at='0' * 64, **when), wk),
+                  'another key': refused(checkpoints.keep, log, sign_checkpoint(Signer(), root=root, seq=cp_old['seq'], head=cp_old['head'], **when), wk)}
+        lines = len(log.read_text().splitlines()); clean = checkpoints.audit(checkpoints.read_log(log), wk)
+        with log.open('a') as f:
+            f.write(json.dumps(signed(root=root, seq=cp_old['seq'], head='0' * 64, **when)) + '\n')        # put in behind the keeper's back
+        dirty = checkpoints.audit(checkpoints.read_log(log), wk)
+        ask = lambda *a: refused(s.checkpoint, *a)
+        stranger = TLS.issue(pathlib.Path(s.pki['ca_key']).read_bytes(), pathlib.Path(s.pki['ca']).read_bytes(), 'stranger', 'client', (), 3)
+        (here / 'stranger.key').write_bytes(stranger[0]); (here / 'stranger.crt').write_bytes(stranger[1])
+        url = f"https://127.0.0.1:{s.ports['witness']}"
+        witness_says = {'unknown budget': ask(root + 'x'), 'nonce with a space': refused(checkpoints.fetch, url, s.pki['ca'], *s.pki['keeper'], root, 'a b'),
+                        'beyond the chain': ask(root, None, 10 ** 6), 'a certificate it does not admit': refused(checkpoints.fetch, url, s.pki['ca'], str(here / 'stranger.crt'), str(here / 'stranger.key'), root),
+                        'no certificate': refused(checkpoints.fetch, url, s.pki['ca'], None, None, root)}
+        fetched = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'checkpoints.py'), 'fetch', '--witness-url', url, '--ca', s.pki['ca'], '--cert', s.pki['keeper'][0], '--key', s.pki['keeper'][1],
+                                  '--root', root, '--nonce', 'cli-1', '--out', str(here / 'cp_cli.json'), '--log', str(here / 'keeper2' / 'log.jsonl'), '--witness-key', wk], capture_output=True, text=True, timeout=120)
+        audited = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'checkpoints.py'), 'audit', str(here / 'keeper2' / 'log.jsonl'), '--witness-key', wk], capture_output=True, text=True, timeout=120)
+        rec3 = r.record(); (here / 'rec3.json').write_text(json.dumps(rec3)); cli_closed = cli(here / 'rec3.json', '--keys', here / 'keys.json', '--checkpoint', here / 'cp_cli.json', '--nonce', 'cli-1', '--max-age', '600')
+        e.update(cp0={k: cp0.get(k) for k in ('seq', 'business', 'witness', 'nonce', 'at')}, reads=(before, after_reads), checks1=[(n, t, g) for n, t, g, _ in checks1][-1], bare=[(n, t, g) for n, t, g, _ in checksb][-1],
+                 summary=sum1.get('checkpoint'), states={k: v[0] for k, v in states.items()}, sentences={k: v[1][:150] for k, v in states.items()}, cli=(cli_current, cli_none, cli_old, cli_closed),
+                 inside=inside, old_state=old_state, kept=kept, turned=turned, lines=lines, clean=clean, dirty=dirty, witness_says=witness_says, fetched=(fetched.returncode, fetched.stdout[:160], fetched.stderr[:160]),
+                 audited=(audited.returncode, audited.stdout[-90:]))
+        st = e['states']
+        checks = {'before any run the witness signs a checkpoint of the empty chain: no decisions, its head the provisioning record\'s hash, the budget open, the asker\'s nonce signed back; it verifies under the witness\'s key':
+                      cp0['seq'] == 0 and cp0['head'] == prov['hash'] and (cp0['business'], cp0['witness'], cp0['nonce']) == ('OPEN', 'ACTIVE', 'first-ask_1') and check_record.checkpoint_problems(cp0, [wk], root) == [],
+                  'asking for a checkpoint adds no decision: five asks leave the chain as long as it was, and each gives its length and head':
+                      before == after_reads == rec1['as_of']['seq'] and all(c['seq'] == before and c['head'] == rec1['as_of']['head'] for c in five),
+                  'a record carries the witness\'s checkpoint, which names the record\'s own last decision and head; the record verifies with a ninth check, the witness checkpoint; a record built without one still verifies, and its ninth check says it has none':
+                      ok1 and e['checks1'] == (9, 'witness checkpoint', True) and rec1['checkpoint']['at'] == rec1['as_of']['seq'] and rec1['checkpoint']['head_at'] == rec1['as_of']['head']
+                      and sum1['checkpoint']['seq'] == rec1['as_of']['seq'] and okb and 'checkpoint' not in bare and e['bare'] == (9, 'witness checkpoint (none in this record)', True) and sumb['checkpoint'] is None,
+                  'against a checkpoint obtained separately, whose chain ends where the record does, the record is CURRENT, with the nonce asked signed back; the checker\'s command says so and exits 0; with no checkpoint given it says the currency was not checked, and exits 0 as before':
+                      st['current'] == 'CURRENT' and cli_current[0] == 0 and len(cli_current[1]) == 1 and cli_current[1][0].startswith('CURRENCY: CURRENT.  The record was current at 20')
+                      and cli_none == (0, ['CURRENCY: NOT CHECKED.  Give a checkpoint obtained separately from this record (--checkpoint) to see whether it is current.']),
+                  'after a later run the same record is out of date: SUPERSEDED, a true beginning of the chain, where the checkpoint names the record\'s head; SUPERSEDED_UNPROVEN where it does not; the command exits 1 though the record itself verifies':
+                      st['later, names this record'] == 'SUPERSEDED' and 'The record is a true beginning of that chain' in states['later, names this record'][1] and '8 later decisions' in states['later, names this record'][1]
+                      and st['later, no word on this record'] == 'SUPERSEDED_UNPROVEN' and cli_old[0] == 1 and cli_old[1][0].startswith('CURRENCY: SUPERSEDED.'),
+                  'a checkpoint older than the record says nothing of it (OLDER); one older than the age allowed is STALE, and one within it is CURRENT':
+                      (st['older'], st['stale'], st['fresh enough']) == ('OLDER', 'STALE', 'CURRENT'),
+                  'a checkpoint is not used (INVALID) when it signs back another nonce or none, was edited, is signed by another key, is for another budget, or is a receipt and not a checkpoint':
+                      all(st[k] == 'INVALID' for k in ('other nonce', 'no nonce signed', 'edited', 'another key', 'another budget', 'not a checkpoint')),
+                  'a checkpoint the witness\'s key signed that gives another head for the record\'s last decision, as the chain\'s head or as an earlier one, shows the record is of another chain: FORKED':
+                      (st['fork, same number'], st['fork, earlier head']) == ('FORKED', 'FORKED'),
+                  'the checkpoint inside a record cannot be changed, exchanged or dropped unseen: edited, checks 1 and 9 fail; edited and re-signed with the engineer\'s key, or exchanged for a true checkpoint of an earlier point, or for one signed by another key, check 9 alone fails; taken out and re-signed, the record verifies and says it has none':
+                      inside == {'edited': [1, 9], 'edited, re-signed': [9], 'earlier point, re-signed': [9], 'another key, re-signed': [9], 'taken out, re-signed': []},
+                  'once the baseline is superseded, a checkpoint of its chain says the budget is no longer open, and the checker says so beside the record\'s currency':
+                      cp_old['business'] != 'OPEN' and old_state[0] == 'SUPERSEDED_UNPROVEN' and 'it was superseded or closed' in old_state[1],
+                  'a log of checkpoints kept apart from the service takes them in order, and refuses a rollback, a fork of the head, a fork of an earlier head and a checkpoint not signed by the witness, keeping none of them; its audit is clean, and reports a fork written into it behind the keeper\'s back':
+                      kept == [None, None, None, None] and turned['rollback'].startswith('not kept: ROLLBACK') and turned['fork'].startswith('not kept: FORK') and turned['fork of an earlier head'].startswith('not kept: FORK')
+                      and 'not signed by a witness key given' in turned['another key'] and lines == 4 and clean == [] and len(dirty) == 1 and 'FORK' in dirty[0],
+                  'the witness gives no checkpoint for a budget it does not hold, a malformed nonce, a decision beyond the chain, a client certificate it does not admit, or no certificate':
+                      'answered 404' in witness_says['unknown budget'] and 'nonce' in witness_says['nonce with a space'] and 'answered 400' in witness_says['beyond the chain']
+                      and witness_says['a certificate it does not admit'] is not None and witness_says['no certificate'] is not None,
+                  'the keeper\'s command fetches a checkpoint, keeps it in a log of its own and writes it out; the log audits clean; the superseded baseline\'s record, built after the revision and checked against that checkpoint within ten minutes, is CURRENT, the command says the budget is no longer open, and exits 0':
+                      fetched.returncode == 0 and audited.returncode == 0 and 'no rollback or fork, every signature verifies' in audited.stdout and cli_closed[0] == 0 and cli_closed[1][0].startswith('CURRENCY: CURRENT.')
+                      and 'it was superseded or closed' in cli_closed[1][0]}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25}
 
 
 def main():
