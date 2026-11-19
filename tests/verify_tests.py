@@ -2602,6 +2602,7 @@ def r27():
         def boxed(src, stdin=b'{}', **kw):                                                     # one run of a script in the sandbox: (state, exit status, what it printed)
             o = step(sandbox.run, {'c.py': src.encode(), 'data.csv': b'a,b\n1,2\n'}, 'c.py', stdin, **kw)
             return (o.state, o.returncode, o.stdout.decode(errors='replace')[:2000], o.stderr.decode(errors='replace')[-300:], o.detail) if not isinstance(o, tuple) else o
+        said = lambda out: head(out) if isinstance(out, str) else str(out)[:300]                 # what a step said, if it said something other than text
         def printed(o):
             try:
                 return json.loads(o[2])
@@ -2634,17 +2635,21 @@ def r27():
         first = printed(boxed(probe + "print(json.dumps(found))"))
         second = printed(boxed(probe + "print(json.dumps(found))"))
         mark = f'r27-{uuid.uuid4().hex[:8]}'
+        t0 = time.monotonic(); piped = boxed("import time\ntime.sleep(20)", stdin=b'x' * 500000, timeout=3); e['piped_seconds'] = round(time.monotonic() - t0, 2)
+        grouped = subprocess.run([PY, '-B', '-c', "import sys; sys.path.insert(0, sys.argv[1]); import sandbox; o = sandbox.run({'c.py': b'import os; print(os.getgroups())'}, 'c.py', b''); print(o.state, o.stdout.decode().strip())",
+                                  str(GATEWAY / 'verify')], capture_output=True, text=True, timeout=60, extra_groups=[4242])   # a service that holds a group of its own: the check holds none
+        e['grouped'] = grouped.stdout.strip()
         limits = {'fork bomb': boxed("import os\nn = 0\ntry:\n    while n < 300:\n        if os.fork() == 0:\n            import time; time.sleep(30); os._exit(0)\n        n += 1\n    print(n, 'no limit')\nexcept Exception as e:\n    print(n, type(e).__name__)"),
                   'escape': boxed(f"import os, sys, time\nos.setsid()\nfor i in range(3):\n    if os.fork() == 0:\n        os.execv(sys.executable, [sys.executable, '-c', 'import time; time.sleep(120)', '{mark}-e'])\nos.execv(sys.executable, [sys.executable, '-c', 'import time; time.sleep(120)', '{mark}-e'])", timeout=2),
                   'memory, many processes': boxed("import os, sys, time\nfor i in range(6):\n    if os.fork() == 0:\n        x = bytearray(900 * 1024 ** 2); time.sleep(3); print('alive', flush=True); os._exit(0)\n"
                                                   "x = bytearray(900 * 1024 ** 2)\ntime.sleep(3)\nprint('alive', flush=True)\ntime.sleep(1)", timeout=10),
                   'disk, many files': boxed("n = 0\ntry:\n    while n < 40:\n        open(f'/work/f{n}', 'wb').write(b'x' * (10 << 20)); n += 1\n    print(n, 'no limit')\nexcept Exception as e:\n    print(n, type(e).__name__)"),
-                  'a design larger than the pipe': boxed("import time\ntime.sleep(20)", stdin=b'x' * 500000, timeout=3),
+                  'a design larger than the pipe': piped,
                   'keyring, first run': boxed("import ctypes\nlibc = ctypes.CDLL(None, use_errno=True)\nlibc.syscall.restype = ctypes.c_long\n"
                                               "r = libc.syscall(248, b'user', b'r27-kept', b'secret', 6, ctypes.c_int(-4))\nprint('added' if r > 0 else 'refused %d' % ctypes.get_errno())"),
                   'keyring, next run': boxed("import ctypes\nlibc = ctypes.CDLL(None, use_errno=True)\nlibc.syscall.restype = ctypes.c_long\n"
                                              "r = libc.syscall(249, b'user', b'r27-kept', None, ctypes.c_int(0))\nprint('found' if r > 0 else 'not found')"),
-                  'host': boxed("import os, socket\ntry:\n    import cryptography; site = 'imported'\nexcept ImportError:\n    site = 'ImportError'\nprint(socket.gethostname(), sorted(os.listdir('/usr/local')), site)"),
+                  'host': boxed("import os, socket, sys\ntry:\n    import cryptography; site = 'imported'\nexcept ImportError:\n    site = 'ImportError'\nprint(socket.gethostname(), sorted(os.listdir('/usr/local')), site, sys.flags.no_site, sys.flags.isolated)"),
                   'calls': boxed("import json, os, socket, sys\nr = {}\nfor name, fam in (('vsock', 40), ('packet', 17), ('netlink', 16), ('unix', 1), ('inet', 2)):\n    try:\n        socket.socket(fam, socket.SOCK_RAW if fam in (16, 17) else socket.SOCK_STREAM).close(); r[name] = 'made'\n"
                                  "    except OSError as e:\n        r[name] = e.errno\ntry:\n    socket.socketpair(); r['pair'] = 'made'\nexcept OSError as e:\n    r['pair'] = e.errno\nst = os.statvfs('/work'); r['work_bytes'] = st.f_frsize * st.f_blocks\n"
                                  "sys.path.append('/usr/lib/python3/dist-packages')\ntry:\n    import yaml; r['dist'] = 'imported'\nexcept ImportError:\n    r['dist'] = 'ImportError'\nprint(json.dumps(r))"),
@@ -2725,11 +2730,11 @@ def r27():
         runs = {(x['design'] or {}).get('wall_mm'): (x['outcome'], x['reason_code'], x['detail'][:160]) for x in summ.get('runs', [])}
         good = submit(GOOD); bad = submit(BAD)
         e.update(first=first, second=second, limits={k: v[:4] if isinstance(v, tuple) else v for k, v in limits.items()}, survivors=survivors, run_left=run_left, fail_closed=fail_closed,
-                 controls2=controls2, bad2=(bad2[0], head(bad2[1])), run2=(run2.get('outcome'), run2.get('reason_code'), run2.get('basis')), ok2=ok2,
-                 refused=(refused[0], head(refused[1])), notices=(notices_before, notices_after), runs=runs, again=(again[0], head(again[1])), good=good[0], bad=bad[0], ok=ok, why=why)
+                 controls2=controls2, bad2=(bad2[0], said(bad2[1])), run2=(run2.get('outcome'), run2.get('reason_code'), run2.get('basis')), ok2=ok2,
+                 refused=(refused[0], said(refused[1])), notices=(notices_before, notices_after), runs=runs, again=(again[0], said(again[1])), good=good[0], bad=bad[0], ok=ok, why=why)
         f1, f2 = (first if isinstance(first, dict) else {}), (second if isinstance(second, dict) else {})
-        checks = {'a check runs as nobody (user and group 65534, no other group), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev':
-                      (f1.get('uid'), f1.get('gid'), f1.get('groups'), f1.get('cwd'), f1.get('here')) == (65534, 65534, [], '/work', ['c.py', 'data.csv'])
+        checks = {'a check runs as nobody (user and group 65534, no other group, even where the service holds one), in /work, which holds only its own files, under a root that holds only the Python installation, /work, /tmp and /dev':
+                      (f1.get('uid'), f1.get('gid'), f1.get('groups'), f1.get('cwd'), f1.get('here')) == (65534, 65534, [], '/work', ['c.py', 'data.csv']) and e['grouped'] == 'RAN []'
                       and f1.get('root') == ['bin', 'dev', 'lib', 'lib64', 'sbin', 'tmp', 'usr', 'work'],
                   'none of the service\'s files is there to read: not the engineer\'s or the courier\'s key, the witness\'s TLS key, the ledger, the baselines, /etc/passwd, /proc or the code':
                       bool(f1.get('read')) and all(v == 'FileNotFoundError' for v in f1['read'].values()),
@@ -2745,13 +2750,13 @@ def r27():
                   'a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children; no process of any run\'s identities is left; the check sees no other process and can signal none':
                       limits['left behind'][:2] == ('RAN', 0) and limits['escape'][0] == 'TIMEOUT' and survivors == [] and run_left == []
                       and limits['others'][2].strip() == "['ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError']",
-                  'what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds does not stop the clock':
+                  'what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds does not stop the clock: that run ends at its own time, not later at the launcher\'s':
                       limits['memory, many processes'][0] == 'RAN' and limits['memory, many processes'][2].split().count('alive') <= 1
                       and limits['disk, many files'][0] == 'RAN' and int((limits['disk, many files'][2].split() or ['99'])[0]) < 7 and limits['disk, many files'][2].split()[-1:] == ['OSError']
-                      and limits['a design larger than the pipe'][0] == 'TIMEOUT',
-                  'runs share nothing: the kernel\'s keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox\'s; /usr/local is hidden; and the check has no site packages, not even by adding their folder':
+                      and limits['a design larger than the pipe'][0] == 'TIMEOUT' and e['piped_seconds'] < 5,
+                  'runs share nothing: the kernel\'s keyrings cannot be used (refused, ENOSYS), so nothing is kept in them from one run to the next; the host name is the sandbox\'s; /usr/local is hidden; and the check has no site packages, not even by adding their folder, and is run without them (python -I -S)':
                       limits['keyring, first run'][2].strip() == 'refused 38' and limits['keyring, next run'][2].strip() == 'not found'
-                      and limits['host'][2].strip() == 'sandbox [] ImportError' and (printed(limits['calls']) or {}).get('dist') == 'ImportError',
+                      and limits['host'][2].strip() == 'sandbox [] ImportError 1 1' and (printed(limits['calls']) or {}).get('dist') == 'ImportError',
                   'the check can make no socket of any family: vsock (which no network namespace closes), packet, netlink, internet and Unix sockets, and socket pairs, are refused; /work is in memory, at most 64 MiB':
                       isinstance(printed(limits['calls']), dict) and {k: printed(limits['calls']).get(k) for k in ('vsock', 'packet', 'netlink', 'unix', 'inet', 'pair')} == dict.fromkeys(('vsock', 'packet', 'netlink', 'unix', 'inet', 'pair'), 97)
                       and 0 < printed(limits['calls'])['work_bytes'] <= (64 << 20),
@@ -2770,7 +2775,7 @@ def r27():
                       good[0] == 0 and bad[0] == 2 and ok}
     finally:
         s.stop()
-    return checks, e
+    return {k: bool(v) for k, v in checks.items()}, e
 
 
 TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27}
