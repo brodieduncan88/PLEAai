@@ -68,6 +68,12 @@ signed card with the baselines held. What Amendment 8 called a proof of delivery
 itself, so that a run cut off gets its notice with no one sending its design again. `DECLARED_AMEND9.md` has the list, and the
 open items.
 
+**Note of 19 November 2026.** `AMENDMENT_10_2026-11-19.md` lets a reader ask whether a record is the latest. The witness signs
+a checkpoint of a baseline's chain on request, and every record the front door's deployment builds carries one, checked by the
+record's ninth check. `check_record.py --checkpoint` says whether a record is current against a checkpoint fetched separately,
+and `checkpoints.py` keeps the witness's checkpoints apart from the service, refusing a rollback or a fork. The front door
+itself is unchanged. `DECLARED_AMEND10.md` has the list, and the open items.
+
 ## The pieces
 
 | file | what it does |

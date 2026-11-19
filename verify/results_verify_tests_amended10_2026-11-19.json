@@ -1,0 +1,2549 @@
+{
+ "tests": {
+  "R1": {
+   "title": "A design that does not meet the requirement gets a signed FAIL with the reason, kept on the record and sent to the engineer.",
+   "ok": true,
+   "checks": {
+    "the assistant is told FAIL, with the required and achieved values (exit status 2)": true,
+    "the record holds the FAIL with reason LIMIT_NOT_MET, 180 against 200, margin -20": true,
+    "the record verifies offline and its status is NOT VERIFIED": true,
+    "one notice is in the engineer's inbox, from the service, naming the failure": true
+   },
+   "evidence": {
+    "exit": 2,
+    "first_line": "FAIL: REQUIREMENT NOT MET",
+    "says_values": true,
+    "record_verifies": true,
+    "why": [],
+    "status": "NOT VERIFIED",
+    "run": {
+     "outcome": "FAIL",
+     "reason": "LIMIT_NOT_MET",
+     "criteria": [
+      {
+       "id": "service_temperature",
+       "met": false,
+       "limit": "200",
+       "units": "C",
+       "margin": "-20",
+       "achieved": "180",
+       "quantity": "continuous service temperature",
+       "comparison": ">="
+      }
+     ]
+    },
+    "notices": [
+     "20261119T012319Z_FAIL_3a94e4be.txt"
+    ],
+    "notice_head": [
+     "To: D. Marsh",
+     "From: the verification service (not the assistant)",
+     "",
+     "FAIL: REQUIREMENT NOT MET"
+    ]
+   },
+   "seconds": 1.8
+  },
+  "R2": {
+   "title": "The same design sent again returns the same verdict: one run, one notice.",
+   "ok": true,
+   "checks": {
+    "both answers are the same FAIL": true,
+    "the check ran once and one notice was sent": true,
+    "the record shows one official run": true
+   },
+   "evidence": {
+    "first": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "second": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "tool_calls": 1,
+    "notices": 1,
+    "official_runs": 1,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 2.2
+  },
+  "R3": {
+   "title": "A design outside the baselined design space is a FAIL, and the check is not run on it.",
+   "ok": true,
+   "checks": {
+    "each is answered FAIL: DESIGN OUTSIDE THE BASELINE (exit status 2)": true,
+    "the record holds four FAILs with that reason and no achieved value": true,
+    "each was sent to the engineer and the status is NOT VERIFIED": true
+   },
+   "evidence": {
+    "answers": {
+     "material off the approved list": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "number outside its bounds": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "an extra parameter": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a parameter left out": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ]
+    },
+    "reasons": [
+     "DESIGN_OUTSIDE_BASELINE",
+     "DESIGN_OUTSIDE_BASELINE",
+     "DESIGN_OUTSIDE_BASELINE",
+     "DESIGN_OUTSIDE_BASELINE"
+    ],
+    "achieved": [
+     [
+      null
+     ],
+     [
+      null
+     ],
+     [
+      null
+     ],
+     [
+      null
+     ]
+    ],
+    "notices": 4,
+    "status": "NOT VERIFIED",
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 4.4
+  },
+  "R4": {
+   "title": "A design that meets the check after two that did not: met for that design only, and the failures stay on the record.",
+   "ok": true,
+   "checks": {
+    "the three runs answer FAIL, FAIL, met (exit 2, 2, 0)": true,
+    "the status is DECLARED CHECK MET with both failures still counted": true,
+    "it is met for that exact design only": true,
+    "the two failures were sent to the engineer and are still open": true
+   },
+   "evidence": {
+    "exits": [
+     2,
+     2,
+     0
+    ],
+    "status": "DECLARED CHECK MET",
+    "counts": [
+     3,
+     1,
+     2
+    ],
+    "open": 2,
+    "released_good": {
+     "design_sha256": "3d052bbd639f6e6ef2e6994aaf59c480fae29d84702895123feecb15b625dc34",
+     "met": true,
+     "seen": true
+    },
+    "released_other": {
+     "design_sha256": "eab444043649c1ab07c2ac59b5de8ae06de44d719e9dc4d9598be7006bb569ba",
+     "met": false,
+     "seen": false
+    },
+    "released_failed": {
+     "design_sha256": "3a94e4bee21282fdcad24b5fd7bbd593c47e864c747dda8bd5123abcb7c04e46",
+     "met": false,
+     "seen": true
+    },
+    "record_verifies": true,
+    "why": [],
+    "notices": 2
+   },
+   "seconds": 3.7
+  },
+  "R5": {
+   "title": "A check, a data file or a card changed after baselining gives UNKNOWN, never a pass.",
+   "ok": true,
+   "checks": {
+    "changed data gives UNKNOWN (exit status 3), not a pass": true,
+    "a changed check gives UNKNOWN": true,
+    "a stored card with a relaxed limit is not used": true,
+    "with the files restored the same requirement still fails": true,
+    "no run met the check, the record verifies and the status is NOT VERIFIED": true,
+    "all five results were sent to the engineer": true
+   },
+   "evidence": {
+    "data": [
+     3,
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+    ],
+    "check": [
+     3,
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+    ],
+    "card": [
+     3,
+     "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+    ],
+    "forged": [
+     3,
+     "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+    ],
+    "restored": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "outcomes": [
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ]
+    ],
+    "status": "NOT VERIFIED",
+    "record_verifies": true,
+    "why": [],
+    "notices": 5
+   },
+   "seconds": 5.1
+  },
+  "R6": {
+   "title": "A check that crashes, prints rubbish, returns not-a-number, zero or an absurd value, or hangs, gives UNKNOWN with its reason.",
+   "ok": true,
+   "checks": {
+    "each answers UNKNOWN (exit status 3)": true,
+    "the record gives each its reason": true,
+    "a check that hangs is stopped and is UNKNOWN": true,
+    "a material that would have passed is not a pass when the check misbehaves": true,
+    "every UNKNOWN was sent to the engineer": true
+   },
+   "evidence": {
+    "exits": {
+     "crash": 3,
+     "garbage": 3,
+     "nan": 3,
+     "zero": 3,
+     "huge": 3
+    },
+    "reasons": {
+     "zero": [
+      "UNKNOWN",
+      "RESULT_IMPLAUSIBLE"
+     ],
+     "nan": [
+      "UNKNOWN",
+      "CHECK_OUTPUT_INVALID"
+     ],
+     "crash": [
+      "UNKNOWN",
+      "CHECK_ERROR"
+     ],
+     "huge": [
+      "UNKNOWN",
+      "RESULT_IMPLAUSIBLE"
+     ],
+     "garbage": [
+      "UNKNOWN",
+      "CHECK_OUTPUT_INVALID"
+     ]
+    },
+    "hang": [
+     "UNKNOWN",
+     "CHECK_ERROR",
+     1.0
+    ],
+    "status": "NOT VERIFIED",
+    "notices": 5,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 6.0
+  },
+  "R7": {
+   "title": "The service dying part-way through a run leaves it counted, without a verdict, and never run again.",
+   "ok": true,
+   "checks": {
+    "the host died during the run (exit 137) and the assistant was not told it passed": true,
+    "asked again, twice, the answer is UNKNOWN: interrupted (exit status 3)": true,
+    "the check was started once for that design and never produced a verdict": true,
+    "the record shows it INTERRUPTED and counted, and that design is not verified": true,
+    "a different design can still be verified": true
+   },
+   "evidence": {
+    "during": [
+     4,
+     "The verification service could not be reached (RemoteDisconnected).  NOT VERIFIED.  The run may be pending; ask again."
+    ],
+    "host_exit": 137,
+    "again": [
+     3,
+     "UNKNOWN: THE RUN WAS INTERRUPTED"
+    ],
+    "again2": 3,
+    "tool_calls_for_design": 1,
+    "verdicts_for_design": 0,
+    "outcomes": [
+     "INTERRUPTED",
+     "PASS"
+    ],
+    "released": {
+     "design_sha256": "3d052bbd639f6e6ef2e6994aaf59c480fae29d84702895123feecb15b625dc34",
+     "met": false,
+     "seen": true
+    },
+    "other": 0,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 5.6
+  },
+  "R8": {
+   "title": "A baseline is refused unless its check is seen to fail a bad design and pass a good one.",
+   "ok": true,
+   "checks": {
+    "seven defective baselines are refused, each with its reason": true,
+    "the sound one is baselined, and only it is stored": true
+   },
+   "evidence": {
+    "got": {
+     "no failing control": "controls need at least one design that must FAIL and one that must PASS: a check nobody has seen fail is not a check",
+     "no passing control": "controls need at least one design that must FAIL and one that must PASS: a check nobody has seen fail is not a check",
+     "must-fail control passes": "control case \"PA66 must fail at 200 C\" was expected to FAIL and gave PASS (MET): not baselined",
+     "must-pass control fails": "control case \"PEEK must pass at 200 C (outside the design space on purpose)\" was expected to PASS and gave FAIL (LIMIT_NOT_MET): not baselined",
+     "limit so loose nothing fails": "control case \"PA66 must fail at 200 C\" was expected to FAIL and gave PASS (MET): not baselined",
+     "no stated limits of the check": "check.stated_limits is needed: say what the check does not cover",
+     "no plausible range": "criterion service_temperature: a plausible range (min < max) is needed, so that zero or a unit slip is not read as a result",
+     "the fixture as written": "baselined"
+    },
+    "baselines_stored": 1
+   },
+   "seconds": 0.4
+  },
+  "R9": {
+   "title": "The record verifies offline; an edited one does not, even when re-signed with the engineer's key.",
+   "ok": true,
+   "checks": {
+    "the record verifies, by library and by command line": true,
+    "without keys given it says consistent, not verified": true,
+    "every single-value edit fails": true,
+    "a wrong engineer key fails": true,
+    "re-signed with the engineer's key, edits verify only where the engineer alone is the source": true
+   },
+   "evidence": {
+    "verifies": true,
+    "cli_exit": 0,
+    "cli_says": [
+     "RECORD VERIFIED against the keys given.",
+     "STATUS: DECLARED CHECK MET, for design 3d052bbd639f6e6e\u2026 only, after 4 official runs (2 not met, 1 unknown)."
+    ],
+    "unpinned_exit": 0,
+    "unpinned_says": [
+     "RECORD CONSISTENT, but the keys were rea"
+    ],
+    "values": 1511,
+    "edits_that_still_verify": [],
+    "resigned_edits_that_verify": [
+     "as_of.time",
+     "baseline.controls_run.criteria.achieved"
+    ],
+    "outcomes": [
+     "FAIL",
+     "FAIL",
+     "PASS",
+     "UNKNOWN"
+    ],
+    "open": 2
+   },
+   "seconds": 17.1
+  },
+  "R10": {
+   "title": "A requirement changes only as a new, signed baseline that says what it replaced and what had failed.",
+   "ok": true,
+   "checks": {
+    "a revision with no reason is refused": true,
+    "the old baseline takes no further runs (exit status 4, nothing run)": true,
+    "the new card says what it replaced and what had failed, counted by the console": true,
+    "the design that failed on A meets the check on B, and B's record is headed CHANGED AFTER THE EVENT": true,
+    "the old record still verifies and still shows the failure": true
+   },
+   "evidence": {
+    "first": 2,
+    "no_reason": "a revision needs a reason",
+    "weak_control": "control case \"PEEK-free control: an unlisted material fails the lookup\" was expe",
+    "on_old": [
+     4,
+     "REFUSED: this baseline has been stopped (it was superseded or closed by the responsible engineer).  Nothing was run."
+    ],
+    "on_new": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "supersedes": {
+     "baseline_sha256": "b2cc879221e1fec1e65307cd8f4cd5aca79f2339c6573bad51fddb3c41c1231a",
+     "revision": "A",
+     "reason": "Customer lowered the operating temperature (CR-17).",
+     "official_runs": 1,
+     "met": 0,
+     "not_met": 1,
+     "unknown": 0
+    },
+    "rev_a": {
+     "verifies": true,
+     "status": "NOT VERIFIED",
+     "not_met": 1
+    },
+    "rev_b": {
+     "verifies": true,
+     "status": "DECLARED CHECK MET"
+    },
+    "headline": [
+     "CHANGED AFTER THE EVENT: this baseline replaced b2cc879221e1fec1\u2026 (rev A) after 1 official runs on i"
+    ]
+   },
+   "seconds": 3.2
+  },
+  "R11": {
+   "title": "What the assistant's side holds cannot do the engineer's part.",
+   "ok": true,
+   "checks": {
+    "the gateway credential cannot provision a budget or stop one": true,
+    "a relaxed baseline signed by another key is not accepted by the client": true,
+    "even trusting that key, nothing is run: no budget exists for a baseline the engineer did not provision": true,
+    "the real record is unchanged: one run, NOT VERIFIED": true,
+    "even with a budget provisioned for it, a baseline the pinned engineer did not sign gets UNKNOWN, not a pass": true
+   },
+   "evidence": {
+    "forged_baseline_with_a_budget": [
+     3,
+     "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELIN"
+    ],
+    "provision_with_gateway_credential": "refused",
+    "stop_with_gateway_credential": "refused",
+    "still_runs": 2,
+    "forged_copy": [
+     4,
+     "The verification client is not configured correctly: the baseline is n"
+    ],
+    "forged_copy_own_key": [
+     4,
+     "REFUSED: this baseline has no budget at the control plane.  It was not"
+    ],
+    "tool_calls": 1,
+    "official_runs": 1,
+    "status": "NOT VERIFIED",
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 3.1
+  },
+  "R12": {
+   "title": "The engineer's disposition of a failure is signed, shown on the record, and cannot be made by anyone else.",
+   "ok": true,
+   "checks": {
+    "before the disposition the failure is open; after it, acknowledged": true,
+    "a run that met the check takes no disposition": true,
+    "a disposition signed by another key makes the record fail": true
+   },
+   "evidence": {
+    "open_before": 1,
+    "open_after": 0,
+    "acknowledged": [
+     true
+    ],
+    "on_pass": "a run that met the declared check needs no disposition",
+    "verifies": true,
+    "why": [],
+    "with_forged_acknowledgement": false,
+    "forged_why": [
+     "8 acknowledgements: a-008b05afa4ec22ce: not signed by the engineer's key"
+    ],
+    "ack_signer_is_engineer": true
+   },
+   "seconds": 3.3
+  },
+  "R13": {
+   "title": "A verdict that does not follow from its own numbers is rejected, even when the gate and the engineer have both signed it.",
+   "ok": true,
+   "checks": {
+    "the honest record verifies": true,
+    "the altered verdict, signed by the gate key and the engineer key, fails, and only at the re-derived verdict": true,
+    "its status is NOT VERIFIED": true
+   },
+   "evidence": {
+    "honest_record_verifies": true,
+    "forged_record_verifies": false,
+    "failed": [
+     "6 gate reports and re-derived verdicts: a-73bad4ba1db499ba: service_temperature: recorded as met, but 180 >= 200 is False; a-73bad4ba1db499ba: reason MET does not follow from the comparisons"
+    ],
+    "status": "NOT VERIFIED"
+   },
+   "seconds": 1.9
+  },
+  "R14": {
+   "title": "A stored baseline that is no longer a card at all gives a signed UNKNOWN and a notice, like any other changed baseline: never an interrupted run, never a pass.",
+   "ok": true,
+   "checks": {
+    "each of fourteen unusable stored baselines is answered UNKNOWN (exit status 3), not interrupted and not a pass": true,
+    "the tool returned a verdict every time and the gate host kept running": true,
+    "the record holds fourteen UNKNOWNs with the reason BASELINE_MISMATCH, and no run without a verdict": true,
+    "every one of them was sent to the engineer, in a notice that is not empty": true,
+    "no notice carries a line of its own from the changed file; and no word of the file, and no path of the service's own folder, is in an answer, in the record or in a notice": true,
+    "with the file restored a failing design fails and a good design meets the check": true,
+    "the record verifies: fourteen unknown, one not met, one met, and met for that design only": true
+   },
+   "evidence": {
+    "answers": {
+     "a required field removed": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "the requirement turned into a list": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "a criterion turned into text": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "a design-space rule turned into text": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "the signature turned into text": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "a file nested a hundred thousand deep": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "a name holding half a surrogate pair": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "a repeated name holding a NUL": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "a name holding line breaks and a headline": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "a repeated name that the broken rule would quote": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "an empty file": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "text that is not JSON": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "a JSON list": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ],
+     "the file removed": [
+      3,
+      "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+     ]
+    },
+    "host_alive": true,
+    "restored": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "passes": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "outcomes": [
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "PASS",
+      "MET"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ],
+     [
+      "UNKNOWN",
+      "BASELINE_MISMATCH"
+     ]
+    ],
+    "notices": 14,
+    "empty_notices": 0,
+    "forged_lines": 0,
+    "tool_calls": 16,
+    "verdict_lines": 16,
+    "quoted_from_the_file": 0,
+    "service_path_shown": 0,
+    "reasons_given": [
+     "the stored file is not a baseline card (a part of it is missing or is not as a card needs it)",
+     "the stored file is not a baseline card (a part of it is the wrong kind of value)",
+     "the stored file is not a baseline card (it is nested too deeply to read)"
+    ],
+    "status": "DECLARED CHECK MET",
+    "met": 1,
+    "unknown": 14,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 17.8
+  },
+  "R15": {
+   "title": "Whatever a baselined check prints, the answer is a signed verdict that can be kept and checked again, and a notice: never an interrupted run, never a record left unable to verify.",
+   "ok": true,
+   "checks": {
+    "a check whose output cannot be read at all is answered UNKNOWN: THE CHECK DID NOT RUN TO A RESULT (exit status 3), not an interrupted run": true,
+    "a check that stops with unprintable bytes in its last message is UNKNOWN in the same way": true,
+    "a check that gives a value to 38 significant digits, which cannot be written exactly, is UNKNOWN: THE CHECK GAVE NO USABLE RESULT, not a FAIL the record's checker would reject": true,
+    "a check that prints a NUL, half a surrogate pair, line breaks of three kinds, a direction mark or DEL in its basis still gets its verdict: FAIL for the failing design, DECLARED CHECK MET for the good one": true,
+    "the tool returned a verdict every time and the gate host kept running": true,
+    "each FAIL and UNKNOWN was sent to the engineer: nine notices, none empty, none with a line of the check's own or a character that is not printable": true,
+    "what the check said is kept, in the record and in the five notices of a FAIL: each character that is not printable written as its escape, a no-break space as a plain space, and a degree sign as it is": true,
+    "the record verifies: four unknown (three CHECK_ERROR, one CHECK_OUTPUT_INVALID), five not met, one met, and nothing unprintable is kept in it": true
+   },
+   "evidence": {
+    "unreadable": {
+     "output nested a hundred thousand deep": [
+      3,
+      "UNKNOWN: THE CHECK DID NOT RUN TO A RESULT"
+     ],
+     "a number written with an exponent of a million": [
+      3,
+      "UNKNOWN: THE CHECK DID NOT RUN TO A RESULT"
+     ]
+    },
+    "noise": [
+     3,
+     "UNKNOWN: THE CHECK DID NOT RUN TO A RESULT"
+    ],
+    "digits": [
+     3,
+     "UNKNOWN: THE CHECK GAVE NO USABLE RESULT"
+    ],
+    "failing": {
+     "a NUL in its basis": [
+      2,
+      "FAIL: REQUIREMENT NOT MET"
+     ],
+     "half a surrogate pair in its basis": [
+      2,
+      "FAIL: REQUIREMENT NOT MET"
+     ],
+     "lines of its own in its basis": [
+      2,
+      "FAIL: REQUIREMENT NOT MET"
+     ],
+     "other line breaks, a direction mark and DEL in its basis": [
+      2,
+      "FAIL: REQUIREMENT NOT MET"
+     ]
+    },
+    "passing": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "plain": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "host_alive": true,
+    "tool_calls": 10,
+    "verdict_lines": 10,
+    "outcomes": [
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "FAIL",
+      "LIMIT_NOT_MET"
+     ],
+     [
+      "PASS",
+      "MET"
+     ],
+     [
+      "UNKNOWN",
+      "CHECK_ERROR"
+     ],
+     [
+      "UNKNOWN",
+      "CHECK_ERROR"
+     ],
+     [
+      "UNKNOWN",
+      "CHECK_ERROR"
+     ],
+     [
+      "UNKNOWN",
+      "CHECK_OUTPUT_INVALID"
+     ]
+    ],
+    "notices": 9,
+    "empty_notices": 0,
+    "forged_lines": 0,
+    "unprintable_in_notices": 0,
+    "unprintable_in_record": 0,
+    "kept": {
+     "the NUL": true,
+     "half a surrogate pair": true,
+     "the lines": true,
+     "the other marks": true,
+     "the last message of the check that stopped": true
+    },
+    "notices_giving_the_basis": 5,
+    "record_verifies": true,
+    "why": [],
+    "status": "DECLARED CHECK MET",
+    "met": 1,
+    "not_met": 5,
+    "unknown": 4
+   },
+   "seconds": 10.0
+  },
+  "R16": {
+   "title": "From the inside, the tool called directly with no services: its guards take an error of any kind, a verdict the record's checker would reject is not returned, notices of one name are each kept, and a notice is written under a locale that is not UTF-8.",
+   "ok": true,
+   "checks": {
+    "the tool called directly decides the plain failing design as the services do: FAIL, LIMIT_NOT_MET, one notice": true,
+    "an error of a kind no other test makes, while the stored baseline is read, is the signed refusal UNKNOWN / BASELINE_MISMATCH with a notice, in fixed words that do not repeat the error's own": true,
+    "the same error while the check is run is UNKNOWN / CHECK_ERROR with a notice, naming the kind of error and not its words; for a design outside the design space it is FAIL / DESIGN_OUTSIDE_BASELINE, the only answer the record's checker accepts for one": true,
+    "a verdict the record's checker would reject (a margin that does not recompute) is not returned: UNKNOWN / CHECK_OUTPUT_INVALID with a notice": true,
+    "five results of one name in one second give five notices, named in turn, each holding its own text": true,
+    "under a locale that is not UTF-8 the notice of a FAIL, which holds text outside ASCII, is still written": true
+   },
+   "evidence": {
+    "got": {
+     "encoding": "UTF-8",
+     "plain": [
+      "FAIL",
+      "LIMIT_NOT_MET",
+      "",
+      1
+     ],
+     "notice_holds_text_outside_ascii": true,
+     "reading": [
+      "UNKNOWN",
+      "BASELINE_MISMATCH",
+      "no signed baseline with this hash is held by the verification service: the stored file is not a baseline card (it could not be read)",
+      1
+     ],
+     "check_inside": [
+      "UNKNOWN",
+      "CHECK_ERROR",
+      "the check could not be run to a result: the verification service met an error it did not expect while running the check or reading what it printed (an error of the kind LookupError)",
+      1
+     ],
+     "check_outside": [
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE",
+      "the design could not be shown to be inside the baselined design space, so no result of the check is given for it",
+      1
+     ],
+     "not_as_checked": [
+      "UNKNOWN",
+      "CHECK_OUTPUT_INVALID",
+      "the numbers the check printed could not be written in a form that can be checked again (for example a value given to more than 28 significant digits)",
+      1
+     ],
+     "names": [
+      "20261119T012444Z_UNKNOWN_8f68eec4.txt",
+      "20261119T012444Z_UNKNOWN_8f68eec4_2.txt",
+      "20261119T012444Z_UNKNOWN_8f68eec4_3.txt",
+      "20261119T012444Z_UNKNOWN_8f68eec4_4.txt",
+      "20261119T012444Z_UNKNOWN_8f68eec4_5.txt"
+     ],
+     "own_text": [
+      true,
+      true,
+      true,
+      true,
+      true
+     ]
+    },
+    "other_locale": {
+     "encoding": "ANSI_X3.4-1968",
+     "plain": [
+      "FAIL",
+      "LIMIT_NOT_MET",
+      "",
+      1
+     ],
+     "notice_holds_text_outside_ascii": true
+    }
+   },
+   "seconds": 1.4
+  },
+  "R17": {
+   "title": "What a design supplies cannot be read as the service's own words: not in the reason that is signed, not in the engineer's notice or the answer, not in the checker's print of the record.",
+   "ok": true,
+   "checks": {
+    "each of sixteen designs outside the baseline is answered FAIL: DESIGN OUTSIDE THE BASELINE (exit status 2); one sent while no usable baseline is held is UNKNOWN (exit status 3)": true,
+    "the reason that is signed repeats no name and no text from a design: none of the senders' words is in any recorded reason": true,
+    "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number": true,
+    "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width": true,
+    "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way": true,
+    "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line": true,
+    "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out": true,
+    "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere": true,
+    "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass": true,
+    "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words": true,
+    "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason": true,
+    "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one": true,
+    "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design": true,
+    "an ordinary design is set out on one line as it always was, an empty one is said to be empty, and a name of the baseline's own longer than 26 characters is cut on a line of what was sent": true,
+    "the record verifies: sixteen not met, one unknown, none met": true
+   },
+   "evidence": {
+    "form": {
+     "lines_sent": 62,
+     "not_of_the_form": 0,
+     "first_line_the_approved_design": 4
+    },
+    "grid": {
+     "designs": 15792,
+     "reason_differs": 0,
+     "raised": 0,
+     "line_too_long_or_not_ascii": 0,
+     "reason_or_own_line_repeats_what_was_sent": 0
+    },
+    "plain_lines": {
+     "an ordinary design": [
+      "Design        material = PPS-GF40, mode = normal, wall_mm = 3"
+     ],
+     "an empty design": [
+      "Design        no parameters were sent"
+     ],
+     "a baseline whose own name is long": "          sent: ppppppppppppppppppppppp... = \"QS x\""
+    },
+    "twenty": [
+     "\"xxxxxxxxxxxxxxxxxxxx\"",
+     "\"xxxxxxxxxxxxxxxxxxxx\"+1"
+    ],
+    "answers": {
+     "a name that is a sentence": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a name padded with spaces, which the notice as it was showed as a row of its own at 80 columns": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a text value that is a sentence": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a name in letters of full width with characters that look blank": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a value holding quotes and a backslash": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a value that is a list of text": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a number of forty digits": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a number outside its range": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "two plain names that are not in the baseline, one sorting after the baseline's": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "forty names that are not in the baseline, with texts of its own for two of the baseline's parameters": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a number of 23 characters": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a text sent for a number, every name right": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a text with no plain space in it, in characters that look blank, sent for one of the baseline's parameters": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "an object as a value": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a design that is not an object": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "two names in small letters that are not in the baseline": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ]
+    },
+    "no_card": [
+     3,
+     "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+    ],
+    "reasons": {
+     "a name that is a sentence": "the design must give exactly the baselined parameters; 1 of the names sent is not in the baseline; missing: material, mode, wall_mm.  The check was not run.",
+     "a name padded with spaces, which the notice as it was showed as a row of its own at 80 columns": "the design must give exactly the baselined parameters; 1 of the names sent is not in the baseline.  The check was not run.",
+     "a text value that is a sentence": "the value sent for material is not on the approved list (PA66-GF30, PPS-GF40).  The check was not run.",
+     "a name in letters of full width with characters that look blank": "the design must give exactly the baselined parameters; 1 of the names sent is not in the baseline.  The check was not run.",
+     "a value holding quotes and a backslash": "the value sent for mode is not on the approved list (normal, crash, garbage, nan, zero, huge, hang).  The check was not run.",
+     "a value that is a list of text": "the value sent for wall_mm is not a number.  The check was not run.",
+     "a number of forty digits": "the value sent for wall_mm is outside the baselined range 2 to 4.  The check was not run.",
+     "a number outside its range": "wall_mm = 9 is outside the baselined range 2 to 4.  The check was not run.",
+     "two plain names that are not in the baseline, one sorting after the baseline's": "the design must give exactly the baselined parameters; 2 of the names sent are not in the baseline.  The check was not run.",
+     "forty names that are not in the baseline, with texts of its own for two of the baseline's parameters": "the design must give exactly the baselined parameters; 40 of the names sent are not in the baseline.  The check was not run.",
+     "a number of 23 characters": "wall_mm = -0.000012345678901234568 is outside the baselined range 2 to 4.  The check was not run.",
+     "a text sent for a number, every name right": "the value sent for wall_mm is not a number.  The check was not run.",
+     "a text with no plain space in it, in characters that look blank, sent for one of the baseline's parameters": "the value sent for material is not on the approved list (PA66-GF30, PPS-GF40).  The check was not run.",
+     "an object as a value": "the value sent for mode is not on the approved list (normal, crash, garbage, nan, zero, huge, hang).  The check was not run.",
+     "a design that is not an object": "the design must be an object of parameters.  The check was not run.",
+     "two names in small letters that are not in the baseline": "the design must give exactly the baselined parameters; 2 of the names sent are not in the baseline.  The check was not run."
+    },
+    "notices": 17,
+    "in_notices": {
+     "lines_holding_what_was_sent": 27,
+     "not_marked_as_sent": 0,
+     "outside_quotes": 0,
+     "longer_than_78": 0,
+     "not_printable_ascii": 0,
+     "planted_words_shown": 0,
+     "letters_of_full_width_or_blank": 0
+    },
+    "in_answers": {
+     "lines_holding_what_was_sent": 27,
+     "not_marked_as_sent": 0,
+     "outside_quotes": 0,
+     "longer_than_78": 0,
+     "not_printable_ascii": 0,
+     "planted_words_shown": 0,
+     "letters_of_full_width_or_blank": 0
+    },
+    "rows_in_notices": {
+     "Verdict": [
+      16
+     ],
+     "Reason": [
+      17
+     ],
+     "STATUS": [
+      0
+     ],
+     "RECORD VERIFIED": [
+      0
+     ],
+     "forged": 0
+    },
+    "rows_in_answers": {
+     "Verdict": [
+      17
+     ],
+     "Reason": [
+      17
+     ],
+     "STATUS": [
+      0
+     ],
+     "RECORD VERIFIED": [
+      0
+     ],
+     "forged": 0
+    },
+    "forty": {
+     "own_parameters": 2,
+     "names": 12,
+     "and_the_rest": 1
+    },
+    "numbers": {
+     "whole": 1,
+     "named_by_its_length": 1,
+     "shown_in_part": 0
+    },
+    "headed": {
+     "notices_with_lines_sent": 14,
+     "with_the_heading_above_them": 14
+    },
+    "in_reasons": 0,
+    "in_print": 0,
+    "rows_in_print": {
+     "Verdict": [
+      0
+     ],
+     "Reason": [
+      0
+     ],
+     "STATUS": [
+      1
+     ],
+     "RECORD VERIFIED": [
+      1
+     ],
+     "forged": 0
+    },
+    "print_gives_the_signed_reason": 16,
+    "outside": 16,
+    "earlier_record_prints_the_same": true,
+    "unreadable_reason": {
+     "rows": 1,
+     "longest": 411,
+     "not_printable": 0
+    },
+    "sample": 4765,
+    "not_as_the_rule_says": [],
+    "record_verifies": true,
+    "why": [],
+    "not_met": 16,
+    "unknown": 1,
+    "met": 0
+   },
+   "seconds": 20.8
+  },
+  "R18": {
+   "title": "A notice and an answer say only what is so for their own run: each states its verdict, says the check's files matched only when the check ran on files that did, never says that nothing was changed, says so when the service held no usable copy of the card, and a revised baseline gives every count of the runs it replaced.",
+   "ok": true,
+   "checks": {
+    "eight runs, one for each verdict the gate gives (MET, LIMIT_NOT_MET, DESIGN_OUTSIDE_BASELINE, CHECK_ERROR, CHECK_OUTPUT_INVALID, RESULT_IMPLAUSIBLE, BASELINE_MISMATCH) and one while the gate holds no usable copy of the card, are answered with the exit status of their verdict; the seven that are not a pass each have a notice": true,
+    "no notice says that nothing was changed, that the check is exactly as baselined, that anything is unchanged, or that a failure is to be accepted when the result is UNKNOWN; each notice's first line and Verdict row state its verdict, and the Verdict row says the limits were compared only when they were; the notice written while the gate holds no usable card has only its own rows": true,
+    "a notice says the check and its data matched the baseline only when the check ran and its files did match, and says they were not as baselined only when they were not": true,
+    "every other line of a notice that says what is so holds for its run: it says what the declared check returned against the limits only when its numbers were compared, says who may accept the result, and the notice of a changed check says the files must be restored and offers no other design": true,
+    "the seven answers given to the caller say the same, the pass among them, and the last gives the count of runs so far: 8, 1 met, 2 not met, 5 unknown": true,
+    "while the gate holds no usable copy of the card, the first client's answer says so: it does not call the card unchanged or as baselined, does not say the check or its data changed, and says the stored baseline is to be restored": true,
+    "in process, for every verdict on two cards (the fixture and the pump station), each with five kinds of design, and for the gate's refusal when it holds no usable card, what face() writes keeps the same rules": true,
+    "the revised baseline counts every run on the one it replaced, and the counts are the old record's: 8 runs, 1 met, 2 not met, 5 unknown": true,
+    "the new record's print and the requirement the first client shows give all three counts, so the runs that were not failures are not taken for passes": true,
+    "the new record verifies": true
+   },
+   "evidence": {
+    "exits": {
+     "LIMIT_NOT_MET": 2,
+     "DESIGN_OUTSIDE_BASELINE": 2,
+     "CHECK_ERROR": 3,
+     "CHECK_OUTPUT_INVALID": 3,
+     "RESULT_IMPLAUSIBLE": 3,
+     "BASELINE_MISMATCH": 3,
+     "MET": 0,
+     "NO_CARD": 3
+    },
+    "notices": [
+     "BASELINE_MISMATCH",
+     "CHECK_ERROR",
+     "CHECK_OUTPUT_INVALID",
+     "DESIGN_OUTSIDE_BASELINE",
+     "LIMIT_NOT_MET",
+     "NO_CARD",
+     "RESULT_IMPLAUSIBLE"
+    ],
+    "in_notices": {
+     "LIMIT_NOT_MET": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "DESIGN_OUTSIDE_BASELINE": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "CHECK_ERROR": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "CHECK_OUTPUT_INVALID": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "RESULT_IMPLAUSIBLE": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "BASELINE_MISMATCH": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     }
+    },
+    "in_answers": {
+     "LIMIT_NOT_MET": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "DESIGN_OUTSIDE_BASELINE": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "CHECK_ERROR": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "CHECK_OUTPUT_INVALID": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "RESULT_IMPLAUSIBLE": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "BASELINE_MISMATCH": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     },
+     "MET": {
+      "old_words": 0,
+      "rows_are_known": true,
+      "headline_fits": true,
+      "verdict_row_states_it": true,
+      "card_line_ends_at_the_hash": true,
+      "check_line_ends_at_the_hash": true,
+      "claims_are_the_allowed_lines": true,
+      "accept_fits": true,
+      "closing_fits": true,
+      "as_baselined_said_only_when_so": true,
+      "files_matched_said_when_so": true,
+      "files_changed_said_when_so": true,
+      "no_card_said_when_so": true,
+      "comparison_claimed_only_when_made": true,
+      "next_step_fits": true
+     }
+    },
+    "no_card_answer": {
+     "old_words": 0,
+     "rows_are_known": true,
+     "headline_fits": true,
+     "verdict_row_states_it": true,
+     "card_line_ends_at_the_hash": true,
+     "check_line_ends_at_the_hash": true,
+     "claims_are_the_allowed_lines": true,
+     "accept_fits": true,
+     "closing_fits": true,
+     "as_baselined_said_only_when_so": true,
+     "files_matched_said_when_so": true,
+     "files_changed_said_when_so": true,
+     "no_card_said_when_so": true,
+     "comparison_claimed_only_when_made": true,
+     "next_step_fits": true
+    },
+    "no_card_head": "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE",
+    "no_card_notice_old_words": 0,
+    "files_matched": {
+     "LIMIT_NOT_MET": true,
+     "DESIGN_OUTSIDE_BASELINE": true,
+     "CHECK_ERROR": true,
+     "CHECK_OUTPUT_INVALID": true,
+     "RESULT_IMPLAUSIBLE": true,
+     "BASELINE_MISMATCH": false,
+     "MET": true
+    },
+    "no_card_notice_known": true,
+    "in_process": {},
+    "runs_row": [
+     "Official runs 8 through the service on this baseline: 1 met, 2 not met, 5 unknown.  This run: a-96b9c84efa97f298."
+    ],
+    "missing_counts": [
+     "? met, 2 not met, ? unknown.",
+     "(8 official runs, 2 not met); ? unknown, ? met."
+    ],
+    "counts_a": [
+     8,
+     1,
+     2,
+     5
+    ],
+    "supersedes": {
+     "official_runs": 8,
+     "met": 1,
+     "not_met": 2,
+     "unknown": 5
+    },
+    "banner_print": [
+     "CHANGED AFTER THE EVENT: this baseline replaced a2815a5e9b63c1b1\u2026 (rev A) after 8 official runs on it: 1 met, 2 not met, 5 unknown.  Reason given by the engineer: Revision B, for R18 (CR-18)."
+    ],
+    "banner_shown": [
+     "THIS BASELINE SUPERSEDES a2815a5e9b63c1b1\u2026 (8 official runs, 2 not met); 5 unknown, 1 met.  Reason given: Revision B, for R18 (CR-18)."
+    ],
+    "on_b": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "record_a": [
+     true,
+     []
+    ],
+    "record_b": [
+     true,
+     []
+    ]
+   },
+   "seconds": 9.5
+  },
+  "R19": {
+   "title": "A notice reaches an engineer's inbox only for that engineer's own baseline: a request naming a hash the service holds no baseline for, even one that shares all but one digit of a real baseline's, is answered UNKNOWN and its notice is kept apart, addressed to no engineer; and a notice about a real baseline still reaches its engineer while the service can find its folder or read its full hash in its inbox.  (Amendment 6.)",
+   "ok": true,
+   "checks": {
+    "when a baseline is made, its engineer's inbox is made with it, holds no notice, and holds the baseline's full hash; when the gate's tool starts, a baseline with no inbox, or with one that holds notices and no hash, as for a baseline made before this amendment, is given an inbox that holds it": true,
+    "requests naming hashes the service holds no baseline for (one sharing the real hash's first 64 bits, one differing from it only in its last digit, one sharing nothing) are answered UNKNOWN, saying none is stored, or, while the service cannot look in its folder of baselines, that the stored file could not be opened; each notice is kept apart under its own hash, addressed to no engineer, and nothing is added to the real engineer's inbox, even while the service cannot look in its folder of baselines": true,
+    "a failure on the real baseline goes to its engineer's inbox": true,
+    "while the real engineer's inbox holds no hash, a made-up hash that shares its name still does not reach it; and any run on the real baseline, a pass included, writes the hash again, also where the file system makes no hard links, and leaves nothing else in the inbox": true,
+    "with the baseline's folder taken away, a run on its hash is answered UNKNOWN, saying none is stored, and its notice still goes to its engineer, by the hash its inbox holds, saying the baseline should be restored": true,
+    "an inbox that holds another baseline's hash, as two baselines sharing their first 64 bits would share one, still takes the notices of a baseline whose folder the gate holds, and its hash is not replaced": true,
+    "with the stored card taken away and the inbox holding no hash, the reason saying the stored file could not be opened; with the service unable to look in its folder of baselines, the reason saying so too and the notice that the stored baseline should be inspected; with a hash file that is empty, as a crash could leave, not text, or not a hash; or with a folder in its place: each notice still reaches the engineer, the hash is written again where it can be, and no temporary file is left": true
+   },
+   "evidence": {
+    "inbox_at_baselining": [
+     "baseline_sha256"
+    ],
+    "claim_at_baselining": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+    "got": {
+     "claim_after_start": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "made": {
+      "verdict": [
+       "UNKNOWN",
+       "BASELINE_MISMATCH",
+       "no signed baseline with this hash is held by the verification service (none is stored under this hash)"
+      ],
+      "added": {
+       "real": 0,
+       "unclaimed": 1
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: no engineer: the verification service found no baseline folder for the hash e2c1cd6962d19de301b5316b5856f66509864825b94bd35ad9f498a2baed2a9a, and read it in no inbox",
+        "No check was run.  This is not a pass.  This notice is kept by the service and sent to nobody."
+       ]
+      ]
+     },
+     "last": {
+      "verdict": [
+       "UNKNOWN",
+       "BASELINE_MISMATCH",
+       "no signed baseline with this hash is held by the verification service (none is stored under this hash)"
+      ],
+      "added": {
+       "real": 0,
+       "unclaimed": 1
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: no engineer: the verification service found no baseline folder for the hash e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a90, and read it in no inbox",
+        "No check was run.  This is not a pass.  This notice is kept by the service and sent to nobody."
+       ]
+      ]
+     },
+     "other": {
+      "verdict": [
+       "UNKNOWN",
+       "BASELINE_MISMATCH",
+       "no signed baseline with this hash is held by the verification service (none is stored under this hash)"
+      ],
+      "added": {
+       "real": 0,
+       "unclaimed": 1,
+       "own": 0
+      },
+      "own_inbox_made": false,
+      "notices": [
+       [
+        "To: no engineer: the verification service found no baseline folder for the hash 6a4945e1ea59156ba93db9e3d0de7eed810ec0ad31c35bd2517c102a3265a212, and read it in no inbox",
+        "No check was run.  This is not a pass.  This notice is kept by the service and sent to nobody."
+       ]
+      ]
+     },
+     "real": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET",
+       ""
+      ],
+      "added": {
+       "real": 1,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: D. Marsh",
+        "The check does not cover: anything except the material's listed continuous-use temperature."
+       ]
+      ]
+     },
+     "claim_after_restart": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "made_with_no_claim": {
+      "verdict": [
+       "UNKNOWN",
+       "BASELINE_MISMATCH",
+       "no signed baseline with this hash is held by the verification service (none is stored under this hash)"
+      ],
+      "added": {
+       "real": 0,
+       "unclaimed": 1
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: no engineer: the verification service found no baseline folder for the hash e2c1cd6962d19de301b5316b5856f66509864825b94bd35ad9f498a2baed2a9a, and read it in no inbox",
+        "No check was run.  This is not a pass.  This notice is kept by the service and sent to nobody."
+       ]
+      ]
+     },
+     "claim_after_made": null,
+     "pass_with_no_claim": {
+      "verdict": [
+       "PASS",
+       "MET",
+       ""
+      ],
+      "added": {
+       "real": 0,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": []
+     },
+     "claim_after_pass": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "folder_gone": {
+      "verdict": [
+       "UNKNOWN",
+       "BASELINE_MISMATCH",
+       "no signed baseline with this hash is held by the verification service (none is stored under this hash)"
+      ],
+      "added": {
+       "real": 1,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: the responsible engineer for baseline e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+        "No check was run.  This is not a pass.  Nothing is stored under this hash; the baseline should be restored, or a revised one issued."
+       ]
+      ]
+     },
+     "foreign_claim": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET",
+       ""
+      ],
+      "added": {
+       "real": 1,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: D. Marsh",
+        "The check does not cover: anything except the material's listed continuous-use temperature."
+       ]
+      ]
+     },
+     "claim_after_foreign": "e2c1cd6962d19de301b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "card_gone_no_claim": {
+      "verdict": [
+       "UNKNOWN",
+       "BASELINE_MISMATCH",
+       "no signed baseline with this hash is held by the verification service (the stored file could not be opened)"
+      ],
+      "added": {
+       "real": 1,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: the responsible engineer for baseline e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+        "No check was run.  This is not a pass.  The stored baseline should be inspected."
+       ]
+      ]
+     },
+     "claim_after_card_gone": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "baselines_unsearchable": {
+      "verdict": [
+       "UNKNOWN",
+       "BASELINE_MISMATCH",
+       "no signed baseline with this hash is held by the verification service (the stored file could not be opened)"
+      ],
+      "added": {
+       "real": 1,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: the responsible engineer for baseline e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+        "No check was run.  This is not a pass.  The stored baseline should be inspected."
+       ]
+      ]
+     },
+     "made_unsearchable": {
+      "verdict": [
+       "UNKNOWN",
+       "BASELINE_MISMATCH",
+       "no signed baseline with this hash is held by the verification service (the stored file could not be opened)"
+      ],
+      "added": {
+       "real": 0,
+       "unclaimed": 1
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: no engineer: the verification service found no baseline folder for the hash e2c1cd6962d19de301b5316b5856f66509864825b94bd35ad9f498a2baed2a9a, and read it in no inbox",
+        "No check was run.  This is not a pass.  This notice is kept by the service and sent to nobody."
+       ]
+      ]
+     },
+     "empty_claim": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET",
+       ""
+      ],
+      "added": {
+       "real": 1,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: D. Marsh",
+        "The check does not cover: anything except the material's listed continuous-use temperature."
+       ]
+      ]
+     },
+     "claim_after_empty": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "bad_claim": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET",
+       ""
+      ],
+      "added": {
+       "real": 1,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: D. Marsh",
+        "The check does not cover: anything except the material's listed continuous-use temperature."
+       ]
+      ]
+     },
+     "claim_after_bad": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "garbage_claim": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET",
+       ""
+      ],
+      "added": {
+       "real": 1,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: D. Marsh",
+        "The check does not cover: anything except the material's listed continuous-use temperature."
+       ]
+      ]
+     },
+     "claim_after_garbage": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "claim_folder": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET",
+       ""
+      ],
+      "added": {
+       "real": 1,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: D. Marsh",
+        "The check does not cover: anything except the material's listed continuous-use temperature."
+       ]
+      ]
+     },
+     "left_with_claim_folder": [
+      "baseline_sha256"
+     ],
+     "no_links": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET",
+       ""
+      ],
+      "added": {
+       "real": 1,
+       "unclaimed": 0
+      },
+      "own_inbox_made": null,
+      "notices": [
+       [
+        "To: D. Marsh",
+        "The check does not cover: anything except the material's listed continuous-use temperature."
+       ]
+      ]
+     },
+     "claim_after_no_links": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "left_in_inbox": [
+      "baseline_sha256"
+     ],
+     "h": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "made_h": "e2c1cd6962d19de301b5316b5856f66509864825b94bd35ad9f498a2baed2a9a",
+     "last_h": "e2c1cd6962d19de321b5316b5856f66509864825b94bd35ad9f498a2baed2a90",
+     "other_h": "6a4945e1ea59156ba93db9e3d0de7eed810ec0ad31c35bd2517c102a3265a212"
+    }
+   },
+   "seconds": 0.8
+  },
+  "R20": {
+   "title": "A notice that cannot be written does not stop a run or lose its verdict: it goes to the service's own store, whole, and the verdict says where it went; where nothing can be written, the verdict says so; a ledger that cannot be written does not stop a run; a card whose notice text cannot be built still gets its notice, in fixed words.  (Amendment 7, D2 and D3.)",
+   "ok": true,
+   "checks": {
+    "the inbox is a file in place of its folder: the verdict is returned, the notice is kept in the service's own store, whole, and the verdict says where it went": true,
+    "the inbox refuses writes, as one made by another account would: the same, with the notice whole in the service's own store": true,
+    "the disk fills part-way through the inbox's copy: the notice kept is whole, and no partial notice is left in either place": true,
+    "where nothing can be written, the verdict is still returned and says so, and nothing is raised": true,
+    "a ledger that cannot be written does not stop a run: the verdict is returned and its notice is in the inbox": true,
+    "a card whose notice text cannot be built gets its notice in fixed words, in the inbox, and the words repeat none of the card's text": true,
+    "a normal failing run is unchanged: its notice is in the inbox, whole, with the card's own text": true,
+    "the error output may fail too: the verdict is still returned, and its notice is in the inbox": true,
+    "a notice held under one name is one copy: a repeat is reported where that copy is, and no second copy is made": true,
+    "a write stopped part-way, with no hard links, leaves no notice under its name and no temporary file": true,
+    "every run returned a verdict, and no temporary file was left in any place": true
+   },
+   "evidence": {
+    "got": {
+     "inbox_is_a_file": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "UNDELIVERED",
+      "in_inbox": [],
+      "in_undelivered": [
+       "20261119T012515Z_FAIL_a2f5267d.txt"
+      ],
+      "texts": [
+       "To: D. Marsh\nFrom: the verification service (not the assistant)\n\nFAIL: REQUIREMENT NOT MET\nThe check does not cover: anything except the material's listed continuous-use temperature.\n\nRequirement   REQ-SELFTEST-001 rev A: Sensor housing service temperature\n              \"The housing shall withstand continuous operation at 200 C.\"\n              baselined 2026-11-19T01:25:15Z by D. Marsh, responsible engineer.  Baseline f1b89b317e0c6833\u2026\nLoad case     continuous operation, no other load\nDesign        material = PA66-GF30, mode = normal, wall_mm = 3.2\n              design hash a2f5267d4f5356e1\u2026\n\n  continuous service temperature: required at least 200 C; achieved 180 C; margin -20 C (10% beyond the limit)  -> NOT MET\n\nReason        continuous service temperature is 180 C, the limit is 200 C.\nBasis         As reported by the declared check (not verified by this tool): \"limited by the continuous-use rating of PA66-GF30: 180 C\"\nCheck         CHK-SELFTEST v1, written by test author, reviewed by test reviewer.  Baselined hash 00046e4ecd2534e0\u2026\nVerdict       FAIL.  Computed by the verification service from the check's output and the baselined limits.  Not stated by the assistant.\n\nThe requirement, the limits and the load case are as baselined.\nThe check and its data matched their baselined hashes when it ran.\nD. Marsh has been sent this result directly.  Only D. Marsh can accept this result or issue a revised baseline; the assistant cannot.\nWhat can happen next:  a different design inside the baselined design space (a new official run; this result stays on the record),\n                       or a decision by D. Marsh: redesign, a revised baseline with a reason, or a recorded concession.\nThis result says what the declared check returned against the baselined limits.  It does not say the check is correct.\nThe check does not cover: anything except the material's listed continuous-use temperature.\n"
+      ],
+      "dots": []
+     },
+     "inbox_refuses": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "UNDELIVERED",
+      "in_inbox": [],
+      "in_undelivered": [
+       "20261119T012515Z_FAIL_d33f0d23.txt"
+      ],
+      "texts": [
+       "To: D. Marsh\nFrom: the verification service (not the assistant)\n\nFAIL: REQUIREMENT NOT MET\nThe check does not cover: anything except the material's listed continuous-use temperature.\n\nRequirement   REQ-SELFTEST-001 rev A: Sensor housing service temperature\n              \"The housing shall withstand continuous operation at 200 C.\"\n              baselined 2026-11-19T01:25:15Z by D. Marsh, responsible engineer.  Baseline f1b89b317e0c6833\u2026\nLoad case     continuous operation, no other load\nDesign        material = PA66-GF30, mode = normal, wall_mm = 3.25\n              design hash d33f0d23d7749407\u2026\n\n  continuous service temperature: required at least 200 C; achieved 180 C; margin -20 C (10% beyond the limit)  -> NOT MET\n\nReason        continuous service temperature is 180 C, the limit is 200 C.\nBasis         As reported by the declared check (not verified by this tool): \"limited by the continuous-use rating of PA66-GF30: 180 C\"\nCheck         CHK-SELFTEST v1, written by test author, reviewed by test reviewer.  Baselined hash 00046e4ecd2534e0\u2026\nVerdict       FAIL.  Computed by the verification service from the check's output and the baselined limits.  Not stated by the assistant.\n\nThe requirement, the limits and the load case are as baselined.\nThe check and its data matched their baselined hashes when it ran.\nD. Marsh has been sent this result directly.  Only D. Marsh can accept this result or issue a revised baseline; the assistant cannot.\nWhat can happen next:  a different design inside the baselined design space (a new official run; this result stays on the record),\n                       or a decision by D. Marsh: redesign, a revised baseline with a reason, or a recorded concession.\nThis result says what the declared check returned against the baselined limits.  It does not say the check is correct.\nThe check does not cover: anything except the material's listed continuous-use temperature.\n"
+      ],
+      "dots": []
+     },
+     "disk_fills": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "UNDELIVERED",
+      "in_inbox": [],
+      "in_undelivered": [
+       "20261119T012515Z_FAIL_8bd5fcc6.txt"
+      ],
+      "texts": [
+       "To: D. Marsh\nFrom: the verification service (not the assistant)\n\nFAIL: REQUIREMENT NOT MET\nThe check does not cover: anything except the material's listed continuous-use temperature.\n\nRequirement   REQ-SELFTEST-001 rev A: Sensor housing service temperature\n              \"The housing shall withstand continuous operation at 200 C.\"\n              baselined 2026-11-19T01:25:15Z by D. Marsh, responsible engineer.  Baseline f1b89b317e0c6833\u2026\nLoad case     continuous operation, no other load\nDesign        material = PA66-GF30, mode = normal, wall_mm = 3.3\n              design hash 8bd5fcc6e9b2f20d\u2026\n\n  continuous service temperature: required at least 200 C; achieved 180 C; margin -20 C (10% beyond the limit)  -> NOT MET\n\nReason        continuous service temperature is 180 C, the limit is 200 C.\nBasis         As reported by the declared check (not verified by this tool): \"limited by the continuous-use rating of PA66-GF30: 180 C\"\nCheck         CHK-SELFTEST v1, written by test author, reviewed by test reviewer.  Baselined hash 00046e4ecd2534e0\u2026\nVerdict       FAIL.  Computed by the verification service from the check's output and the baselined limits.  Not stated by the assistant.\n\nThe requirement, the limits and the load case are as baselined.\nThe check and its data matched their baselined hashes when it ran.\nD. Marsh has been sent this result directly.  Only D. Marsh can accept this result or issue a revised baseline; the assistant cannot.\nWhat can happen next:  a different design inside the baselined design space (a new official run; this result stays on the record),\n                       or a decision by D. Marsh: redesign, a revised baseline with a reason, or a recorded concession.\nThis result says what the declared check returned against the baselined limits.  It does not say the check is correct.\nThe check does not cover: anything except the material's listed continuous-use temperature.\n"
+      ],
+      "dots": []
+     },
+     "nothing_writes": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "NOT_WRITTEN",
+      "in_inbox": [],
+      "in_undelivered": [],
+      "texts": [],
+      "dots": []
+     },
+     "ledger_refuses": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "INBOX",
+      "in_inbox": [
+       "20261119T012516Z_FAIL_ffcd1fc1.txt"
+      ],
+      "in_undelivered": [],
+      "texts": [
+       "To: D. Marsh\nFrom: the verification service (not the assistant)\n\nFAIL: REQUIREMENT NOT MET\nThe check does not cover: anything except the material's listed continuous-use temperature.\n\nRequirement   REQ-SELFTEST-001 rev A: Sensor housing service temperature\n              \"The housing shall withstand continuous operation at 200 C.\"\n              baselined 2026-11-19T01:25:15Z by D. Marsh, responsible engineer.  Baseline f1b89b317e0c6833\u2026\nLoad case     continuous operation, no other load\nDesign        material = PA66-GF30, mode = normal, wall_mm = 3.4\n              design hash ffcd1fc11122da07\u2026\n\n  continuous service temperature: required at least 200 C; achieved 180 C; margin -20 C (10% beyond the limit)  -> NOT MET\n\nReason        continuous service temperature is 180 C, the limit is 200 C.\nBasis         As reported by the declared check (not verified by this tool): \"limited by the continuous-use rating of PA66-GF30: 180 C\"\nCheck         CHK-SELFTEST v1, written by test author, reviewed by test reviewer.  Baselined hash 00046e4ecd2534e0\u2026\nVerdict       FAIL.  Computed by the verification service from the check's output and the baselined limits.  Not stated by the assistant.\n\nThe requirement, the limits and the load case are as baselined.\nThe check and its data matched their baselined hashes when it ran.\nD. Marsh has been sent this result directly.  Only D. Marsh can accept this result or issue a revised baseline; the assistant cannot.\nWhat can happen next:  a different design inside the baselined design space (a new official run; this result stays on the record),\n                       or a decision by D. Marsh: redesign, a revised baseline with a reason, or a recorded concession.\nThis result says what the declared check returned against the baselined limits.  It does not say the check is correct.\nThe check does not cover: anything except the material's listed continuous-use temperature.\n"
+      ],
+      "dots": []
+     },
+     "face_breaks": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "INBOX",
+      "in_inbox": [
+       "20261119T012516Z_FAIL_17451ec7.txt"
+      ],
+      "in_undelivered": [],
+      "texts": [
+       "To: the responsible engineer for baseline f1b89b317e0c6833c7a83198c431cd6db9a6c5e6f0cbbda1670fd3458b36c422\nFrom: the verification service (not the assistant)\n\nFAIL: A VERIFICATION RUN GAVE THIS RESULT, AND ITS NOTICE COULD NOT BE SHOWN IN FULL\n\nReason code  LIMIT_NOT_MET\n\nThe notice could not be built from the baseline, so the text of the baseline and of the design is left out.  The reason code above is the verification service's own.  This is not a pass.\n"
+      ],
+      "dots": []
+     },
+     "ledger_and_stderr": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "INBOX",
+      "in_inbox": [
+       "20261119T012516Z_FAIL_8734e759.txt"
+      ],
+      "in_undelivered": [],
+      "texts": [
+       "To: D. Marsh\nFrom: the verification service (not the assistant)\n\nFAIL: REQUIREMENT NOT MET\nThe check does not cover: anything except the material's listed continuous-use temperature.\n\nRequirement   REQ-SELFTEST-001 rev A: Sensor housing service temperature\n              \"The housing shall withstand continuous operation at 200 C.\"\n              baselined 2026-11-19T01:25:15Z by D. Marsh, responsible engineer.  Baseline f1b89b317e0c6833\u2026\nLoad case     continuous operation, no other load\nDesign        material = PA66-GF30, mode = normal, wall_mm = 3.55\n              design hash 8734e759a3034579\u2026\n\n  continuous service temperature: required at least 200 C; achieved 180 C; margin -20 C (10% beyond the limit)  -> NOT MET\n\nReason        continuous service temperature is 180 C, the limit is 200 C.\nBasis         As reported by the declared check (not verified by this tool): \"limited by the continuous-use rating of PA66-GF30: 180 C\"\nCheck         CHK-SELFTEST v1, written by test author, reviewed by test reviewer.  Baselined hash 00046e4ecd2534e0\u2026\nVerdict       FAIL.  Computed by the verification service from the check's output and the baselined limits.  Not stated by the assistant.\n\nThe requirement, the limits and the load case are as baselined.\nThe check and its data matched their baselined hashes when it ran.\nD. Marsh has been sent this result directly.  Only D. Marsh can accept this result or issue a revised baseline; the assistant cannot.\nWhat can happen next:  a different design inside the baselined design space (a new official run; this result stays on the record),\n                       or a decision by D. Marsh: redesign, a revised baseline with a reason, or a recorded concession.\nThis result says what the declared check returned against the baselined limits.  It does not say the check is correct.\nThe check does not cover: anything except the material's listed continuous-use temperature.\n"
+      ],
+      "dots": []
+     },
+     "one_copy": {
+      "first": [
+       "UNDELIVERED",
+       "INTERRUPTED_one.txt"
+      ],
+      "second": [
+       "UNDELIVERED",
+       "INTERRUPTED_one.txt"
+      ],
+      "in_inbox": [],
+      "in_store": [
+       "INTERRUPTED_one.txt"
+      ]
+     },
+     "stopped": {
+      "raised": "KeyboardInterrupt",
+      "new": [],
+      "dots": []
+     },
+     "normal": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "INBOX",
+      "in_inbox": [
+       "20261119T012516Z_FAIL_2b92aa9a.txt"
+      ],
+      "in_undelivered": [],
+      "texts": [
+       "To: D. Marsh\nFrom: the verification service (not the assistant)\n\nFAIL: REQUIREMENT NOT MET\nThe check does not cover: anything except the material's listed continuous-use temperature.\n\nRequirement   REQ-SELFTEST-001 rev A: Sensor housing service temperature\n              \"The housing shall withstand continuous operation at 200 C.\"\n              baselined 2026-11-19T01:25:15Z by D. Marsh, responsible engineer.  Baseline f1b89b317e0c6833\u2026\nLoad case     continuous operation, no other load\nDesign        material = PA66-GF30, mode = normal, wall_mm = 3.5\n              design hash 2b92aa9a87a441a3\u2026\n\n  continuous service temperature: required at least 200 C; achieved 180 C; margin -20 C (10% beyond the limit)  -> NOT MET\n\nReason        continuous service temperature is 180 C, the limit is 200 C.\nBasis         As reported by the declared check (not verified by this tool): \"limited by the continuous-use rating of PA66-GF30: 180 C\"\nCheck         CHK-SELFTEST v1, written by test author, reviewed by test reviewer.  Baselined hash 00046e4ecd2534e0\u2026\nVerdict       FAIL.  Computed by the verification service from the check's output and the baselined limits.  Not stated by the assistant.\n\nThe requirement, the limits and the load case are as baselined.\nThe check and its data matched their baselined hashes when it ran.\nD. Marsh has been sent this result directly.  Only D. Marsh can accept this result or issue a revised baseline; the assistant cannot.\nWhat can happen next:  a different design inside the baselined design space (a new official run; this result stays on the record),\n                       or a decision by D. Marsh: redesign, a revised baseline with a reason, or a recorded concession.\nThis result says what the declared check returned against the baselined limits.  It does not say the check is correct.\nThe check does not cover: anything except the material's listed continuous-use temperature.\n"
+      ],
+      "dots": []
+     }
+    }
+   },
+   "seconds": 0.8
+  },
+  "R21": {
+   "title": "A check whose stated limits are not text cannot be baselined, and a card signed that way is refused at every run, as not a baseline card, with its notice in the engineer's inbox and no error raised.  (Amendment 7, D4.)",
+   "ok": true,
+   "checks": {
+    "the console will not baseline a check whose stated limits are not text, and says why": true,
+    "a card signed that way anyway is refused at the run as not a baseline card: UNKNOWN, no check run, and its notice is in the engineer's inbox": true,
+    "the run raises no error, and the notice is the no-usable-baseline notice": true
+   },
+   "evidence": {
+    "refused": "check.stated_limits is needed: say what the check does not cover",
+    "got": {
+     "verdict": [
+      "UNKNOWN",
+      "BASELINE_MISMATCH",
+      "no signed baseline with this hash is held by the verification service: the stored file is not a baseline card (a part of it is missing or is not as a card needs it)"
+     ],
+     "notice": "INBOX",
+     "texts": [
+      "To: the responsible engineer for baseline 5ded7a83fa41d7e3ed57f8c19a19b51f57c52eca5e532e60fe68de23669129ab\nFrom: the verification service (not the assistant)\n\nUNKNOWN: A VERIFICATION RUN WAS ASKED FOR AND NO USABLE BASELINE IS HELD\n\nReason        no signed baseline with this hash is held by the verification service: the stored file is not a baseline card (a part of it is missing or is not as a card needs it)\nDesign        no usable baseline is held to set it against\n              From the caller, not the service (quoted; cut at 20, +N more):\n          sent: \"material\" = \"PA66-GF30\"\n          sent: \"mode\" = \"normal\"\n          sent: \"wall_mm\" = 3\n\nNo check was run.  This is not a pass.  The stored baseline should be inspected.\n"
+     ]
+    }
+   },
+   "seconds": 0.5
+  },
+  "R22": {
+   "title": "The gate's tool shows that it can write each baseline's inbox, and keeps a dated proof of it: when it starts, on every run, and by its own look for a baseline made later or an inbox it could not write; a proof that is missing, old, or says the inbox could not be written reads as not good; and the engineer's console shows which.  (Amendment 8, D3.)",
+   "ok": true,
+   "checks": {
+    "when the tool starts, a baseline it holds has an inbox-writability check on record: its inbox and the service's store could be written, the proof names this baseline and the present time, and the probe leaves nothing in the inbox; a temporary file that a killed process left minutes ago is taken away, from the inbox, from a folder of notices that are no engineer's and from the folder of proofs; a fresh one is left alone, and so is an old file that is not the service's own, though its name begins the same way": true,
+    "a proof is read as not proven when it is missing, is not a proof, names another baseline, or gives a time that is not a number that can be used; as not writable unless it says plainly that the inbox was written; and as stale when it is older than its limit or dated further ahead than that": true,
+    "with a file in place of the inbox, a run still returns its verdict, with its notice kept in the service's own store, and the proof then says the inbox cannot be written; the tool says so on its error output": true,
+    "put back, the inbox is proved again by the tool's own look, with no run, the tool says so, and nothing is left in the inbox but its hash": true,
+    "a baseline folder that appears after the tool started, and has had no inbox for a minute, is given its inbox, its hash and its proof by the tool's own look; so is one whose folder is dated an hour ahead": true,
+    "a baseline folder made this moment, with no inbox yet, is left for the console: the tool's look makes no inbox for it, and it is not proven; once the console has made the inbox, the look proves it": true,
+    "a run on a baseline renews its proof": true,
+    "where the proof cannot be recorded, a run still returns its verdict and its notice, the state reads as not proven, and the tool says so; once it can be recorded, it is": true,
+    "where the record cannot be written though its folder is there, as on a full disk, the proof left from before is not kept as good: the state reads as not proven at once, nothing is left beside it, and it is proved again once it can be": true,
+    "with the clock put back, so that the tool's memory of its proof is dated an hour ahead, the proof is made again all the same": true,
+    "with the baseline's folder taken away and its inbox still holding its hash, its proof is still made by the tool's own look, and a run on it is answered UNKNOWN with its notice in that inbox, as before this amendment": true,
+    "with the error output closed, a run whose proof and whose ledger both have something to say still returns its verdict and keeps its notice": true,
+    "the engineer's console shows the state: proven, with its time; and, with the proof taken away, not proven, saying that new runs are refused": true
+   },
+   "evidence": {
+    "got": {
+     "at_start": {
+      "inbox": true,
+      "store": true,
+      "names_this_baseline": true,
+      "time_is_now": true,
+      "state": "WRITABLE",
+      "inbox_holds": [
+       ".notice.draft",
+       ".probe.1.0123456789ab",
+       "baseline_sha256"
+      ],
+      "no_engineers_folder_holds": [],
+      "proofs_folder_holds": [
+       ".keep"
+      ]
+     },
+     "read": {
+      "older_than_limit": "STALE",
+      "within_limit": "WRITABLE",
+      "dated_ahead": "STALE",
+      "time_not_a_number": "UNCHECKED",
+      "time_too_large": "UNCHECKED",
+      "time_a_yes": "UNCHECKED",
+      "missing": "UNCHECKED",
+      "not_a_proof": "UNCHECKED",
+      "another_baseline": "UNCHECKED",
+      "inbox_not_true": "NOT_WRITABLE",
+      "put_back": "WRITABLE"
+     },
+     "blocked": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "UNDELIVERED",
+      "inbox": false,
+      "store": true,
+      "state": "NOT_WRITABLE"
+     },
+     "restored": {
+      "seconds": 1.01,
+      "state": "WRITABLE",
+      "inbox_holds": [
+       "baseline_sha256"
+      ],
+      "the_tool_says_so": true
+     },
+     "later": {
+      "seconds": 1.01,
+      "state": "WRITABLE",
+      "inbox_claims_it": true
+     },
+     "later_dated_ahead": {
+      "state": "WRITABLE",
+      "inbox_claims_it": true
+     },
+     "young": {
+      "inbox_made_by_the_tool": false,
+      "state": "UNCHECKED"
+     },
+     "young_after_console": {
+      "seconds": 0.5,
+      "state": "WRITABLE"
+     },
+     "renewed": true,
+     "unrecorded": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "INBOX",
+      "state": "UNCHECKED"
+     },
+     "recorded_again": {
+      "seconds": 0.86,
+      "state": "WRITABLE",
+      "a_new_proof_is_on_record": true
+     },
+     "no_room": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "state": "UNCHECKED",
+      "left": []
+     },
+     "room_again": {
+      "seconds": 1.01,
+      "state": "WRITABLE"
+     },
+     "clock_put_back": {
+      "seconds": 1.01,
+      "made_again": true
+     },
+     "folder_gone": {
+      "seconds": 0.96,
+      "state": "WRITABLE",
+      "run": [
+       "UNKNOWN",
+       "BASELINE_MISMATCH",
+       "INBOX"
+      ],
+      "after_the_run": "WRITABLE"
+     },
+     "closed_output": {
+      "verdict": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "notice": "UNDELIVERED"
+     },
+     "h2": "3eb540695ec0a319f58c286edf6e26f9d5f1268ebf76d1033a173aac17817913"
+    },
+    "said": [
+     "verify tool: CANNOT WRITE THE INBOX of baseline e960fb14097b5ec4\u2026: its notices go to the s",
+     "verify tool: the inbox of baseline e960fb14097b5ec4\u2026 can be written again, and the inbox-w",
+     "verify tool: CANNOT RECORD THE INBOX-WRITABILITY CHECK for baseline e960fb14097b5ec4\u2026: enr",
+     "verify tool: the inbox of baseline e960fb14097b5ec4\u2026 can be written again, and the inbox-w",
+     "verify tool: CANNOT RECORD THE INBOX-WRITABILITY CHECK for baseline e960fb14097b5ec4\u2026: enr",
+     "verify tool: the inbox of baseline e960fb14097b5ec4\u2026 can be written again, and the inbox-w",
+     "verify tool: the inbox of baseline e960fb14097b5ec4\u2026 can be written again, and the inbox-w"
+    ],
+    "shown": [
+     "0 official runs; 4 notices in the inbox",
+     "inbox writable: the gate wrote a test file in this inbox at 2026-11-19T01:25:28Z.  This is not delivery: it do",
+     "2 notices kept undelivered, in /home/user/PLEAai/outputs/verify_tests/R22/home/undelivered/e960fb14097b5ec4a03"
+    ],
+    "shown_without": [
+     "0 official runs; 4 notices in the inbox",
+     "INBOX NOT CHECKED: the verification service has not shown that it can write a notice to the inbox of this base",
+     "2 notices kept undelivered, in /home/user/PLEAai/outputs/verify_tests/R22/home/undelivered/e960fb14097b5ec4a03"
+    ]
+   },
+   "seconds": 11.6
+  },
+  "R23": {
+   "title": "A requirement the service already holds a baseline for is changed by a revision, which is linked as before, or baselined again only with the engineer's reason; the reason, and the baselines already held, go into the signed card, and the record's checker and the first client's view of the requirement print them.  (Amendment 9.)",
+   "ok": true,
+   "checks": {
+    "a second baseline for a requirement the service holds, not made as a revision, is refused without a reason, or with a blank one; the refusal names the baseline held and says to revise it or give a reason; nothing is stored and no inbox is made": true,
+    "with the engineer's reason it is baselined, and its signed card names the baseline held, with its revision, and the reason": true,
+    "a revision needs no reason and is linked as before, and its card has no such field": true,
+    "a later baseline made as new names every baseline the service holds for the requirement": true,
+    "a baseline for another requirement needs no reason, and its card has no such field, as a first baseline's has none": true,
+    "the record's checker, on a record that verifies, the first client's view of the requirement and the front door's, in its text and its fields, each give the link and the reason": true,
+    "the console's command line refuses such a draft without a reason, with exit status 1, and stores nothing": true,
+    "a card whose link has a blank reason, no baselines, a hash that is not one, or is not a link at all, is refused by the card's rules": true,
+    "an id that differs from one held only in case, in white space or in its Unicode form is the same requirement: each such draft is refused without a reason": true,
+    "a link written in the draft is never signed: a first baseline for another requirement and a revision, each made from a draft that carries one, have none": true,
+    "a baseline folder whose signature does not verify is not counted as held, and a first baseline for its requirement needs no reason; one that is whole, signed by another engineer's key, is counted, and a baseline for its requirement is refused without a reason": true
+   },
+   "evidence": {
+    "refused": "requirement REQ-SELFTEST-001 already has a baseline at this service (811352c9279005f9\u2026 rev A): make this one a revision of it (revise --supersedes), or, if it is a separate baseline for the same requirement and not a change to it, give the reason (--alongside-",
+    "blank": "requirement REQ-SELFTEST-001 already has a baseline at this service (811352c9279005f9\u2026 rev A): make this one a revision ",
+    "side": {
+     "reason": "A second bracket of the same part, rated for a lower temperature (CR-23).",
+     "baselines": [
+      {
+       "baseline_sha256": "811352c9279005f93a63cfea00e8f9b6db4631072520095c2daef65e6109509f",
+       "revision": "A"
+      }
+     ]
+    },
+    "third": [
+     "51bc80ea2eed2340",
+     "811352c9279005f9",
+     "b60df17d918b715f"
+    ],
+    "alike": [
+     "requirement  req-selftest-001 already has a baseline at this service (51bc80ea2eed2340\u2026 re",
+     "requirement \uff32\uff25\uff31-SELFTEST-001 already has a baseline at this service (51bc80ea2eed2340\u2026 rev",
+     "requirement REQ-SELFTEST-001\t already has a baseline at this service (51bc80ea2eed2340\u2026 re",
+     "requirement REQ\u200b-SELFTEST-001 already has a baseline at this service (51bc80ea2eed2340\u2026 re",
+     "requirement REQ\u2011SELFTEST\u2212001 already has a baseline at this service (51bc80ea2eed2340\u2026 rev",
+     "requirement REQ-SELFTEST-001\ufe0f already has a baseline at this service (51bc80ea2eed2340\u2026 re"
+    ],
+    "from_draft": "none",
+    "rev_draft": "none",
+    "after_forged": [
+     "requirement",
+     "criteria",
+     "load_case",
+     "design_space",
+     "check",
+     "inputs",
+     "controls",
+     "responsible_engineer",
+     "job",
+     "format",
+     "supersedes",
+     "baselined_at"
+    ],
+    "after_colleague": "requirement REQ-SELFTEST-026 already has a baseline at this service (0096382c8aa0bc6e\u2026 rev A): make this one a revision of it (revise --supersedes), or, if it is a separate baseline for the same requi",
+    "door": [
+     "  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: 811352c9279005f9\u2026 (rev A).  Reason given by the engineer: A second bracket of the same part, rated for a lower temperature (CR-23)."
+    ],
+    "door_fields": {
+     "reason": "A second bracket of the same part, rated for a lower temperature (CR-23).",
+     "baselines": [
+      {
+       "baseline_sha256": "811352c9279005f93a63cfea00e8f9b6db4631072520095c2daef65e6109509f",
+       "revision": "A"
+      }
+     ]
+    },
+    "other": [
+     "requirement",
+     "criteria",
+     "load_case",
+     "design_space",
+     "check",
+     "inputs",
+     "controls",
+     "responsible_engineer",
+     "job",
+     "format",
+     "supersedes",
+     "baselined_at"
+    ],
+    "cli": [
+     1,
+     "0df17d918b715f\u2026 rev A): make this one a revision of it (revise --supersedes), or, if it is a separate baseline for the same requirement and not a change to it, give the reason (--alongside-reason), which is written into the signed card.  Nothing was baselined\n"
+    ],
+    "record_ok": true,
+    "printed": [
+     "  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: 811352c9279005f9\u2026 (rev A).  Reason given by the engineer: A second bracket of the same part, rated for a lower temperature (CR-23)."
+    ],
+    "shown": [
+     "  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: 811352c9279005f9\u2026 (rev A).  Reason given by the engineer: A second bracket of the same part, rated for a lower temperature (CR-23)."
+    ]
+   },
+   "seconds": 2.0
+  },
+  "R24": {
+   "title": "What a person or an assistant reads of a pass calls it the declared check met, never a bare PASS, and shows what the check does not cover: the answer, the first client's status and the engineer's console.  A notice shows what the check does not cover under its headline.  The signed verdict and the record keep the word PASS.  (Amendment 9.)",
+   "ok": true,
+   "checks": {
+    "the answer to a pass begins DECLARED CHECK MET, with what the check does not cover on the next line and again at its end, and its Verdict row calls it the declared check met, signed as PASS (exit status 0)": true,
+    "no line of the answers, the first client's status or the engineer's console shows the bare word PASS": true,
+    "with no design met, the status says NOT VERIFIED and nothing more; with one met, the first client's status shows the run as MET and says for which design the declared check was met, that this does not say the check is correct, and what the check does not cover": true,
+    "the engineer's console shows the run as MET with the same lines, and calls the gate's check what it is, an inbox-writability check, not delivery": true,
+    "the notice of the failure has what the check does not cover under its headline and at its end": true,
+    "the signed verdicts and the record keep the word PASS, the record verifies, and its checker prints DECLARED CHECK MET and shows the run that met it as MET": true
+   },
+   "evidence": {
+    "code": 0,
+    "first_lines": [
+     "DECLARED CHECK MET",
+     "The check does not cover: anything except the material's listed continuous-use temperature."
+    ],
+    "last": [
+     "The check does not cover: anything except the material's listed continuous-use temperature."
+    ],
+    "verdict_rows": [
+     "Verdict       DECLARED CHECK MET (signed as PASS).  Computed by the verification service from the check's output and the baselined limits.  Not stated by the assistant."
+    ],
+    "bare": [
+     [],
+     [],
+     [],
+     []
+    ],
+    "rows_after": [
+     "FAIL",
+     "MET"
+    ],
+    "rows_console": [
+     "FAIL",
+     "MET"
+    ],
+    "mid_tail": [
+     "NOT VERIFIED: no design has met the declared check on this baseline."
+    ],
+    "after_tail": [
+     "DECLARED CHECK MET, for design 3d052bbd639f6e6e\u2026 only.  This says what the declared check returned against the baselined limits.  It does not say the check is correct, the requirement is complete, or the design is safe.",
+     "The check does not cover: anything except the material's listed continuous-use temperature."
+    ],
+    "console_tail": [
+     "DECLARED CHECK MET, for design 3d052bbd639f6e6e\u2026 only.  This says what the declared check returned against the baselined limits.  It does not say the check is correct, the requirement is complete, or the design is safe.",
+     "The check does not cover: anything except the material's listed continuous-use temperature."
+    ],
+    "inbox_line": [
+     "inbox writable: the gate wrote a test file in this inbox at "
+    ],
+    "notice_lines": [
+     "FAIL: REQUIREMENT NOT MET",
+     "The check does not cover: anything except the material's listed continuous-use temperature.",
+     "The check does not cover: anything except the material's listed continuous-use temperature."
+    ],
+    "outcomes": [
+     "FAIL",
+     "PASS"
+    ],
+    "status": "DECLARED CHECK MET"
+   },
+   "seconds": 2.8
+  },
+  "R25": {
+   "title": "The witness signs a checkpoint of a baseline's chain: how many decisions it holds, the hash of the last, and its clock.  A record carries one, and its checker requires it to be the witness's and to name the record's own head.  Against a checkpoint obtained separately, the checker says whether a record is current, out of date or of another chain; and a log of checkpoints kept apart from the service refuses a rollback or a fork, and keeps the evidence.  (Amendment 10.)",
+   "ok": true,
+   "checks": {
+    "before any run the witness signs a checkpoint of the empty chain: no decisions, its head the provisioning record's hash, the budget open, the asker's nonce signed back; asked for the head after decision 0 it gives the same hash; both verify under the witness's key": true,
+    "asking for a checkpoint adds no decision: five asks leave the chain as long as it was, and each gives its length and head": true,
+    "a record carries the witness's checkpoint, which names the record's own last decision and head; the record verifies with a ninth check, the witness checkpoint; a record built without one still verifies, and its ninth check says it has none": true,
+    "against a checkpoint obtained separately, whose chain ends where the record does, the record is CURRENT within the age allowed, with the nonce asked signed back; with no age allowed it is only CURRENT_AT the checkpoint's time; the checker's command, which allows an hour unless told, says CURRENT and exits 0; with no checkpoint given it says the currency was not checked, and exits 0 as before": true,
+    "the command refuses to be misused (exit 2): an age or a nonce with no checkpoint, a checkpoint with the keys read from the record itself, an age that is not a number, a checkpoint file with no name": true,
+    "after a later run the same record is out of date: SUPERSEDED, a true beginning of the chain, where the checkpoint names the record's head; SUPERSEDED_UNPROVEN where it does not; the command exits 1 though the record itself verifies": true,
+    "an old checkpoint handed over again with the old record, after a later run, still reads CURRENT inside the age allowed, which is all that CURRENT says; asked with a nonce of the reader's own, it is not used": true,
+    "a checkpoint older than the record says nothing of it (OLDER); one older than the age allowed is STALE and one within it CURRENT; one dated more than five minutes ahead of the reader's clock is not used, and one less than that ahead is; the command exits 1 for a stale, a forked, an unusable and an older checkpoint": true,
+    "a checkpoint is not used (INVALID) when it signs back another nonce or none, when its number, head, time or state was edited or a field added, when its number is text or true, when it gives an earlier head with no number, when it is signed by another key, is for another budget, or is a receipt and not a checkpoint; nor is an age that is not a number, or a record with no as-of point": true,
+    "a checkpoint the witness's key signed that gives another head for a decision the record holds shows the record is of another chain (FORKED): for the record's last decision, as the chain's head or as an earlier one, and for a decision inside the record, in a checkpoint older or newer than it": true,
+    "the checkpoint inside a record cannot be changed, exchanged or dropped unseen: edited, checks 1 and 9 fail; edited and re-signed with the engineer's key, or exchanged for a true checkpoint of an earlier point, for a true one that names no head, or for one signed by another key, check 9 alone fails; taken out and re-signed, the record verifies and says it has none": true,
+    "once the baseline is superseded, a checkpoint of its chain says the budget is no longer open, and the checker says so beside the record's currency": true,
+    "a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence": true,
+    "the log's audit is clean, and reports a fork written into it behind the keeper's back": true,
+    "the witness answers 404 for a budget it does not hold and 400 for no budget, a nonce with a space or of 65 characters, a decision beyond the chain, a number that is not one and a budget name with a control character; none of it adds a decision": true,
+    "the keeper's certificate reads a checkpoint (200) and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the checkpoint (403); the fetcher gives nothing with no certificate, and will not ask over plain http": true,
+    "the keeper's command fetches a checkpoint with a nonce of its own making, keeps it and writes it out; its next fetch asks the witness for the head at the last number kept; a line cut off in the log is reported by the audit and does not stop the next fetch, nor does a last line that lost its line end; the log then audits clean with four checkpoints": true,
+    "a keeper whose log holds a longer chain than the witness now has is told of a rollback: the command exits 1, and the witness's signed checkpoint of the shorter chain is put aside as the evidence": true,
+    "the superseded baseline's record, built after the revision and checked against the keeper's first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer's console, given the witness's address, writes a record that carries a checkpoint and verifies": true
+   },
+   "evidence": {
+    "cp0": {
+     "seq": 0,
+     "business": "OPEN",
+     "witness": "ACTIVE",
+     "nonce": "first-ask_1",
+     "at": null
+    },
+    "reads": [
+     8,
+     8
+    ],
+    "checks1": [
+     9,
+     "witness checkpoint",
+     true
+    ],
+    "bare": [
+     9,
+     "witness checkpoint (none in this record)",
+     true
+    ],
+    "summary": {
+     "seq": 8,
+     "time": "2026-11-19T01:25:35Z",
+     "business": "OPEN",
+     "witness": "ACTIVE",
+     "at": 8
+    },
+    "at_the_time": {
+     "in the age allowed, nonce signed back": "CURRENT",
+     "no age allowed": "CURRENT_AT"
+    },
+    "states": {
+     "replayed after a later run, in the age allowed": "CURRENT",
+     "replayed, a new nonce asked": "INVALID",
+     "later, no word on this record": "SUPERSEDED_UNPROVEN",
+     "later, names this record": "SUPERSEDED",
+     "older": "OLDER",
+     "stale": "STALE",
+     "fresh enough": "CURRENT",
+     "dated ahead": "INVALID",
+     "clock a little behind": "CURRENT",
+     "age not a number": "INVALID",
+     "other nonce": "INVALID",
+     "no nonce signed": "INVALID",
+     "edited number": "INVALID",
+     "edited head": "INVALID",
+     "edited time": "INVALID",
+     "edited state": "INVALID",
+     "a field added": "INVALID",
+     "number as text": "INVALID",
+     "number as true": "INVALID",
+     "earlier head with no number": "INVALID",
+     "another key": "INVALID",
+     "another budget": "INVALID",
+     "not a checkpoint": "INVALID",
+     "record with no as-of": "INVALID",
+     "fork, same number": "FORKED",
+     "fork, earlier head": "FORKED",
+     "fork, older than the record": "FORKED",
+     "fork, an earlier head inside the record": "FORKED"
+    },
+    "sentences": {
+     "replayed after a later run, in the age allowed": "the record was current at 2026-11-19T01:25:35Z by the witness's clock, 1 seconds ago by this computer's clock: the witness's chain",
+     "replayed, a new nonce asked": "the checkpoint does not sign back the nonce given, so it may have been made before it was asked for",
+     "later, no word on this record": "the record is out of date: at 2026-11-19T01:25:36Z by the witness's clock the witness's chain had 8 later decisions (sequence numb",
+     "later, names this record": "the record is out of date: at 2026-11-19T01:25:36Z by the witness's clock the witness's chain had 8 later decisions (sequence numb",
+     "older": "the checkpoint is older than the record (sequence number 8, the record's is 16): it says nothing of whether the record is current",
+     "stale": "the record was current at 2026-11-19T01:25:35Z by the witness's clock, which is more than 60 seconds ago: get a newer checkpoint",
+     "fresh enough": "the record was current at 2026-11-19T01:25:35Z by the witness's clock, 59 seconds ago by this computer's clock: the witness's chai",
+     "dated ahead": "the checkpoint is dated 2026-11-19T01:25:35Z, which is in the future by this computer's clock: one of the two clocks is wrong, and",
+     "clock a little behind": "the record was current at 2026-11-19T01:25:35Z by the witness's clock, 0 seconds ago by this computer's clock: the witness's chain",
+     "age not a number": "the age allowed is not a number of seconds",
+     "other nonce": "the checkpoint does not sign back the nonce given, so it may have been made before it was asked for",
+     "no nonce signed": "the checkpoint does not sign back the nonce given, so it may have been made before it was asked for",
+     "edited number": "the checkpoint cannot be used: it is not signed by a witness key given",
+     "edited head": "the checkpoint cannot be used: it is not signed by a witness key given",
+     "edited time": "the checkpoint cannot be used: it is not signed by a witness key given",
+     "edited state": "the checkpoint cannot be used: it is not signed by a witness key given",
+     "a field added": "the checkpoint cannot be used: it is not a checkpoint, or has fields a checkpoint does not have",
+     "number as text": "the checkpoint cannot be used: its sequence number, head or time is not readable",
+     "number as true": "the checkpoint cannot be used: its sequence number, head or time is not readable",
+     "earlier head with no number": "the checkpoint cannot be used: what it says of an earlier decision is not readable, or contradicts its own head",
+     "another key": "the checkpoint cannot be used: it is not signed by a witness key given",
+     "another budget": "the checkpoint cannot be used: it is for another budget",
+     "not a checkpoint": "the checkpoint cannot be used: it is not a checkpoint, or has fields a checkpoint does not have; it is not signed by a witness key",
+     "record with no as-of": "the record has no as-of sequence number and head to compare",
+     "fork, same number": "the witness's chain and the record's disagree at sequence number 8: this record is not of the chain the witness holds",
+     "fork, earlier head": "the witness's chain and the record's disagree at sequence number 8: this record is not of the chain the witness holds",
+     "fork, older than the record": "the witness's chain and the record's disagree at sequence number 8: this record is not of the chain the witness holds",
+     "fork, an earlier head inside the record": "the witness's chain and the record's disagree at sequence number 8: this record is not of the chain the witness holds"
+    },
+    "cli": [
+     [
+      0,
+      [
+       "CURRENCY: CURRENT"
+      ]
+     ],
+     [
+      0,
+      [
+       "CURRENCY: NOT CHECKED"
+      ]
+     ],
+     [
+      1,
+      [
+       "CURRENCY: SUPERSEDED"
+      ]
+     ],
+     [
+      0,
+      [
+       "CURRENCY: CURRENT"
+      ]
+     ]
+    ],
+    "cli_misuse": [
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "cli_bad": {
+     "forked": [
+      1,
+      [
+       "CURRENCY: FORKED"
+      ]
+     ],
+     "invalid": [
+      1,
+      [
+       "CURRENCY: INVALID"
+      ]
+     ],
+     "older": [
+      1,
+      [
+       "CURRENCY: OLDER"
+      ]
+     ]
+    },
+    "cli_stale": [
+     1,
+     [
+      "CURRENCY: STALE"
+     ]
+    ],
+    "inside": {
+     "edited": [
+      1,
+      9
+     ],
+     "edited, re-signed": [
+      9
+     ],
+     "earlier point, re-signed": [
+      9
+     ],
+     "another key, re-signed": [
+      9
+     ],
+     "names no head, re-signed": [
+      9
+     ],
+     "taken out, re-signed": []
+    },
+    "old_state": [
+     "SUPERSEDED",
+     "the record is out of date: at 2026-11-19T01:25:37Z by the witness's clock the witness's chain had 1 later decision (sequence number 17).  The record is a true beginning of that chain.  Ask for the current record.  The budget was then STOPPING: it was superseded or closed, or is held, and takes no new runs as it stands."
+    ],
+    "kept": [
+     null,
+     null,
+     null,
+     null
+    ],
+    "turned": {
+     "rollback": "not kept: ROLLBACK: sequence number 8 after 17 for REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60.  The checkpoint is in /home/user/PLEAai/outputs/verify_tests/R25/keeper/checkpoints.jsonl.refused.jsonl",
+     "fork": "not kept: FORK: two heads for sequence number 17 of REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60.  The checkpoint is in /home/user/PLEAai/outputs/verify_tests/R25/keeper/checkpoints.jsonl.refused.jsonl",
+     "fork of an earlier head": "not kept: FORK: two heads for sequence number 8 of REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60.  The checkpoint is in /home/user/PLEAai/outputs/verify_tests/R25/keeper/checkpoints.jsonl.refused.jsonl",
+     "a longer chain that does not follow the last kept": "not kept: FORK: two heads for sequence number 17 of REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60.  The checkpoint is in /home/user/PLEAai/outputs/verify_tests/R25/keeper/checkpoints.jsonl.refused.jsonl",
+     "not tied to the last kept": "not kept: it does not say what the chain's head was at sequence number 17, the last kept for REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60: ask the witness again, for that number (the log may have been added to meanwhile)",
+     "tied to an earlier one, truly": "not kept: it does not say what the chain's head was at sequence number 17, the last kept for REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60: ask the witness again, for that number (the log may have been added to meanwhile)",
+     "another key": "not kept: it is not signed by a witness key given",
+     "another budget than asked": "not kept: it is for another budget",
+     "another nonce than asked": "not kept: it does not sign back the nonce asked"
+    },
+    "lines": 4,
+    "evidence": 4,
+    "clean": [],
+    "dirty": [
+     "line 5: FORK: two heads for sequence number 17 of REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60"
+    ],
+    "witness_says": {
+     "unknown budget": 404,
+     "no budget named": 400,
+     "nonce with a space": 400,
+     "nonce of 65 characters": 400,
+     "beyond the chain": 400,
+     "a number that is not one": 400,
+     "a budget name with a control character": 400,
+     "stranger": 403,
+     "keeper reads": 200,
+     "keeper writes": 403,
+     "keeper asks the key": 403,
+     "governor reads": 200
+    },
+    "no_cert": "the witness could not be asked (SSLError)",
+    "plain_http": "the witness is asked over https, with the authority that issued its certificate (--ca)",
+    "chain": [
+     17,
+     17
+    ],
+    "keeper": [
+     [
+      0,
+      "{\"root\": \"REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60\", \"seq\": 17, \"time\": \"2026-11-19T01:25:37Z\", \"nonce\": \"JOhOjCT_CooMB4LEF9umVC0R\", \"at\": null, \"kept\": true, \"out\": \"/home/user/PLEAai/outputs/verify_tests/R25/cp_cli.json\"}",
+      ""
+     ],
+     [
+      0,
+      "{\"root\": \"REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60\", \"seq\": 17, \"time\": \"2026-11-19T01:25:37Z\", \"nonce\": \"SKCdBJE-7QKyYL4y7Z93hmpS\", \"at\": 17, \"kept\": true, \"out\": null}",
+      ""
+     ],
+     [
+      0,
+      "{\"root\": \"REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60\", \"seq\": 17, \"time\": \"2026-11-19T01:25:37Z\", \"nonce\": \"ZPpHPPpZAvDfSR_MMWC9CqlW\", \"at\": 17, \"kept\": true, \"out\": null}",
+      ""
+     ],
+     [
+      0,
+      "{\"root\": \"REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60\", \"seq\": 17, \"time\": \"2026-11-19T01:25:37Z\", \"nonce\": \"VjFJ0pr0Z4oHv6JyMjbw6NxL\", \"at\": 17, \"kept\": true, \"out\": null}",
+      ""
+     ]
+    ],
+    "torn_audit": [
+     1,
+     "the last line was cut off and is passed over\n2 checkpoints; 1 problems",
+     ""
+    ],
+    "audited": [
+     0,
+     "4 checkpoints; no rollback or fork, every signature verifies",
+     ""
+    ],
+    "shorter": [
+     1,
+     "",
+     "refused: not kept: ROLLBACK: sequence number 17 after 25 for REQ-SELFTEST-001/A/6b9be53ea38d078234708084dde1ec60.  The checkpoint is in /home/user/PLEAai/outputs/verify_tests/R25/keeper3/log.jsonl.refused.jsonl"
+    ],
+    "aside3": [
+     [
+      17,
+      null
+     ]
+    ],
+    "console": [
+     0,
+     ""
+    ]
+   },
+   "seconds": 5.3
+  }
+ },
+ "passed": 25,
+ "of": 25,
+ "seconds": 140.9,
+ "PASS": true
+}
