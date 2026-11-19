@@ -2639,8 +2639,9 @@ def r27():
         grouped = subprocess.run([PY, '-B', '-c', "import sys; sys.path.insert(0, sys.argv[1]); import sandbox; o = sandbox.run({'c.py': b'import os; print(os.getgroups())'}, 'c.py', b''); print(o.state, o.stdout.decode().strip())",
                                   str(GATEWAY / 'verify')], capture_output=True, text=True, timeout=60, extra_groups=[4242])   # a service that holds a group of its own: the check holds none
         e['grouped'] = grouped.stdout.strip()
+        t0 = time.monotonic(); escape = boxed(f"import os, sys, time\nos.setsid()\nfor i in range(3):\n    if os.fork() == 0:\n        os.execv(sys.executable, [sys.executable, '-c', 'import time; time.sleep(120)', '{mark}-e'])\nos.execv(sys.executable, [sys.executable, '-c', 'import time; time.sleep(120)', '{mark}-e'])", timeout=2); e['escape_seconds'] = round(time.monotonic() - t0, 2)   # it leaves its process group: the run still ends at its time, not at the launcher's
         limits = {'fork bomb': boxed("import os\nn = 0\ntry:\n    while n < 300:\n        if os.fork() == 0:\n            import time; time.sleep(30); os._exit(0)\n        n += 1\n    print(n, 'no limit')\nexcept Exception as e:\n    print(n, type(e).__name__)"),
-                  'escape': boxed(f"import os, sys, time\nos.setsid()\nfor i in range(3):\n    if os.fork() == 0:\n        os.execv(sys.executable, [sys.executable, '-c', 'import time; time.sleep(120)', '{mark}-e'])\nos.execv(sys.executable, [sys.executable, '-c', 'import time; time.sleep(120)', '{mark}-e'])", timeout=2),
+                  'escape': escape,
                   'memory, many processes': boxed("import os, sys, time\nfor i in range(6):\n    if os.fork() == 0:\n        x = bytearray(900 * 1024 ** 2); time.sleep(3); print('alive', flush=True); os._exit(0)\n"
                                                   "x = bytearray(900 * 1024 ** 2)\ntime.sleep(3)\nprint('alive', flush=True)\ntime.sleep(1)", timeout=10),
                   'disk, many files': boxed("n = 0\ntry:\n    while n < 40:\n        open(f'/work/f{n}', 'wb').write(b'x' * (10 << 20)); n += 1\n    print(n, 'no limit')\nexcept Exception as e:\n    print(n, type(e).__name__)"),
@@ -2785,8 +2786,8 @@ def r27():
                       limits['fork bomb'][0] == 'RAN' and limits['fork bomb'][2].split()[-1:] == ['BlockingIOError'] and int((limits['fork bomb'][2].split() or ['999'])[0]) < 64
                       and limits['memory'][:2] == ('RAN', 1) and 'MemoryError' in limits['memory'][3] and limits['output'][0] == 'OUTPUT_TOO_LONG' and limits['spin'][0] == 'TIMEOUT'
                       and limits['disk'][0] in ('RAN',) and 'wrote' not in limits['disk'][2],
-                  'a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children; no process of any run\'s identities is left; the check sees no process of the machine, and cannot signal the namespace\'s first process, which is the sandbox\'s own':
-                      limits['left behind'][:2] == ('RAN', 0) and limits['escape'][0] == 'TIMEOUT' and survivors == [] and run_left == []
+                  'a process the check leaves behind ends with the run, and so does a check that leaves its process group and outlives the time allowed, with its children, at its time, not later at the launcher\'s; no process of any run\'s identities is left; the check sees no process of the machine, and cannot signal the namespace\'s first process, which is the sandbox\'s own':
+                      limits['left behind'][:2] == ('RAN', 0) and limits['escape'][0] == 'TIMEOUT' and e['escape_seconds'] < 4 and survivors == [] and run_left == []
                       and limits['others'][2].strip() == "['PermissionError', 'ProcessLookupError', 'ProcessLookupError', 'ProcessLookupError']",
                   'what a run uses is limited for the run as a whole: of seven processes that each take 900 MiB, at most one lives, ten-MiB files stop before 7 of them, and a design larger than a pipe holds, of which the check reads a little and then no more, does not stop the clock: that run ends at its own time, not later at the launcher\'s':
                       limits['memory, many processes'][0] == 'RAN' and limits['memory, many processes'][2].split().count('alive') <= 1
@@ -2802,7 +2803,7 @@ def r27():
                       and printed(limits['calls']).get('bounding') == [] and printed(limits['calls']).get('rlimits') == [64, 0],
                   'what the kernel counts for each user is counted against a user of the run\'s own, not root: a check takes inotify instances until refused, and gets exactly 128, the limit for one user, while root, outside, can still make one':
                       isinstance(e['inotify'], tuple) and e['inotify'][0] == 'RAN' and e['inotify_taken'] == 128 and e['root_inotify'][0] is True,
-                  'two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had cleared its death signal and run itself again from a second thread, which starts without one':
+                  'two runs have different host identities, and a run whose service is killed ends with it, within two seconds, with every process it started, though the check had tried to clear its death signal, and had run itself again from a second thread, which starts without one':
                       len(e['host_ids']) == 2 and e['host_ids'][0] and e['host_ids'][1] and not set(e['host_ids'][0]) & set(e['host_ids'][1]) and e['running_before_kill'] and e['tried_before_kill'] and e['orphans'] == [],
                   'where the sandbox cannot be made, the check is not run and the outcome says why: a launcher outside new namespaces refuses, and so does a service that cannot make the run\'s control groups, or whose machine has a file table one run could fill':
                       isinstance(fail_closed[0], list) and fail_closed[0][0] == 'SANDBOX_UNAVAILABLE' and 'not the first process of a new process namespace' in fail_closed[0][1] and fail_closed[1] is False

@@ -11,7 +11,8 @@ and thrown away after it:
     keyring, not the right to trace or signal them.  The namespace is made by the first of these ids, not by root, so what
     the kernel counts for each user (inotify and fanotify use, message queues, pending signals) is counted against the run's
     own id, not against root's, which the machine's other processes share;
-  - new mount, process, network, IPC and host-name namespaces: the check sees no other process, has no network at all (not
+  - new mount, process, network, IPC and host-name namespaces: the check sees no process of the machine (only the sandbox's
+    own first process and its own), has no network at all (not
     even loopback), and its mounts are its own;
   - a root of its own: an empty, read-only file system holding the Python installation (/usr, read-only throughout, with
     /usr/local, /usr/src and the site and dist packages hidden), a work folder at /work and a /tmp, both in memory and limited in size and number of files, and
@@ -20,7 +21,7 @@ and thrown away after it:
     inbox, not /etc, not /proc.  The host name is "sandbox";
   - the check runs as the unprivileged user of that namespace, with no other group and no capabilities (its bounding set
     emptied), no way to gain any (no new privileges), and a session keyring of its own, not the service's; it cannot
-    trace or signal the namespace's first process, which runs as the namespace's root;
+    trace, stop or kill the namespace's first process, which runs as the namespace's root;
   - a small system-call filter (seccomp, x86-64 only): no sockets of any family, so no vsock, which a network namespace does
     not close, and no Unix sockets, whose queued data the memory group does not count; the keyring, io_uring, native
     asynchronous I/O (whose limit is the machine's), bpf, perf and userfaultfd calls are refused (ENOSYS); any other
@@ -73,6 +74,7 @@ import threading
 import pathlib
 import random
 import resource
+import select
 import selectors
 import shutil
 import signal
@@ -216,8 +218,9 @@ def sweep(parent: pathlib.Path) -> None:
     now = time.time()
     for d in parent.glob('verify-sandbox-*'):
         try:
-            made = d.name.rsplit('-', 1)[-1]
-            if now - (int(made) if made.isdigit() and len(made) >= 10 else d.stat().st_mtime) < STALE:   # the time in its name: the kernel does not keep a group's mtime
+            parts = d.name.split('-')                                  # verify-sandbox-UID-TIME; a name without its time is older than this rule
+            made = int(parts[3]) if len(parts) == 4 and parts[3].isdigit() else d.stat().st_mtime
+            if now - made < STALE:                                      # the time in its name: the kernel does not keep a group's mtime
                 continue
             for p in (d / 'cgroup.procs').read_text().split():
                 try:
@@ -611,15 +614,20 @@ def launcher(a: list) -> None:
     _check(libc.prctl(PR_SET_PDEATHSIG, signal.SIGKILL, 0, 0, 0), 'pdeathsig')   # cleared by the change of identity, so set again
     if os.getppid() != parent:                                          # the service died before it was set again
         raise OSError('the service ended before the sandbox was made')
+    alive_r, alive_w = os.pipe()                                        # held open by the launcher: at its end, the child reads end-of-file
     child = os.fork()                                                   # the first process of the new process namespace
     if child == 0:
         try:
+            os.close(alive_w)
             _check(libc.prctl(PR_SET_PDEATHSIG, signal.SIGKILL, 0, 0, 0), 'pdeathsig')
+            if select.select([alive_r], [], [], 0)[0]:                    # the launcher died before the signal was set (its parent is not seen from here)
+                raise OSError('the launcher ended before the sandbox was made')
+            os.close(alive_r)
             jail_and_exec(libc, jail, work, ready_fd, parent_ns, limits, program)
         except BaseException as exc:
             sys.stderr.write(f'sandbox: {exc}\n'); sys.stderr.flush()
         os._exit(125)
-    os.close(ready_fd)
+    os.close(ready_fd); os.close(alive_r)
     end = time.monotonic() + allowed                                     # the run's time is kept here too, if the service cannot keep it
     while True:
         done, status = os.waitpid(child, os.WNOHANG)
