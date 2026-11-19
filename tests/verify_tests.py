@@ -1983,7 +1983,7 @@ def r25():
     try:
         s = r.s; root = B.root_for(r.env['card']); wk = s.keys['witness']; here = OUT / 'R25'
         url = f"https://127.0.0.1:{s.ports['witness']}"; keeper_tls = ['--ca', s.pki['ca'], '--cert', s.pki['keeper'][0], '--key', s.pki['keeper'][1]]
-        rows = lambda: len(Store(deploy.LOCAL_DSN).audit_snapshot(root)[0])
+        rows = lambda: len(Store(deploy.LOCAL_DSN).audit_snapshot(root)[0])                   # the one chain: the witness and this reader use one database, under different roles
         cur = lambda rec, cp, **kw: check_record.currency(rec, cp, wk, **kw)
         signed = lambda **f: sign_checkpoint(s.witness, **f)                                  # what only the witness's key can sign
         fails = lambda rec: [n for n, _, good, _ in check_record.verify(rec, s.keys)[1] if not good]
@@ -2020,7 +2020,7 @@ def r25():
         before = rows(); five = [s.checkpoint(root) for _ in range(5)]; after_reads = rows()
         rec1 = r.record(); ok1, checks1, sum1 = check_record.verify(rec1, s.keys)
         bare = s.record(r.h, [r.ws / '.verify' / 'submissions.jsonl'], checkpoint=False); okb, checksb, sumb = check_record.verify(bare, s.keys)
-        cp1 = s.checkpoint(root, 'n-1'); f_rec1, f_cp1 = save('rec1.json', rec1), save('cp1.json', cp1)
+        cp1 = s.checkpoint(root, 'n-1'); f_rec1, f_cp1 = save('rec1.json', rec1), save('cp1.json', cp1); k1 = s.checkpoint(root, None, 0)      # k1 answers for decision 0, which the keeper will hold
         n1, h1 = rec1['as_of']['seq'], rec1['as_of']['head']
         when = dict(business='OPEN', witness='ACTIVE', time=cp1['time'])
         at_the_time = {'in the age allowed, nonce signed back': cur(rec1, cp1, nonce='n-1', max_age=600), 'no age allowed': cur(rec1, cp1)}
@@ -2057,13 +2057,15 @@ def r25():
         inside = {'edited': fails(edited), 'edited, re-signed': fails(resign(edited)), 'earlier point, re-signed': fails(resign(earlier)), 'another key, re-signed': fails(resign(foreign)),
                   'names no head, re-signed': fails(resign(plain)), 'taken out, re-signed': fails(resign({k: v for k, v in rec2.items() if k != 'checkpoint'}))}
         log = here / 'keeper' / 'checkpoints.jsonl'
-        kept = [refused(checkpoints.keep, log, c, wk) for c in (cp0, cp1, cp2at)]
+        kept = [refused(checkpoints.keep, log, c, wk) for c in (cp0, k1, cp2at)]
         rev = verify_ctl.revise(s.home, CASE, draft(requirement=dict(r.env['card']['requirement'], revision='B')), s.engineer, r.h, 'The bracket was strengthened (CR-31).')
         cp_old = s.checkpoint(root, None, n2); old_state = cur(rec2, cp_old); kept.append(refused(checkpoints.keep, log, cp_old, wk))
         top = cp_old['seq']
         turned = {'rollback': refused(checkpoints.keep, log, cp1, wk), 'fork': refused(checkpoints.keep, log, signed(root=root, seq=top, head='0' * 64, **when), wk),
                   'fork of an earlier head': refused(checkpoints.keep, log, signed(root=root, seq=top + 8, head='1' * 64, at=n1, head_at='0' * 64, **when), wk),
                   'a longer chain that does not follow the last kept': refused(checkpoints.keep, log, signed(root=root, seq=top + 8, head='1' * 64, at=top, head_at='0' * 64, **when), wk),
+                  'not tied to the last kept': refused(checkpoints.keep, log, signed(root=root, seq=top + 8, head='1' * 64, **when), wk),
+                  'tied to an earlier one, truly': refused(checkpoints.keep, log, signed(root=root, seq=top + 8, head='1' * 64, at=n1, head_at=h1, **when), wk),
                   'another key': refused(checkpoints.keep, log, sign_checkpoint(Signer(), root=root, seq=top, head=cp_old['head'], **when), wk),
                   'another budget than asked': refused(checkpoints.keep, log, cp_old, wk, root + 'x'), 'another nonce than asked': refused(checkpoints.keep, log, cp_old, wk, root, 'mine')}
         lines = len(log.read_text().splitlines()); clean = checkpoints.audit(checkpoints.read_log(log)[0], wk)
@@ -2091,7 +2093,13 @@ def r25():
             f.write('{"statement": "CHECKP')                                                               # a line cut off by a crash
         torn_audit = keeper('audit', log2, '--witness-key', wk)
         third = keeper('fetch', '--witness-url', url, *keeper_tls, '--root', root, '--log', log2, '--witness-key', wk)
+        log2.write_bytes(log2.read_bytes().rstrip(b'\n'))                                                  # the last line whole, its line end lost
+        fourth = keeper('fetch', '--witness-url', url, *keeper_tls, '--root', root, '--log', log2, '--witness-key', wk)
         audited = keeper('audit', log2, '--witness-key', wk)
+        log3 = here / 'keeper3' / 'log.jsonl'; log3.parent.mkdir()
+        log3.write_text(json.dumps(signed(root=root, seq=top + 8, head='1' * 64, **when)) + '\n')           # a keeper that was once told of a longer chain
+        shorter = keeper('fetch', '--witness-url', url, *keeper_tls, '--root', root, '--log', log3, '--witness-key', wk)
+        aside3 = [json.loads(l) for l in (here / 'keeper3' / 'log.jsonl.refused.jsonl').read_text().splitlines()] if (here / 'keeper3' / 'log.jsonl.refused.jsonl').exists() else []
         rec3 = r.record(); cli_closed = cli(save('rec3.json', rec3), '--keys', keys, '--checkpoint', here / 'cp_cli.json', '--nonce', j1.get('nonce', ''), '--max-age', '600')
         keyfile = here / 'engineer.key'; keyfile.write_text(s.engineer.private_hex + '\n')
         console = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'verify_ctl.py'), 'record', str(s.home), r.h, '--key', str(keyfile), '--witness-key', wk, '--gate-key', s.keys['gate'],
@@ -2103,7 +2111,7 @@ def r25():
                  summary=sum1.get('checkpoint'), at_the_time={k: v[0] for k, v in at_the_time.items()}, states={k: v[0] for k, v in states.items()}, sentences={k: v[1][:130] for k, v in states.items()},
                  cli=(cli_current[:2], cli_none[:2], cli_old[:2], cli_closed[:2]), cli_misuse=cli_misuse, cli_bad=cli_bad, cli_stale=cli_stale,
                  inside=inside, old_state=old_state, kept=kept, turned=turned, lines=lines, evidence=evidence, clean=clean, dirty=dirty, witness_says=witness_says, no_cert=no_cert, plain_http=plain_http,
-                 chain=(chain_before, chain_after), keeper=(first, second, third), torn_audit=torn_audit, audited=audited, console=(console.returncode, console.stderr[:200]))
+                 chain=(chain_before, chain_after), keeper=(first, second, third, fourth), torn_audit=torn_audit, audited=audited, shorter=shorter, aside3=[(c.get('seq'), c.get('at')) for c in aside3], console=(console.returncode, console.stderr[:200]))
         st = e['states']
         checks = {'before any run the witness signs a checkpoint of the empty chain: no decisions, its head the provisioning record\'s hash, the budget open, the asker\'s nonce signed back; asked for the head after decision 0 it gives the same hash; both verify under the witness\'s key':
                       cp0['seq'] == 0 and cp0['head'] == prov['hash'] and (cp0['business'], cp0['witness'], cp0['nonce']) == ('OPEN', 'ACTIVE', 'first-ask_1') and check_record.checkpoint_problems(cp0, [wk], root) == []
@@ -2135,8 +2143,9 @@ def r25():
                       inside == {'edited': [1, 9], 'edited, re-signed': [9], 'earlier point, re-signed': [9], 'another key, re-signed': [9], 'names no head, re-signed': [9], 'taken out, re-signed': []},
                   'once the baseline is superseded, a checkpoint of its chain says the budget is no longer open, and the checker says so beside the record\'s currency':
                       cp_old['business'] != 'OPEN' and old_state[0] == 'SUPERSEDED' and 'it was superseded or closed' in old_state[1],
-                  'a log of checkpoints kept apart from the service takes them in order, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence':
+                  'a log of checkpoints kept apart from the service takes them in order, each answering for the last number kept, and refuses a rollback, a fork of the head, a fork of an earlier head, a longer chain that does not follow the last one kept, one that does not answer for the last number kept (naming none, or an earlier one), a checkpoint not signed by the witness, and one for another budget or nonce than asked; it keeps none of them, and puts the four that contradict it aside as evidence':
                       kept == [None, None, None, None] and turned['rollback'].startswith('not kept: ROLLBACK') and all(turned[k].startswith('not kept: FORK') for k in ('fork', 'fork of an earlier head', 'a longer chain that does not follow the last kept'))
+                      and all('does not say what the chain\'s head was at sequence number' in turned[k] for k in ('not tied to the last kept', 'tied to an earlier one, truly'))
                       and 'not signed by a witness key given' in turned['another key'] and 'another budget' in turned['another budget than asked'] and 'nonce' in turned['another nonce than asked'] and lines == 4 and evidence == 4,
                   'the log\'s audit is clean, and reports a fork written into it behind the keeper\'s back': clean == [] and len(dirty) == 1 and 'FORK' in dirty[0],
                   'the witness answers 404 for a budget it does not hold and 400 for no budget, a nonce with a space or of 65 characters, a decision beyond the chain, a number that is not one and a budget name with a control character; none of it adds a decision':
@@ -2145,9 +2154,11 @@ def r25():
                   'the keeper\'s certificate reads a checkpoint (200) and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the checkpoint (403); the fetcher gives nothing with no certificate, and will not ask over plain http':
                       (witness_says['keeper reads'], witness_says['keeper writes'], witness_says['keeper asks the key'], witness_says['stranger'], witness_says['governor reads']) == (200, 403, 403, 403, 200)
                       and 'could not be asked' in (no_cert or '') and 'https' in (plain_http or ''),
-                  'the keeper\'s command fetches a checkpoint with a nonce of its own making, keeps it and writes it out; its next fetch asks the witness for the head at the last number kept; a line cut off in the log is reported by the audit and does not stop the next fetch; the log then audits clean with three checkpoints':
+                  'the keeper\'s command fetches a checkpoint with a nonce of its own making, keeps it and writes it out; its next fetch asks the witness for the head at the last number kept; a line cut off in the log is reported by the audit and does not stop the next fetch, nor does a last line that lost its line end; the log then audits clean with four checkpoints':
                       first[0] == 0 and second[0] == 0 and third[0] == 0 and len(j1.get('nonce', '')) >= 16 and j1.get('nonce') != j2.get('nonce') and j1.get('at') is None and j2.get('at') == j1.get('seq')
-                      and torn_audit[0] == 1 and 'cut off' in torn_audit[1] and audited[0] == 0 and audited[1].endswith('3 checkpoints; no rollback or fork, every signature verifies'),
+                      and torn_audit[0] == 1 and 'cut off' in torn_audit[1] and fourth[0] == 0 and audited[0] == 0 and audited[1].endswith('4 checkpoints; no rollback or fork, every signature verifies'),
+                  'a keeper whose log holds a longer chain than the witness now has is told of a rollback: the command exits 1, and the witness\'s signed checkpoint of the shorter chain is put aside as the evidence':
+                      shorter[0] == 1 and 'ROLLBACK' in shorter[2] and len(aside3) == 1 and aside3[0].get('seq') == top and check_record.checkpoint_problems(aside3[0], wk, root) == [],
                   'the superseded baseline\'s record, built after the revision and checked against the keeper\'s first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer\'s console, given the witness\'s address, writes a record that carries a checkpoint and verifies':
                       cli_closed[0] == 0 and cli_closed[1] == ['CURRENCY: CURRENT'] and 'it was superseded or closed' in cli_closed[2] and console.returncode == 0 and console_ok}
     finally:

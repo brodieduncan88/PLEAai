@@ -14,9 +14,10 @@ which the witness must sign back, so a checkpoint made earlier cannot be handed 
 for the budget asked.
 
 With --log it also appends the checkpoint to a log.  It asks the witness what the chain's head was at the last sequence
-number the log holds for that budget (unless --at is given), so each checkpoint kept is tied to the one before it.  The
-checkpoint is kept only if it is the witness's (under one of the keys given: give the old and the new during a key
-rotation) and does not contradict what the log holds:
+number the log holds for that budget, and a checkpoint is kept only if it answers that: it must name that sequence number
+(at) and give the head the log holds for it.  So each checkpoint kept is tied to the one before it by the witness's own
+signature.  The checkpoint must also be the witness's (under one of the keys given: give the old and the new during a key
+rotation) and must not contradict what the log holds:
 
   ROLLBACK   its sequence number is lower than one already kept for the budget;
   FORK       it gives another head for a sequence number the log already knows, as the chain's head or as the head after
@@ -24,14 +25,16 @@ rotation) and does not contradict what the log holds:
 
 A checkpoint that contradicts the log is the evidence that the witness said two things.  It is not appended to the log,
 but it is written to LOG.refused.jsonl beside it, and the command exits 1 saying which rule it broke.  A witness that
-answers that the log's last sequence number is beyond its chain has rolled the chain back: the command says so.
+answers that the log's last sequence number is beyond its chain has rolled the chain back: the command asks again for
+the chain as it stands, and that signed answer, with its lower sequence number, is the evidence put aside.
 `audit` re-reads a whole log by the same rules and checks every signature.
 
 What the log can and cannot show.  Kept as above, it shows a change to any decision at or before a sequence number it
 holds.  It does not show what the witness told others in between two of its own askings, nor a witness that tells
-everyone the same false thing.  The log is one writer's: a second keeper waits for the first (a file lock), and a
-checkpoint that arrives after a later one is refused as a rollback, so keep them in the order they were fetched.  A last
-line cut off by a crash is passed over and reported by `audit`.  The log is as independent as the machine and account
+everyone the same false thing.  The log is one writer's at a time: a second keeper waits for the first to finish
+appending (a file lock), and if the first appended meanwhile, the second's checkpoint no longer answers for the log's
+last sequence number and is refused; fetch again.  A last line cut off by a crash is reported by `audit` and taken away
+by the next keeping; a whole last line that lost only its line end is given one.  The log is as independent as the machine and account
 it is kept on: in the demonstration that is the same machine as everything else.  The time in a checkpoint is the
 witness's clock, not a third party's.  This file needs the Python standard library and `cryptography` (through
 check_record.py), and nothing from the gateway.
@@ -169,8 +172,9 @@ def audit(checkpoints: list, witness_keys) -> list:
 
 def keep(log, cp: dict, witness_keys, root: str | None = None, nonce: str | None = None) -> None:
     """Append a checkpoint to a log, unless it is not the witness's, is not for `root` or does not sign back `nonce` (where
-    given), or contradicts what the log holds.  A checkpoint that contradicts the log is written to LOG.refused.jsonl.
-    Raises CheckpointRefused."""
+    given), contradicts what the log holds, or does not answer for the last sequence number the log holds for its budget
+    (it must name it in `at`).  A checkpoint that contradicts the log is written to LOG.refused.jsonl.  Raises
+    CheckpointRefused."""
     bad = checkpoint_problems(cp, _keys(witness_keys), root if root is not None else (cp.get('root') if isinstance(cp, dict) else None))
     if not bad and nonce is not None and cp.get('nonce') != nonce:
         bad = ['it does not sign back the nonce asked']
@@ -193,9 +197,16 @@ def keep(log, cp: dict, witness_keys, root: str | None = None, nonce: str | None
             with open(str(p) + '.refused.jsonl', 'a', encoding='utf-8') as g:      # the evidence that two things were said
                 g.write(json.dumps(cp, sort_keys=True) + '\n')
             raise CheckpointRefused(f'not kept: {why}.  The checkpoint is in {p}.refused.jsonl')
+        top = last_seq(held, cp['root'])
+        if top is not None and cp.get('at') != top:                     # asked or not, an answer that does not name the last number kept ties nothing
+            raise CheckpointRefused(f"not kept: it does not say what the chain's head was at sequence number {top}, the last kept for {cp['root']}: "
+                                    'ask the witness again, for that number (the log may have been added to meanwhile)')
         if torn:                                                        # a last line cut off by a crash is taken away: it was never a checkpoint
             f.truncate(p.read_bytes().rfind(b'\n') + 1)
+        data = p.read_bytes()
         f.seek(0, os.SEEK_END)
+        if data and not data.endswith(b'\n'):                           # a whole last line that lost its line end
+            f.write(b'\n')
         f.write((json.dumps(cp, sort_keys=True) + '\n').encode()); f.flush(); os.fsync(f.fileno())
 
 
@@ -219,9 +230,13 @@ def main():
             try:
                 cp = fetch(a.witness_url, a.ca, a.cert, a.key, a.root, nonce, at)
             except CheckpointRefused as exc:
-                if a.log and a.at is None and at is not None and 'beyond the chain' in str(exc):
-                    raise CheckpointRefused(f'ROLLBACK: the witness says its chain for {a.root} is shorter than sequence number {at}, which the log holds')
-                raise
+                if not (a.log and a.at is None and at is not None and 'beyond the chain' in str(exc)):
+                    raise
+                cp = fetch(a.witness_url, a.ca, a.cert, a.key, a.root, nonce, None)     # the chain as it stands, signed: the evidence of the rollback
+                if cp.get('root') != a.root or cp.get('nonce') != nonce:
+                    raise CheckpointRefused(f'ROLLBACK: the witness says its chain for {a.root} is shorter than sequence number {at}, which the log holds, and gave no usable checkpoint of it')
+                keep(a.log, cp, a.witness_key, a.root, nonce)                           # refused as a rollback, and put aside
+                raise CheckpointRefused(f'the witness says its chain for {a.root} is shorter than sequence number {at}, which the log holds, yet its checkpoint is not lower')
             if cp.get('root') != a.root or cp.get('nonce') != nonce:
                 raise CheckpointRefused('the answer is not for the budget asked, or does not sign back the nonce asked')
             if a.witness_key:

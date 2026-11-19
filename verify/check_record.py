@@ -185,6 +185,8 @@ def currency(record: dict, cp, witness_keys, now=None, max_age=None, nonce=None)
     if max_age is not None and not (isinstance(max_age, (int, float)) and 0 <= max_age < float('inf')):
         return 'INVALID', 'the age allowed is not a number of seconds'
     now = time.time() if now is None else now
+    if not (isinstance(now, (int, float)) and now == now):
+        return 'INVALID', 'the time now is not a number'
     age = now - checkpoint_time(cp)
     if age < -CLOCK_SKEW:
         return 'INVALID', f"the checkpoint is dated {cp['time']}, which is in the future by this computer's clock: one of the two clocks is wrong, and its age cannot be judged"

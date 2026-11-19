@@ -62,7 +62,7 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
         def do_GET(self):
             url = urllib.parse.urlsplit(self.path)
             reading = url.path == '/checkpoint' and self.peer_name in self.tls_read      # a reading name is admitted to this one path, and to nothing that writes
-            if not (self.peer_allowed() or reading):
+            if not (reading or self.fully_allowed()):
                 return self._send(403, {'error': f'client {self.peer_name!r} is not allowed'})
             if self.path == '/pubkey':
                 return self._send(200, {'public_key': signer.public_hex, 'gate_keys': list(gate_keys),
@@ -91,8 +91,13 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
                                                        time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), nonce, at, head_at))
             self._send(404, {'error': 'not found'})
 
+        def fully_allowed(self) -> bool:
+            """Admitted to everything the witness does.  A name given only as a reading name is not, even where no --tls-allow
+            list is set and every other certificate is."""
+            return self.peer_allowed() and not (self.peer_name in self.tls_read and self.peer_name not in self.tls_allow)
+
         def do_POST(self):
-            if not self.peer_allowed():
+            if not self.fully_allowed():
                 return self._send(403, {'error': f'client {self.peer_name!r} is not allowed'})
             if self.path != '/accept':
                 return self._send(404, {'error': 'not found'})
@@ -141,7 +146,7 @@ def main():
     signer = Signer(a.key); tls = server_from_args(a)
     server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(Store(a.dsn), signer, tuple(a.gate_key), a.chaos, tuple(a.tls_allow), tuple(a.tls_allow_read))), tls)
     print(json.dumps({'listening': a.port, 'public_key': signer.public_hex, 'gate_keys': a.gate_key, 'chaos': a.chaos,
-                      'tls': tls is not None, 'tls_allow': a.tls_allow}), flush=True)
+                      'tls': tls is not None, 'tls_allow': a.tls_allow, 'tls_allow_read': a.tls_allow_read}), flush=True)
     server.serve_forever()
 
 
