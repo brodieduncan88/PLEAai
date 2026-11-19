@@ -80,6 +80,12 @@ which signs a receipt; a record can carry both, checked by its tenth check. The 
 mailbox. The front door itself is unchanged, and so are the service's own notices. `DECLARED_AMEND11.md` has the list, and
 the open items.
 
+**Third note of 19 November 2026.** `AMENDMENT_12_2026-11-19.md` runs each run of a check in a disposable sandbox of its
+own: identities, namespaces and control groups of its own, a root holding only /usr, no network, and a small system-call
+filter. A sandbox that cannot be made means the check is not run and the verdict is UNKNOWN. The front door itself is
+unchanged. In its official run F17 failed: its two runs did not end in the same second, so the case it tests was not
+made; the amendment says what is known of why. `DECLARED_AMEND12.md` has the list, and the open items.
+
 ## The pieces
 
 | file | what it does |
