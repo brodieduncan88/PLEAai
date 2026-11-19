@@ -2530,7 +2530,7 @@ def r26():
                       okd and sorted((d['outcome'], d['delivered']) for d in e['dropped'][1] or []) == [('FAIL', False), ('FAIL', True), ('INTERRUPTED', True)]
                       and cli_dropped[0] == 1 and 'NO DELIVERY EVIDENCE' in (cli_dropped[1] or [''])[0]
                       and oki and [d['delivered'] for d in e['no_int'][1] or [] if d['outcome'] == 'INTERRUPTED'] == [False],
-                  'the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record\'s chain, and one that says what the record does not, each fail check 10 alone; so does a record checked with no courier or mailbox key given':
+                  'the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record\'s chain, and one that says what the record does not (in its outcome or in its words), each fail check 10 alone':
                       all(v == [10] for v in tampered.values()) and words_differ,
                   'a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken':
                       unverified == {'no result': 'UNVERIFIED', 'a result changed': 'UNVERIFIED', 'the result': 'FAIL', 'a report not the gate\'s': 'UNVERIFIED', 'a report for another nonce': 'UNVERIFIED'}
