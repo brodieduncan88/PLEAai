@@ -92,6 +92,11 @@ through connections of its own. They are now read in one transaction. The front 
 25 answers in a row. F17 is not changed, and passed in this amendment's official run; it is restated in the amendment after.
 `DECLARED_AMEND13.md` has the list, and the open items.
 
+**Second note of 20 November 2026.** `AMENDMENT_14_2026-11-20.md` restates F17, and changes no code. F17 now shows the naming
+of two notices with no clock, makes its case through the front door by two jobs sending at once, and says whether the case
+was made; a case not made is a failure to test, never a pass. It also restates R28, in the gate's suite, after a review.
+`DECLARED_AMEND14.md` has the list, the open items, and a correction to what Amendment 12's amendment says of F17.
+
 ## The pieces
 
 | file | what it does |
