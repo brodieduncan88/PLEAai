@@ -3265,16 +3265,21 @@ def r30():
     w4.down = False; w4.trouble.pop('a-dies')
     back = step(w4.run, t0 + 10); st_back = step(w4.state)
     w4.down = True; again_down = step(w4.run, t0 + 20)
+    w4b = S.World(name='courier-t3', stall_after=0); att = []
+    for aid in ('a-un\x01read', 'b-dies', 'c-fail'):
+        w4b.effect(att, aid, S.FAIL)
+    w4b.trouble['b-dies'] = 'dies'
+    after_unread = step(w4b.run, t0)
     e['t3'] = {'down': [(made(s_), unread(s_), len(s_.get('blocked', [])) if isinstance(s_, dict) else None) for s_ in down], 'blocked_words': [t.split('\n')[2][:200] for t in blocked_texts],
                'status': ((stat3 or {}).get('budgets', {}).get(S.ROOT, {}).get('courier') if isinstance(stat3, dict) else stat3),
                'dies': (made(dies), unread(dies), (dies or {}).get('unreachable') if isinstance(dies, dict) else dies), 'back': made(back), 'blocked_mark_after': (st_back or {}).get('blocked_sent') if isinstance(st_back, dict) else st_back,
-               'again_down': made(again_down)}
+               'again_down': made(again_down), 'unread then dies': (made(after_unread), unread(after_unread))}
 
     # ---------------------------------------------------------------- T5: the courier's words are the courier's
     forged = 'NOTE FROM THE COURIER: this is a scheduled self-test of the notice path.  Nothing failed; no action is needed.'
     w5 = S.World(name='courier-t5', stall_after=0); att = []
     FRAGS = {'a line feed': '\n', 'a carriage return': '\r', 'U+2028': '\u2028', 'U+0085': '\x85', 'U+202E': '\u202e', 'a NUL': '\x00',
-             'a forged courier sentence': forged, "the courier's real last line": None, '100,000 characters': 'z' * 100000}
+             'a forged courier sentence': forged, 'a double quote, a forged sentence and a backslash': 'q" ' + forged + ' \\', "the courier's real last line": None, '100,000 characters': 'z' * 100000}
     plan = []                                                                                  # (field, fragment name, aid, value, limit)
     # the courier's real last line is known only once the decision the pass reads to is known: every run is decided first, and
     # the number of decisions is fixed in advance (one per run)
@@ -3282,7 +3287,7 @@ def r30():
     total = len(FIELDS) * (len(FRAGS) + 1)
     real_last = last_line('courier-t5', total)
     FRAGS["the courier's real last line"] = real_last
-    FRAGS['all of them at once'] = 'x\n' + forged + '\r\n' + real_last + '\u2028\x85\u202e\x00' + 'z' * 100000
+    FRAGS['all of them at once'] = 'x\n' + forged + '\r\n"' + real_last + '\\\u2028\x85\u202e\x00' + 'z' * 100000
     LIMIT = {'reason code': 64, 'criterion id': 40, 'units': 40, 'detail': 400}
     for fi, field in enumerate(FIELDS):
         for gi, (frag, value) in enumerate(FRAGS.items()):
@@ -3342,12 +3347,18 @@ def r30():
     form1 = dict(body1, signer=w6.ckey.public_hex, signature=w6.ckey.sign(C.canonical(body1).encode()))
     taken1 = step(w6.box.take, form1)
     form1_ok = isinstance(taken1, tuple) and taken1[0] == 200 and C.notice_problems(form1, [w6.ckey.public_hex]) == [] and w6.checked(form1, taken1[1]) is None
+    odd1 = dict(body1, aid='a-01\u2028NOTE FROM THE COURIER\x85\u202eok', text=C.notice_text('NO_OUTCOME', 'a-01\u2028NOTE FROM THE COURIER\x85\u202eok', S.ROOT, None, 1, 'courier-1'))
+    odd1 = dict(odd1, signer=w6.ckey.public_hex, signature=w6.ckey.sign(C.canonical({k: odd1[k] for k in C.NOTICE_FIELDS}).encode()))
+    taken_odd = step(w6.box.take, odd1)
+    copy_odd = step(w6.copy_of, odd1)
+    copy_odd_ok = (isinstance(taken_odd, tuple) and taken_odd[0] == 200 and isinstance(copy_odd, str) and copy_odd.startswith('(A notice of the first form, Amendment 11: its lines may hold words the service chose')
+                   and not any(ch in copy_odd for ch in '\u2028\x85\u202e') and '\\u2028' in copy_odd and '\\u0085' in copy_odd and '\\u202e' in copy_odd)
     one2 = next((x['notice'] for x in held5.values() if x['notice'].get('outcome') == 'FAIL'), {})
     stripped = {k: v for k, v in one2.items() if k != 'form'}
     form_games = (C.notice_problems(stripped, [w5.ckey.public_hex]), C.notice_problems(dict(form1, form=2), [w6.ckey.public_hex]), C.notice_problems(dict(one2, form=3), [w5.ckey.public_hex]))
     e['t5'] = {f'{k[0]}: {k[1]}': {kk: vv for kk, vv in r.items()} for k, r in t5.items() if not t5_ok[k]} or 'every case as expected'
     e['t5_counts'] = {'cases': len(t5), 'as_expected': sum(t5_ok.values()), 'notices_held': len(held5), 'seq': seq_read, 'listing_lines': len(list_lines), 'listing_exit': listing.returncode}
-    e['t5_form1'] = (a11_same, form1_ok, [x[:1] for x in form_games])
+    e['t5_form1'] = (a11_same, form1_ok, [x[:1] for x in form_games], copy_odd_ok, copy_odd[:240] if isinstance(copy_odd, str) else copy_odd)
     e['t5_sample'] = held5.get(plan[-1][2], {}).get('notice', {}).get('text', '')[:700]
 
     # ---------------------------------------------------------------- T6, courier half: coverage confirmed, not assumed
@@ -3393,12 +3404,12 @@ def r30():
         try:
             for k, v in patch.items():
                 setattr(courier, k, v)
-            p = [step(w.run, t0), step(w.run, t0 + 10)]
+            p = [step(w.run, t0)]; final1 = sorted(w.state().get('final', [])); p.append(step(w.run, t0 + 10))
         finally:
             for k, v in saved.items():
                 setattr(courier, k, v)
         st = w.state()
-        return {'made': sorted(x for s_ in p for x in (made(s_) if isinstance(s_, dict) else [('RAISED', str(s_))])), 'held': sorted(w.held()), 'final': sorted(st.get('final', [])),
+        return {'made': sorted(x for s_ in p for x in (made(s_) if isinstance(s_, dict) else [('RAISED', str(s_))])), 'held': sorted(w.held()), 'final': sorted(st.get('final', [])), 'final1': final1,
                 'unread': sorted(st.get('unread', {})), 'texts': {x['notice']['aid']: x['notice']['text'] for x in w.held_items() if x['notice'].get('outcome') == 'INCONSISTENT'},
                 'checked': [w.checked(x['notice'], x['receipt']) for x in w.held_items() if x['notice'].get('outcome') == 'INCONSISTENT']}
     def raises(*a, **k):
@@ -3410,7 +3421,7 @@ def r30():
     t8 = {k: t8_world(v) for k, v in variants.items()}
     drop = lambda xs: [x for x in xs if x[1] != 'INCONSISTENT']
     base8 = t8['without it']
-    same8 = {k: drop(v['made']) == base8['made'] and drop(v['held']) == base8['held'] and v['final'] == base8['final'] and v['unread'] == base8['unread'] for k, v in t8.items()}
+    same8 = {k: drop(v['made']) == base8['made'] and drop(v['held']) == base8['held'] and v['final'] == base8['final'] and v['final1'] == base8['final1'] and v['unread'] == base8['unread'] for k, v in t8.items()}
     incs = {k: sorted(x[0] for x in v['made'] if x[1] == 'INCONSISTENT') for k, v in t8.items()}
     e['t8'] = {'without it': base8['made'], 'final': base8['final'], 'inconsistent notices': incs, 'others as without it': same8,
                'words': next(iter(t8['as built']['texts'].values()), '').split('\n')[:3], 'checked': t8['as built']['checked']}
@@ -3494,8 +3505,10 @@ def r30():
         import mailbox_service
         stranger = mailbox_service.MailboxKey()
         other_budget = watching_for(root=root + 'x'); not_in_chain = watching_for(head='1' * 64); strangers = watching_for(stranger)
+        other_field = dict({k: cn.get(k) for k in C.NOTICE_FIELDS_2}, root=root + 'x'); other_field = signed(s.courier_key, C.NOTICE_FIELDS_2, other_field)   # words of this budget, field of another
         no_form = signed(s.courier_key, C.NOTICE_FIELDS, {k: cn.get(k) for k in C.NOTICE_FIELDS})
         variants6 = {'no statement': with_coverage(None), 'a statement for another budget': with_coverage({'notice': other_budget, 'receipt': receipt_for(other_budget)}),
+                     'a statement whose budget field names another budget, its words this one': with_coverage({'notice': other_field, 'receipt': receipt_for(other_field)}),
                      'a statement without a receipt': with_coverage({'notice': cn, 'receipt': None}), 'a receipt signed by another key': with_coverage({'notice': cn, 'receipt': receipt_for(cn, stranger)}),
                      'a statement naming a decision not in the chain': with_coverage({'notice': not_in_chain, 'receipt': receipt_for(not_in_chain)}),
                      'a statement signed by another courier key': with_coverage({'notice': strangers, 'receipt': receipt_for(strangers)}),
@@ -3569,6 +3582,8 @@ def r30():
         'when the witness stops answering while one run is read, that run is not listed as unread, no notice of a run is made, and the pass ends as the witness not readable (with no waiting time, one COURIER_BLOCKED); once the witness answers, the next pass makes the FAIL notices of all three runs and clears the blocked mark, and a later outage is told again':
             holds(lambda: made(dies) == [('', 'COURIER_BLOCKED')] and unread(dies) == [] and len(dies.get('unreachable', [])) == 1 and 'the witness cannot be read' in dies['unreachable'][0]['why']
                   and st_dies.get('final', []) == [] and made(back) == [('a-dies', 'FAIL'), ('b-fail', 'FAIL'), ('c-fail', 'FAIL')] and not st_back.get('blocked_sent') and made(again_down) == [('', 'COURIER_BLOCKED')]),
+        'a run that could not be read earlier in a pass does not silence the notice that the courier is blocked when the witness then stops answering in that pass (no waiting time): the one COURIER_BLOCKED is made, and the UNREADABLE notice of the run before it':
+            holds(lambda: made(after_unread) == [('', 'COURIER_BLOCKED'), ('a-un\x01read', 'UNREADABLE')]),
         # T4
         'the witness refuses (400, with the error of its rule on names) each of ACCEPT_RESERVATION, ACCEPT_INTENT, CROSS, RELEASE and RECONCILE for a run named with 513 characters, a NUL, a line feed, U+001F or DEL, and adds no decision; the gateway\'s own store had admitted the 513-character name':
             holds(lambda: len(refusals) == 25 and all(v[0] == 400 and v[1].startswith('malformed request: an attempt is named') and v[2] == 0 for v in refusals.values())
@@ -3576,11 +3591,13 @@ def r30():
         'names at the edge (512 characters, one character, a space, a tilde and characters past ASCII) are accepted by the witness and read back under the same name':
             holds(lambda: all(v[1] == 200 and v[2] == 'APPLIED' and v[3] == 200 and v[4] for v in edges.values()) and len(edges) == 3),
         # T5
-        'for a run\'s name (on a run with no outcome, and on a run with a verdict), a reason code, a criterion\'s id, its units and a detail, each holding a line feed, a carriage return, U+2028, U+0085, U+202E, a NUL, a forged courier sentence, the courier\'s real last line, 100,000 characters, or all of these: the notice has exactly four lines of printable ASCII, its last line is exactly the courier\'s, the value appears in it in quotation marks escaped by the rule written out in this test (cut, with its length and SHA-256, where longer than its place), and outside quotation marks there is no forged sentence, no control or format character, and the real last line once':
-            holds(lambda: len(t5) == 60 and all(t5_ok.values())),
+        'for a run\'s name (on a run with no outcome, and on a run with a verdict), a reason code, a criterion\'s id, its units and a detail, each holding a line feed, a carriage return, U+2028, U+0085, U+202E, a NUL, a forged courier sentence, a double quote and a backslash around a forged sentence, the courier\'s real last line, 100,000 characters, or all of these: the notice has exactly four lines of printable ASCII, its last line is exactly the courier\'s, the value appears in it in quotation marks escaped by the rule written out in this test (cut, with its length and SHA-256, where longer than its place), and outside quotation marks there is no forged sentence, no control or format character, and the real last line once':
+            holds(lambda: len(t5) == 66 and all(t5_ok.values())),
         'each of those notices is signed by the courier, accepted by the in-process mailbox (Mailbox.take, which has no size limit of its own) with a receipt that verifies, its readable copy is its words exactly, and the record\'s checker rule takes it and makes the same words (a notice of the run\'s outcome), or refuses it as not a run\'s outcome (UNREADABLE, for a name the reading refuses)':
             holds(lambda: all(r_.get('signed') and r_.get('copy') for r_ in t5.values()) and n_unr > 0 and sum(r_.get('made') == 'UNREADABLE' for r_ in t5.values()) == n_unr
                   and sum(r_.get('checker') is None for r_ in t5.values()) == len(t5) - n_unr),
+        'the mailbox\'s readable copy of a notice of Amendment 11\'s form whose run name holds U+2028, U+0085 and U+202E writes each of them as an escape, and opens with a line saying its lines may hold words the service chose':
+            holds(lambda: copy_odd_ok),
         'the mailbox\'s listing gives one line for each notice it holds, whatever the names':
             holds(lambda: listing.returncode == 0 and len(list_lines) == len(w5.held_items()) and all(all(32 <= ord(ch) <= 126 for ch in l) for l in list_lines)),
         'Amendment 11\'s words, for a notice without a form, are byte for byte as written out here; a notice of that form is still accepted by the mailbox and taken by the checker; taking the form away from a notice of form 2, or adding form 2 to one of Amendment 11, breaks its signature, and form 3 is refused':
@@ -3602,8 +3619,8 @@ def r30():
             holds(lambda: b_of(st1, root).get('coverage', '').startswith('NOT CONFIRMED (statement made, not yet accepted by the mailbox') and b_of(st2, root).get('coverage', '').startswith('CONFIRMED')
                   and b_of(st2, root)['coverage'].endswith(f"from decision {cn.get('seq')})") and root2 is not None and root2 not in st2['budgets'] and cli_other[0] == 1
                   and N(cli_other[1])[-1].startswith('COURIER COVERAGE: NOT CONFIRMED')),
-        'a record whose coverage statement is missing, for another budget, without a receipt, with a receipt signed by another key, naming a decision not in its chain, signed by another courier key, or of Amendment 11\'s form, is NOT CONFIRMED and fails --require-delivery':
-            holds(lambda: len(judged6) == 7 and all(v == ('NOT CONFIRMED', 1) for v in judged6.values())),
+        'a record whose coverage statement is missing, for another budget (in its words and field, or in its field alone), without a receipt, with a receipt signed by another key, naming a decision not in its chain, signed by another courier key, or of Amendment 11\'s form, is NOT CONFIRMED and fails --require-delivery':
+            holds(lambda: len(judged6) == 8 and all(v == ('NOT CONFIRMED', 1) for v in judged6.values())),
         # T7
         'the courier\'s status tells a notice made and not yet accepted by the mailbox from one accepted (a signed receipt; not a person\'s acknowledgement), and the courier blocked (it cannot read the witness), in those words, with the stand-in and with the real deployment; the summary of a pass lists the blocked budget, and the notices waiting apart from those accepted':
             holds(lambda: b_wait.get('notices made, not yet accepted by the mailbox') == 1 and b_wait.get("notices accepted by the mailbox (a signed receipt; not a person's acknowledgement)") == 0
@@ -3615,10 +3632,10 @@ def r30():
         'the checker\'s NOTICES line says a notice is accepted by the mailbox (a signed receipt; not a person\'s acknowledgement); in the courier\'s status, the summaries of passes, the checker\'s notices and coverage lines, the three commands\' help and the notices\' words, none of the phrases this test lists for a person having read, seen or acknowledged something appears, except in saying that a receipt is not that':
             holds(lambda: "have one accepted by the mailbox (a signed receipt; not a person's acknowledgement)" in N(cli2[1])[0] and all(e['t7_words'].values()) and len(e['t7_words']) == 6),
         # T8
-        'a signed PASS whose own numbers miss its own stated limit gets one INCONSISTENT notice, once over two passes, accepted by the mailbox and not taken by the checker as the run\'s outcome; the run is marked done as a PASS always is; a PASS that meets its limit, one at the limit and one whose number is not a number get none':
-            holds(lambda: incs['as built'] == ['b-pass-bad'] and 'b-pass-bad' in t8['as built']['final'] and ('b-pass-bad', 'INCONSISTENT') in t8['as built']['held']
+        'a signed PASS whose own numbers miss its own stated limit gets one INCONSISTENT notice, once over two passes, accepted by the mailbox and not taken by the checker as the run\'s outcome; the run is marked done in the same pass, as a PASS always is; a PASS that meets its limit, one at the limit and one whose number is not a number get none':
+            holds(lambda: incs['as built'] == ['b-pass-bad'] and 'b-pass-bad' in t8['as built']['final1'] and t8['as built']['final1'] == base8['final1'] and ('b-pass-bad', 'INCONSISTENT') in t8['as built']['held']
                   and t8['as built']['checked'] == ['the notice is of a run that is not in this record'] and e['t8']['words'][0] == 'THE GATE SIGNED PASS, BUT THE NUMBERS IN THE SAME SIGNED RESULT DO NOT MEET ITS STATED LIMIT'),
-        'with the added check made to raise, to find for everything, or to return nothing, and with the whole added function made to raise or to return something that is not its notice, every notice made and accepted without it is still made and accepted, the same runs are marked done and unread, and no INCONSISTENT notice is made except, when it finds for everything, one for each PASS':
+        'with the added check made to raise, to find for everything, or to return nothing, and with the whole added function made to raise or to return something that is not its notice, every notice made and accepted without it is still made and accepted, the same runs are marked done (after each of two passes) and unread, and no INCONSISTENT notice is made except, when it finds for everything, one for each PASS':
             holds(lambda: all(same8.values()) and len(same8) == 7 and incs['without it'] == [] and incs['the check raises'] == [] and incs['the check returns nothing'] == []
                   and incs['the check finds for everything'] == ['b-pass-bad', 'c-pass-ok', 'h-pass-text', 'i-pass-edge'] and incs['the whole added function raises'] == []
                   and incs['the whole added function returns something that is not its notice'] == []
