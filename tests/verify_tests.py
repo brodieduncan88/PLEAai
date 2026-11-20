@@ -3042,21 +3042,22 @@ def r29():
         (here / 'cgroup-rubbish').write_bytes(b'12:freezer:/\xff\xfe\n'); rubbish, rubbish_said = with_paths(SELF_CGROUP=here / 'cgroup-rubbish')
         nothing_ran = all(x[2] == '' for x in (below, unread, no_table, words_table, more, less_below, many, none_maps, raised, v2, no_freezer, no_spaces, elsewhere, unread_spaces, rubbish))
         # the bound counts one IPC namespace for a run: a check must not be able to make namespaces of its own
-        o = sandbox.run({'c.py': b"import ctypes\nlibc = ctypes.CDLL(None, use_errno=True)\nprint([libc.unshare(f) for f in (0x10000000, 0x08000000, 0x18000000)])"}, 'c.py', b'')
+        o = sandbox.run({'c.py': b"import ctypes\nlibc = ctypes.CDLL(None, use_errno=True)\nprint([(libc.unshare(f), ctypes.get_errno()) for f in (0x10000000, 0x08000000, 0x18000000)])"}, 'c.py', b'')
         own_spaces = [o.state, o.stdout.decode(errors='replace').strip()]
         # the floor counts four runs at once on the machine: two made by this process and two by another, and a fifth is not made
         slow = {'c.py': b"import time\ntime.sleep(5)\nprint('the check ran')"}; four = [None] * 2
+        places_were = sandbox.SLOTS_DIR; sandbox.SLOTS_DIR = str(here / 'places')   # places of the test's own, so that nothing else on the machine takes or waits for them
 
         def one(i):
             try:
                 o = sandbox.run(slow, 'c.py', b'', timeout=20); four[i] = [o.state, o.stdout.decode(errors='replace').strip()]
             except Exception as exc:
                 four[i] = [f'RAISED {type(exc).__name__}: {exc}'[:160], '']
-        other = ("import sys, json, threading\nsys.path.insert(0, sys.argv[1])\nimport sandbox\nout = [None, None]\n"
+        other = ("import sys, json, threading\nsys.path.insert(0, sys.argv[1])\nimport sandbox\nsandbox.SLOTS_DIR = sys.argv[2]\nout = [None, None]\n"
                  "def one(i):\n    o = sandbox.run({'c.py': b\"import time\\ntime.sleep(5)\\nprint('the check ran')\"}, 'c.py', b'', timeout=20); out[i] = [o.state, o.stdout.decode().strip()]\n"
                  "ths = [threading.Thread(target=one, args=(i,)) for i in range(2)]\n[t.start() for t in ths]; [t.join() for t in ths]\nprint(json.dumps(out))")
         t0 = time.time(); ths = [threading.Thread(target=one, args=(i,)) for i in range(2)]
-        elsewhere_proc = subprocess.Popen([PY, '-B', '-c', other, str(GATEWAY / 'verify')], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        elsewhere_proc = subprocess.Popen([PY, '-B', '-c', other, str(GATEWAY / 'verify'), sandbox.SLOTS_DIR], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         for th in ths:
             th.start()
         time.sleep(2.0)
@@ -3070,8 +3071,15 @@ def r29():
             four = four + json.loads((elsewhere_proc.communicate(timeout=60)[0].strip().splitlines() or ['[null, null]'])[-1])
         except Exception as exc:
             four = four + [f'RAISED {type(exc).__name__}: {exc}'[:160]]
+        finally:
+            if elsewhere_proc.poll() is None:
+                elsewhere_proc.kill()
         four_took = round(time.time() - t0, 2)
         o = sandbox.run(script, 'c.py', b'', timeout=20); after_four = [o.state, o.detail, o.stdout.decode(errors='replace').strip()]
+        sandbox.SLOTS_DIR = places_were
+        (here / 'open-places').mkdir(); os.chmod(here / 'open-places', 0o777)   # places anyone could take are no count
+        open_places, open_places_said = with_paths(SLOTS_DIR=here / 'open-places')
+        (here / 'a-file').write_text(''); no_places, no_places_said = with_paths(SLOTS_DIR=here / 'a-file' / 'places')
         small = file('small', '1644500\n')                                # the table this machine starts with
         cli_small = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'sandbox.py'), '--prerequisites'], capture_output=True, text=True, timeout=60, env=dict(os.environ, VERIFY_SANDBOX_FILE_MAX=str(small)))
         # a service on such a machine: the run is UNKNOWN, the check is not run, and the engineer is told
@@ -3103,13 +3111,13 @@ def r29():
             held_run = [f'RAISED {type(exc).__name__}: {exc}'[:160], None, '']
         stop[0] = True; th.join(); time.sleep(1.0); left = open_now()
         e.update(maps=maps, table=table, per_run=per_run, floor=floor, floor_said=sandbox.file_table_floor(), as_is=[(n, m) for n, m, _ in as_is], cli=(cli.returncode, cli.stdout.strip().splitlines()[-1:]),
-                 below=below, at=at, half=half, more=more, less_below=less_below, less_at=less_at, many=many, many_floor=many_floor, none_maps=none_maps, raised=raised, unread_spaces=unread_spaces, rubbish=rubbish, own_spaces=own_spaces, unread=unread, no_table=no_table, words_table=words_table, elsewhere=elsewhere, four=four, fifth=fifth, four_took=four_took, after_four=after_four, runs_at_once=sandbox.RUNS_AT_ONCE, v2=v2, no_freezer=no_freezer, no_spaces=no_spaces, nothing_ran=nothing_ran,
+                 below=below, at=at, half=half, more=more, less_below=less_below, less_at=less_at, many=many, many_floor=many_floor, open_places=open_places, no_places=no_places, none_maps=none_maps, raised=raised, unread_spaces=unread_spaces, rubbish=rubbish, own_spaces=own_spaces, unread=unread, no_table=no_table, words_table=words_table, elsewhere=elsewhere, four=four, fifth=fifth, four_took=four_took, after_four=after_four, runs_at_once=sandbox.RUNS_AT_ONCE, v2=v2, no_freezer=no_freezer, no_spaces=no_spaces, nothing_ran=nothing_ran,
                  cli_small=(cli_small.returncode, [l for l in cli_small.stdout.splitlines() if l.startswith('NOT MET')]), refused=(refused[0], head(refused[1])), notices=(before, after),
                  again=again[0], runs=runs, record_verifies=ok, why=why, held_run=held_run, files_before=base, files_peak=peak[0], held=peak[0] - base, files_after=left)
         unmet = lambda said: sorted(n for n, (m, _) in said.items() if not m)
-        checks = {'as this machine is set up for the runs, every one of the five is met, and the command an operator gives says so, says that it made no run, and ends with status 0':
-                      [n for n, _ in e['as_is']] == ['root', 'x86-64', 'control groups', 'user namespaces', 'file table'] and all(m for _, m in e['as_is'])
-                      and cli.returncode == 0 and 'Each of these is met' in cli.stdout and 'No run was made' in cli.stdout and cli.stdout.count('met    ') == 5 and 'NOT MET' not in cli.stdout,
+        checks = {'as this machine is set up for the runs, every one of the six is met, and the command an operator gives says so, says that it made no run, and ends with status 0':
+                      [n for n, _ in e['as_is']] == ['root', 'x86-64', 'control groups', 'user namespaces', 'places for runs', 'file table'] and all(m for _, m in e['as_is'])
+                      and cli.returncode == 0 and 'Each of these is met' in cli.stdout and 'No run was made' in cli.stdout and cli.stdout.count('met    ') == 6 and 'NOT MET' not in cli.stdout,
                   'the file table must hold twice what four runs can keep open, worked out from the machine\'s own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor':
                       e['floor_said'] == floor and below[0] == 'SANDBOX_UNAVAILABLE' and str(floor - 1) in below[1] and str(floor) in below[1] and 'file table' in below[1] and below[2] == ''
                       and unmet(below_said) == ['file table'] and at == ['RAN', '', 'the check ran'] and unmet(at_said) == [] and half == ['RAN', '', 'the check ran'] and unmet(half_said) == []
@@ -3131,11 +3139,12 @@ def r29():
                       cli_small.returncode == 1 and len(e['cli_small'][1]) == 1 and 'file table' in e['cli_small'][1][0] and '1644500' in e['cli_small'][1][0] and 'cannot run checks' in cli_small.stdout
                       and refused[0] == 3 and head(refused[1]).startswith('UNKNOWN') and any(x[0] == 'UNKNOWN' and 'the check was not run' in x[2] and 'file table' in x[2] for x in runs)
                       and after == before + 1 and again[0] == 2 and ok,
-                  'the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made':
+                  'the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made; where the places are a folder others can write to, or cannot be made, no run is made':
                       e['runs_at_once'] == 4 and len(four) == 4 and all(x == ['RAN', 'the check ran'] for x in four) and four_took < 15 and fifth == ['SANDBOX_UNAVAILABLE', 'too many checks are running at once on this machine', '']
-                      and after_four == ['RAN', '', 'the check ran'],
-                  'a check cannot make a user or an IPC namespace of its own, which the count of what one run can keep open rests on':
-                      own_spaces == ['RAN', '[-1, -1, -1]'],
+                      and after_four == ['RAN', '', 'the check ran']
+                      and all(x[0] == 'SANDBOX_UNAVAILABLE' and 'cannot be counted' in x[1] and x[2] == '' and unmet(said) == ['places for runs'] for x, said in ((open_places, open_places_said), (no_places, no_places_said))),
+                  'a check that asks, by unshare, for a user namespace of its own, an IPC namespace, or both, is refused each (EPERM): the count of what one run can keep open has one IPC namespace in it':
+                      own_spaces == ['RAN', '[(-1, 1), (-1, 1), (-1, 1)]'],
                   'a measurement, not a proof of the floor: one run that keeps open every file it can keeps more than a million, which is more than half the table this machine starts with, and fewer than the count worked out for one run; and after it has ended the machine has within 2,000 of the files open that it had before':
                       1_000_000 < e['held'] < per_run and e['held'] > 1644500 // 2 and held_run[0] in ('RAN', 'TIMEOUT') and e['files_after'] < base + 2000}
     finally:

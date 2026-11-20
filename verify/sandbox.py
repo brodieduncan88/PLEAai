@@ -50,7 +50,8 @@ freezer control groups (a machine with cgroup v2 only is refused in those words)
 through memory mappings, beyond its limit on descriptors: one run was measured keeping 2.6 million open.  The floor is
 worked out from the machine's own limit on mappings and the run's limits: about 33.6 million where a process may have
 65,530 mappings, the kernel's own default, and about 134 million where it may have 1,048,576, as Ubuntu 24.04 sets it.
-The four are counted for the machine, by locks every service takes (in /run/verify-sandbox), not for each service.  A
+The four are counted for the machine, by locks every service takes (in /run/verify-sandbox), not for each service;
+services that do not share one /run are not counted together.  A
 machine started again with a smaller table runs no check until the table is raised.  Nothing is mounted, and nothing run, unless
 the process doing it is the first of new user, mount, process, network, IPC and host-name namespaces, none of them the
 service's, with no network but a loopback, and with the run's own two ids mapped.  It says that the sandbox is ready on a
@@ -113,7 +114,6 @@ SLOTS_DIR = '/run/verify-sandbox'                                       # one lo
 SHM_SEGMENTS = 4096                                                     # kernel.shmmni in a new IPC namespace: each segment is a file with no descriptor and no mapping
 PAGE = os.sysconf('SC_PAGE_SIZE')
 LATE = 0.5                                                              # seconds past the run's time that output still waiting may hold the clock
-AT_ONCE = threading.BoundedSemaphore(RUNS_AT_ONCE)
 CGROUP_ROOT = os.environ.get('VERIFY_SANDBOX_CGROUP_ROOT', '/sys/fs/cgroup')   # a test may point this elsewhere, to show the run fails closed
 NAMESPACES = ('user', 'mnt', 'pid', 'net', 'ipc', 'uts')
 
@@ -356,6 +356,15 @@ def _prerequisites(limits):
                 'the machine\'s limit on user namespaces allows some' if spaces is not None and spaces > 0 else
                 'the sandbox needs user namespaces, and this machine allows none (user.max_user_namespaces is 0)' if spaces == 0 else
                 'the sandbox needs user namespaces, and how many this machine allows (user.max_user_namespaces) cannot be read'))
+    try:                                                                 # looked at, not made: the first run makes it
+        st = os.lstat(SLOTS_DIR); there = stat.S_ISDIR(st.st_mode) and st.st_uid == 0 and not st.st_mode & 0o022
+        why = f'the runs made at once are counted in {SLOTS_DIR}' if there else f'the runs made at once cannot be counted: {SLOTS_DIR} is not a folder of root\'s alone'
+    except FileNotFoundError:
+        up = os.path.dirname(SLOTS_DIR); there = os.path.isdir(up) and os.access(up, os.W_OK)
+        why = f'the runs made at once can be counted in {SLOTS_DIR}, which the first run makes' if there else f'the runs made at once cannot be counted: {SLOTS_DIR} cannot be made'
+    except OSError as exc:
+        there = False; why = f'the runs made at once cannot be counted: {SLOTS_DIR} cannot be looked at ({type(exc).__name__})'
+    out.append(('places for runs', there, why))
     table, floor = _number(FILE_MAX_PATH), file_table_floor(limits)
     named = ''
     if FILE_MAX_PATH != REAL_FILE_MAX:                                   # a file named in place of the kernel's can lower the table, for a test; it cannot raise it
@@ -379,46 +388,53 @@ def _prerequisites(limits):
 # ---------------------------------------------------------------------------------------------------- the service's side
 def run(files: dict, script: str, stdin: bytes, timeout: float = 30.0, limits: dict | None = None, _no_unshare: bool = False) -> Outcome:
     """Run `script` (one of `files`, name -> bytes) in a new sandbox, with `stdin`, and throw the sandbox away."""
-    if not AT_ONCE.acquire(timeout=timeout):
-        return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'too many checks are running at once')
-    slot = None
+    limits = dict(LIMITS, **(limits or {}))
+    for _name, met, words in prerequisites(limits):                      # each is looked at before every run: a machine that stops meeting one stops running checks
+        if not met:
+            return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', words[:300])
     try:
-        limits = dict(LIMITS, **(limits or {}))
-        for _name, met, words in prerequisites(limits):                  # each is looked at before every run: a machine that stops meeting one stops running checks
-            if not met:
-                return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', words[:300])
-        try:
-            slot = _slot(time.time() + timeout)                          # the file table is the machine's, so the count of runs is the machine's too
-        except OSError as exc:
-            return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', f'the machine\'s count of runs at once could not be kept: {exc}'[:300])
-        if slot is None:
-            return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'too many checks are running at once on this machine')
+        place = _place(time.monotonic() + timeout)                       # the file table is the machine's, so the count of runs is the machine's too
+    except OSError as exc:
+        return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', f'the machine\'s count of runs at once could not be kept: {exc}'[:300])
+    if place is None:
+        return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'too many checks are running at once on this machine')
+    try:
         return _run(files, script, stdin, timeout, limits, _no_unshare)
     finally:
-        if slot is not None:
-            os.close(slot)
-        AT_ONCE.release()
+        os.close(place)
 
 
-def _slot(deadline: float):
+def _place(deadline: float):
     """One of the machine's RUNS_AT_ONCE places for a run: a lock on a file of root's, held until the run is over and let go by
-    the kernel if the service dies.  None if none comes free in time.  Every service on the machine takes its places here, so
-    the runs the floor counts are all the machine's, whichever service makes them."""
+    the kernel if the service dies.  None if none comes free in time.  Every service that sees this folder takes its places
+    here, so the runs the floor counts are all of theirs, whichever makes them.  Services that do not see one /run (in
+    containers of their own, on one kernel) are not counted together; nor is a run whose service died while it was frozen for
+    its kill, which keeps its files until a later run sweeps it."""
     os.makedirs(SLOTS_DIR, mode=0o700, exist_ok=True)
-    st = os.lstat(SLOTS_DIR)
-    if not stat.S_ISDIR(st.st_mode) or st.st_uid != 0 or st.st_mode & 0o022:
-        raise OSError(f'{SLOTS_DIR} is not a folder of root\'s alone')
-    while True:
-        for i in range(RUNS_AT_ONCE):
-            fd = os.open(f'{SLOTS_DIR}/place-{i}', os.O_RDWR | os.O_CREAT | os.O_CLOEXEC | os.O_NOFOLLOW, 0o600)
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                return fd
-            except OSError:
-                os.close(fd)
-        if time.time() >= deadline:
-            return None
-        time.sleep(0.05)
+    folder = os.open(SLOTS_DIR, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        st = os.fstat(folder)
+        if st.st_uid != 0 or st.st_mode & 0o022:
+            raise OSError(f'{SLOTS_DIR} is not a folder of root\'s alone')
+        while True:
+            for i in range(RUNS_AT_ONCE):
+                fd = os.open(f'place-{i}', os.O_RDWR | os.O_CREAT | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600, dir_fd=folder)
+                try:
+                    st = os.fstat(fd)
+                    if not stat.S_ISREG(st.st_mode) or st.st_uid != 0:
+                        raise OSError(f'{SLOTS_DIR}/place-{i} is not a file of root\'s')
+                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    return fd
+                except BlockingIOError:                                  # taken: by another run, here or in another service
+                    os.close(fd)
+                except BaseException:
+                    os.close(fd)
+                    raise
+            if time.monotonic() >= deadline:
+                return None
+            time.sleep(0.05)
+    finally:
+        os.close(folder)
 
 
 def _run(files: dict, script: str, stdin: bytes, timeout: float, limits: dict, _no_unshare: bool) -> Outcome:
