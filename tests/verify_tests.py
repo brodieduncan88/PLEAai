@@ -3708,7 +3708,7 @@ def r30():
     g9 = ([r_.get('why', '')[:160] for r_ in s9.get('own_state', [])] if isinstance(s9, dict) else s9, made(s9), st9.get(S.ROOT, {}).get('stopped'),
           any(x[1] == '/checkpoint' for x in w9b.asked[m0:]), [r_.get('root') for r_ in s9.get('own_state', [])] if isinstance(s9, dict) else None,
           (s9 or {}).get('unreachable') if isinstance(s9, dict) else None, [o for _, o in w9b.held() if o == 'COURIER_STOPPED'], (s9 or {}).get('refused') if isinstance(s9, dict) else None,
-          step(w9b.status))
+          step(w9b.status), courier.failed(s9) if isinstance(s9, dict) else None)
     # G10 (and resume clears the runs after which the witness stopped answering)
     wv = S.World(name='courier-t10'); att = []
     wv.effect(att, 'a-knock', S.FAIL); wv.effect(att, 'b-fail', S.FAIL); wv.trouble['a-knock'] = 'knocks'
@@ -3746,6 +3746,25 @@ def r30():
         att.append(['n-01', 'verify:n1', 'CONSUMED', 'nn1', True, True]); wk.decide(att, ('X', 'n-01')); wk.trouble['n-01'] = 'hangs'
         sk = step(wk.run, t0 + 10)
         h1 = (made(sk), [x.get('runs') for x in sk.get('put_off', [])] if isinstance(sk, dict) else sk)
+        # H1a: older runs in flight, asked before it and slow, are ahead of it in tier B: only a changed entry brings it first
+        wk2 = S.World(name='courier-t1', stall_after=100); wk2.cfg['pass_seconds'] = 0.25; wk2.hang = 0.3; att = []
+        for i in range(2):
+            att.append([f'a-old-{i}', f'verify:o{i}', 'CONSUMED', f'no{i}', True, True]); wk2.decide(att, ('X', f'a-old-{i}')); wk2.trouble[f'a-old-{i}'] = 'hangs'
+        att.append(['x-run', 'verify:x', 'CONSUMED', 'nx', True, True]); wk2.decide(att, ('X', 'x-run'))
+        step(wk2.run, t0)
+        for a_ in att:
+            if a_[0] == 'x-run':
+                a_[2] = 'EFFECT'
+        wk2.decide(att, ('RECONCILE', 'x-run')); wk2.report('x-run', 'nx', 'EFFECT', S.FAIL); wk2.store('x-run', S.FAIL)
+        sk2 = step(wk2.run, t0 + 10)
+        h1a = (made(sk2), [x.get('runs') for x in sk2.get('put_off', [])] if isinstance(sk2, dict) else sk2)
+        # H1b: a run whose outcome needs no request is handled in every pass, even when the time is spent on slow runs
+        wk3 = S.World(name='courier-t1', stall_after=100); wk3.cfg['pass_seconds'] = 0.1; wk3.hang = 0.3; att = []
+        att.append(['b-slow', 'verify:b', 'CONSUMED', 'nb', True, True]); wk3.decide(att, ('X', 'b-slow')); wk3.trouble['b-slow'] = 'hangs'
+        att.append(['c-intent', 'verify:c', 'INTENT_PENDING', 'nc', True, False]); wk3.decide(att, ('X', 'c-intent'))
+        step(wk3.run, t0)
+        sk3 = step(wk3.run, t0 + 200)
+        h1b = (made(sk3), [x.get('aid') for x in sk3.get('put_off_runs', [])] if isinstance(sk3, dict) else sk3)
         # H2 (exp_l): the clock set back: nothing refused, the times set back, a new failure noticed in that pass
         wl = S.World(name='courier-t1'); att = []
         att.append(['a-inflight', 'verify:a', 'CONSUMED', 'na', True, True]); wl.decide(att, ('X', 'a-inflight'))
@@ -3878,7 +3897,7 @@ def r30():
                    '  "The housing shall stay at or below 85 ' + esc(0xb0) + 'C ' + esc(0x2014) + ' measured at the hottest point."',
                    '  baselined 2026-11-01T00:00:00Z by "Jos' + esc(0xe9) + ' N' + esc(0xfa) + esc(0xf1) + 'ez".  Baseline 0000000000000000',
                    '  limit: temperature at most 85 "' + esc(0xb0) + 'C"']
-    e['fourth form'] = {'Gb': b_turns, 'Gm': str(in_error_body)[:100], 'H1': h1, 'H2': h2c, 'H3': h3, 'H4': h4, 'H5': h5, 'H7': [t_[:240] for t_ in h7], 'H10': h10, 'timeout': timeout_held, 'caller took': round(caller_took, 2),
+    e['fourth form'] = {'H1a': h1a, 'H1b': h1b, 'Gb': b_turns, 'Gm': str(in_error_body)[:100], 'H1': h1, 'H2': h2c, 'H3': h3, 'H4': h4, 'H5': h5, 'H7': [t_[:240] for t_ in h7], 'H10': h10, 'timeout': timeout_held, 'caller took': round(caller_took, 2),
                         'state rules': state_rules, 'state good': state_good, 'forged after ok': forged_ok, 'honest lines': honest_lines}
 
     # ---------------------------------------------------------------- T4, T6 and T7 with the real deployment
@@ -4024,9 +4043,10 @@ def r30():
             holds(lambda: lone == {'blocks': (0, 3), 'deaf': (0, 3)}),
         'a notice is sent as soon as it is made: the FAIL notice of a run read before four slow ones is in the stand-in mailbox before the first slow run is asked for, and so before the last slow answer ends':
             holds(lambda: take_at is not None and first_hang_ask is not None and last_hang_end is not None and take_at < first_hang_ask < last_hang_end),
-        'with six unreadable runs and a pass allowed half a second for runs already in trouble, each of six later passes reads its new run and makes its FAIL notice, the six stay listed, as unread when asked for and as put off when not, some are put off and said so, every one is asked for again within the six passes, and each gets its UNREADABLE notice in the first pass after the waiting time, whether or not it was asked for in that pass':
+        'with six unreadable runs and a pass allowed half a second for runs already in trouble, each of six later passes reads its new run and makes its FAIL notice, the six stay listed, as unread when asked for and as put off (and not as unread) when not, some are put off and said so, every one is asked for again within the six passes, and each gets its UNREADABLE notice in the first pass after the waiting time, whether or not it was asked for in that pass':
             holds(lambda: unread(rot0) == [f'h-{i}' for i in range(6)] and all((f'z-fresh-{k}', 'FAIL') in r_['made'] for k, r_ in enumerate(rotation, 1))
                   and all(sorted(r_['unread'] + r_['put_off_names']) == [f'h-{i}' for i in range(6)] for r_ in rotation) and any(r_['put_off'] > 0 for r_ in rotation)
+                  and all(not set(r_['unread']) & set(r_['put_off_names']) and len(r_['put_off_names']) == r_['put_off'] for r_ in rotation)
                   and sorted(set().union(*[r_['asked'] for r_ in rotation])) == [f'h-{i}' for i in range(6)] and unr12 == [f'h-{i}' for i in range(6)]
                   and rotation[0]['put_off'] > 0 and unr_first == [f'h-{i}' for i in range(6)]),
         # T2
@@ -4160,10 +4180,10 @@ def r30():
             holds(lambda: forged_seen == [] and isinstance(printed_d, str) and 'THE LAST PROBLEM' in printed_d.splitlines()[0]),
         'the checker counts a notice of form 2, which states a long name cut, as delivered for the run it names':
             holds(lambda: ten_n is not None and ten_n[2] and due_n == [{'aid': long_f, 'outcome': 'FAIL', 'delivered': True}]),
-        'a budget whose own state in the courier\'s state file is malformed is refused for that pass, under a summary key of its own, in words that say so and name the field; it is not marked stopped, nothing is put under the witness\'s refusals, no notice blames the witness, the next budget is read as usual, and the status says the state is malformed':
+        'a budget whose own state in the courier\'s state file is malformed is refused for that pass, under a summary key of its own, in words that say so and name the field; it is not marked stopped, nothing is put under the witness\'s refusals, no notice blames the witness, the next budget is read as usual, the status says the state is malformed, and the pass exits 1':
             holds(lambda: len(g9[0]) == 1 and "the courier's own state for this budget" in g9[0][0] and 'its field unread' in g9[0][0] and g9[4] == [S.ROOT] and g9[2] is None
                   and g9[3] and g9[5] == [] and g9[6] == [] and ('z-new-fail', 'FAIL') not in g9[1] and g9[7] == []
-                  and g9[8]['budgets'][S.ROOT]['state'].startswith('malformed: its field unread') and g9[8]['budgets'][S.ROOT]['coverage'].startswith('NOT CONFIRMED')),
+                  and g9[8]['budgets'][S.ROOT]['state'].startswith('malformed: its field unread') and g9[8]['budgets'][S.ROOT]['coverage'].startswith('NOT CONFIRMED') and g9[9] is True),
         'resume clears the courier\'s coverage and the runs after which the witness stopped answering: the status says NOT CONFIRMED and lists none until a whole pass has been made again, and then CONFIRMED':
             holds(lambda: g10[0] == 'CONFIRMED (th' and g10[1] and g10[2].startswith('NOT CONFIRMED (not yet read') and g10[3] == [] and g10[4] == [] and g10[5] == 'CONFIRMED'),
         # fourth form
@@ -4173,6 +4193,10 @@ def r30():
             holds(lambda: isinstance(in_error_body, tuple) and in_error_body[0] == 'RAISED' and 'did not answer within' in in_error_body[1]),
         'a run first seen in flight, among a dozen runs that are never done and a new slow run, gets its FAIL notice in the pass in which the chain first says it':
             holds(lambda: ('x-run', 'FAIL') in h1[0]),
+        'a run in flight whose entry in the chain changes (it now has a FAIL) is asked for in that pass before older runs in flight that answer slowly, and its FAIL notice is made, though the time runs out on them':
+            holds(lambda: ('x-run', 'FAIL') in h1a[0] and h1a[1] and h1a[1][0] >= 1),
+        'a run whose outcome needs no request to the witness gets its notice in the pass in which its waiting time ends, though the pass\'s time is spent on a slow run':
+            holds(lambda: ('c-intent', 'NO_OUTCOME') in h1b[0] and 'c-intent' not in h1b[1]),
         'when the clock is set back two thousand seconds, nothing of the courier\'s own state is refused, the times in it later than now are set back and the summary says how many, and a new failure is noticed in that pass':
             holds(lambda: h2c[0] == [('b-fail', 'FAIL')] and h2c[1] and h2c[1][0].get('times', 0) >= 1 and h2c[2] == [] and h2c[3] <= t0 - 2000),
         'a notice whose delivery drops the connection, or gets an answer that is not JSON, while the mailbox answers for other notices, holds back no other: a failure made later is delivered in that pass, the first stays waiting, and the status lists it as could not be delivered while the mailbox answers for other notices':
