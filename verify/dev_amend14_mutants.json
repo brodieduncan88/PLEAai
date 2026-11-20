@@ -1,0 +1,424 @@
+{
+ "M0": {
+  "defect": "no change at all: the control, which must not be caught",
+  "tests_run": [
+   "F17"
+  ],
+  "caught_by": [],
+  "failed_checks": {},
+  "errors": {},
+  "seconds": 5.3
+ },
+ "N1": {
+  "defect": "a notice is written over the one that has its name",
+  "tests_run": [
+   "F17"
+  ],
+  "caught_by": [
+   "F17"
+  ],
+  "failed_checks": {
+   "F17": [
+    "with no clock: two notices delivered under one name are two files, the second numbered, each with its own text, and nothing else is left",
+    "and it was handled: each failure has its own notice, two files with different names, neither empty, each naming its own design",
+    "the inbox holds one notice for every failure, and the record verifies with all of them"
+   ]
+  },
+  "errors": {},
+  "seconds": 6.0
+ },
+ "N2": {
+  "defect": "a notice whose name is taken is not written, and the first is reported in its place",
+  "tests_run": [
+   "F17"
+  ],
+  "caught_by": [
+   "F17"
+  ],
+  "failed_checks": {
+   "F17": [
+    "with no clock: two notices delivered under one name are two files, the second numbered, each with its own text, and nothing else is left",
+    "and it was handled: each failure has its own notice, two files with different names, neither empty, each naming its own design",
+    "the inbox holds one notice for every failure, and the record verifies with all of them"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.0
+ },
+ "N3": {
+  "defect": "no second name is tried: a notice whose name is taken goes to the service's own store, not the inbox",
+  "tests_run": [
+   "F17"
+  ],
+  "caught_by": [
+   "F17"
+  ],
+  "failed_checks": {
+   "F17": [
+    "with no clock: two notices delivered under one name are two files, the second numbered, each with its own text, and nothing else is left",
+    "and it was handled: each failure has its own notice, two files with different names, neither empty, each naming its own design",
+    "the inbox holds one notice for every failure, and the record verifies with all of them"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.9
+ },
+ "N4": {
+  "defect": "the second notice is given its number and no text",
+  "tests_run": [
+   "F17"
+  ],
+  "caught_by": [
+   "F17"
+  ],
+  "failed_checks": {
+   "F17": [
+    "with no clock: two notices delivered under one name are two files, the second numbered, each with its own text, and nothing else is left",
+    "and it was handled: each failure has its own notice, two files with different names, neither empty, each naming its own design"
+   ]
+  },
+  "errors": {},
+  "seconds": 5.0
+ },
+ "N5": {
+  "defect": "not a defect of the service: the two jobs send a second apart, so the case is not made; F17 must say so, and fail",
+  "tests_run": [
+   "F17"
+  ],
+  "caught_by": [
+   "F17"
+  ],
+  "failed_checks": {
+   "F17": [
+    "through the service the case was made: two designs whose hashes begin with the same eight digits, sent at the same moment by two jobs on the one baseline, both failed, with their notices named for the same second (a case not made is PRECONDITION_NOT_MET: a failure to test, never a pass)",
+    "and it was handled: each failure has its own notice, two files with different names, neither empty, each naming its own design"
+   ]
+  },
+  "errors": {},
+  "seconds": 22.7
+ },
+ "T1": {
+  "defect": "each attempt is read by itself again, through connections of its own",
+  "tests_run": [
+   "R28",
+   "F36"
+  ],
+  "caught_by": [
+   "F36",
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "it opens two connections to the database for 15 runs as for 3, counted where the driver opens them, where reading each run by itself opens more for every run"
+   ],
+   "F36": [
+    "the last five are answered about as fast as the first five: their middle time is less than a quarter of a second more (it was a second more before)"
+   ]
+  },
+  "errors": {},
+  "seconds": 65.2
+ },
+ "T2": {
+  "defect": "only the results are read attempt by attempt",
+  "tests_run": [
+   "R28",
+   "F36"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "it opens two connections to the database for 15 runs as for 3, counted where the driver opens them, where reading each run by itself opens more for every run"
+   ]
+  },
+  "errors": {},
+  "seconds": 44.0
+ },
+ "T3": {
+  "defect": "an attempt's evidence is not in order of decision",
+  "tests_run": [
+   "R28",
+   "F36"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 36.5
+ },
+ "T4": {
+  "defect": "only the receipt of the crossing is read",
+  "tests_run": [
+   "R28",
+   "F36"
+  ],
+  "caught_by": [
+   "F36",
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "the runs are there to read: 3, then 15, one of them interrupted, with no result; and the record verifies",
+    "the reading gives exactly what reading each run by itself gives, for 3 runs and for 15",
+    "and so does a reading cut at an earlier decision, which is not the whole reading; cut at the very decision of a run's report it shows the report, and cut at the decision before it does not",
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ],
+   "F36": [
+    "every failure has its notice, and the record verifies with all 25"
+   ]
+  },
+  "errors": {},
+  "seconds": 36.5
+ },
+ "T5": {
+  "defect": "no result is read",
+  "tests_run": [
+   "R28",
+   "F36"
+  ],
+  "caught_by": [
+   "F36",
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "the runs are there to read: 3, then 15, one of them interrupted, with no result; and the record verifies",
+    "the reading gives exactly what reading each run by itself gives, for 3 runs and for 15",
+    "and so does a reading cut at an earlier decision, which is not the whole reading; cut at the very decision of a run's report it shows the report, and cut at the decision before it does not",
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ],
+   "F36": [
+    "every failure has its notice, and the record verifies with all 25"
+   ]
+  },
+  "errors": {},
+  "seconds": 36.8
+ },
+ "T6": {
+  "defect": "a reading cut at an earlier decision still shows later evidence",
+  "tests_run": [
+   "R28",
+   "F36"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "and so does a reading cut at an earlier decision, which is not the whole reading; cut at the very decision of a run's report it shows the report, and cut at the decision before it does not",
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives"
+   ]
+  },
+  "errors": {},
+  "seconds": 37.9
+ },
+ "T7": {
+  "defect": "a reading cut at an earlier decision still shows later receipts",
+  "tests_run": [
+   "R28",
+   "F36"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "and so does a reading cut at an earlier decision, which is not the whole reading; cut at the very decision of a run's report it shows the report, and cut at the decision before it does not",
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives"
+   ]
+  },
+  "errors": {},
+  "seconds": 36.8
+ },
+ "T8": {
+  "defect": "the evidence of every budget is read, not this one's",
+  "tests_run": [
+   "R28",
+   "F36"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 59.1
+ },
+ "T9": {
+  "defect": "one attempt's evidence is left out: the last",
+  "tests_run": [
+   "R28",
+   "F36"
+  ],
+  "caught_by": [
+   "F36",
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "the runs are there to read: 3, then 15, one of them interrupted, with no result; and the record verifies",
+    "the reading gives exactly what reading each run by itself gives, for 3 runs and for 15",
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ],
+   "F36": [
+    "every failure has its notice, and the record verifies with all 25"
+   ]
+  },
+  "errors": {},
+  "seconds": 36.5
+ },
+ "U1": {
+  "defect": "the results of every budget are read, not this one's",
+  "tests_run": [
+   "R28"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 52.1
+ },
+ "U2": {
+  "defect": "the receipts of every budget are read, not this one's",
+  "tests_run": [
+   "R28"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 67.6
+ },
+ "U3": {
+  "defect": "a result is taken for a run that had no effect",
+  "tests_run": [
+   "R28"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 21.4
+ },
+ "U4": {
+  "defect": "a result that is no value is taken",
+  "tests_run": [
+   "R28"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 21.2
+ },
+ "U5": {
+  "defect": "a run with no report makes the reading fail",
+  "tests_run": [
+   "R28"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "it opens two connections to the database for 15 runs as for 3, counted where the driver opens them, where reading each run by itself opens more for every run",
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.4
+ },
+ "U6": {
+  "defect": "a connection is opened for every run, outside the store's own way of opening one",
+  "tests_run": [
+   "R28"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "it opens two connections to the database for 15 runs as for 3, counted where the driver opens them, where reading each run by itself opens more for every run"
+   ]
+  },
+  "errors": {},
+  "seconds": 24.2
+ },
+ "U7": {
+  "defect": "a reading cut at a decision leaves out the report of that very decision",
+  "tests_run": [
+   "R28"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "the runs are there to read: 3, then 15, one of them interrupted, with no result; and the record verifies",
+    "the reading gives exactly what reading each run by itself gives, for 3 runs and for 15",
+    "and so does a reading cut at an earlier decision, which is not the whole reading; cut at the very decision of a run's report it shows the report, and cut at the decision before it does not",
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 21.1
+ },
+ "U8": {
+  "defect": "a run with no receipt makes the reading fail",
+  "tests_run": [
+   "R28"
+  ],
+  "caught_by": [
+   "R28"
+  ],
+  "failed_checks": {
+   "R28": [
+    "it opens two connections to the database for 15 runs as for 3, counted where the driver opens them, where reading each run by itself opens more for every run",
+    "with a second, earlier report put into the store for one run, and a report, every receipt and a PASS put under another budget for runs of the same names: the run shows its own two reports, the earlier first, its own receipts and its own FAIL, and nothing of the other budget's is anywhere in the reading, as reading each run by itself gives",
+    "a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken"
+   ]
+  },
+  "errors": {},
+  "seconds": 19.2
+ }
+}
