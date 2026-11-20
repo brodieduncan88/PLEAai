@@ -61,6 +61,14 @@ READINGS = ('/checkpoint', '/chain', '/run')                            # what a
 CHAIN_BYTES = 4 * 1024 * 1024                                           # a page of decisions stops growing past this
 
 
+def unreadable_name(aid: str) -> bool:
+    """Whether an attempt's name is one the witness's reading of a run (GET /run) cannot serve: empty, longer than 512
+    characters, or holding a control character.  (Verification Amendment 16.)  The same rule refuses such a name at POST
+    /accept: before, the write path admitted any name the gateway gave, while the reading refused these, so the chain could
+    hold a run that no courier could ask for (D47)."""
+    return not aid or len(aid) > 512 or re.search(r'[\x00-\x1f\x7f]', aid) is not None
+
+
 def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, allow=(), read_allow=(), chain_allow=()):
     class Handler(TLSHandlerMixin, BaseHTTPRequestHandler):
         tls_allow = tuple(allow)                                      # v0.5: client names admitted over TLS
@@ -123,7 +131,7 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
                             rows.append(row)
                         return self._send(200, {'root': root, 'after': int(after), 'rows': rows})
                     aid = q.get('aid', [None])[-1]
-                    if not aid or len(aid) > 512 or re.search(r'[\x00-\x1f\x7f]', aid):      # any attempt the chain can hold
+                    if unreadable_name(aid):                                        # any attempt the chain can hold (and, since Amendment 16, any POST /accept admits)
                         return self._send(400, {'error': 'malformed request'})
                     if not store.root_exists(root):
                         raise UnknownRoot(root)
@@ -152,6 +160,10 @@ def make_handler(store: Store, signer: Signer, gate_keys: tuple, chaos: bool, al
                 return self._send(400, {'error': 'malformed request'})
             if not op or op[0] not in WITNESSED:
                 return self._send(400, {'error': 'not a witnessed operation'})
+            if len(op) >= 2 and isinstance(op[1], str) and unreadable_name(op[1]):   # verification Amendment 16 (D47): every witnessed
+                # operation names its attempt at op[1].  A name the reading of a run refuses is refused here too, before any
+                # decision is added, so that the chain cannot come to hold a run the witness itself will not answer for.
+                return self._send(400, {'error': 'malformed request: an attempt is named by 1 to 512 characters, none of them a control character'})
             if op[0] in EVIDENCE_OPS:
                 if len(op) != 2:
                     return self._send(400, {'error': 'labels are derived from evidence, not supplied'})
