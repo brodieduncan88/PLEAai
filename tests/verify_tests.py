@@ -2333,9 +2333,9 @@ def r26():
                     'a receipt for another notice': fails(with_delivery(dict(d0, receipt=((rec.get('deliveries') or [{}, {}])[1:2] or [{}])[0].get('receipt')))),
                     'a notice for another budget': fails(with_delivery({'notice': signed(s.courier_key, C.NOTICE_FIELDS, dict({k: n0.get(k) for k in C.NOTICE_FIELDS}, root=root + 'x')),
                                                                        'receipt': receipt_for(signed(s.courier_key, C.NOTICE_FIELDS, dict({k: n0.get(k) for k in C.NOTICE_FIELDS}, root=root + 'x')))})),
-                    'words changed': fails(with_delivery({'notice': signed(s.courier_key, C.NOTICE_FIELDS, dict({k: fail_n.get(k) for k in C.NOTICE_FIELDS}, text=str(fail_n.get('text')).replace('achieved 180', 'achieved 210'))),
-                                                          'receipt': receipt_for(signed(s.courier_key, C.NOTICE_FIELDS, dict({k: fail_n.get(k) for k in C.NOTICE_FIELDS}, text=str(fail_n.get('text')).replace('achieved 180', 'achieved 210'))))}))}
-        words_differ = 'achieved 180' in str(fail_n.get('text'))
+                    'words changed': fails(with_delivery({'notice': signed(s.courier_key, C.notice_fields(fail_n), dict({k: fail_n.get(k) for k in C.notice_fields(fail_n)}, text=str(fail_n.get('text')).replace('achieved "180"', 'achieved "210"'))),
+                                                          'receipt': receipt_for(signed(s.courier_key, C.notice_fields(fail_n), dict({k: fail_n.get(k) for k in C.notice_fields(fail_n)}, text=str(fail_n.get('text')).replace('achieved "180"', 'achieved "210"'))))}))}
+        words_differ = 'achieved "180"' in str(fail_n.get('text'))
         three = C.verify(rec, {k: s.keys[k] for k in ('witness', 'gate', 'engineer')})
         three_keys = (three[0], next(((n, tt, g) for n, tt, g, _ in three[1] if n == 10), None), (three[2].get('delivery') or {}).get('unchecked'))
         cli_three = cli(f_rec, '--witness-key', s.keys['witness'], '--gate-key', s.keys['gate'], '--engineer-key', s.keys['engineer'], '--require-delivery')
@@ -2512,10 +2512,10 @@ def r26():
                       and again[0] == 3 and cs.get('interrupted', (None,))[:3] == (0, ['INTERRUPTED'], ['INTERRUPTED']),
                   'a failing run whose own notice was taken out of the service\'s inbox still gets the courier\'s notice of the failure, delivered; a passing run gets none; a second pass sends nothing more':
                       bad[0] == 2 and len(own) == 1 and good[0] == 0 and cs.get('fail', (None,))[:3] == (0, ['FAIL'], ['FAIL']) and cs.get('again', (None,))[:3] == (0, [], []),
-                  'the mailbox holds each notice with its receipt, which verifies under the mailbox\'s key and names that notice, and a readable copy that opens with what happened; the failure\'s copy gives the numbers; the courier\'s log holds the same notices':
-                      len(held) == 3 and all(C.notice_problems(h['notice'], s.keys['courier']) == [] and C.receipt_problems(h['receipt'], s.keys['mailbox'], h['notice']) == [] for h in held)
-                      and e['headlines'] == sorted(['A RUN WAS ADMITTED AND HAS NO OUTCOME', 'DECLARED CHECK NOT MET (FAIL)', 'THE RUN WAS INTERRUPTED: ADMITTED AND COUNTED, WITH NO VERDICT'])
-                      and any('achieved 180, required at least 200' in t for t in texts) and len(log) == 3 and sorted(C.notice_digest(x['notice']) for x in log) == sorted(C.notice_digest(h['notice']) for h in held),
+                  'the mailbox holds each notice, and the courier\'s statement that it watches the budget (Amendment 16), with its receipt, which verifies under the mailbox\'s key and names that notice, and a readable copy that opens with what happened; the failure\'s copy gives the numbers, shown as data (Amendment 16); the courier\'s log holds the same notices':
+                      len(held) == 4 and all(C.notice_problems(h['notice'], s.keys['courier']) == [] and C.receipt_problems(h['receipt'], s.keys['mailbox'], h['notice']) == [] for h in held)
+                      and e['headlines'] == sorted(['A RUN WAS ADMITTED AND HAS NO OUTCOME', 'DECLARED CHECK NOT MET (FAIL)', 'THE RUN WAS INTERRUPTED: ADMITTED AND COUNTED, WITH NO VERDICT', 'THE COURIER HAS BEGUN TO WATCH THIS BUDGET'])
+                      and any('achieved "180", comparison ">=", limit "200"' in t for t in texts) and len(log) == 4 and sorted(C.notice_digest(x['notice']) for x in log) == sorted(C.notice_digest(h['notice']) for h in held),
                   'the courier\'s configuration names neither the service\'s home nor its database; it holds the courier\'s certificate and the witness\'s address':
                       str(s.home) not in cfg_text and 'postgresql' not in cfg_text and s.pki['courier'][0] in cfg_text and url in cfg_text,
                   'with the mailbox down, the notice of a failure is made and waits, and the pass exits 1; with the mailbox back, the next pass delivers it, makes no other, and exits 0':
@@ -2564,8 +2564,9 @@ def r26():
                       odd_steps == ['APPLIED', (200, 'APPLIED'), 'APPLIED', 'APPLIED', (200, 'APPLIED'), 'APPLIED', (200, 'APPLIED')] and odd_phase == 'INTENT_PENDING' and odd_after == 'CONSUMED'
                       and isinstance(c_odd, tuple) and c_odd[0] == 0
                       and odd_made == [(False, 'FAIL'), (False, 'FAIL'), (False, 'INTERRUPTED'), (True, 'NO_OUTCOME')] and e['odd2'] == (0, []),
-                  'when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers':
-                      isolated[0] == [(False, 'COURIER_BLOCKED'), (False, 'FAIL'), (False, 'INTERRUPTED'), (False, 'NO_OUTCOME')] and isolated[1] == 1 and isolated[2] == [(True, 'FAIL')],
+                  'when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it cannot read that run, and no budget reported unreachable: Amendment 16), and sends its notice at the next pass, when the witness answers':
+                      isolated[0] == [(False, 'FAIL'), (False, 'INTERRUPTED'), (False, 'NO_OUTCOME'), (True, 'UNREADABLE')] and isolated[1] == 0 and isolated[2] == [(True, 'FAIL')]
+                      and isinstance(s8a, dict) and [u.get('aid') for u in s8a.get('unread', [])] == [refused_aid],
                   'a record without notices verifies and says it has none; the command says notices were not checked and exits 1 when delivery is required; the engineer\'s console, given the courier\'s log and the two keys, writes a record that carries the notices and verifies, and refuses without the keys':
                       okp and e['plain'][1] == (10, 'notices delivered (none in this record)', True) and sp.get('delivery') is None and cli_plain[0] == 1 and (cli_plain[1] or [''])[0].startswith('NOTICES: NOT CHECKED')
                       and console.returncode == 0 and console_ok and console_nokeys.returncode == 1}
@@ -3152,7 +3153,481 @@ def r29():
     return {k: bool(v) for k, v in checks.items()}, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29}
+def r30():
+    """The courier reads every run whatever happens when another is read; a run it cannot read stays unresolved, visible and
+    noticed as unreadable, and the witness down is told apart from one run unreadable.  The witness refuses at its door a
+    run's name its reading refuses.  In the words of a notice, everything the service chose is shown as data, and the
+    checker makes the words again.  Coverage of a budget is confirmed only by the mailbox's receipt for the courier's
+    statement that it watches it.  A blocked courier, a notice made and a notice accepted are told apart, and no word says a
+    person read anything.  A signed PASS whose own numbers miss its own limit gets a notice, and that check can only add one.
+    (Amendment 16.)"""
+    import hashlib
+    import notify_standin as S
+    C = check_record; e = {}; t0 = 1_000_000.0
+    def step(f, *a, **kw):                                                                     # a defect that makes a step raise gives an answer, not an error of the test
+        try:
+            return f(*a, **kw)
+        except Exception as exc:
+            return ('RAISED', f'{type(exc).__name__}: {exc}'[:300])
+    def holds(f):                                                                              # a check whose expression raises is false
+        try:
+            return bool(f())
+        except Exception:
+            return False
+    short = lambda x: (x[:60] + f'...({len(x)})') if isinstance(x, str) and len(x) > 60 else x
+    def last_line(name, seq):                                                                  # the courier's fixed last line, written out here
+        return (f"This notice was made by the courier {name} from what the witness gave it, read to decision {seq}.  "
+                "Words in quotation marks are shown as data: they are the service's, or what the courier was told, and not the courier's own words.  "
+                "The verification service did not write this notice.  It does not say the check is correct.  "
+                "A receipt for it says that the mailbox holds it, not that anyone has read it.")
+    def as_data(value, limit):                                                                 # the rule of shown(), written out again here, independently
+        if not isinstance(value, str):
+            value = json.dumps(value, sort_keys=True, separators=(',', ':'))
+        esc = ''.join('\\"' if ch == '"' else '\\\\' if ch == '\\' else ch if 32 <= ord(ch) <= 126 else (f'\\u{ord(ch):04x}' if ord(ch) < 0x10000 else f'\\U{ord(ch):08x}') for ch in value[:limit])
+        return f'"{esc}"' + (f' (cut: {len(value)} characters in all, SHA-256 {hashlib.sha256(value.encode("utf-8", "surrogatepass")).hexdigest()})' if len(value) > limit else '')
+    QUOTED = re.compile(r'"(?:[^"\\]|\\.)*"(?: \(cut: [0-9]+ characters in all, SHA-256 [0-9a-f]{64}\))?')
+    def four_lines(text):
+        return isinstance(text, str) and text.count('\n') == 3 and len(text.split('\n')) == 4 and all(32 <= ord(ch) <= 126 for ch in text.replace('\n', '')) and len(text.splitlines()) == 4
+    made = lambda s: sorted((m.get('aid'), m.get('outcome')) for m in s.get('made', [])) if isinstance(s, dict) else s
+    unread = lambda s: sorted(u.get('aid') for u in s.get('unread', [])) if isinstance(s, dict) else s
+
+    # ---------------------------------------------------------------- T1: no run hides another (stand-in witness, real courier and mailbox)
+    FAILS = ['b-fail-1', 'd-fail-2']
+    def t1(troubles):                                                                          # {aid: mode, or None for a name the reading refuses}
+        w = S.World(name='courier-t1'); att = []
+        for aid in sorted(FAILS + list(troubles)):
+            w.effect(att, aid, S.FAIL)
+        w.trouble.update({a: m for a, m in troubles.items() if m})
+        s_ = step(w.run, t0)
+        if not isinstance(s_, dict):
+            return {'error': s_}
+        st = w.state()
+        return {'made': made(s_), 'unread': unread(s_), 'unreachable': s_.get('unreachable'), 'blocked': s_.get('blocked'), 'final': sorted(st.get('final', [])),
+                'held': sorted(w.held()), 'probes': sum(1 for x in w.asked if x[1] == '/checkpoint'), 'reads': sorted(set(w.asked_bytes)),
+                'blocked_sent': st.get('blocked_sent'), 'transport': sum(1 for m in troubles.values() if m)}
+    WAYS = {'an answer too long': 'too_long', 'the connection dropped': 'dropped', 'an answer not readable': 'garbled', 'a name the reading refuses': None}
+    NAMES = {'first': 'a-unread', 'between': 'c-unread', 'last': 'e-unread'}
+    REFUSED = {'first': 'a-' + 'z' * 600, 'between': 'c-un\x01read', 'last': 'e-un\x7fread'}
+    cases = {(way, where): t1({(REFUSED[where] if mode is None else NAMES[where]): mode}) for way, mode in WAYS.items() for where in NAMES}
+    many = t1({'a-unread': 'too_long', 'c-un\x01read': None, 'e-unread': 'dropped'})
+    def t1_good(c, bad):
+        return (c.get('made') == [(a, 'FAIL') for a in FAILS] and c.get('unread') == sorted(bad) and c.get('unreachable') == [] and c.get('blocked') == []
+                and c.get('final') == FAILS and not set(bad) & set(c.get('final') or []) and sorted(x for x in c.get('held') or [] if x[1] == 'FAIL') == [(a, 'FAIL') for a in FAILS]
+                and ('', 'WATCHING') in (c.get('held') or []) and not c.get('blocked_sent'))
+    t1_all = {k: t1_good(c, [REFUSED[k[1]] if WAYS[k[0]] is None else NAMES[k[1]]]) for k, c in cases.items()}
+    probes_ok = {k: c.get('probes') == 1 + c.get('transport', -9) for k, c in cases.items()} if all(isinstance(c, dict) for c in cases.values()) else {}
+    reads_ok = all(isinstance(c.get('reads'), list) and c['reads'] and all(isinstance(n, int) and 0 <= n <= courier.MAX_ANSWER + 1 for n in c['reads']) for c in list(cases.values()) + [many])
+    # an answer that never comes, with the courier's deadline made short for the test
+    old_deadline = courier.DEADLINE
+    try:
+        courier.DEADLINE = 1.0
+        wh = S.World(name='courier-t1'); att = []; wh.hang = 4.0
+        for aid in ['a-hangs'] + FAILS:
+            wh.effect(att, aid, S.FAIL)
+        wh.trouble['a-hangs'] = 'hangs'
+        started = time.time(); sh = step(wh.run, t0); hang_seconds = time.time() - started
+    finally:
+        courier.DEADLINE = old_deadline
+    e['t1'] = {f'{k[0]}, {k[1]}': {kk: [short(x) if isinstance(x, str) else x for x in v] if isinstance(v, list) else v for kk, v in c.items() if kk in ('made', 'unread', 'probes', 'final')} for k, c in cases.items()}
+    e['t1_many'] = {k: v for k, v in many.items() if k in ('made', 'unread', 'probes', 'final')}
+    e['t1_hang'] = (made(sh), unread(sh), round(hang_seconds, 1))
+
+    # ---------------------------------------------------------------- T2: an unreadable run stays unresolved and visible, then noticed, then read
+    w2 = S.World(name='courier-t2'); att = []
+    for aid in ('a-u1', 'b-fail', 'c-u2'):
+        w2.effect(att, aid, S.FAIL)
+    w2.trouble.update({'a-u1': 'dropped', 'c-u2': 'too_long'})
+    early = [step(w2.run, t0 + dt) for dt in (0, 300, 600)]
+    st_early, stat_early = step(w2.state), step(w2.status)
+    due = step(w2.run, t0 + 1000); again2 = step(w2.run, t0 + 1100)
+    w2.trouble.pop('a-u1')
+    read2 = step(w2.run, t0 + 1200); st_read, stat_read = step(w2.state), step(w2.status)
+    unr = [x for x in w2.held_items() if x['notice'].get('outcome') == 'UNREADABLE']
+    unr_checked = [w2.checked(x['notice'], x['receipt']) for x in unr]
+    e['t2'] = {'early': [(made(s_), unread(s_), [u.get('since') for u in s_.get('unread', [])] if isinstance(s_, dict) else None) for s_ in early], 'due': made(due), 'again': made(again2),
+               'read': (made(read2), unread(read2)), 'final_early': st_early.get('final') if isinstance(st_early, dict) else st_early,
+               'final_read': st_read.get('final') if isinstance(st_read, dict) else st_read, 'status_unread': [u.get('aid') for u in ((stat_early or {}).get('budgets', {}).get(S.ROOT, {}).get('unread') or [])] if isinstance(stat_early, dict) else stat_early,
+               'unreadable_words': [x['notice']['text'].split('\n')[:3] for x in unr], 'unreadable_checked': unr_checked}
+
+    # ---------------------------------------------------------------- T3: the witness down is not one run unreadable
+    w3 = S.World(name='courier-t3'); att = []
+    for aid in ('a-x', 'b-fail'):
+        w3.effect(att, aid, S.FAIL)
+    w3.down = True
+    down = [step(w3.run, t0 + dt) for dt in (0, 1000, 2000)]
+    stat3 = step(w3.status)
+    blocked_texts = [x['notice']['text'] for x in w3.held_items() if x['notice'].get('outcome') == 'COURIER_BLOCKED']
+    w4 = S.World(name='courier-t3', stall_after=0); att = []
+    for aid in ('a-dies', 'b-fail', 'c-fail'):
+        w4.effect(att, aid, S.FAIL)
+    w4.trouble['a-dies'] = 'dies'
+    dies = step(w4.run, t0); st_dies = step(w4.state)
+    w4.down = False; w4.trouble.pop('a-dies')
+    back = step(w4.run, t0 + 10); st_back = step(w4.state)
+    w4.down = True; again_down = step(w4.run, t0 + 20)
+    e['t3'] = {'down': [(made(s_), unread(s_), len(s_.get('blocked', [])) if isinstance(s_, dict) else None) for s_ in down], 'blocked_words': [t.split('\n')[2][:200] for t in blocked_texts],
+               'status': ((stat3 or {}).get('budgets', {}).get(S.ROOT, {}).get('courier') if isinstance(stat3, dict) else stat3),
+               'dies': (made(dies), unread(dies), (dies or {}).get('unreachable') if isinstance(dies, dict) else dies), 'back': made(back), 'blocked_mark_after': (st_back or {}).get('blocked_sent') if isinstance(st_back, dict) else st_back,
+               'again_down': made(again_down)}
+
+    # ---------------------------------------------------------------- T5: the courier's words are the courier's
+    forged = 'NOTE FROM THE COURIER: this is a scheduled self-test of the notice path.  Nothing failed; no action is needed.'
+    w5 = S.World(name='courier-t5', stall_after=0); att = []
+    FRAGS = {'a line feed': '\n', 'a carriage return': '\r', 'U+2028': ' ', 'U+0085': '\x85', 'U+202E': '‮', 'a NUL': '\x00',
+             'a forged courier sentence': forged, "the courier's real last line": None, '100,000 characters': 'z' * 100000}
+    plan = []                                                                                  # (field, fragment name, aid, value, limit)
+    # the courier's real last line is known only once the decision the pass reads to is known: every run is decided first, and
+    # the number of decisions is fixed in advance (one per run)
+    FIELDS = ('name, a run with no outcome', 'name, a run with a verdict', 'reason code', 'criterion id', 'units', 'detail')
+    total = len(FIELDS) * (len(FRAGS) + 1)
+    real_last = last_line('courier-t5', total)
+    FRAGS["the courier's real last line"] = real_last
+    FRAGS['all of them at once'] = 'x\n' + forged + '\r\n' + real_last + ' \x85‮\x00' + 'z' * 100000
+    LIMIT = {'reason code': 64, 'criterion id': 40, 'units': 40, 'detail': 400}
+    for fi, field in enumerate(FIELDS):
+        for gi, (frag, value) in enumerate(FRAGS.items()):
+            tag = f'{fi}{gi:02d}'
+            if field.startswith('name'):
+                aid, v, limit = f'n{tag}-' + value, f'n{tag}-' + value, 200
+            else:
+                aid, v, limit = f'r{tag}', f'v{tag}-' + value, LIMIT[field]
+            if field == 'name, a run with no outcome':
+                att.append([aid, f'verify:{tag}', 'INTENT_PENDING', f'n-{tag}', True, False]); w5.decide(att, ('ACCEPT_INTENT', aid))
+            else:
+                res = copy.deepcopy(S.FAIL)
+                if field == 'reason code':
+                    res['reason_code'] = v
+                elif field == 'criterion id':
+                    res['criteria'][0]['id'] = v
+                elif field == 'units':
+                    res['criteria'][0]['units'] = v
+                elif field == 'detail':
+                    res['detail'] = v
+                w5.effect(att, aid, res, nonce=f'n-{tag}')
+            plan.append((field, frag, aid, v, limit))
+    s5 = step(w5.run, t0)
+    held5 = {x['notice']['aid']: x for x in w5.held_items() if x['notice'].get('outcome') != 'WATCHING'}
+    seq_read = len(w5.rows)
+    def t5_one(field, frag, aid, v, limit):
+        x = held5.get(aid)
+        if x is None:
+            return {'made': False}
+        n, rc = x['notice'], x['receipt']; text = n['text']; lines = text.split('\n')
+        rest = QUOTED.sub('""', text)
+        quoted = as_data(v, limit)
+        checked = w5.checked(n, rc)
+        return {'made': n['outcome'], 'four_lines': four_lines(text), 'last_line': lines[-1] == last_line('courier-t5', seq_read), 'shown': quoted in text,
+                'forged_outside': forged in rest, 'real_last_outside': rest.count(real_last), 'control_outside': any(ch in rest for ch in '\r\x00\x85 ‮'),
+                'checker': checked, 'copy': w5.copy_of(n) == text + '\n', 'signed': C.notice_problems(n, [w5.ckey.public_hex]) == [] and C.receipt_problems(rc, [w5.mkey.public_hex], n) == []}
+    t5 = {(field, frag): t5_one(field, frag, aid, v, limit) for field, frag, aid, v, limit in plan}
+    def t5_good(k, r):
+        want = 'NO_OUTCOME' if k[0] == 'name, a run with no outcome' else ('UNREADABLE' if k[0] == 'name, a run with a verdict' and S.unreadable_name(next(a for f, g, a, _, _ in plan if (f, g) == k)) else 'FAIL')
+        return (r.get('made') == want and r.get('four_lines') and r.get('last_line') and r.get('shown') and not r.get('forged_outside') and r.get('real_last_outside') == 1
+                and not r.get('control_outside') and r.get('copy') and r.get('signed')
+                and (r.get('checker') is None if want != 'UNREADABLE' else r.get('checker') == 'the notice is of a run that is not in this record'))
+    t5_ok = {k: t5_good(k, r) for k, r in t5.items()}
+    n_unr = sum(1 for f, g, a, _, _ in plan if f == 'name, a run with a verdict' and S.unreadable_name(a))
+    listing = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'mailbox_service.py'), 'list', str(w5.tmp / 'mbox')], capture_output=True, text=True, timeout=120)
+    list_lines = listing.stdout.split('\n')[:-1] if listing.stdout.endswith('\n') else listing.stdout.split('\n')
+    # Amendment 11's rule, byte for byte, for a notice without a form, and its notices still taken
+    a11_words = ("DECLARED CHECK NOT MET (FAIL)\nRun a-0123 on budget REQ-T/1/abababababababababababababababab.\n"
+                 "Reason: LIMIT_NOT_MET.  service_temperature achieved 180, required at least 200 C.  d\n"
+                 "This notice was made by the courier courier-1 from the witness's chain at decision 7 and the gate's signed reports.  "
+                 "The verification service did not write it.  It does not say the check is correct.")
+    a11_same = C.notice_text('FAIL', 'a-0123', S.ROOT, S.FAIL, 7, 'courier-1') == a11_words
+    w6 = S.World(name='courier-1'); att = []; w6.effect(att, 'a-0123', S.FAIL)
+    body1 = {'statement': 'NOTICE', 'root': S.ROOT, 'aid': 'a-0123', 'request_key': att[0][1], 'outcome': 'FAIL', 'reason_code': 'LIMIT_NOT_MET', 'detail': 'd',
+             'result_digest': C.sha(C.canonical(S.FAIL)), 'seq': 1, 'head': w6.rows[0]['hash'], 'time': courier.now(), 'courier': 'courier-1',
+             'text': C.notice_text('FAIL', 'a-0123', S.ROOT, S.FAIL, 1, 'courier-1')}
+    form1 = dict(body1, signer=w6.ckey.public_hex, signature=w6.ckey.sign(C.canonical(body1).encode()))
+    taken1 = step(w6.box.take, form1)
+    form1_ok = isinstance(taken1, tuple) and taken1[0] == 200 and C.notice_problems(form1, [w6.ckey.public_hex]) == [] and w6.checked(form1, taken1[1]) is None
+    one2 = next((x['notice'] for x in held5.values() if x['notice'].get('outcome') == 'FAIL'), {})
+    stripped = {k: v for k, v in one2.items() if k != 'form'}
+    form_games = (C.notice_problems(stripped, [w5.ckey.public_hex]), C.notice_problems(dict(form1, form=2), [w6.ckey.public_hex]), C.notice_problems(dict(one2, form=3), [w5.ckey.public_hex]))
+    e['t5'] = {f'{k[0]}: {k[1]}': {kk: vv for kk, vv in r.items()} for k, r in t5.items() if not t5_ok[k]} or 'every case as expected'
+    e['t5_counts'] = {'cases': len(t5), 'as_expected': sum(t5_ok.values()), 'notices_held': len(held5), 'seq': seq_read, 'listing_lines': len(list_lines), 'listing_exit': listing.returncode}
+    e['t5_form1'] = (a11_same, form1_ok, [x[:1] for x in form_games])
+    e['t5_sample'] = held5.get(plan[-1][2], {}).get('notice', {}).get('text', '')[:700]
+
+    # ---------------------------------------------------------------- T6, courier half: coverage confirmed, not assumed
+    OTHER = 'REQ-U/1/' + 'cd' * 16
+    w7 = S.World(name='courier-t6', roots=(S.ROOT, OTHER)); att = []
+    w7.effect(att, 'b-fail', S.FAIL)
+    cov0 = step(w7.status)
+    w7.mailbox_up = False; p71 = step(w7.run, t0); cov1 = step(w7.status)
+    w7.mailbox_up = True; p72 = step(w7.run, t0 + 10); cov2 = step(w7.status)
+    p73 = step(w7.run, t0 + 20)
+    watching = [x for x in w7.held_items() if x['notice'].get('outcome') == 'WATCHING']
+    watching_logged = [d for d in courier.read_deliveries(w7.tmp / 'state' / 'deliveries.jsonl', S.ROOT) if d['notice'].get('outcome') == 'WATCHING']
+    wn = watching[0] if watching else {}
+    w_ok = bool(watching) and C.coverage_problem(wn, S.ROOT, w7.rows, S.PROV, [w7.ckey.public_hex], [w7.mkey.public_hex]) is None and four_lines(wn['notice'].get('text'))
+    stp = w7.tmp / 'state' / 'state.json'; js = json.loads(stp.read_text()); js['roots'][S.ROOT]['head'] = '0' * 64; stp.write_text(json.dumps(js))
+    p74 = step(w7.run, t0 + 30); cov3 = step(w7.status)
+    cv = lambda st_, root: ((st_ or {}).get('budgets', {}).get(root) or {}).get('coverage', '') if isinstance(st_, dict) else str(st_)
+    e['t6_courier'] = {'before': cv(cov0, S.ROOT), 'mailbox down': cv(cov1, S.ROOT), 'mailbox up': cv(cov2, S.ROOT), 'stopped': cv(cov3, S.ROOT), 'other configured': cv(cov2, OTHER),
+                       'budgets listed': sorted((cov2 or {}).get('budgets', {})) if isinstance(cov2, dict) else cov2, 'watching held': len(watching), 'seq': len(w7.rows),
+                       'coverage in summaries': [(c.get('state')) for p in (p71, p72) if isinstance(p, dict) for c in p.get('coverage', [])], 'note': (cov2 or {}).get('note') if isinstance(cov2, dict) else None}
+
+    # ---------------------------------------------------------------- T7, courier half: the three states in the status and the summary
+    stat_wait = cov1 if isinstance(cov1, dict) else {}
+    b_wait = stat_wait.get('budgets', {}).get(S.ROOT, {})
+    b_acc = (cov2 or {}).get('budgets', {}).get(S.ROOT, {}) if isinstance(cov2, dict) else {}
+    b_blocked = (stat3 or {}).get('budgets', {}).get(S.ROOT, {}) if isinstance(stat3, dict) else {}
+    e['t7_courier'] = {'mailbox down': {k: v for k, v in b_wait.items() if k.startswith('notices') or k == 'courier'}, 'mailbox up': {k: v for k, v in b_acc.items() if k.startswith('notices') or k == 'courier'},
+                       'witness down': b_blocked.get('courier'), 'summary words': (p71 or {}).get('words') if isinstance(p71, dict) else p71}
+
+    # ---------------------------------------------------------------- T8: a signed PASS whose own numbers miss its own limit; the check only adds
+    def t8_world(patch):
+        w = S.World(name='courier-t8', stall_after=0); a = []
+        bad_pass = S.verdict('PASS', 'MET', [{'id': 't', 'achieved': '9', 'comparison': '<=', 'limit': '1', 'units': 'mm', 'met': True}])
+        w.effect(a, 'a-fail', S.FAIL); w.effect(a, 'b-pass-bad', bad_pass); w.effect(a, 'c-pass-ok', S.PASS)
+        w.effect(a, 'd-unknown', S.verdict('UNKNOWN', 'CHECK_ERROR'))
+        w.effect(a, 'h-pass-text', S.verdict('PASS', 'MET', [{'id': 't', 'achieved': 'many', 'comparison': '<=', 'limit': '1', 'units': 'mm', 'met': True}]))
+        w.effect(a, 'i-pass-edge', S.verdict('PASS', 'MET', [{'id': 't', 'achieved': '1.000', 'comparison': '<=', 'limit': '1', 'units': 'mm', 'met': True}]))
+        a.append(['e-intent', 'verify:e', 'INTENT_PENDING', 'n-e', True, False]); w.decide(a, ('ACCEPT_INTENT', 'e-intent'))
+        w.effect(a, 'f-unread', S.FAIL); w.trouble['f-unread'] = 'dropped'
+        a.append(['g-cut', 'verify:g', 'CONSUMED', 'n-g', True, True]); w.decide(a, ('RECONCILE', 'g-cut')); w.report('g-cut', 'n-g', 'UNKNOWN')
+        a.append(['j-unverified', 'verify:j', 'EFFECT', 'n-j', True, True]); w.decide(a, ('RECONCILE', 'j-unverified')); w.report('j-unverified', 'n-j', 'EFFECT', S.FAIL); w.store('j-unverified', S.PASS)
+        saved = {k: getattr(courier, k) for k in ('inconsistent', 'inconsistent_notice')}
+        try:
+            for k, v in patch.items():
+                setattr(courier, k, v)
+            p = [step(w.run, t0), step(w.run, t0 + 10)]
+        finally:
+            for k, v in saved.items():
+                setattr(courier, k, v)
+        st = w.state()
+        return {'made': sorted(x for s_ in p for x in (made(s_) if isinstance(s_, dict) else [('RAISED', str(s_))])), 'held': sorted(w.held()), 'final': sorted(st.get('final', [])),
+                'unread': sorted(st.get('unread', {})), 'texts': {x['notice']['aid']: x['notice']['text'] for x in w.held_items() if x['notice'].get('outcome') == 'INCONSISTENT'},
+                'checked': [w.checked(x['notice'], x['receipt']) for x in w.held_items() if x['notice'].get('outcome') == 'INCONSISTENT']}
+    def raises(*a, **k):
+        raise RuntimeError('the added check fails')
+    variants = {'without it': {'inconsistent_notice': lambda *a, **k: None}, 'as built': {},
+                'the check raises': {'inconsistent': raises}, 'the check finds for everything': {'inconsistent': lambda r: True}, 'the check returns nothing': {'inconsistent': lambda r: None},
+                'the whole added function raises': {'inconsistent_notice': raises},
+                'the whole added function returns something that is not its notice': {'inconsistent_notice': lambda *a, **k: {'statement': 'NOTICE', 'aid': 'a-fail', 'outcome': 'FAIL'}}}
+    t8 = {k: t8_world(v) for k, v in variants.items()}
+    drop = lambda xs: [x for x in xs if x[1] != 'INCONSISTENT']
+    base8 = t8['without it']
+    same8 = {k: drop(v['made']) == base8['made'] and drop(v['held']) == base8['held'] and v['final'] == base8['final'] and v['unread'] == base8['unread'] for k, v in t8.items()}
+    incs = {k: sorted(x[0] for x in v['made'] if x[1] == 'INCONSISTENT') for k, v in t8.items()}
+    e['t8'] = {'without it': base8['made'], 'final': base8['final'], 'inconsistent notices': incs, 'others as without it': same8,
+               'words': next(iter(t8['as built']['texts'].values()), '').split('\n')[:3], 'checked': t8['as built']['checked']}
+
+    # ---------------------------------------------------------------- T4, T6 and T7 with the real deployment
+    r = Run('R30'); here = OUT / 'R30'
+    try:
+        s = r.s; root = B.root_for(r.env['card']); url = f"https://127.0.0.1:{s.ports['witness']}"
+        rows = lambda: len(Store(deploy.LOCAL_DSN).audit_snapshot(root)[0])
+        def call(path, cert, method='GET', body=None):                                         # (status, answer), the answer read on an error too
+            ctx = TLS.TLSClient(s.pki['ca'], *cert).context()
+            req = urllib.request.Request(url + path, data=None if body is None else json.dumps(body).encode(), method=method, headers={'Content-Type': 'application/json'})
+            try:
+                with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
+                    return resp.status, json.loads(resp.read() or b'null')
+            except urllib.error.HTTPError as exc:
+                try:
+                    return exc.code, json.loads(exc.read() or b'null')
+                except ValueError:
+                    return exc.code, None
+            except (OSError, http.client.HTTPException, ValueError) as exc:
+                return f'no answer: {type(exc).__name__}', None
+        def resign(rec):
+            body = {k: v for k, v in rec.items() if k != 'signature'}
+            return dict(body, signature={'signer': s.engineer.public_hex, 'signature': s.engineer.sign(canonical(body).encode())})
+        def signed(key, fields, body):
+            return dict(body, signer=key.public_hex, signature=key.sign(C.canonical({k: body.get(k) for k in fields}).encode()))
+        def save(name, obj):
+            (here / name).write_text(json.dumps(obj)); return here / name
+        keys = save('keys.json', s.keys)
+        def cli(rec, *extra):
+            p = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'check_record.py'), str(save('rec.json', rec)), '--keys', str(keys), '--require-delivery', *extra], capture_output=True, text=True, timeout=120)
+            return p.returncode, [l for l in p.stdout.splitlines() if l.startswith(('NOTICES', 'COURIER COVERAGE'))]
+        def status_cli(name='courier'):
+            p = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'courier.py'), 'status', '--config', str(s.dir / f'{name}.json')], capture_output=True, text=True, timeout=60)
+            return step(json.loads, p.stdout) if p.returncode == 0 else ('exit', p.returncode, p.stderr[-200:])
+        gov = s.pki['governor']; local = Store(deploy.LOCAL_DSN)
+        # T4: names the reading cannot serve are refused at the witness's door, and those at the edge are taken and read back
+        BAD_NAMES = {'513 characters': 'a-' + 'q' * 511, 'a NUL': 'a-x\x00y', 'a line feed': 'a-x\ny', 'U+001F': 'a-x\x1fy', 'DEL': 'a-x\x7fy'}
+        reserved = {k: step(lambda n: local.apply(root, ('RESERVE', n, 'verify:t4-' + k.replace(' ', '-')))[0].kind, n) for k, n in BAD_NAMES.items()}
+        refusals = {}
+        for k, n in BAD_NAMES.items():
+            for op in ('ACCEPT_RESERVATION', 'ACCEPT_INTENT', 'CROSS', 'RELEASE', 'RECONCILE'):
+                before_ = rows(); ans = call('/accept', gov, 'POST', {'root': root, 'op': [op, n], 'evidence': None})
+                refusals[(k, op)] = (ans[0], str((ans[1] or {}).get('error', ''))[:40], rows() - before_)
+        EDGE = {'512 characters': 'a-' + 'q' * 510, 'one character': 'e', 'a space, a tilde and characters past ASCII': 'a- ~\x80 é'}
+        edges = {}
+        for k, n in EDGE.items():
+            got = step(lambda: local.apply(root, ('RESERVE', n, 'verify:t4e-' + str(len(n))))[0].kind)
+            ans = call('/accept', gov, 'POST', {'root': root, 'op': ['ACCEPT_RESERVATION', n], 'evidence': None})
+            if ans[0] == 200 and (ans[1] or {}).get('kind') in ('APPLIED', 'DUPLICATE'):
+                step(local.put_receipt, root, n, ans[1]['seq'], ans[1]['receipt'], 'ACCEPT_RESERVATION')
+            back_ = call(f'/run?root={urllib.parse.quote(root, safe="")}&aid={urllib.parse.quote(n, safe="")}', s.pki['courier'])
+            edges[k] = (got, ans[0], (ans[1] or {}).get('kind'), back_[0], (back_[1] or {}).get('aid') == n)
+        e['t4'] = {'reserved by the gateway': reserved, 'refusals': {f'{k} {op}': v for (k, op), v in refusals.items()}, 'edges': edges}
+        # T6 and T7: a failure; a record before the courier has run, with the mailbox down, and after
+        bad = r.submit(BAD)
+        journals = [r.ws / '.verify' / 'submissions.jsonl']
+        rec0 = step(s.record, r.h, journals, deliveries=True); cli0 = cli(rec0) if isinstance(rec0, dict) else rec0
+        s.stop_mailbox(); c1 = step(s.courier, [root], 900); st1 = status_cli()
+        rec1 = step(s.record, r.h, journals, deliveries=True); cli1 = cli(rec1) if isinstance(rec1, dict) else rec1
+        s.start_mailbox(); c2 = step(s.courier, [root], 900); st2 = status_cli()
+        rec2 = step(s.record, r.h, journals, deliveries=True); rec2 = rec2 if isinstance(rec2, dict) else {}
+        cli2 = cli(rec2); okc, _, sc = C.verify(rec2, s.keys) if rec2 else (False, [], {})
+        cov = rec2.get('coverage') or {}; cn = cov.get('notice') or {}
+        log_w = [d for d in courier.read_deliveries(s.dir / 'courier' / 'deliveries.jsonl', root) if d['notice'].get('outcome') == 'WATCHING']
+        def receipt_for(n, key=None):
+            body = {'statement': 'DELIVERED', 'notice': C.notice_digest(n), 'root': n.get('root'), 'aid': n.get('aid'), 'outcome': n.get('outcome'), 'mailbox': 'engineer-mailbox', 'time': n.get('time')}
+            return signed(key or s.mailbox_key, C.RECEIPT_FIELDS, body)
+        def watching_for(key=None, **change):
+            body = dict({k: cn.get(k) for k in C.NOTICE_FIELDS_2}, **change)
+            body['text'] = C.watching_text(body['root'], body['seq'], body['head'], body['courier'])
+            return signed(key or s.courier_key, C.NOTICE_FIELDS_2, body)
+        def with_coverage(c):
+            x = copy.deepcopy(rec2)
+            if c is None:
+                x.pop('coverage', None)
+            else:
+                x['coverage'] = c
+            return resign(x)
+        import mailbox_service
+        stranger = mailbox_service.MailboxKey()
+        other_budget = watching_for(root=root + 'x'); not_in_chain = watching_for(head='1' * 64); strangers = watching_for(stranger)
+        no_form = signed(s.courier_key, C.NOTICE_FIELDS, {k: cn.get(k) for k in C.NOTICE_FIELDS})
+        variants6 = {'no statement': with_coverage(None), 'a statement for another budget': with_coverage({'notice': other_budget, 'receipt': receipt_for(other_budget)}),
+                     'a statement without a receipt': with_coverage({'notice': cn, 'receipt': None}), 'a receipt signed by another key': with_coverage({'notice': cn, 'receipt': receipt_for(cn, stranger)}),
+                     'a statement naming a decision not in the chain': with_coverage({'notice': not_in_chain, 'receipt': receipt_for(not_in_chain)}),
+                     'a statement signed by another courier key': with_coverage({'notice': strangers, 'receipt': receipt_for(strangers)}),
+                     'a statement of Amendment 11\'s form': with_coverage({'notice': no_form, 'receipt': receipt_for(no_form)})}
+        judged6 = {k: ((C.verify(v, s.keys)[2].get('coverage') or {}).get('state'), cli(v)[0]) for k, v in variants6.items()}
+        # a budget not in the courier's configuration: a second baseline of the requirement, alongside
+        env2 = step(s.baseline, CASE, draft(), alongside_reason='R30: a budget the courier is not configured for')
+        h2 = env2.get('baseline_sha256') if isinstance(env2, dict) else None
+        root2 = B.root_for(env2['card']) if isinstance(env2, dict) else None
+        rec_other = step(s.record, h2, (), deliveries=True) if h2 else env2
+        cli_other = cli(rec_other) if isinstance(rec_other, dict) else rec_other
+        # the courier blocked: its configuration given a witness that does not answer
+        cfgb = json.loads(s.courier_config([root], 0, 'courierb').read_text()); cfgb['witness_url'] = 'https://127.0.0.1:8979'
+        (s.dir / 'courierb.json').write_text(json.dumps(cfgb))
+        pb = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'courier.py'), 'run', '--config', str(s.dir / 'courierb.json')], capture_output=True, text=True, timeout=120)
+        sum_b = step(json.loads, (pb.stdout.strip().splitlines() or ['{}'])[-1]); st_b = status_cli('courierb')
+        helps = {name: subprocess.run([PY, '-B', str(GATEWAY / 'verify' / name), '--help'], capture_output=True, text=True, timeout=60).stdout
+                 for name in ('courier.py', 'check_record.py', 'mailbox_service.py')}
+        mailbox_words = [p.read_text() for p in sorted((s.dir / 'mailbox' / 'notices').glob('*.txt'))]
+        b_of = lambda st_, rt: (st_ or {}).get('budgets', {}).get(rt, {}) if isinstance(st_, dict) else {}
+        e['t6'] = {'record before the courier': cli0, 'record with the mailbox down': cli1, 'record after': cli2, 'statement seq': cn.get('seq'), 'logged statement seq': [d['notice'].get('seq') for d in log_w],
+                   'status mailbox down': b_of(st1, root).get('coverage'), 'status after': b_of(st2, root).get('coverage'), 'variants': judged6,
+                   'other budget': (root2 in (st2 or {}).get('budgets', {}) if isinstance(st2, dict) else st2, cli_other), 'courier runs': (c1[0] if isinstance(c1, tuple) else c1, c2[0] if isinstance(c2, tuple) else c2)}
+        e['t7'] = {'status mailbox down': {k: v for k, v in b_of(st1, root).items() if k.startswith('notices')}, 'status after': {k: v for k, v in b_of(st2, root).items() if k.startswith('notices')},
+                   'status blocked': b_of(st_b, root).get('courier'), 'summary blocked': (sum_b or {}).get('blocked') if isinstance(sum_b, dict) else sum_b,
+                   'summary mailbox down': {k: (c1[1] or {}).get(k) for k in ('made', 'waiting', 'delivered', 'coverage')} if isinstance(c1, tuple) and isinstance(c1[1], dict) else c1}
+        ALLOWED = ("not a person's acknowledgement", 'it does not say that anyone has read it', 'not that anyone has read it', 'nothing here shows that anyone read a notice')
+        FORBIDDEN = re.compile(r"acknowledg|delivered to the engineer|read by|seen by|\b(engineer|person|someone|anyone|they|he|she)( has| have| had)? (read|seen)\b|has been read|was read|been seen", re.I)
+        def says_no_person(text):
+            text = re.sub(r'\s+', ' ', text.replace('\\n', ' '))                              # help is wrapped, and JSON writes line ends as \n
+            for a in ALLOWED:
+                text = text.replace(a, '')
+            return FORBIDDEN.search(text) is None
+        spoken = {'status': json.dumps([st1, st2, st_b]), 'summaries': json.dumps([c1[1] if isinstance(c1, tuple) else c1, c2[1] if isinstance(c2, tuple) else c2, sum_b]),
+                  "checker's notices and coverage lines": json.dumps([cli0, cli1, cli2]), 'help': json.dumps(helps), 'notices': json.dumps(mailbox_words),
+                  'stand-in status and summaries': json.dumps([cov1, cov2, stat3, p71, p72], default=str)}
+        e['t7_words'] = {k: says_no_person(v) for k, v in spoken.items()}
+    finally:
+        r.stop()
+
+    N = lambda c: (c or ['', ''])
+    checks = {
+        # T1
+        'with one run made unreadable by an answer too long, a dropped connection, an answer that is not JSON, or a name the witness\'s reading refuses, and that run sorted first, between or last of two failed runs, the courier makes both FAIL notices in the same pass and the in-process mailbox accepts them; the unreadable run is listed as unread and not marked done, the failed runs are marked done, and no budget is reported unreachable or blocked':
+            holds(lambda: len(t1_all) == 12 and all(t1_all.values())),
+        'with three runs unreadable at once (an answer too long first, a refused name between, a dropped connection last), both failed runs still get their FAIL notices in that pass and all three are listed as unread':
+            holds(lambda: t1_good(many, ['a-unread', 'c-un\x01read', 'e-unread'])),
+        'when a run\'s reading fails as a transport fails, the courier asks the witness for one more checkpoint, and it asks none when the witness answered with a refusal; no answer is read past MAX_ANSWER + 1 bytes':
+            holds(lambda: len(probes_ok) == 12 and all(probes_ok.values()) and many.get('probes') == 3 and reads_ok),
+        'an answer that does not come is given up at the courier\'s deadline (made 1 second here; the answer would take 4), the run is listed as unread, and the other runs\' FAIL notices are made in the same pass':
+            holds(lambda: made(sh) == [(a, 'FAIL') for a in FAILS] and unread(sh) == ['a-hangs'] and hang_seconds < 4.0),
+        # T2
+        'two runs that cannot be read are listed as unread, with the time since and why, in the summary of each of three passes inside the waiting time and in the courier\'s status; neither is marked done, no notice of them is made, and the blocked mark is not set':
+            holds(lambda: all(unread(x) == ['a-u1', 'c-u2'] and all(u.get('since') == t0 and u.get('why') for u in x['unread']) for x in early)
+                  and made(early[0]) == [('b-fail', 'FAIL')] and made(early[1]) == [] and made(early[2]) == [] and st_early.get('final') == ['b-fail'] and not st_early.get('blocked_sent')
+                  and e['t2']['status_unread'] == ['"a-u1"', '"c-u2"']),
+        'once they have been unreadable for the waiting time, each gets one UNREADABLE notice of its own, which the mailbox accepts with a receipt that verifies; its four lines say the courier could not read the run and does not know its outcome; it is not made again at the next pass, and the record\'s checker does not take it as a notice of the run\'s outcome':
+            holds(lambda: made(due) == [('a-u1', 'UNREADABLE'), ('c-u2', 'UNREADABLE')] and made(again2) == [] and len(unr) == 2
+                  and all(C.notice_problems(x['notice'], [w2.ckey.public_hex]) == [] and C.receipt_problems(x['receipt'], [w2.mkey.public_hex], x['notice']) == [] for x in unr)
+                  and all(four_lines(x['notice']['text']) and x['notice']['text'].split('\n')[0] == 'THE COURIER CANNOT READ ONE RUN FROM THE WITNESS: ITS OUTCOME IS NOT KNOWN'
+                          and 'does not know its outcome' in x['notice']['text'] for x in unr)
+                  and unr_checked == ['the notice is of a run that is not in this record'] * 2),
+        'when one of them becomes readable, its FAIL notice is made at the next pass, it leaves the unread list and is marked done, and the other stays unread':
+            holds(lambda: made(read2) == [('a-u1', 'FAIL')] and unread(read2) == ['c-u2'] and 'a-u1' in st_read.get('final', []) and 'c-u2' not in st_read.get('final', [])
+                  and [u.get('aid') for u in stat_read['budgets'][S.ROOT]['unread']] == ['"c-u2"']),
+        # T3
+        'with the witness not answering at all, no run is listed as unread and no notice of a run is made; each pass\'s summary says the courier is blocked; one COURIER_BLOCKED notice is made once the waiting time has passed, not before and not again; its words say the courier has not been able to read the witness and do not say that no notice of the budget\'s runs will come; the status says the courier is blocked':
+            holds(lambda: [made(x) for x in down] == [[], [('', 'COURIER_BLOCKED')], []] and all(unread(x) == [] and len(x.get('blocked', [])) == 1 for x in down)
+                  and len(blocked_texts) == 1 and 'has not been able to read the witness' in blocked_texts[0] and 'no notice of this budget\'s runs will come' not in blocked_texts[0]
+                  and four_lines(blocked_texts[0]) and stat3['budgets'][S.ROOT]['courier'].startswith('the courier is blocked: it cannot read the witness')),
+        'when the witness stops answering while one run is read, that run is not listed as unread, no notice of a run is made, and the pass ends as the witness not readable (with no waiting time, one COURIER_BLOCKED); once the witness answers, the next pass makes the FAIL notices of all three runs and clears the blocked mark, and a later outage is told again':
+            holds(lambda: made(dies) == [('', 'COURIER_BLOCKED')] and unread(dies) == [] and len(dies.get('unreachable', [])) == 1 and 'the witness cannot be read' in dies['unreachable'][0]['why']
+                  and st_dies.get('final', []) == [] and made(back) == [('a-dies', 'FAIL'), ('b-fail', 'FAIL'), ('c-fail', 'FAIL')] and not st_back.get('blocked_sent') and made(again_down) == [('', 'COURIER_BLOCKED')]),
+        # T4
+        'the witness refuses (400, with the error of its rule on names) each of ACCEPT_RESERVATION, ACCEPT_INTENT, CROSS, RELEASE and RECONCILE for a run named with 513 characters, a NUL, a line feed, U+001F or DEL, and adds no decision; the gateway\'s own store had admitted the 513-character name':
+            holds(lambda: len(refusals) == 25 and all(v[0] == 400 and v[1].startswith('malformed request: an attempt is named') and v[2] == 0 for v in refusals.values())
+                  and reserved['513 characters'] == 'APPLIED'),
+        'names at the edge (512 characters, one character, a space, a tilde and characters past ASCII) are accepted by the witness and read back under the same name':
+            holds(lambda: all(v[1] == 200 and v[2] == 'APPLIED' and v[3] == 200 and v[4] for v in edges.values()) and len(edges) == 3),
+        # T5
+        'for a run\'s name (on a run with no outcome, and on a run with a verdict), a reason code, a criterion\'s id, its units and a detail, each holding a line feed, a carriage return, U+2028, U+0085, U+202E, a NUL, a forged courier sentence, the courier\'s real last line, 100,000 characters, or all of these: the notice has exactly four lines of printable ASCII, its last line is exactly the courier\'s, the value appears in it in quotation marks escaped by the rule written out in this test (cut, with its length and SHA-256, where longer than its place), and outside quotation marks there is no forged sentence, no control or format character, and the real last line once':
+            holds(lambda: len(t5) == 60 and all(t5_ok.values())),
+        'each of those notices is signed by the courier, accepted by the in-process mailbox (Mailbox.take, which has no size limit of its own) with a receipt that verifies, its readable copy is its words exactly, and the record\'s checker rule takes it and makes the same words (a notice of the run\'s outcome), or refuses it as not a run\'s outcome (UNREADABLE, for a name the reading refuses)':
+            holds(lambda: all(r_.get('signed') and r_.get('copy') for r_ in t5.values()) and n_unr > 0 and sum(r_.get('made') == 'UNREADABLE' for r_ in t5.values()) == n_unr
+                  and sum(r_.get('checker') is None for r_ in t5.values()) == len(t5) - n_unr),
+        'the mailbox\'s listing gives one line for each notice it holds, whatever the names':
+            holds(lambda: listing.returncode == 0 and len(list_lines) == len(w5.held_items()) and all(all(32 <= ord(ch) <= 126 for ch in l) for l in list_lines)),
+        'Amendment 11\'s words, for a notice without a form, are byte for byte as written out here; a notice of that form is still accepted by the mailbox and taken by the checker; taking the form away from a notice of form 2, or adding form 2 to one of Amendment 11, breaks its signature, and form 3 is refused':
+            holds(lambda: a11_same and form1_ok and form_games[0] == ['it is not signed by a courier key given'] and form_games[1] == ['it is not signed by a courier key given']
+                  and form_games[2] == ['it is of a form of notice this checker does not know']),
+        # T6
+        'in the courier\'s status, a configured budget is NOT CONFIRMED (not yet read) before any pass, NOT CONFIRMED (statement made, not yet accepted) with the mailbox down, and CONFIRMED from the decision the pass read to once the mailbox accepts the statement; NOT CONFIRMED (stopped) after the courier refuses the budget; a configured budget whose chain it cannot read is not yet read; only configured budgets are listed, and the status says the courier knows only those':
+            holds(lambda: e['t6_courier']['before'].startswith('NOT CONFIRMED (not yet read') and e['t6_courier']['mailbox down'].startswith('NOT CONFIRMED (statement made, not yet accepted by the mailbox')
+                  and e['t6_courier']['mailbox up'].startswith('CONFIRMED') and e['t6_courier']['mailbox up'].endswith(f'from decision {len(w7.rows)})')
+                  and e['t6_courier']['stopped'].startswith('NOT CONFIRMED (stopped') and e['t6_courier']['other configured'].startswith('NOT CONFIRMED (not yet read')
+                  and e['t6_courier']['budgets listed'] == sorted([S.ROOT, OTHER]) and 'knows only the budgets it is configured for' in e['t6_courier']['note']),
+        'the courier makes one WATCHING statement for a budget, after its first whole pass, and not again; it is of form 2 with four lines, and the checker\'s rule takes it for the stand-in\'s chain':
+            holds(lambda: len(watching) == 1 and len(watching_logged) == 1 and w_ok and [c.get('state') for c in p73.get('coverage', [])] == []),
+        'with the real deployment: a record built before the courier has run, and one built while the mailbox is down, fail --require-delivery saying COURIER COVERAGE: NOT CONFIRMED; once the mailbox accepts the statement, the record carries it and passes, saying COURIER COVERAGE: CONFIRMED from the decision the statement names':
+            holds(lambda: cli0[0] == 1 and N(cli0[1])[-1].startswith('COURIER COVERAGE: NOT CONFIRMED') and cli1[0] == 1 and N(cli1[1])[-1].startswith('COURIER COVERAGE: NOT CONFIRMED')
+                  and cli2[0] == 0 and okc and N(cli2[1])[-1].startswith(f"COURIER COVERAGE: CONFIRMED from decision {cn.get('seq')}") and [d['notice'].get('seq') for d in log_w] == [cn.get('seq')]
+                  and (sc.get('coverage') or {}).get('state') == 'CONFIRMED' and isinstance(cn.get('seq'), int)),
+        'with the real deployment, the courier\'s status says NOT CONFIRMED (statement made, not yet accepted by the mailbox) while the mailbox is down and CONFIRMED from that decision after; a budget it is not configured for is not in its status, and a record of that budget fails --require-delivery saying COURIER COVERAGE: NOT CONFIRMED':
+            holds(lambda: b_of(st1, root).get('coverage', '').startswith('NOT CONFIRMED (statement made, not yet accepted by the mailbox') and b_of(st2, root).get('coverage', '').startswith('CONFIRMED')
+                  and b_of(st2, root)['coverage'].endswith(f"from decision {cn.get('seq')})") and root2 is not None and root2 not in st2['budgets'] and cli_other[0] == 1
+                  and N(cli_other[1])[-1].startswith('COURIER COVERAGE: NOT CONFIRMED')),
+        'a record whose coverage statement is missing, for another budget, without a receipt, with a receipt signed by another key, naming a decision not in its chain, signed by another courier key, or of Amendment 11\'s form, is NOT CONFIRMED and fails --require-delivery':
+            holds(lambda: len(judged6) == 7 and all(v == ('NOT CONFIRMED', 1) for v in judged6.values())),
+        # T7
+        'the courier\'s status tells a notice made and not yet accepted by the mailbox from one accepted (a signed receipt; not a person\'s acknowledgement), and the courier blocked (it cannot read the witness), in those words, with the stand-in and with the real deployment; the summary of a pass lists the blocked budget, and the notices waiting apart from those accepted':
+            holds(lambda: b_wait.get('notices made, not yet accepted by the mailbox') == 1 and b_wait.get("notices accepted by the mailbox (a signed receipt; not a person's acknowledgement)") == 0
+                  and b_acc.get('notices made, not yet accepted by the mailbox') == 0 and b_acc.get("notices accepted by the mailbox (a signed receipt; not a person's acknowledgement)") == 1
+                  and b_of(st1, root).get('notices made, not yet accepted by the mailbox') == 1 and b_of(st2, root).get("notices accepted by the mailbox (a signed receipt; not a person's acknowledgement)") == 1
+                  and b_of(st_b, root).get('courier', '').startswith('the courier is blocked: it cannot read the witness') and len(sum_b.get('blocked', [])) == 1
+                  and sum_b['blocked'][0]['state'] == 'the courier is blocked: it cannot read the witness'
+                  and [x.get('outcome') for x in c1[1]['waiting']] == ['FAIL'] and c1[1]['delivered'] == [] and [x.get('outcome') for x in c2[1]['delivered']] == ['FAIL']),
+        'the checker\'s NOTICES line says a notice is accepted by the mailbox (a signed receipt; not a person\'s acknowledgement); in the courier\'s status, the summaries of passes, the checker\'s notices and coverage lines, the three commands\' help and the notices\' words, none of the phrases this test lists for a person having read, seen or acknowledged something appears, except in saying that a receipt is not that':
+            holds(lambda: "have one accepted by the mailbox (a signed receipt; not a person's acknowledgement)" in N(cli2[1])[0] and all(e['t7_words'].values()) and len(e['t7_words']) == 6),
+        # T8
+        'a signed PASS whose own numbers miss its own stated limit gets one INCONSISTENT notice, once over two passes, accepted by the mailbox and not taken by the checker as the run\'s outcome; the run is marked done as a PASS always is; a PASS that meets its limit, one at the limit and one whose number is not a number get none':
+            holds(lambda: incs['as built'] == ['b-pass-bad'] and 'b-pass-bad' in t8['as built']['final'] and ('b-pass-bad', 'INCONSISTENT') in t8['as built']['held']
+                  and t8['as built']['checked'] == ['the notice is of a run that is not in this record'] and e['t8']['words'][0] == 'THE GATE SIGNED PASS, BUT THE NUMBERS IN THE SAME SIGNED RESULT DO NOT MEET ITS STATED LIMIT'),
+        'with the added check made to raise, to find for everything, or to return nothing, and with the whole added function made to raise or to return something that is not its notice, every notice made and accepted without it is still made and accepted, the same runs are marked done and unread, and no INCONSISTENT notice is made except, when it finds for everything, one for each PASS':
+            holds(lambda: all(same8.values()) and len(same8) == 7 and incs['without it'] == [] and incs['the check raises'] == [] and incs['the check returns nothing'] == []
+                  and incs['the check finds for everything'] == ['b-pass-bad', 'c-pass-ok', 'h-pass-text', 'i-pass-edge'] and incs['the whole added function raises'] == []
+                  and incs['the whole added function returns something that is not its notice'] == []
+                  and sorted(base8['made']) == sorted([('a-fail', 'FAIL'), ('d-unknown', 'UNKNOWN'), ('e-intent', 'NO_OUTCOME'), ('f-unread', 'UNREADABLE'), ('g-cut', 'INTERRUPTED'), ('j-unverified', 'UNVERIFIED')])),
+    }
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30}
 
 
 def main():
