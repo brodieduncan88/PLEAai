@@ -2995,14 +2995,14 @@ def r29():
         floor = 2 * 4 * per_run                                           # worked out here by itself: twice what four runs can keep open
         script = {'c.py': b"print('the check ran')"}                     # what it prints is the sign that it ran: it can write nothing outside its sandbox
 
-        def with_paths(**paths):
+        def with_paths(limits=None, **paths):
             """One run with the sandbox reading the machine from other files, and what it says of the machine then."""
             was = {k: getattr(sandbox, k) for k in paths}
             for k, v in paths.items():
                 setattr(sandbox, k, str(v))
             try:
-                o = sandbox.run(script, 'c.py', b'')
-                return [o.state, o.detail, o.stdout.decode(errors='replace').strip()], {n: (m, w) for n, m, w in sandbox.prerequisites()}
+                o = sandbox.run(script, 'c.py', b'', limits=limits)
+                return [o.state, o.detail, o.stdout.decode(errors='replace').strip()], {n: (m, w) for n, m, w in sandbox.prerequisites(limits)}
             except Exception as exc:
                 return [f'RAISED {type(exc).__name__}: {exc}'[:160], '', ''], {}
             finally:
@@ -3018,10 +3018,36 @@ def r29():
         at, at_said = with_paths(FILE_MAX_PATH=file('at', f'{floor}\n'))
         half, half_said = with_paths(MAP_COUNT_PATH=file('half-maps', f'{maps // 2}\n'), FILE_MAX_PATH=file('half-floor', f'{2 * 4 * sandbox.LIMITS["processes"] * (maps // 2 + sandbox.LIMITS["open_files"])}\n'))
         unread, unread_said = with_paths(MAP_COUNT_PATH=here / 'not-there')
+        no_table, no_table_said = with_paths(FILE_MAX_PATH=here / 'not-there')
+        words_table, words_table_said = with_paths(FILE_MAX_PATH=file('words', 'unlimited\n'))
+        twice = {'processes': 2 * sandbox.LIMITS['processes']}             # a run allowed twice the processes can keep twice the files open
+        more, more_said = with_paths(limits=twice, FILE_MAX_PATH=file('at-again', f'{floor}\n'))
+        more_at, more_at_said = with_paths(limits=twice, FILE_MAX_PATH=file('twice', f'{2 * 4 * twice["processes"] * (maps + sandbox.LIMITS["open_files"])}\n'))
         v2, v2_said = with_paths(SELF_CGROUP=file('cgroup-v2', '0::/user.slice/user-0.slice/session-1.scope\n'))
         no_freezer, no_freezer_said = with_paths(SELF_CGROUP=file('cgroup-no-freezer', ''.join(l + '\n' for l in open('/proc/self/cgroup').read().splitlines() if 'freezer' not in l)))
         no_spaces, no_spaces_said = with_paths(USERNS_PATH=file('no-userns', '0\n'))
-        nothing_ran = all(x[2] == '' for x in (below, unread, v2, no_freezer, no_spaces))
+        elsewhere, elsewhere_said = with_paths(SELF_CGROUP=file('cgroup-elsewhere', ''.join((l if ':freezer:' not in l else l.split(':', 2)[0] + ':freezer:/not-there-r29') + '\n' for l in open('/proc/self/cgroup').read().splitlines())))
+        nothing_ran = all(x[2] == '' for x in (below, unread, no_table, words_table, more, v2, no_freezer, no_spaces, elsewhere))
+        # the floor counts four runs at once: a fifth, while four are being made, is not made
+        slow = {'c.py': b"import time\ntime.sleep(4)\nprint('the check ran')"}; four = [None] * 4
+
+        def one(i):
+            try:
+                o = sandbox.run(slow, 'c.py', b'', timeout=20); four[i] = [o.state, o.stdout.decode(errors='replace').strip()]
+            except Exception as exc:
+                four[i] = [f'RAISED {type(exc).__name__}: {exc}'[:160], '']
+        t0 = time.time(); ths = [threading.Thread(target=one, args=(i,)) for i in range(4)]
+        for th in ths:
+            th.start()
+        time.sleep(1.5)
+        try:
+            o = sandbox.run(script, 'c.py', b'', timeout=1); fifth = [o.state, o.detail, o.stdout.decode(errors='replace').strip()]
+        except Exception as exc:
+            fifth = [f'RAISED {type(exc).__name__}: {exc}'[:160], '', '']
+        for th in ths:
+            th.join()
+        four_took = round(time.time() - t0, 2)
+        o = sandbox.run(script, 'c.py', b'', timeout=20); after_four = [o.state, o.detail, o.stdout.decode(errors='replace').strip()]
         small = file('small', '1644500\n')                                # the table this machine starts with
         cli_small = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'sandbox.py'), '--prerequisites'], capture_output=True, text=True, timeout=60, env=dict(os.environ, VERIFY_SANDBOX_FILE_MAX=str(small)))
         # a service on such a machine: the run is UNKNOWN, the check is not run, and the engineer is told
@@ -3053,26 +3079,31 @@ def r29():
             held_run = [f'RAISED {type(exc).__name__}: {exc}'[:160], None, '']
         stop[0] = True; th.join(); time.sleep(1.0); left = open_now()
         e.update(maps=maps, table=table, per_run=per_run, floor=floor, floor_said=sandbox.file_table_floor(), as_is=[(n, m) for n, m, _ in as_is], cli=(cli.returncode, cli.stdout.strip().splitlines()[-1:]),
-                 below=below, at=at, half=half, unread=unread, v2=v2, no_freezer=no_freezer, no_spaces=no_spaces, nothing_ran=nothing_ran,
+                 below=below, at=at, half=half, more=more, more_at=more_at, unread=unread, no_table=no_table, words_table=words_table, elsewhere=elsewhere, four=four, fifth=fifth, four_took=four_took, after_four=after_four, runs_at_once=sandbox.RUNS_AT_ONCE, v2=v2, no_freezer=no_freezer, no_spaces=no_spaces, nothing_ran=nothing_ran,
                  cli_small=(cli_small.returncode, [l for l in cli_small.stdout.splitlines() if l.startswith('NOT MET')]), refused=(refused[0], head(refused[1])), notices=(before, after),
                  again=again[0], runs=runs, record_verifies=ok, why=why, held_run=held_run, files_before=base, files_peak=peak[0], held=peak[0] - base, files_after=left)
         unmet = lambda said: sorted(n for n, (m, _) in said.items() if not m)
         checks = {'as this machine is set up for the runs, every one of the five is met, and the command an operator gives says so and ends with status 0':
                       [n for n, _ in e['as_is']] == ['root', 'x86-64', 'control groups', 'user namespaces', 'file table'] and all(m for _, m in e['as_is'])
                       and cli.returncode == 0 and 'can run checks' in cli.stdout and cli.stdout.count('met    ') == 5 and 'NOT MET' not in cli.stdout,
-                  'the file table must hold twice what four runs can keep open, worked out from the machine\'s own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings, half the table is enough':
+                  'the file table must hold twice what four runs can keep open, worked out from the machine\'s own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings, half the table is enough; a run allowed twice the processes needs twice the table':
                       e['floor_said'] == floor and below[0] == 'SANDBOX_UNAVAILABLE' and str(floor - 1) in below[1] and str(floor) in below[1] and 'file table' in below[1] and below[2] == ''
-                      and unmet(below_said) == ['file table'] and at == ['RAN', '', 'the check ran'] and unmet(at_said) == [] and half == ['RAN', '', 'the check ran'] and unmet(half_said) == [],
-                  'where the machine\'s limit on mappings cannot be read, the floor cannot be worked out, and the check is not run':
-                      unread[0] == 'SANDBOX_UNAVAILABLE' and 'cannot be read' in unread[1] and unmet(unread_said) == ['file table'],
-                  'a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing; one that allows no user namespaces is told so; and on none of them is the check run':
+                      and unmet(below_said) == ['file table'] and at == ['RAN', '', 'the check ran'] and unmet(at_said) == [] and half == ['RAN', '', 'the check ran'] and unmet(half_said) == []
+                      and more[0] == 'SANDBOX_UNAVAILABLE' and 'file table' in more[1] and unmet(more_said) == ['file table'] and more_at == ['RAN', '', 'the check ran'] and unmet(more_at_said) == [],
+                  'where the machine\'s limit on mappings, or its file table, cannot be read as a number, it cannot be shown that the table is large enough, and the check is not run':
+                      all(x[0] == 'SANDBOX_UNAVAILABLE' and 'cannot be read' in x[1] and unmet(said) == ['file table'] for x, said in ((unread, unread_said), (no_table, no_table_said), (words_table, words_table_said))),
+                  'a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so; and on none of them is the check run':
                       v2[0] == 'SANDBOX_UNAVAILABLE' and 'cgroup v2 only' in v2[1] and unmet(v2_said) == ['control groups']
                       and no_freezer[0] == 'SANDBOX_UNAVAILABLE' and 'freezer' in no_freezer[1] and 'cgroup v2 only' not in no_freezer[1] and unmet(no_freezer_said) == ['control groups']
+                      and elsewhere[0] == 'SANDBOX_UNAVAILABLE' and 'freezer' in elsewhere[1] and 'is not under' in elsewhere[1] and unmet(elsewhere_said) == ['control groups']
                       and no_spaces[0] == 'SANDBOX_UNAVAILABLE' and 'user namespaces' in no_spaces[1] and unmet(no_spaces_said) == ['user namespaces'] and nothing_ran,
                   'with the file table this machine starts with (1,644,500), the operator\'s command says the file table is NOT MET and ends with status 1; a service there answers UNKNOWN, says the check was not run and why, and sends the engineer the notice; started again on the machine as set up, it runs checks':
                       cli_small.returncode == 1 and len(e['cli_small'][1]) == 1 and 'file table' in e['cli_small'][1][0] and '1644500' in e['cli_small'][1][0] and 'cannot run checks' in cli_small.stdout
                       and refused[0] == 3 and head(refused[1]).startswith('UNKNOWN') and any(x[0] == 'UNKNOWN' and 'the check was not run' in x[2] and 'file table' in x[2] for x in runs)
                       and after == before + 1 and again[0] == 2 and ok,
+                  'the floor counts four runs at once, and no more are made: four runs of four seconds are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made':
+                      e['runs_at_once'] == 4 and all(x == ['RAN', 'the check ran'] for x in four) and four_took < 12 and fifth == ['SANDBOX_UNAVAILABLE', 'too many checks are running at once', '']
+                      and after_four == ['RAN', '', 'the check ran'],
                   'the measurement the floor rests on: one run that keeps open every file it can keeps more than a million, fewer than its processes times the mappings each may have, and none after it has ended':
                       1_000_000 < e['held'] < per_run and held_run[0] in ('RAN', 'TIMEOUT') and e['files_after'] < base + 2000}
     finally:
