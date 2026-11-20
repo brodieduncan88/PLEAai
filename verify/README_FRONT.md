@@ -97,6 +97,13 @@ of two notices with no clock, makes its case through the front door by two jobs 
 was made; a case not made is a failure to test, never a pass. It also restates R28, in the gate's suite, after a review.
 `DECLARED_AMEND14.md` has the list, the open items, and a correction to what Amendment 12's amendment says of F17.
 
+**Third note of 20 November 2026.** `AMENDMENT_15_2026-11-20.md` changes what the sandbox asks of the machine. Its file table
+need not be 2^40: it must hold twice what four runs can keep open, a number worked out from the machine's own limits
+(33,617,920 on the machine of the tests). Four runs at once is now counted for the machine, not for each process. What the
+machine must give is looked at before every run, and `python3 verify/sandbox.py --prerequisites` says it to an operator. A
+machine started again with a smaller table runs no check, answers UNKNOWN, and says why. The front door itself is
+unchanged. `DECLARED_AMEND15.md` has the list, and the open items.
+
 ## The pieces
 
 | file | what it does |
