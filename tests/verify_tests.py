@@ -3727,6 +3727,7 @@ def r30():
                        'counted': (due_n, ten_n), 'G9': g9, 'G10': g10}
 
     # ---------------------------------------------------------------- fourth form (H1 to H10)
+    import io as _io_m
     LS, NEL, LE, DEG, EMD = chr(0x2028), chr(0x85), chr(0x2264), chr(0xb0), chr(0x2014)
     esc = lambda cp: '\\' + 'u%04x' % cp
     old_deadline = courier.DEADLINE
@@ -3750,7 +3751,7 @@ def r30():
         att.append(['a-inflight', 'verify:a', 'CONSUMED', 'na', True, True]); wl.decide(att, ('X', 'a-inflight'))
         step(wl.run, t0); wl.effect(att, 'b-fail', S.FAIL)
         sl = step(wl.run, t0 - 2000)
-        h2 = (made(sl), sl.get('clock_set_back') if isinstance(sl, dict) else sl, sl.get('own_state') if isinstance(sl, dict) else sl,
+        h2c = (made(sl), sl.get('clock_set_back') if isinstance(sl, dict) else sl, sl.get('own_state') if isinstance(sl, dict) else sl,
               max(v['at'] for v in wl.state().get('asked', {}).values()) if wl.state().get('asked') else None)
         # H3 (exp_n): one notice whose delivery fails as a transport fails holds back no other
         h3 = {}
@@ -3808,8 +3809,29 @@ def r30():
         finally:
             urllib.request.urlopen, courier._context = saved_open, saved_ctx
         timeout_held = (seen_timeouts[:1], round(took_u, 2), str(got_u)[:60])
+        # Gb: with the pass's time spent before tier B is reached, one run of tier B is still asked for
+        courier.DEADLINE = 1.0
+        wg2 = S.World(name='courier-t1'); att = []
+        for i in range(3):
+            att.append([f'b-{i}', f'verify:b{i}', 'CONSUMED', f'nb{i}', True, True]); wg2.decide(att, ('X', f'b-{i}'))
+        step(wg2.run, t0)
+        wg2.cfg['pass_seconds'] = 0.0; m0 = len(wg2.asked); step(wg2.run, t0 + 10)
+        b_turns = sorted(x[2] for x in wg2.asked[m0:] if x[1] == '/run')
     finally:
         courier.DEADLINE = old_deadline
+    # Gm: the deadline passing while an error's body is read is raised as the deadline, not taken as an empty refusal
+    class Drip2(_io_m.RawIOBase):
+        def readable(self):
+            return True
+        def readinto(self, buf):
+            time.sleep(0.2); buf[0:1] = b' '; return 1
+    saved_open2, saved_ctx2 = urllib.request.urlopen, courier._context
+    try:
+        urllib.request.urlopen = lambda req, timeout=None, context=None: (_ for _ in ()).throw(urllib.error.HTTPError(req.full_url, 500, 'x', {}, _io_m.BufferedReader(Drip2(), 1)))
+        courier._context = lambda *a: None
+        in_error_body = step(courier._https, 'GET', 'https://w/run?aid=x', {'ca': '', 'cert': '', 'key': ''}, None, 15.0, {'until': time.monotonic() + 0.6})
+    finally:
+        urllib.request.urlopen, courier._context = saved_open2, saved_ctx2
     # the close is not made in the caller's thread: an answer whose read never returns until it is let go
     import io as _io3
     let_go = threading.Event()
@@ -3856,7 +3878,7 @@ def r30():
                    '  "The housing shall stay at or below 85 ' + esc(0xb0) + 'C ' + esc(0x2014) + ' measured at the hottest point."',
                    '  baselined 2026-11-01T00:00:00Z by "Jos' + esc(0xe9) + ' N' + esc(0xfa) + esc(0xf1) + 'ez".  Baseline 0000000000000000',
                    '  limit: temperature at most 85 "' + esc(0xb0) + 'C"']
-    e['fourth form'] = {'H1': h1, 'H2': h2, 'H3': h3, 'H4': h4, 'H5': h5, 'H7': [t_[:240] for t_ in h7], 'H10': h10, 'timeout': timeout_held, 'caller took': round(caller_took, 2),
+    e['fourth form'] = {'Gb': b_turns, 'Gm': str(in_error_body)[:100], 'H1': h1, 'H2': h2c, 'H3': h3, 'H4': h4, 'H5': h5, 'H7': [t_[:240] for t_ in h7], 'H10': h10, 'timeout': timeout_held, 'caller took': round(caller_took, 2),
                         'state rules': state_rules, 'state good': state_good, 'forged after ok': forged_ok, 'honest lines': honest_lines}
 
     # ---------------------------------------------------------------- T4, T6 and T7 with the real deployment
@@ -4145,10 +4167,14 @@ def r30():
         'resume clears the courier\'s coverage and the runs after which the witness stopped answering: the status says NOT CONFIRMED and lists none until a whole pass has been made again, and then CONFIRMED':
             holds(lambda: g10[0] == 'CONFIRMED (th' and g10[1] and g10[2].startswith('NOT CONFIRMED (not yet read') and g10[3] == [] and g10[4] == [] and g10[5] == 'CONFIRMED'),
         # fourth form
+        'with the pass\'s time spent before any run asked for before is reached, one of them is still asked for in the pass, and only one':
+            holds(lambda: len(b_turns) == 1),
+        'the deadline passing while the body of an error answer is being read is raised as the deadline, not taken as an answer with nothing in it':
+            holds(lambda: isinstance(in_error_body, tuple) and in_error_body[0] == 'RAISED' and 'did not answer within' in in_error_body[1]),
         'a run first seen in flight, among a dozen runs that are never done and a new slow run, gets its FAIL notice in the pass in which the chain first says it':
             holds(lambda: ('x-run', 'FAIL') in h1[0]),
         'when the clock is set back two thousand seconds, nothing of the courier\'s own state is refused, the times in it later than now are set back and the summary says how many, and a new failure is noticed in that pass':
-            holds(lambda: h2[0] == [('b-fail', 'FAIL')] and h2[1] and h2[1][0].get('times', 0) >= 1 and h2[2] == [] and h2[3] <= t0 - 2000),
+            holds(lambda: h2c[0] == [('b-fail', 'FAIL')] and h2c[1] and h2c[1][0].get('times', 0) >= 1 and h2c[2] == [] and h2c[3] <= t0 - 2000),
         'a notice whose delivery drops the connection, or gets an answer that is not JSON, while the mailbox answers for other notices, holds back no other: a failure made later is delivered in that pass, the first stays waiting, and the status lists it as could not be delivered while the mailbox answers for other notices':
             holds(lambda: all(v[0] and v[1] and v[2] == ['a-poison'] and v[3] == [('"a-poison"', 'could not be delivered: the mailbox answers for other notices')] for v in h3.values()) and len(h3) == 2),
         'a run read cleanly since the witness stopped answering after it, when it is put off, gets no UNREADABLE notice and is listed as put off for want of time only':
