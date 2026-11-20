@@ -762,28 +762,60 @@ def _clashing_pairs(n: int) -> list:
 
 
 def f17():
-    """Two failures whose notices would once have had the same file name both reach the engineer: a notice is never written over another."""
+    """Two failures whose notices would have the same file name both reach the engineer: a notice is never written over another.
+    Restated by Amendment 14.  Before, the case was made by timing alone, two runs in a row ending within one second, and when
+    it was not made the test failed without having tested anything.  Now the naming is shown with no clock at all; and the
+    case is made through the service by two jobs sending at the same moment, and the test says for itself whether it was
+    made: COLLISION_HANDLED, COLLISION_MISHANDLED, or PRECONDITION_NOT_MET, which is a failure to test and never a pass."""
     r = Run('F17'); e = {}
     try:
-        tried, clash = [], None
-        for a, b in _clashing_pairs(6):
-            time.sleep(1.03 - time.time() % 1)                                           # begin just after a second starts, so that both runs fall inside it
-            ra = raw(r.job, 'POST', '/submit', json.dumps({'design': a}).encode()); rb = raw(r.job, 'POST', '/submit', json.dumps({'design': b}).encode())
-            names = [x.get('notice') for x in r.s.ledger('verdict')][-2:]
-            stems = ['_'.join(str(n)[:-4].split('_')[:3]) for n in names]              # time to the second, verdict, first eight digits of the design hash
-            tried.append((ra[1].get('outcome'), rb[1].get('outcome'), names, stems[0] == stems[-1]))
-            if len(names) == 2 and stems[0] == stems[1]:
-                clash = (a, b, names); break
+        stem_of = lambda n: '_'.join(str(n)[:-4].split('_')[:3])                              # time to the second, verdict, first eight digits of the design hash
+        # with no clock: two notices delivered under one name, by the call the gate's tool makes for every notice
+        scratch = OUT / 'F17' / 'no-clock'; held = '0' * 64; one = '20261120T000000Z_FAIL_ff539c34'
+        __import__('shutil').rmtree(scratch, ignore_errors=True)                               # nothing of an earlier run is there
+        wrote = [service_notices.deliver(scratch, held, one, lambda engineer, i=i: f'the notice of design {i}\n' + 'x' * 300) for i in (1, 2)]
+        there = sorted(str(q.relative_to(scratch)) for q in scratch.rglob('*') if q.is_file())
+        folder = next((q.parent for q in scratch.rglob(one + '.txt')), scratch)
+        own = [(folder / n).read_text().startswith(f'the notice of design {i}\n') if n and (folder / n).is_file() else False for i, (_, n) in zip((1, 2), wrote)]
+        # through the service: two jobs on the one baseline, each sending one of two designs whose hashes begin alike, at the same moment
         box = r.s.home / 'inbox' / r.h[:16]
-        files = sorted(p.name for p in box.glob('*.txt')) if box.exists() else []
-        a, b, names = clash or ({}, {}, [])
-        texts = [(box / n).read_text() if n and (box / n).exists() else '' for n in names]
+        jobs = {'a': r.job, 'b': r.s.enrol('job-b', r.h)}                                     # one job has one design verified at a time; a second is refused IN_PROGRESS
+        tried, result, made = [], 'PRECONDITION_NOT_MET', None
+        for a, b in _clashing_pairs(6):
+            time.sleep(1.03 - time.time() % 1)                                               # both begin early in a second; each takes about half of one
+            before = len(r.s.ledger('verdict')); got = {}
+            threads = [threading.Thread(target=lambda k=k, d=d: got.update({k: raw(jobs[k], 'POST', '/submit', json.dumps({'design': d}).encode())})) for k, d in (('a', a), ('b', b))]
+            for th in threads:
+                th.start()
+            for th in threads:
+                th.join()
+            entries = r.s.ledger('verdict')[before:]
+            names = [x.get('notice') for x in entries]
+            designs = [next((d for d in (a, b) if B.design_hash(d) == x.get('design_sha256')), None) for x in entries]
+            outcomes = [(got.get(k) or (None, {}))[1].get('outcome') if isinstance((got.get(k) or (None, {}))[1], dict) else None for k in ('a', 'b')]
+            met = len(names) == 2 and all(names) and stem_of(names[0]) == stem_of(names[1])
+            tried.append({'outcomes': outcomes, 'names': names, 'precondition_met': met})
+            if met:                                                                           # the case is made: now, and only now, the property is judged
+                texts = [(box / n).read_text() if (box / n).is_file() else '' for n in names]
+                made = {'pair': (a, b), 'names': names, 'distinct': len(set(names)) == 2, 'two_designs': None not in designs and designs[0] != designs[1],
+                        'own_text': [d is not None and f"wall_mm = {d.get('wall_mm')}" in x for d, x in zip(designs, texts)], 'sizes': [len(x) for x in texts],
+                        'same_hash_start': B.design_hash(a)[:8] == B.design_hash(b)[:8], 'both_failed': outcomes == ['FAIL', 'FAIL']}
+                good = made['distinct'] and made['two_designs'] and made['own_text'] == [True, True] and all(n > 200 for n in made['sizes'])
+                result = 'COLLISION_HANDLED' if good else 'COLLISION_MISHANDLED'
+                break
+        files = sorted(q.name for q in box.glob('*.txt')) if box.exists() else []
+        failures = sum(1 for row in tried for o in row['outcomes'] if o == 'FAIL')
         ok, why, s = r.checked()
-        e.update(tried=tried, pair=(a, b), same_hash_start=bool(clash) and B.design_hash(a)[:8] == B.design_hash(b)[:8], names=names, files=len(files), failures=2 * len(tried),
-                 own_text=[f"wall_mm = {d.get('wall_mm')}" in t for d, t in zip((a, b), texts)], sizes=[len(t) for t in texts], record_verifies=ok, why=why, not_met=s.get('not_met'), status=s.get('status'))
-        checks = {'two designs inside the design space whose hashes begin with the same eight digits both fail in the same second': bool(clash) and e['same_hash_start'] and all(x[0] == x[1] == 'FAIL' for x in tried),
-                  'each has its own notice: two files with different names, neither empty, each naming its own design': bool(clash) and len(set(names)) == 2 and e['own_text'] == [True, True] and all(n > 200 for n in e['sizes']),
-                  'the inbox holds one notice for every failure, and the record verifies with all of them': e['files'] == e['failures'] and ok and s.get('not_met') == e['failures'] and s.get('status') == 'NOT VERIFIED'}
+        e.update(no_clock=dict(wrote=wrote, files=there, own_text=own), result=result, tried=tried, made=made, files=len(files), failures=failures, record_verifies=ok, why=why,
+                 not_met=s.get('not_met'), status=s.get('status'))
+        checks = {'with no clock: two notices delivered under one name are two files, the second numbered, each with its own text, and nothing else is left':
+                      [n for _, n in wrote] == [one + '.txt', one + '_2.txt'] and wrote[0][0] == wrote[1][0] and own == [True, True] and len(there) == 2,
+                  'through the service the case was made: two designs whose hashes begin with the same eight digits, sent at the same moment by two jobs on the one baseline, both failed, with their notices named for the same second (a case not made is PRECONDITION_NOT_MET: a failure to test, never a pass)':
+                      result != 'PRECONDITION_NOT_MET' and made is not None and made['same_hash_start'] and made['both_failed'],
+                  'and it was handled: each failure has its own notice, two files with different names, neither empty, each naming its own design':
+                      result == 'COLLISION_HANDLED',
+                  'the inbox holds one notice for every failure, and the record verifies with all of them':
+                      e['files'] == failures and failures >= 2 and ok and s.get('not_met') == failures and s.get('status') == 'NOT VERIFIED'}
     finally:
         r.stop()
     return checks, e
