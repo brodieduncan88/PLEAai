@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The responsible engineer's mailbox: it takes notices from a courier and signs a receipt for each (Amendment 11).
+"""A mailbox for the responsible engineer: it takes notices from a courier and signs a receipt for each (Amendment 11).
 
     mailbox_service.py keygen KEYFILE                                  write a new mailbox key; print its public half
     mailbox_service.py serve --port P --dir DIR --key-file KEYFILE --name NAME --courier-key HEX [--courier-key HEX ...]
@@ -12,15 +12,19 @@ POST /deliver  a notice, as a courier signed it (verify/courier.py), at most 64 
                400 not a notice   403 the client is not admitted, or the notice is not signed by a courier key given
 GET  /pubkey   {"public_key": HEX, "name": NAME}
 
-The mailbox is the engineer's, not the verification service's: it runs under the engineer's account, with its own key and
-its own folder, and it never reads the service.  It keeps each notice it takes in DIR/notices/, as DIR/notices/DIGEST.json
-(the notice and the receipt) and a readable DIR/notices/DIGEST.txt, written whole and synced before the receipt is sent.  A
-notice delivered again is answered with the receipt first given, and is not kept twice.
+The mailbox is meant to be the engineer's, not the verification service's: to run under an account and on a machine the
+engineer controls, with a key the engineer made, and its own folder.  In the demonstration it is none of these: it runs
+under the same account as the service, on the same machine, and its key is made by the deployment code (deploy.py).  It
+never reads the service.  It keeps each notice it takes in DIR/notices/, as DIR/notices/DIGEST.json (the notice and the
+receipt) and a readable DIR/notices/DIGEST.txt, written whole and synced before the receipt is sent.  A notice delivered
+again is answered with the receipt first given, and is not kept twice.  It takes notices of both forms: Amendment 11's,
+and form 2 (Amendment 16), whose words show everything the service chose as data, in quotation marks.
 
-What a receipt shows.  That this mailbox, holding this key, had stored this exact notice, signed by a courier key the
-engineer gave it, at the time it states by its own clock.  It does not show that the engineer read the notice; the
-engineer's signed acknowledgement of a run does (verify_ctl.py acknowledge).  The mailbox is as independent of the service
-as the account and machine it runs on: in the demonstration that is the same machine as everything else.
+What a receipt shows.  That this mailbox process, holding this key, had stored this exact notice, signed by a courier key it
+was started with, at the time it states by its own clock.  It is not a person's acknowledgement: it does not show that the
+engineer, or anyone, read the notice.  (The engineer's signed disposition of a run, verify_ctl.py acknowledge, is a separate
+thing, signed with the engineer's own key.)  The mailbox is as independent of the service as the account and machine it
+runs on, and the key it holds: in the demonstration, the same as everything else.
 
 It speaks only HTTPS with a client certificate issued by --tls-ca; --tls-allow limits which client names it admits.  Each
 connection is handled in its own thread, handshake included, and let go after 15 seconds of silence.  A notice's signature
@@ -84,8 +88,20 @@ def _write_whole(path: pathlib.Path, data: str) -> None:
 
 
 def plain(text: str) -> str:
-    """A notice's words as a person reads them: no control characters but line ends."""
-    return ''.join(ch if ch == '\n' or (ch >= ' ' and ch != '\x7f') else '?' for ch in text)
+    """A notice's words as a person reads them: its lines as they are, and every other character outside printable ASCII
+    (control and format characters among them) written as \\uXXXX or \\UXXXXXXXX.  The words of a notice of form 2
+    (Amendment 16) are printable ASCII on their lines already, so they are kept exactly."""
+    return ''.join(ch if ch == '\n' or 0x20 <= ord(ch) <= 0x7e else ('\\u%04x' % ord(ch) if ord(ch) <= 0xffff else '\\U%08x' % ord(ch)) for ch in str(text))
+
+
+def readable(notice: dict) -> str:
+    """The readable copy kept beside a notice.  A notice of Amendment 11's form puts a run's name, and what the service
+    chose, into its lines as they are, so its copy is opened with a line that says so."""
+    words = plain(notice.get('text', ''))
+    if C.notice_form(notice) == 1:
+        words = ('(A notice of the first form, Amendment 11: its lines may hold words the service chose, a run\'s name among them, '
+                 'which are not marked as the service\'s.)\n' + words)
+    return words + '\n'
 
 
 class Mailbox:
@@ -110,7 +126,7 @@ class Mailbox:
             body = {'statement': 'DELIVERED', 'notice': digest, 'root': notice['root'], 'aid': notice['aid'], 'outcome': notice['outcome'],
                     'mailbox': self.name, 'time': now()}
             receipt = dict(body, signer=self.key.public_hex, signature=self.key.sign(C.canonical({k: body[k] for k in C.RECEIPT_FIELDS}).encode()))
-            _write_whole(self.dir / f'{digest}.txt', plain(notice['text']) + '\n')
+            _write_whole(self.dir / f'{digest}.txt', readable(notice))
             _write_whole(kept, json.dumps({'notice': notice, 'receipt': receipt}, sort_keys=True) + '\n')
         return 200, receipt
 
@@ -189,7 +205,7 @@ def serve(a) -> None:
 
 
 def main():
-    ap = argparse.ArgumentParser(description='The responsible engineer\'s mailbox for notices from a courier (Amendment 11).')
+    ap = argparse.ArgumentParser(description='A mailbox for the responsible engineer, for notices from a courier (Amendment 11).  A receipt it signs says it holds a notice; it is not a person\'s acknowledgement.')
     ap.add_argument('action', choices=['keygen', 'serve', 'list']); ap.add_argument('path', nargs='?')
     ap.add_argument('--port', type=int); ap.add_argument('--bind', default='127.0.0.1'); ap.add_argument('--dir'); ap.add_argument('--key-file')
     ap.add_argument('--name', default='mailbox'); ap.add_argument('--courier-key', action='append', default=[])
@@ -206,7 +222,7 @@ def main():
             ap.error('list DIR')
         for item in Mailbox.held(type('B', (), {'dir': pathlib.Path(a.path) / 'notices'})()):
             n, r = item.get('notice') or {}, item.get('receipt') or {}
-            print(f"{r.get('time')}  {n.get('outcome', ''):<12} {n.get('aid')}  {n.get('root')}")
+            print(f"{C.shown(r.get('time'), 40)}  {C.shown(n.get('outcome', ''), 20):<16} {C.shown(n.get('aid'), 80)}  {C.shown(n.get('root'), 200)}")   # Amendment 16: what a notice names is shown as data
         return
     if not (a.port and a.dir and a.key_file and a.courier_key and a.tls_cert and a.tls_key and a.tls_ca):
         ap.error('serve needs --port, --dir, --key-file, at least one --courier-key, and --tls-cert, --tls-key and --tls-ca')

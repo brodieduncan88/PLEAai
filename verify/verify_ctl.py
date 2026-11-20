@@ -239,7 +239,7 @@ def witness_checkpointer(witness_url: str, ca: str, cert: str | None, key_file: 
 def record(home, baseline_hash, key: Key, witness_key, gate_key, journals=(), local_dsn: str = LOCAL_DSN, checkpointer=None, deliveries=None) -> dict:
     """The verification record.  checkpointer (witness_checkpointer) puts the witness's checkpoint into it (Amendment 10); without
     one the record has none, as before, and its checker says so.  deliveries ({'log': a courier's deliveries.jsonl, 'courier':
-    [hex], 'mailbox': [hex]}) puts the notices delivered to the engineer's mailbox into it, with their receipts (Amendment 11)."""
+    [hex], 'mailbox': [hex]}) puts the notices a mailbox accepted into it, with their signed receipts (Amendment 11; a receipt is not a person's acknowledgement), and the courier's statement that it watches the budget (Amendment 16)."""
     env = load_envelope(pathlib.Path(home) / 'baselines' / baseline_hash / 'baseline.json', key.public_hex)
     given = None
     if deliveries is not None:

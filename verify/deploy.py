@@ -2,8 +2,8 @@
 
 Services(directory) makes a fresh deployment under `directory`: a certificate authority, new witness and gate keys,
 the responsible engineer's key, and VERIFY_HOME.  start() runs the witness service (v1.2.1 with the readings of
-verification Amendments 10 and 11), the v1.2.1 gate host, unchanged, and the engineer's mailbox (Amendment 11), under
-mutual TLS, with the gate host loading verify_tools.  courier() runs one pass of the courier (Amendment 11), which reads
+verification Amendments 10 and 11), the v1.2.1 gate host, unchanged, and a mailbox standing in for the engineer's
+(Amendment 11), under mutual TLS, with the gate host loading verify_tools.  courier() runs one pass of the courier (Amendment 11), which reads
 only the witness and delivers to the mailbox.  client_config() writes what an assistant's workspace
 needs to call verify_client.py: the gateway database credential, the client certificate, the public keys and a copy
 of the signed baseline.
@@ -11,7 +11,9 @@ of the signed baseline.
 What one machine does not show.  Here the gate, the witness, the database, the engineer's key and the assistant all
 run under one operating-system account, so the separation between them is by process and credential, not by machine.
 An assistant with a shell on this machine could read the keys.  A real deployment puts everything in `home`, the
-keys and the control credential on a machine the assistant cannot reach.
+keys and the control credential on a machine the assistant cannot reach.  The same is so of the courier and the mailbox:
+here this code makes their keys, writes them to files in the deployment's folder, and starts them under the same account,
+so the mailbox is the engineer's in name only.  Its receipts show what the mailbox process stored, not that anyone read it.
 """
 import json
 import os
@@ -53,7 +55,7 @@ class Services:
         self.witness, self.gate = Signer(), GateSigner()
         self.engineer = verify_ctl.keygen(self.dir / 'engineer.key')
         import mailbox_service
-        self.courier_key, self.mailbox_key = mailbox_service.MailboxKey(), mailbox_service.MailboxKey()      # the courier's and the engineer's mailbox's (Amendment 11)
+        self.courier_key, self.mailbox_key = mailbox_service.MailboxKey(), mailbox_service.MailboxKey()      # the courier's and the mailbox's (Amendment 11), made here by the deployment
         (self.dir / 'courier.key').write_text(self.courier_key.private_hex + '\n'); (self.dir / 'mailbox.key').write_text(self.mailbox_key.private_hex + '\n')
         self.keys = {'witness': self.witness.public_hex, 'gate': self.gate.public_hex, 'engineer': self.engineer.public_hex,
                      'courier': [self.courier_key.public_hex], 'mailbox': [self.mailbox_key.public_hex]}
@@ -101,7 +103,8 @@ class Services:
         return code
 
     def start_mailbox(self) -> None:
-        """The engineer's mailbox (Amendment 11): its own key and folder, outside the service's home; it admits the courier only."""
+        """The mailbox (Amendment 11): a key and folder of its own, outside the service's home; it admits the courier only.  In
+        the demonstration its key is made by this deployment and it runs under the service's account (see the module's note)."""
         cmd = [PY, '-B', str(HERE / 'mailbox_service.py'), 'serve', '--port', str(self.ports['mailbox']), '--dir', str(self.dir / 'mailbox'),
                '--key-file', str(self.dir / 'mailbox.key'), '--name', 'engineer-mailbox', '--courier-key', self.keys['courier'][0],
                '--tls-cert', self.pki['mailbox'][0], '--tls-key', self.pki['mailbox'][1], '--tls-ca', self.pki['ca'], '--tls-allow', 'courier']
@@ -153,7 +156,7 @@ class Services:
 
     def courier_config(self, roots, stall_after: float = 900, name: str = 'courier', page: int = 200) -> pathlib.Path:
         """The courier's configuration (Amendment 11): the witness's readings with the courier's certificate, the keys it believes,
-        and one watch for each budget, delivering to the engineer's mailbox.  Nothing in it names the service's home or database."""
+        and one watch for each budget, delivering to the mailbox.  Nothing in it names the service's home or database."""
         cfg = {'name': name, 'key_file': str(self.dir / 'courier.key'), 'state_dir': str(self.dir / name), 'stall_after': stall_after, 'page': page,
                'witness_url': f'https://127.0.0.1:{self.ports["witness"]}', 'ca': self.pki['ca'], 'cert': self.pki['courier'][0], 'key': self.pki['courier'][1],
                'witness_keys': [self.keys['witness']], 'gate_keys': [self.keys['gate']],

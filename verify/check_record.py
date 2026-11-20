@@ -30,12 +30,20 @@ network or database.  It recomputes every hash, checks every signature and re-do
  10  the notices delivered, if the record carries any (Amendment 11): each notice is signed by the courier's key, names a
      decision of this record's chain with its hash, and says what this record's chain, gate reports and verdict say of
      that run at that decision: its outcome, the digest of its verdict, the reason code and detail it quotes, and its
-     words, which are made again here and compared; each receipt is signed by the engineer's mailbox key and names that notice.  With keys given
+     words, which are made again here and compared; each receipt is signed by a mailbox key given and names that notice.  With keys given
      separately but none for the courier and the mailbox, the notices are not checked, and the record is judged without them.
+     Since Amendment 16 a notice may be of form 2 (it signs a field `form`: 2), whose words show everything the service chose
+     as data, in quotation marks; a notice without `form` is checked by Amendment 11's rule, unchanged.  The record may also
+     carry the courier's statement that it watches this budget (WATCHING), with a receipt; it is checked here (courier key,
+     receipt, this budget, a decision and head of this chain, its words).  The courier's own notices that it could not read a
+     run (UNREADABLE) or that a signed PASS misses its own numbers (INCONSISTENT) are never taken as a run's outcome.
 
 It then says which runs that call for a notice to the engineer (FAIL, UNKNOWN, INTERRUPTED; and INVALID or REFUNDED,
-which must never happen) have a notice delivered, with the mailbox's signed receipt, and which have none.  A record built
-before a notice was delivered has none for it.  --require-delivery makes the exit status 1 unless every such run has one.
+which must never happen) have a notice accepted by the mailbox, with its signed receipt, and which have none.  A receipt
+says the mailbox process, holding the key given, stored the notice; it is not a person's acknowledgement, and nothing here
+shows that anyone read a notice.  A record built before a notice was accepted has none for it.  It says whether the
+courier's coverage of the budget is CONFIRMED (from the decision its statement names) or NOT CONFIRMED, and why.
+--require-delivery makes the exit status 1 unless every such run has one and coverage is CONFIRMED.
 
 With --checkpoint FILE it also says whether the record is current (Amendment 10).  The file is a checkpoint the witness
 signed, obtained separately from the record: from the witness, or from someone who keeps the witness's checkpoints.  The
@@ -62,6 +70,7 @@ import calendar
 import decimal
 import hashlib
 import json
+import re
 import sys
 import time
 
@@ -79,7 +88,12 @@ NOTICE_FIELDS = ('statement', 'root', 'aid', 'request_key', 'outcome', 'reason_c
 RECEIPT_FIELDS = ('statement', 'notice', 'root', 'aid', 'outcome', 'mailbox', 'time')
 RUN_NOTICES = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INDETERMINATE', 'INVALID', 'REFUNDED', 'UNVERIFIED', 'NO_OUTCOME')   # a courier's notices of a run (Amendment 11)
 ALARMS = ('COURIER_STOPPED', 'COURIER_BLOCKED')                                         # a courier's notices about itself: of no run, never in a record
+COURIER_OWN = ('UNREADABLE', 'INCONSISTENT')        # Amendment 16: the courier's own judgement of one run; delivered, but never taken as that run's outcome
+WATCHING = 'WATCHING'                               # Amendment 16: the courier's statement that it has begun to watch a budget (coverage)
+NOT_OF_A_RUN = ALARMS + COURIER_OWN + (WATCHING,)   # check 10 never takes these as a notice of a run's outcome; a run with only these has no notice delivered
 NOTICE_OUTCOMES = RUN_NOTICES + ALARMS
+NOTICE_OUTCOMES_2 = NOTICE_OUTCOMES + COURIER_OWN + (WATCHING,)                          # what a notice of form 2 may say (Amendment 16)
+NOTICE_FIELDS_2 = NOTICE_FIELDS + ('form',)         # Amendment 16: a notice of form 2 signs these; one without 'form' is of Amendment 11's form
 DUE = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INDETERMINATE', 'INVALID', 'REFUNDED')        # a run's outcome in a record that calls for a notice
 HEADLINES = {'FAIL': 'DECLARED CHECK NOT MET (FAIL)', 'UNKNOWN': 'NO VERDICT: THE CHECK DID NOT DECIDE (UNKNOWN)',
              'INTERRUPTED': 'THE RUN WAS INTERRUPTED: ADMITTED AND COUNTED, WITH NO VERDICT',
@@ -87,7 +101,10 @@ HEADLINES = {'FAIL': 'DECLARED CHECK NOT MET (FAIL)', 'UNKNOWN': 'NO VERDICT: TH
              'INVALID': 'THE GATE SIGNED A RESULT THAT HAS NO VERDICT', 'REFUNDED': 'THE RUN WAS REFUNDED, WHICH A VERIFICATION RUN MUST NEVER BE',
              'UNVERIFIED': 'THE STORED RESULT DOES NOT MATCH THE GATE\'S SIGNATURE', 'NO_OUTCOME': 'A RUN WAS ADMITTED AND HAS NO OUTCOME',
              'COURIER_STOPPED': 'THE COURIER HAS STOPPED READING THIS BUDGET: WHAT THE WITNESS SAID CANNOT BE BELIEVED',
-             'COURIER_BLOCKED': 'THE COURIER CANNOT READ THIS BUDGET FROM THE WITNESS'}
+             'COURIER_BLOCKED': 'THE COURIER CANNOT READ THIS BUDGET FROM THE WITNESS',
+             'UNREADABLE': 'THE COURIER CANNOT READ ONE RUN FROM THE WITNESS: ITS OUTCOME IS NOT KNOWN',       # Amendment 16, form 2 only
+             'INCONSISTENT': 'THE GATE SIGNED PASS, BUT THE NUMBERS IN THE SAME SIGNED RESULT DO NOT MEET ITS STATED LIMIT',
+             'WATCHING': 'THE COURIER HAS BEGUN TO WATCH THIS BUDGET'}
 D = decimal.Decimal
 
 
@@ -224,6 +241,100 @@ def notice_text(outcome, aid, root, result, seq, courier) -> str:
             'The verification service did not write it.  It does not say the check is correct.')
 
 
+# ---------------------------------------------------------------------------------------------- notices of form 2 (Amendment 16)
+PLAIN_TOKEN = re.compile(r'[A-Za-z0-9][A-Za-z0-9._:/+-]{0,199}')
+
+
+def shown(value, limit: int = 200) -> str:
+    """Text the courier did not choose, shown as data (Amendment 16, P5): pure printable ASCII on one line.  The text is put in
+    double quotes; every character outside 0x20-0x7e, and the double quote and the backslash, are escaped (\\uXXXX or
+    \\UXXXXXXXX, \\" and \\\\); it is cut at `limit` characters of the original, and then, after the closing quote,
+    ' (cut: N characters in all, SHA-256 H)' names the whole by the SHA-256 of its UTF-8 (a lone surrogate, which JSON can
+    carry, is encoded as its code point would be).  A value that is not text is shown by its canonical JSON."""
+    if not isinstance(value, str):
+        try:
+            value = canonical(value)
+        except (TypeError, ValueError, OverflowError, RecursionError):
+            value = f'<a value of type {type(value).__name__}>'
+    out = []
+    for ch in value[:limit]:
+        o = ord(ch)
+        out.append('\\"' if ch == '"' else '\\\\' if ch == '\\' else ch if 0x20 <= o <= 0x7e else ('\\u%04x' % o if o <= 0xffff else '\\U%08x' % o))
+    text_ = '"' + ''.join(out) + '"'
+    if len(value) > limit:
+        text_ += f' (cut: {len(value)} characters in all, SHA-256 {hashlib.sha256(value.encode("utf-8", "surrogatepass")).hexdigest()})'
+    return text_
+
+
+def token(value) -> str:
+    """A name from the courier's own configuration (a budget, the courier's name, a head): as it is if it is a plain token,
+    otherwise shown as data."""
+    return value if isinstance(value, str) and PLAIN_TOKEN.fullmatch(value) else shown(value)
+
+
+def _ascii_line(words) -> bool:
+    return isinstance(words, str) and all(0x20 <= ord(ch) <= 0x7e for ch in words)
+
+
+WHY_2 = {'INTERRUPTED': WHY['INTERRUPTED'], 'INDETERMINATE': WHY['INDETERMINATE'], 'NO_OUTCOME': WHY['NO_OUTCOME'], 'UNVERIFIED': WHY['UNVERIFIED'], 'REFUNDED': WHY['REFUNDED'],
+         'UNREADABLE': 'The courier could not read this run from the witness, and does not know its outcome: it does not say that the run passed or failed, '
+                       'nor that the witness is down (the witness answered the courier\'s checkpoint, and the courier still reads the other runs).  '
+                       'If the run becomes readable, the notice of its outcome follows.',
+         'INCONSISTENT': 'The gate signed PASS, and the numbers in the same signed result do not meet the limit stated in it.  '
+                         'The courier did not run the check: it compared the numbers the result gives.'}
+CRITERIA_SHOWN = 5
+
+
+def _criteria_2(r) -> str:
+    crit = r.get('criteria')
+    items = [c for c in crit if isinstance(c, dict) and c.get('achieved') is not None] if isinstance(crit, list) else []
+    say = lambda v: 'none given' if v is None else shown(v, 40)
+    out = [f"criterion {say(c.get('id'))} achieved {say(c.get('achieved'))}, comparison {say(c.get('comparison'))}, limit {say(c.get('limit'))}, units {say(c.get('units'))}"
+           for c in items[:CRITERIA_SHOWN]]
+    if len(items) > CRITERIA_SHOWN:
+        out.append(f'and {len(items) - CRITERIA_SHOWN} more, not shown here')
+    return '; '.join(out)
+
+
+def notice_reason(result, form) -> object:
+    """The reason code a notice states in its signed field: the result's own, as Amendment 11 had it; in form 2, a reason
+    code that is not text of at most 64 characters is stated shown as data, so a notice stays bounded."""
+    rc = result.get('reason_code') if isinstance(result, dict) else None
+    if form == 2 and rc is not None and not (isinstance(rc, str) and len(rc) <= 64):
+        return shown(rc, 64)
+    return rc
+
+
+def notice_text_2(outcome, aid, root, result, seq, courier, why=None) -> str:
+    """The words of a courier's notice of form 2 (Amendment 16, P5): always four lines, and the last always the courier's.
+    Everything the service can choose (a run's name, a reason code, each criterion's id, comparison, achieved value, limit and
+    units, a detail) is shown as data, in quotation marks (shown()); the budget and the courier's name are from the courier's
+    own configuration, shown as they are only when they are plain tokens.  `why` is the courier's own sentence for an alarm
+    or an unreadable run; anything in it that is not printable ASCII is shown as data too.  A record's checker makes the
+    words of a notice of a run again by this rule and compares."""
+    r = result if isinstance(result, dict) else {}
+    subject = f'Run {shown(aid, 200)}, as the service named it, on budget {token(root)}.' if aid != '' or outcome not in ALARMS + (WATCHING,) else f'Budget {token(root)}.'
+    parts = [WHY_2[outcome]] if outcome in WHY_2 and (outcome in COURIER_OWN or not r.get('reason_code')) else []
+    if r.get('reason_code'):
+        numbers = _criteria_2(r)
+        parts.append(f"The service's reason code: {shown(r.get('reason_code'), 64)}." + (f'  Its criteria: {numbers}.' if numbers else '')
+                     + (f"  Its detail: {shown(r.get('detail'), 400)}." if r.get('detail') not in (None, '') else ''))
+    if why is not None:
+        parts.append(why if _ascii_line(why) else shown(why, 2000))
+    last = (f"This notice was made by the courier {token(courier)} from what the witness gave it, read to decision {seq if type(seq) is int else shown(seq)}.  "
+            "Words in quotation marks are shown as data: they are the service's, or what the courier was told, and not the courier's own words.  "
+            "The verification service did not write this notice.  It does not say the check is correct.  "
+            "A receipt for it says that the mailbox holds it, not that anyone has read it.")
+    return '\n'.join((HEADLINES[outcome], subject, '  '.join(parts), last))
+
+
+def watching_text(root, seq, head, courier) -> str:
+    """The words of the courier's statement that it watches a budget (Amendment 16, P6), made from its signed fields."""
+    why = (f"The courier has read this budget's chain from the witness to decision {seq if type(seq) is int else shown(seq)}, whose hash is {token(head)}, and has looked at every run in it.  "
+           'From that decision on, it makes a notice of each run that calls for one.  This statement says the courier is watching; it is not a notice of any run.')
+    return notice_text_2(WATCHING, '', root, None, seq, courier, why)
+
+
 def delivery_problem(d, root, audit, attempts_by_aid, gate_key, courier_keys, mailbox_keys, chain_ok: bool = True):
     """(None, notice) if a delivery is a true courier notice of a run of this record, with the mailbox's receipt for it, and
     says what this record says of that run at the decision it names; otherwise (what is wrong, notice).  (Amendment 11.)"""
@@ -235,7 +346,7 @@ def delivery_problem(d, root, audit, attempts_by_aid, gate_key, courier_keys, ma
     if msgs:
         return f'the receipt: {msgs[0]}', n
     a, seq = attempts_by_aid.get(n['aid']), n['seq']
-    if n['root'] != root or a is None or n['outcome'] in ALARMS:
+    if n['root'] != root or a is None or n['outcome'] in NOT_OF_A_RUN:
         return 'the notice is of a run that is not in this record', n
     if not chain_ok or not 1 <= seq <= len(audit) or audit[seq - 1]['hash'] != n['head']:
         return 'the notice names a decision that is not in this record\'s chain', n
@@ -247,9 +358,35 @@ def delivery_problem(d, root, audit, attempts_by_aid, gate_key, courier_keys, ma
     said = run_outcome(then[2], ev, res, gate_key, root, n['aid'], then[3])
     if n['outcome'] != said or n['request_key'] != a.get('request_key') or n['result_digest'] != (sha(canonical(res)) if isinstance(res, dict) else None):
         return f'the notice says {n["outcome"]} of {n["aid"]}; this record says {said} at decision {seq}', n
-    if n['reason_code'] != (res or {}).get('reason_code') or n['detail'] != notice_detail(res) or n['text'] != notice_text(n['outcome'], n['aid'], root, res, seq, n['courier']):
+    form = notice_form(n)
+    words = notice_text(n['outcome'], n['aid'], root, res, seq, n['courier']) if form == 1 else notice_text_2(n['outcome'], n['aid'], root, res, seq, n['courier'])
+    if n['reason_code'] != notice_reason(res, form) or n['detail'] != notice_detail(res) or n['text'] != words:
         return f'what the notice gives a person to read is not what this record says of {n["aid"]}', n
     return None, n
+
+
+def coverage_problem(c, root, audit, provisioning_hash, courier_keys, mailbox_keys, chain_ok: bool = True):
+    """None if c is the courier's statement that it watches this budget (Amendment 16, P6), signed by a courier key given,
+    of form 2, for this budget, naming a decision of this record's chain with its hash (or decision 0 and the provisioning
+    record's hash), in the words made from its fields, with a receipt for it signed by a mailbox key given; otherwise what is
+    wrong."""
+    n, rc = (c.get('notice'), c.get('receipt')) if isinstance(c, dict) else (None, None)
+    msgs = notice_problems(n, courier_keys)
+    if msgs:
+        return f'the statement: {msgs[0]}'
+    if notice_form(n) != 2 or n['outcome'] != WATCHING or n['aid'] != '' or any(n.get(k) is not None for k in ('request_key', 'reason_code', 'detail', 'result_digest')):
+        return 'it is not a courier\'s statement that it watches a budget'
+    msgs = receipt_problems(rc, mailbox_keys, n)
+    if msgs:
+        return f'the receipt: {msgs[0]}'
+    if n['root'] != root:
+        return 'it is for another budget'
+    seq = n['seq']
+    if not chain_ok or not ((seq == 0 and n['head'] == provisioning_hash) or (1 <= seq <= len(audit) and audit[seq - 1].get('hash') == n['head'])):
+        return 'it names a decision that is not in this record\'s chain'
+    if n['text'] != watching_text(root, seq, n['head'], n['courier']):
+        return 'its words are not the ones made from what it states'
+    return None
 
 
 def kept_deliveries(body: dict, keys: dict) -> list:
@@ -272,18 +409,36 @@ def notice_digest(n) -> str:
     return sha(canonical(n))
 
 
+def notice_fields(n):
+    """The fields a notice signs, by its form (Amendment 16): a notice with no 'form' is of Amendment 11's form and signs
+    NOTICE_FIELDS, exactly as before; one with form 2 signs those and 'form'; None for any other form.  So taking 'form' away
+    from a notice, or adding it, makes its signature fail."""
+    if not isinstance(n, dict):
+        return None
+    if 'form' not in n:
+        return NOTICE_FIELDS
+    return NOTICE_FIELDS_2 if type(n['form']) is int and n['form'] == 2 else None
+
+
+def notice_form(n) -> int:
+    return 2 if isinstance(n, dict) and type(n.get('form')) is int and n.get('form') == 2 else 1
+
+
 def notice_problems(n, courier_keys) -> list:
     """What is wrong with a notice as one made by a courier key given.  (Amendment 11.)"""
     if not isinstance(n, dict):
         return ['it is not a notice']
+    fields = notice_fields(n)
+    if fields is None:
+        return ['it is of a form of notice this checker does not know']
     out = []
-    if n.get('statement') != 'NOTICE' or set(n) != set(NOTICE_FIELDS) | {'signer', 'signature'}:
+    if n.get('statement') != 'NOTICE' or set(n) != set(fields) | {'signer', 'signature'}:
         out.append('it is not a notice, or has fields a notice does not have')
     signer = n.get('signer')
     if not _hex(signer, 64) or not _hex(n.get('signature'), 128) or signer not in _keys(courier_keys) \
-            or not signed_by(signer, n.get('signature', ''), canonical({k: n.get(k) for k in NOTICE_FIELDS}).encode()):
+            or not signed_by(signer, n.get('signature', ''), canonical({k: n.get(k) for k in fields}).encode()):
         out.append('it is not signed by a courier key given')
-    if n.get('outcome') not in NOTICE_OUTCOMES or type(n.get('seq')) is not int or n.get('seq') < 0 or not isinstance(n.get('head'), str) \
+    if n.get('outcome') not in (NOTICE_OUTCOMES_2 if fields is NOTICE_FIELDS_2 else NOTICE_OUTCOMES) or type(n.get('seq')) is not int or n.get('seq') < 0 or not isinstance(n.get('head'), str) \
             or not all(isinstance(n.get(k), str) for k in ('root', 'aid', 'courier', 'text')) or checkpoint_time(n) is None:
         out.append('its outcome, decision, head, names or time are not readable')
     return out
@@ -722,21 +877,32 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
     # 10 the notices delivered, if any (Amendment 11)
     deliveries, delivered, unchecked = record.get('deliveries'), {}, None
     ckeys, mkeys = _keys(keys.get('courier')), _keys(keys.get('mailbox'))
-    if deliveries is not None and pinned and (not ckeys or not mkeys):
+    held = record.get('coverage')                                                  # Amendment 16: the courier's statement that it watches this budget
+    coverage = {'state': 'NOT CONFIRMED', 'seq': None, 'why': 'the record carries no statement by a courier that it watches this budget, with the mailbox\'s receipt for it'}
+    if (deliveries is not None or held is not None) and pinned and (not ckeys or not mkeys):
         unchecked = 'no courier and mailbox keys were given with the others'      # optional evidence, not checked: the rest of the record stands
-    elif deliveries is not None:
+        if held is not None:
+            coverage['why'] = 'not checked: ' + unchecked
+    elif deliveries is not None or held is not None:
         if pinned and (not set(_keys(named.get('courier'))) <= set(ckeys) or not set(_keys(named.get('mailbox'))) <= set(mkeys)):
             bad(10, 'the record names courier or mailbox keys other than the ones given')
         if not ckeys or not mkeys:
             bad(10, 'the record names no courier or mailbox key')
-        elif not isinstance(deliveries, list):
+        elif deliveries is not None and not isinstance(deliveries, list):
             bad(10, 'the deliveries are not a list')
         else:
-            for i, d in enumerate(deliveries, start=1):
+            for i, d in enumerate(deliveries or [], start=1):
                 why, n = delivery_problem(d, root, audit, by_aid, gkey, ckeys, mkeys, chain_ok)
                 if why is not None:
                     bad(10, f'delivery {i}: {why}'); continue
                 delivered.setdefault(n['aid'], set()).add(n['outcome'])
+        if held is not None and ckeys and mkeys:
+            why = coverage_problem(held, root, audit, (prov or {}).get('hash'), ckeys, mkeys, chain_ok)
+            if why is None:
+                coverage = {'state': 'CONFIRMED', 'seq': held['notice']['seq'], 'why': None}
+            else:
+                bad(10, f'the courier\'s statement that it watches this budget: {why}')
+                coverage['why'] = why
 
     titles = {1: 'record signature', 2: 'baseline, controls and anchor', 3: 'audit chain', 4: 'witness receipts', 5: 'runs bound to baseline and design',
               6: 'gate reports and re-derived verdicts', 7: 'counts', 8: 'acknowledgements',
@@ -761,7 +927,8 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
                'checkpoint': ({k: cp.get(k) for k in ('seq', 'time', 'business', 'witness', 'at')} if isinstance(cp, dict) and not problems[9] else None),
                'delivery': None if deliveries is None or problems[10] else {'unchecked': unchecked, 'notices': len(deliveries) if isinstance(deliveries, list) else 0} if unchecked else {
                    'due': [{'aid': r['aid'], 'outcome': r['outcome'], 'delivered': r['outcome'] in delivered.get(r['aid'], ())} for r in rows_out if r['outcome'] in DUE],
-                   'no_outcome': sorted(aid for aid, outs in delivered.items() if 'NO_OUTCOME' in outs), 'notices': len({notice_digest(d.get('notice')) for d in deliveries})}}
+                   'no_outcome': sorted(aid for aid, outs in delivered.items() if 'NO_OUTCOME' in outs), 'notices': len({notice_digest(d.get('notice')) for d in deliveries})},
+               'coverage': coverage}
     return ok, checks, summary
 
 
@@ -811,16 +978,23 @@ def render(ok: bool, checks: list, s: dict, current=None) -> str:
         L.append(f"The witness's checkpoint in this record, made at {cp['time']} by its clock: the chain then had {cp['seq']} decisions"
                  + (', and ended with this record\'s last.' if later == 0 else f", {later} of them after this record's last: it was out of date when it was made.")
                  + ('' if cp.get('business') == 'OPEN' and cp.get('witness') == 'ACTIVE' else f"  The budget was then {cp.get('business')}" + (' and on hold' if cp.get('witness') != 'ACTIVE' else '') + ', and took no new runs.'))
-    dv = s.get('delivery')                         # Amendment 11: notices delivered by a courier to the engineer's mailbox
+    dv = s.get('delivery')                         # Amendment 11: notices a courier delivered, each with a mailbox's signed receipt
     if dv is None:
         L.append('NOTICES: NOT CHECKED.  This record carries no notices delivered by a courier.')
     elif dv.get('unchecked'):
         L.append(f"NOTICES: NOT CHECKED.  The record carries {dv['notices']} notices delivered by a courier, but {dv['unchecked']} (--courier-key, --mailbox-key).")
     else:
         missing = [d for d in dv['due'] if not d['delivered']]
-        L.append(f"NOTICES: {len(dv['due']) - len(missing)} of {len(dv['due'])} runs that call for a notice have one delivered to the engineer's mailbox, with its signed receipt."
-                 + (('  NO DELIVERY EVIDENCE: ' + ', '.join(f"{d['aid']} ({d['outcome']})" for d in missing) + '.') if missing else '')
-                 + ('  A receipt says the mailbox holds the notice; it does not say the engineer read it.'))
+        L.append(f"NOTICES: {len(dv['due']) - len(missing)} of {len(dv['due'])} runs that call for a notice have one accepted by the mailbox (a signed receipt; not a person's acknowledgement)."
+                 + (('  NO DELIVERY EVIDENCE: ' + ', '.join(f"{shown(d['aid'], 80)} ({d['outcome']})" for d in missing) + '.') if missing else '')
+                 + ('  A receipt says the mailbox whose key was given holds the notice; it does not say that anyone has read it.  '
+                    'The courier\'s own notices that it could not read a run, or that a signed PASS does not meet its own numbers, are not counted here.'))
+    cov = s.get('coverage') or {}                  # Amendment 16: whether a courier is confirmed to watch this budget
+    if cov.get('state') == 'CONFIRMED':
+        L.append(f"COURIER COVERAGE: CONFIRMED from decision {cov['seq']}.  The record carries the courier's statement that it watches this budget from that decision, "
+                 'with a mailbox\'s signed receipt for it; a receipt is not a person\'s acknowledgement.')
+    else:
+        L.append(f"COURIER COVERAGE: NOT CONFIRMED ({cov.get('why') or 'no statement checked'}).  Nothing in this record shows that a courier watches this budget.")
     if current is not None:
         L.append(f'CURRENCY: {current[0]}.  ' + current[1][:1].upper() + current[1][1:])
     else:
@@ -833,12 +1007,13 @@ def main():
     ap.add_argument('record'); ap.add_argument('--keys', help='a JSON file: {"witness": HEX, "gate": HEX, "engineer": HEX}')
     ap.add_argument('--witness-key', action='append'); ap.add_argument('--gate-key'); ap.add_argument('--engineer-key')
     ap.add_argument('--courier-key', action='append', help='a courier\'s key, for the notices delivered in the record (Amendment 11)')
-    ap.add_argument('--mailbox-key', action='append', help='the engineer\'s mailbox key, for the receipts of the notices delivered (Amendment 11)')
+    ap.add_argument('--mailbox-key', action='append', help='a mailbox\'s key, given separately, for the receipts of the notices delivered (Amendment 11): the checker knows only the key it is given')
     ap.add_argument('--design', help='a released design file to compare with the record'); ap.add_argument('--json', action='store_true')
     ap.add_argument('--checkpoint', help='a checkpoint signed by the witness, obtained separately from the record (Amendment 10)')
     ap.add_argument('--max-age', type=float, default=None, help='with --checkpoint: the checkpoint may be this many seconds old at most (default 3600)')
     ap.add_argument('--nonce', help='with --checkpoint: the nonce the checkpoint must sign back')
-    ap.add_argument('--require-delivery', action='store_true', help='exit 1 unless every run that calls for a notice has one delivered (Amendment 11)')
+    ap.add_argument('--require-delivery', action='store_true', help='exit 1 unless every run that calls for a notice has one accepted by the mailbox, with its signed receipt '
+                    '(Amendment 11), and the courier\'s coverage of the budget is confirmed (Amendment 16).  A receipt is not a person\'s acknowledgement')
     a = ap.parse_args()
     with open(a.record) as f:
         record = json.load(f)
@@ -879,7 +1054,8 @@ def main():
                           'currency': None if current is None else {'state': current[0], 'detail': current[1]}}, indent=1))
     else:
         print(render(ok, checks, s, current))
-    delivered_all = bool((s or {}).get('delivery')) and not s['delivery'].get('unchecked') and all(d['delivered'] for d in s['delivery']['due'])
+    delivered_all = bool((s or {}).get('delivery')) and not s['delivery'].get('unchecked') and all(d['delivered'] for d in s['delivery']['due']) \
+        and (s.get('coverage') or {}).get('state') == 'CONFIRMED'                # Amendment 16: coverage not confirmed is not delivery shown
     sys.exit(0 if ok and (a.checkpoint is None or (current is not None and current[0] == 'CURRENT')) and (not a.require_delivery or delivered_all) else 1)
 
 

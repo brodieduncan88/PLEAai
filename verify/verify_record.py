@@ -166,8 +166,11 @@ def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions
     asks the witness for a checkpoint that says what the chain's head was after decision `seq`; it goes into the record, under
     the engineer's signature (Amendment 10).  The record's checker requires it to be the witness's and to name this record's head.
     deliveries, where given, is {'items': [{'notice', 'receipt'}, ...], 'courier': [hex], 'mailbox': [hex]}: the notices a courier
-    delivered to the engineer's mailbox, with the mailbox's receipts (Amendment 11).  Those of runs of this budget, signed by the
-    keys given, that name a decision in this record's chain with its hash, go into the record once each, with the two keys."""
+    sent that a mailbox accepted, with the mailbox's signed receipts (Amendment 11; a receipt is not a person's acknowledgement).  Those of runs of this budget, signed by the
+    keys given, that name a decision in this record's chain with its hash, go into the record once each, with the two keys.
+    The courier's own notices that are of no run's outcome (its alarms, UNREADABLE, INCONSISTENT) do not go in.  Its
+    statement that it watches this budget (WATCHING, Amendment 16), with the mailbox's receipt, goes in as 'coverage' when
+    the courier's log has one that the checker would take (the first such)."""
     attempts, snap = attempts_of(store, root, list(submissions))
     audit, provisioning = snap['audit'], store.provisioning(root)
     known = {a['aid'] for a in attempts}
@@ -187,7 +190,7 @@ def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions
         hashes, kept, seen = [row['hash'] for row in audit], [], set()
         for d in deliveries.get('items') or []:                    # notices of runs of this budget, up to this record's last decision, signed as they must be, once each
             n, r = (d.get('notice'), d.get('receipt')) if isinstance(d, dict) else (None, None)
-            if check_record.notice_problems(n, ckeys) or check_record.receipt_problems(r, mkeys, n) or n['outcome'] in check_record.ALARMS or n['root'] != root:
+            if check_record.notice_problems(n, ckeys) or check_record.receipt_problems(r, mkeys, n) or n['outcome'] in check_record.NOT_OF_A_RUN or n['root'] != root:
                 continue
             if not 1 <= n['seq'] <= len(hashes) or hashes[n['seq'] - 1] != n['head'] or check_record.notice_digest(n) in seen:
                 continue
@@ -195,5 +198,9 @@ def build(store, envelope: dict, root: str, keys: dict, signer: Key, submissions
         body['deliveries'] = kept
         body['keys']['courier'], body['keys']['mailbox'] = ckeys, mkeys
         body['deliveries'] = check_record.kept_deliveries(body, dict(body['keys'], gate=keys['gate']))   # and only those its checker would take
+        watching = [d for d in deliveries.get('items') or [] if isinstance(d, dict) and check_record.coverage_problem(
+            d, root, audit, (provisioning or {}).get('hash'), ckeys, mkeys) is None]                     # Amendment 16: the courier's statement that it watches this budget
+        if watching:
+            body['coverage'] = {'notice': watching[0]['notice'], 'receipt': watching[0]['receipt']}
     body = json.loads(json.dumps(body))                                # plain JSON types, exactly what a reader will parse
     return dict(body, signature={'signer': signer.public_hex, 'signature': signer.sign(canonical(body).encode())})
