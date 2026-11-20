@@ -12,8 +12,12 @@ A run can be made unreadable in several ways (World.trouble[aid]):
   'too_long'  the answer is longer than courier.MAX_ANSWER (the reader is given MAX_ANSWER + 1 bytes, and no more is read)
   'dropped'   the connection is dropped while the answer is read
   'garbled'   the answer is not JSON
-  'hangs'     the answer does not come for `hang` seconds
+  'hangs'     the answer comes a byte at a time and would take `hang` seconds (it stops when the courier closes it)
   'dies'      the connection is dropped and, from then on, the witness answers nothing at all
+  'knocks'    the connection is dropped and the witness answers nothing for the next `down_for` requests, then comes back
+              (a run whose reading knocks the witness over, which restarts)
+Every request, mailbox delivery and end of a slow answer is put in World.events, in order.  The mailbox refuses (400) a
+notice whose JSON is longer than mailbox_service.MAX_NOTICE, as its HTTP handler does.
 A name the reading refuses needs no trouble: the stand-in answers 400 for it, as the witness does.
 """
 import contextlib
@@ -42,24 +46,44 @@ PROV = 'p' * 64
 class Answer:
     """What urlopen gives back: a status and a body read at most n bytes at a time, as http.client's response is."""
 
-    def __init__(self, status, body: bytes = b'', world=None, mode=None):
-        self.status, self.body, self.world, self.mode = status, body, world, mode
+    def __init__(self, status, body: bytes = b'', world=None, mode=None, aid=None):
+        self.status, self.body, self.world, self.mode, self.aid = status, body, world, mode, aid
+        self.pos, self.closed, self.started, self.ended = 0, False, time.monotonic(), False
+
+    def _end(self, how):
+        if not self.ended and self.world is not None:
+            self.ended = True; self.world.events.append(('end', self.aid, how))
 
     def read(self, n=-1):
         if self.world is not None:
             self.world.asked_bytes.append(n)
+        if self.closed:
+            self._end('closed'); raise ValueError('read of a closed answer')
         if self.mode == 'too_long':
             return b' ' * (n if n is not None and n >= 0 else courier.MAX_ANSWER * 2)
-        if self.mode in ('dropped', 'dies'):
+        if self.mode in ('dropped', 'dies', 'knocks'):
             raise http.client.IncompleteRead(b'{"root": ')
         if self.mode == 'garbled':
-            return b'{"root": "' + ROOT.encode() + b'", "evidence": [ not json'
-        return self.body if n is None or n < 0 else self.body[:n]
+            out = b'{"root": "' + ROOT.encode() + b'", "evidence": [ not json'
+            self.mode = 'done-garbled'; return out
+        if self.mode == 'done-garbled':
+            return b''
+        if self.mode == 'hangs':                                   # a byte at a time, until `hang` seconds have gone
+            if time.monotonic() - self.started < self.world.hang:
+                time.sleep(0.02); return b' '
+            self._end('finished'); self.mode = None
+        out = self.body[self.pos:] if n is None or n < 0 else self.body[self.pos:self.pos + n]
+        self.pos += len(out)
+        return out
+
+    def close(self):
+        self.closed = True
 
     def __enter__(self):
         return self
 
     def __exit__(self, *exc):
+        self._end('left')
         return False
 
 
@@ -68,7 +92,7 @@ class World:
         self.wkey, self.gkey, self.ckey, self.mkey = M.MailboxKey(), M.MailboxKey(), M.MailboxKey(), M.MailboxKey()
         self.rows, self.runs, self.trouble = [], {}, {}
         self.down, self.mailbox_up, self.hang = False, True, 3.0
-        self.asked, self.asked_bytes = [], []
+        self.asked, self.asked_bytes, self.events, self.refuse_next, self.down_for = [], [], [], 0, 1
         self.tmp = pathlib.Path(tempfile.mkdtemp(prefix='r30-'))
         self.box = M.Mailbox(self.tmp / 'mbox', self.mkey, 'mb', [self.ckey.public_hex])
         (self.tmp / 'courier.key').write_text(self.ckey.private_hex)
@@ -132,17 +156,28 @@ class World:
         if u.netloc == 'm':
             if not self.mailbox_up:
                 raise urllib.error.URLError(ConnectionRefusedError(111, 'Connection refused'))
-            status, ans = self.box.take(json.loads(req.data))
+            if len(req.data) > M.MAX_NOTICE:                           # as the mailbox's HTTP handler refuses it
+                status, ans = 400, {'error': 'a notice is 1 byte to 64 KiB of JSON'}
+            else:
+                n_ = json.loads(req.data); self.events.append(('take', n_.get('aid'), n_.get('outcome')))
+                status, ans = self.box.take(n_)
         else:
+            self.events.append(('ask', u.path, q.get('aid')))
             if self.down:
+                raise urllib.error.URLError(ConnectionRefusedError(111, 'Connection refused'))
+            if self.refuse_next > 0:
+                self.refuse_next -= 1
                 raise urllib.error.URLError(ConnectionRefusedError(111, 'Connection refused'))
             mode = self.trouble.get(q.get('aid')) if u.path == '/run' else None
             if mode == 'dies':
                 self.down = True
+            if mode == 'knocks':
+                self.refuse_next = self.down_for
             if mode == 'hangs':
-                time.sleep(self.hang)
-            elif mode:
-                return Answer(200, world=self, mode=mode)
+                status, ans = self._witness(u.path, q)
+                return Answer(200, json.dumps(ans).encode(), world=self, mode='hangs', aid=q.get('aid'))
+            if mode:
+                return Answer(200, world=self, mode=mode, aid=q.get('aid'))
             status, ans = self._witness(u.path, q)
         body = json.dumps(ans).encode()
         if status != 200:
