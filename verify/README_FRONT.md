@@ -86,6 +86,12 @@ filter. A sandbox that cannot be made means the check is not run and the verdict
 unchanged. In its official run F17 failed: its two runs did not end in the same second, so the case it tests was not
 made; the amendment says what is known of why. `DECLARED_AMEND12.md` has the list, and the open items.
 
+**Note of 20 November 2026.** `AMENDMENT_13_2026-11-20.md` repairs a slowing found while F17's failure was looked into: every
+answer took about 0.05 s longer for each run already made on its baseline, because the runs were read one at a time, each
+through connections of its own. They are now read in one transaction. The front door itself is unchanged; F36, new, times
+25 answers in a row. F17 is not changed, and passed in this amendment's official run; it is restated in the amendment after.
+`DECLARED_AMEND13.md` has the list, and the open items.
+
 ## The pieces
 
 | file | what it does |
