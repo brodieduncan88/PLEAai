@@ -3445,6 +3445,17 @@ def r30():
     watching_logged = [d for d in courier.read_deliveries(w7.tmp / 'state' / 'deliveries.jsonl', S.ROOT) if d['notice'].get('outcome') == 'WATCHING']
     wn = watching[0] if watching else {}
     w_ok = bool(watching) and C.coverage_problem(wn, S.ROOT, w7.rows, S.PROV, [w7.ckey.public_hex], [w7.mkey.public_hex]) is None and four_lines(wn['notice'].get('text'))
+    w_words = (wn.get('notice') or {}).get('text', '').split('\n')[2] if watching else ''
+    # F4: a form-2 notice names a run by field_name(); a record holding two runs with the same field_name refuses it
+    wa = S.World(name='courier-t6', stall_after=0); att = []
+    long_a = 'L' + 'w' * 1000
+    att.append([long_a, 'verify:a', 'INTENT_PENDING', 'n-a', True, False]); wa.decide(att, ('ACCEPT_INTENT', long_a))
+    sa = step(wa.run, t0)
+    na = next((x for x in wa.held_items() if x['notice'].get('outcome') == 'NO_OUTCOME'), None)
+    alone = wa.checked(na['notice'], na['receipt']) if na else 'no notice'
+    att.append([C.field_name(long_a), 'verify:b', 'INTENT_PENDING', 'n-b', True, False]); wa.decide(att, ('ACCEPT_INTENT', C.field_name(long_a)))
+    with_twin = wa.checked(na['notice'], na['receipt']) if na else 'no notice'
+    e['t6_twin'] = (na['notice']['aid'][:40] if na else None, alone, with_twin)
     stp = w7.tmp / 'state' / 'state.json'; js = json.loads(stp.read_text()); js['roots'][S.ROOT]['head'] = '0' * 64; stp.write_text(json.dumps(js))
     p74 = step(w7.run, t0 + 30); cov3 = step(w7.status)
     cv = lambda st_, root: ((st_ or {}).get('budgets', {}).get(root) or {}).get('coverage', '') if isinstance(st_, dict) else str(st_)
@@ -3703,12 +3714,20 @@ def r30():
                   and e['t6_courier']['mailbox up'].startswith('CONFIRMED') and e['t6_courier']['mailbox up'].endswith(f'from decision {len(w7.rows)})')
                   and e['t6_courier']['stopped'].startswith('NOT CONFIRMED (stopped') and e['t6_courier']['other configured'].startswith('NOT CONFIRMED (not yet read')
                   and e['t6_courier']['budgets listed'] == sorted([S.ROOT, OTHER]) and 'knows only the budgets it is configured for' in e['t6_courier']['note']),
+        'the WATCHING statement says the courier has asked the witness for every run in the chain that may call for a notice and that a run it cannot read is reported in a notice of its own, and does not say it has looked at every run':
+            holds(lambda: 'has asked the witness for every run in it that may call for a notice; a run it cannot read is reported in a notice of its own (UNREADABLE)' in w_words
+                  and 'looked at every run' not in w_words),
+        'a notice of form 2 for a run whose name is longer than 512 characters states the name cut, and the checker\'s rule takes it for that run; once the chain also holds a run named with exactly that cut text, the same notice is refused as naming more than one run':
+            holds(lambda: na is not None and na['notice']['aid'] == C.field_name(long_a) and na['notice']['aid'].startswith('cut name: "') and alone is None
+                  and with_twin == 'the notice names more than one run of this record'),
         'the courier makes one WATCHING statement for a budget, after its first whole pass, and not again; it is of form 2 with four lines, and the checker\'s rule takes it for the stand-in\'s chain':
             holds(lambda: len(watching) == 1 and len(watching_logged) == 1 and w_ok and [c.get('state') for c in p73.get('coverage', [])] == []),
         'with the real deployment: a record built before the courier has run, and one built while the mailbox is down, fail --require-delivery saying COURIER COVERAGE: NOT CONFIRMED; once the mailbox accepts the statement, the record carries it and passes, saying COURIER COVERAGE: CONFIRMED from the decision the statement names':
             holds(lambda: cli0[0] == 1 and N(cli0[1])[-1].startswith('COURIER COVERAGE: NOT CONFIRMED') and cli1[0] == 1 and N(cli1[1])[-1].startswith('COURIER COVERAGE: NOT CONFIRMED')
                   and cli2[0] == 0 and okc and N(cli2[1])[-1].startswith(f"COURIER COVERAGE: CONFIRMED from decision {cn.get('seq')}") and [d['notice'].get('seq') for d in log_w] == [cn.get('seq')]
                   and (sc.get('coverage') or {}).get('state') == 'CONFIRMED' and isinstance(cn.get('seq'), int)),
+        'the checker\'s CONFIRMED line says that it shows the courier began to watch at that decision, not that it still does':
+            holds(lambda: 'This shows that the courier began to watch at that decision; it does not show that it still does' in N(cli2[1])[-1]),
         'with the real deployment, the courier\'s status says NOT CONFIRMED (statement made, not yet accepted by the mailbox) while the mailbox is down and CONFIRMED from that decision after; a budget it is not configured for is not in its status, and a record of that budget fails --require-delivery saying COURIER COVERAGE: NOT CONFIRMED':
             holds(lambda: b_of(st1, root).get('coverage', '').startswith('NOT CONFIRMED (statement made, not yet accepted by the mailbox') and b_of(st2, root).get('coverage', '').startswith('CONFIRMED')
                   and b_of(st2, root)['coverage'].endswith(f"from decision {cn.get('seq')})") and root2 is not None and root2 not in st2['budgets'] and cli_other[0] == 1
