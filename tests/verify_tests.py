@@ -3816,8 +3816,10 @@ def r30():
         # H7 (exp_p): the words after a pass where the witness was simply down, then a pass ended by a run
         wpp = S.World(name='courier-t1', stall_after=100); att = []
         wpp.effect(att, 'b-fail', S.FAIL); wpp.effect(att, 'k-run', S.FAIL)
-        wpp.down = True; step(wpp.run, t0); wpp.down = False; wpp.trouble['k-run'] = 'knocks'; step(wpp.run, t0 + 150)
+        wpp.down = True; step(wpp.run, t0); wpp.down = False; wpp.trouble['k-run'] = 'knocks'; m0 = len(wpp.events); h7_pass = step(wpp.run, t0 + 150)
         h7 = [x['notice']['text'].split('\n')[2] for x in wpp.held_items() if x['notice'].get('outcome') == 'COURIER_BLOCKED']
+        ev7 = wpp.events[m0:]                                                                   # fifth form: the notice of the run asked for before it was made, and taken, first
+        h7_before = (made(h7_pass), next((i for i, x in enumerate(ev7) if x[:3] == ('take', 'b-fail', 'FAIL')), None), next((i for i, x in enumerate(ev7) if x[:3] == ('ask', '/run', 'k-run')), None))
         # H10: a mailbox whose answers are no valid receipt is listed for what happened, not as a refusal
         wx = S.World(name='courier-t1'); att = []
         wx.effect(att, 'a-fail', S.FAIL); take_x = wx.box.take
@@ -4490,8 +4492,9 @@ def r30():
             holds(lambda: h5[0].startswith('CONFIRMED') and 'but the last pass' not in h5[0] and h5[1].endswith(', but the last pass did not complete: 1 run put off')
                   and [(x.get('aid'), x.get('line')) for x in h5[2]] == [('"q-1"', 'old')] and h5[4]['old']['put off'] == 1 and h5[4]['new']['put off'] == 0
                   and ', but the last pass did not read this budget: the courier is blocked: it cannot read the witness' in h5[3]),
-        'after a pass in which the witness did not answer at all, then one ended by a run after which it stopped answering, the COURIER_BLOCKED words speak of the last pass only and say the runs before it were asked for, not read':
-            holds(lambda: len(h7) == 1 and 'In the last pass, the witness stopped answering after the courier asked it for run "k-run"' in h7[0] and 'in each' not in h7[0] and 'were read' not in h7[0]),
+        'after a pass in which the witness did not answer at all, then one ended by a run after which it stopped answering, the COURIER_BLOCKED words speak of the last pass only and say the runs before it were asked for, not read; and in that pass the notice of the run asked for before it was made and taken by the mailbox before it was asked for':
+            holds(lambda: len(h7) == 1 and 'In the last pass, the witness stopped answering after the courier asked it for run "k-run"' in h7[0] and 'in each' not in h7[0] and 'were read' not in h7[0]
+                  and h7_before[0] == [('', 'COURIER_BLOCKED'), ('b-fail', 'FAIL')] and h7_before[1] is not None and h7_before[2] is not None and h7_before[1] < h7_before[2]),
         'notices the mailbox answers with no valid receipt for are listed as such in the courier\'s status, not as refused':
             holds(lambda: h10 == ['the mailbox gave no valid receipt']),
         'the time a request is given at the transport is no more than what is left of the deadline, and the courier gives up at the deadline':

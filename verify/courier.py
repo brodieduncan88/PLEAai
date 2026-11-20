@@ -641,6 +641,9 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, p
                 count[line][1] += 1
                 asked[aid] = {'at': clock, 'entry': entry_digest(attempt)}   # asked for now: it goes to the end of the old line
             began = time.monotonic()
+            def charge():                                           # the time of asking (a request, and the checkpoint after a failed one), not of sending
+                if line is not None:
+                    spent[line] += time.monotonic() - began
             try:                                                    # Amendment 16 (P1): no run the courier cannot read ends this loop
                 outcome, result = run_outcome(cfg, root, attempt, cp['seq'])
             except Refused:
@@ -654,6 +657,7 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, p
                     except Unreachable as down:
                         fell = down
                         why = 'the witness stopped answering after the courier asked for this run'
+                charge()
                 u = unread.get(aid) if isinstance(unread.get(aid), dict) else {}
                 unread[aid] = {'since': _number(u.get('since'), clock), 'why': why}
                 summary['unread'].append({'root': root, 'aid': aid, 'since': unread[aid]['since'], 'why': why})
@@ -662,9 +666,7 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, p
                 if fell is not None:
                     raise WitnessFell(f'the witness cannot be read: it stopped answering after the courier asked for run {C.shown(aid, 200)} ({fell})', aid)
                 continue
-            finally:
-                if line is not None:
-                    spent[line] += time.monotonic() - began
+            charge()
             unread.pop(aid, None)                                   # read: it is handled as any other run, so its true notice follows
             done = phase in FINAL and outcome != 'UNVERIFIED'
             if outcome in ('PASS', 'PENDING'):
