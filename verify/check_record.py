@@ -287,11 +287,11 @@ def field_name(value):
     return 'cut name: ' + shown(value, 200)
 
 
-def printable(value) -> str:
+def printable(value, limit: int = 200) -> str:
     """A value the service chose, as the checker prints it in a line of its own (Amendment 16, F5): as it is when every
     character of it is printable ASCII, otherwise shown as data, so it cannot begin a line of its own or look like one."""
     words = value if isinstance(value, str) else str(value)
-    return words if _ascii_line(words) else shown(value, 200)
+    return words if _ascii_line(words) else shown(value, limit)
 
 
 def _ascii_line(words) -> bool:
@@ -975,20 +975,21 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
 
 
 def render(ok: bool, checks: list, s: dict, current=None) -> str:
-    L = [f"  {'ok  ' if good else 'FAIL'} {n}  {title}" + (f': {printable(detail)}' if detail else '') for n, title, good, detail in checks]   # Amendment 16: a detail may quote a run's name
+    L = [f"  {'ok  ' if good else 'FAIL'} {n}  {title}" + (f': {printable(detail, 2000)}' if detail else '') for n, title, good, detail in checks]   # Amendment 16: a detail may quote a run's name
     if not s:
         return '\n'.join(L + ['', 'FAILED: do not rely on this record.'])
     req = s['requirement']
-    L += ['', f"  {req.get('id')} rev {req.get('revision')}: {req.get('title')}", f"  \"{req.get('statement')}\"",
-          f"  baselined {s['baselined_at']} by {s['engineer']}.  Baseline {s['baseline_sha256'][:16]}…   Record as of {s['as_of'].get('time')}, sequence number {s['as_of'].get('seq')}."]
+    P = printable                                  # Amendment 16 (G8): every value taken from the record, as data when it is not plain
+    L += ['', f"  {P(req.get('id'))} rev {P(req.get('revision'))}: {P(req.get('title'))}", f"  \"{P(req.get('statement'), 2000)}\"",
+          f"  baselined {P(s['baselined_at'])} by {P(s['engineer'])}.  Baseline {P(s['baseline_sha256'][:16])}…   Record as of {P(s['as_of'].get('time'))}, sequence number {P(s['as_of'].get('seq'))}."]
     if s['supersedes']:
         sp = s['supersedes']
-        L.append(f"  CHANGED AFTER THE EVENT: this baseline replaced {sp.get('baseline_sha256', '')[:16]}… (rev {sp.get('revision', '?')}) after {sp.get('official_runs', '?')} official runs "
-                 f"on it: {sp.get('met', '?')} met, {sp.get('not_met', '?')} not met, {sp.get('unknown', '?')} unknown.  Reason given by the engineer: {sp.get('reason')}")   # Amendment 4: all three counts
+        L.append(f"  CHANGED AFTER THE EVENT: this baseline replaced {P(sp.get('baseline_sha256', '')[:16])}… (rev {P(sp.get('revision', '?'))}) after {P(sp.get('official_runs', '?'))} official runs "
+                 f"on it: {P(sp.get('met', '?'))} met, {P(sp.get('not_met', '?'))} not met, {P(sp.get('unknown', '?'))} unknown.  Reason given by the engineer: {P(sp.get('reason'), 2000)}")   # Amendment 4: all three counts
     if s.get('alongside'):                         # Amendment 9: a baseline made for a requirement already held, not as a revision of it, names the others
         al = s['alongside']
-        L.append('  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: ' + ', '.join(f"{str(b.get('baseline_sha256', ''))[:16]}… (rev {b.get('revision', '?')})" for b in al.get('baselines') or [])
-                 + f".  Reason given by the engineer: {al.get('reason')}")
+        L.append('  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: ' + ', '.join(f"{P(str(b.get('baseline_sha256', ''))[:16])}… (rev {P(b.get('revision', '?'))})" for b in al.get('baselines') or [])
+                 + f".  Reason given by the engineer: {P(al.get('reason'), 2000)}")
     for c in s['criteria']:
         L.append(f"  limit: {printable(c['quantity'])} {'at most' if c['comparison'] == '<=' else 'at least'} {printable(c['limit'])} {printable(c['units'])}")   # Amendment 16: as data when not plain
     L += ['', f"  Official runs through the service: {s['official_runs']}.  Met {s['met']}, not met {s['not_met']}, unknown {s['unknown']}.  Awaiting the engineer's disposition: {s['open']}."]
@@ -1003,23 +1004,23 @@ def render(ok: bool, checks: list, s: dict, current=None) -> str:
         return '\n'.join(L)
     L.append('RECORD VERIFIED against the keys given.' if s['keys_pinned'] else 'RECORD CONSISTENT, but the keys were read from the record itself, so this does not show who made it.  Give the keys to verify.')
     if s['status'] == 'DECLARED CHECK MET':
-        L.append(f"STATUS: DECLARED CHECK MET, for design {', '.join(h[:16] + '…' for h in s['met_designs'])} only, after {s['official_runs']} official runs ({s['not_met']} not met, {s['unknown']} unknown).")
+        L.append(f"STATUS: DECLARED CHECK MET, for design {', '.join(P(str(h)[:16]) + '…' for h in s['met_designs'])} only, after {s['official_runs']} official runs ({s['not_met']} not met, {s['unknown']} unknown).")
     else:
         L.append('STATUS: NOT VERIFIED.  No design has met the declared check against this baseline.')
     if s['released'] is not None:
         rel = s['released']
         L.append(f"Released design {rel['design_sha256'][:16]}…: " + ('this is a design the record shows as meeting the declared check.' if rel['met'] else
                  ('NOT VERIFIED.  The record shows this design was run and did not meet the check.' if rel['seen'] else 'NOT VERIFIED.  This design does not appear in the record.')))
-    L += ['', f"This says what the declared check ({s['check'].get('id')} v{s['check'].get('version')}, written by {s['check'].get('author')}, reviewed by {s['check'].get('reviewed_by')}) returned against the baselined limits.",
+    L += ['', f"This says what the declared check ({P(s['check'].get('id'))} v{P(s['check'].get('version'))}, written by {P(s['check'].get('author'))}, reviewed by {P(s['check'].get('reviewed_by'))}) returned against the baselined limits.",
           'It does not say the check is correct, the requirement is complete, or the design is safe.',
-          'The check does not cover: ' + '; '.join(s['check'].get('stated_limits') or []) + '.',
+          'The check does not cover: ' + '; '.join(P(x, 2000) for x in s['check'].get('stated_limits') or []) + '.',
           'A record is a statement as of its sequence number.  Ask the responsible engineer for the current one.']
     cp = s.get('checkpoint')
     if cp:                                         # Amendment 10: the witness's own word on the chain when the record was made
         later = cp['seq'] - cp['at']
-        L.append(f"The witness's checkpoint in this record, made at {cp['time']} by its clock: the chain then had {cp['seq']} decisions"
+        L.append(f"The witness's checkpoint in this record, made at {P(cp['time'])} by its clock: the chain then had {P(cp['seq'])} decisions"
                  + (', and ended with this record\'s last.' if later == 0 else f", {later} of them after this record's last: it was out of date when it was made.")
-                 + ('' if cp.get('business') == 'OPEN' and cp.get('witness') == 'ACTIVE' else f"  The budget was then {cp.get('business')}" + (' and on hold' if cp.get('witness') != 'ACTIVE' else '') + ', and took no new runs.'))
+                 + ('' if cp.get('business') == 'OPEN' and cp.get('witness') == 'ACTIVE' else f"  The budget was then {P(cp.get('business'))}" + (' and on hold' if cp.get('witness') != 'ACTIVE' else '') + ', and took no new runs.'))
     dv = s.get('delivery')                         # Amendment 11: notices a courier delivered, each with a mailbox's signed receipt
     if dv is None:
         L.append('NOTICES: NOT CHECKED.  This record carries no notices delivered by a courier.')
@@ -1037,9 +1038,9 @@ def render(ok: bool, checks: list, s: dict, current=None) -> str:
                  'with a mailbox\'s signed receipt for it; a receipt is not a person\'s acknowledgement.  This shows that the courier began to watch at that decision; '
                  'it does not show that it still does (the courier\'s own status does).')
     else:
-        L.append(f"COURIER COVERAGE: NOT CONFIRMED ({cov.get('why') or 'no statement checked'}).  Nothing in this record shows that a courier watches this budget.")
+        L.append(f"COURIER COVERAGE: NOT CONFIRMED ({P(cov.get('why') or 'no statement checked', 2000)}).  Nothing in this record shows that a courier watches this budget.")
     if current is not None:
-        L.append(f'CURRENCY: {current[0]}.  ' + current[1][:1].upper() + current[1][1:])
+        L.append(f'CURRENCY: {current[0]}.  ' + P(current[1][:1].upper() + current[1][1:], 2000))
     else:
         L.append('CURRENCY: NOT CHECKED.  Give a checkpoint obtained separately from this record (--checkpoint) to see whether it is current.')
     return '\n'.join(L)
