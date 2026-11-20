@@ -17,7 +17,8 @@ A run can be made unreadable in several ways (World.trouble[aid]):
   'deaf'      as 'hangs', but closing the answer does not stop it: only the reader's own deadline does
   'silent'    no answer at all for `hang` seconds: urlopen itself waits (as a peer that sends nothing before its headers);
               nothing the courier does can end that wait sooner
-World(empty_roots=(R, ...)) also serves those budgets, each with an empty chain.
+World(empty_roots=(R, ...)) also serves those budgets, each with an empty chain.  World(keys={...}) takes the four private
+keys (witness, gate, courier, mailbox) given, as hex, instead of new ones.
   'dies'      the connection is dropped and, from then on, the witness answers nothing at all
   'knocks'    the connection is dropped and the witness answers nothing for the next `down_for` requests, then comes back
               (a run whose reading knocks the witness over, which restarts)
@@ -102,9 +103,10 @@ class Answer:
 
 
 class World:
-    def __init__(self, stall_after: float = 900, name: str = 'courier-t', roots=(ROOT,), empty_roots=()):
+    def __init__(self, stall_after: float = 900, name: str = 'courier-t', roots=(ROOT,), empty_roots=(), keys=None):
         self.empty_roots = tuple(empty_roots)
-        self.wkey, self.gkey, self.ckey, self.mkey = M.MailboxKey(), M.MailboxKey(), M.MailboxKey(), M.MailboxKey()
+        k = keys or {}                                             # private keys given (to read again a state an earlier courier wrote)
+        self.wkey, self.gkey, self.ckey, self.mkey = (M.MailboxKey(k.get(n)) for n in ('witness', 'gate', 'courier', 'mailbox'))
         self.rows, self.runs, self.trouble = [], {}, {}
         self.down, self.mailbox_up, self.hang = False, True, 3.0
         self.asked, self.asked_bytes, self.events, self.refuse_next, self.down_for = [], [], [], 0, 1

@@ -3174,6 +3174,10 @@ def r30():
             return bool(f())
         except Exception:
             return False
+    def in_thread(f, *a, seconds=20.0):                                                        # a direct call that might hang: in a thread of its own, joined; "still alive" fails
+        box_ = {}
+        th = threading.Thread(target=lambda: box_.update(got=step(f, *a)), daemon=True); th.start(); th.join(seconds)
+        return box_.get('got') if not th.is_alive() else ('RAISED', 'still alive')
     short = lambda x: (x[:60] + f'...({len(x)})') if isinstance(x, str) and len(x) > 60 else x
     def last_line(name, seq):                                                                  # the courier's fixed last line, written out here
         return (f"This notice was made by the courier {name} from what the witness gave it, read to decision {seq}.  "
@@ -3853,7 +3857,7 @@ def r30():
     try:
         urllib.request.urlopen = lambda req, timeout=None, context=None: (_ for _ in ()).throw(urllib.error.HTTPError(req.full_url, 500, 'x', {}, _io_m.BufferedReader(Drip2(), 1)))
         courier._context = lambda *a: None
-        in_error_body = step(courier._https, 'GET', 'https://w/run?aid=x', {'ca': '', 'cert': '', 'key': ''}, None, 15.0, {'until': time.monotonic() + 0.6})
+        in_error_body = in_thread(courier._https, 'GET', 'https://w/run?aid=x', {'ca': '', 'cert': '', 'key': ''}, None, 15.0, {'until': time.monotonic() + 0.6}, seconds=10.0)   # fifth form: in a thread, joined
     finally:
         urllib.request.urlopen, courier._context = saved_open2, saved_ctx2
     # the close is not made in the caller's thread: an answer whose read never returns until it is let go
@@ -3912,6 +3916,271 @@ def r30():
                    '  limit: temperature at most 85 "' + esc(0xb0) + 'C"']
     e['fourth form'] = {'H1a': h1a, 'H1b': h1b, 'Gb': b_turns, 'Gm': str(in_error_body)[:100], 'H1': h1, 'H2': h2c, 'H3': h3, 'H4': h4, 'H5': h5, 'H7': [t_[:240] for t_ in h7], 'H10': h10, 'timeout': timeout_held, 'caller took': round(caller_took, 2),
                         'state rules': state_rules, 'state good': state_good, 'forged after ok': forged_ok, 'honest lines': honest_lines}
+
+    # ---------------------------------------------------------------- fifth form (the addendum's U1 to U8)
+    import io, math
+    bud5 = lambda w_, root=S.ROOT: (step(w_.status) or {}).get('budgets', {}).get(root, {}) if isinstance(step(w_.status), dict) else {}
+    def raw_row(w_, attempts, op=('X',)):                                                      # a decision whose runs' entries are given as they are, unsorted
+        row = {'seq': len(w_.rows) + 1, 'op': list(op), 'kind': 'APPLIED', 'code': 'OK', 'observation': {'attempts': attempts, 'k': 100, 'm': 0, 'live': [0, 0, 0]}, 'prev_hash': w_.head()}
+        row['hash'] = C.chain_hash(row['prev_hash'], row); w_.rows.append(row)
+    def mailbox_trouble(w_, stuck, way):                                                       # the stand-in mailbox fails, in one way, for the notices of the runs named
+        orig = w_.urlopen
+        def uo(req, timeout=None, context=None):
+            n_ = json.loads(req.data) if req.full_url.startswith('https://m/deliver') else None
+            if n_ is not None and n_.get('aid') in stuck:
+                w_.events.append(('stuck', n_.get('aid'), way))
+                if way == 'refused':
+                    raise urllib.error.HTTPError(req.full_url, 400, 'refused', {}, io.BytesIO(b'{"error": "refused: (for good)"}'))
+                if way == 'no valid receipt':
+                    got = w_.box.take(n_)
+                    return S.Answer(200, json.dumps(dict(got[1], signature='00' * 64)).encode(), w_)
+                if way == 'the connection dropped':
+                    raise http.client.RemoteDisconnected('Remote end closed connection without response')
+                if way == 'an answer that is not JSON':
+                    return S.Answer(200, b'<html>oops</html>', w_)
+                time.sleep(courier.DEADLINE * 2); raise urllib.error.URLError(OSError('timed out'))   # no answer before the deadline
+            return orig(req, timeout, context)
+        w_.urlopen = uo
+    old_deadline = courier.DEADLINE
+    try:
+        # U1: a changed entry is noticed in that pass; an unchanged entry whose outcome becomes FAIL within the stated bound
+        courier.DEADLINE = 0.1
+        w_u1 = S.World(name='courier-u1', stall_after=10_000); w_u1.hang = 0.3; att = []
+        w_u1.cfg['pass_seconds'] = 60.0
+        att.append(['x-run', 'verify:x', 'CONSUMED', 'nx', True, True]); w_u1.decide(att, ('X', 'x-run'))
+        att.append(['y-run', 'verify:y', 'EFFECT', 'ny', True, True]); w_u1.decide(att, ('RECONCILE', 'y-run')); w_u1.report('y-run', 'ny', 'EFFECT', S.FAIL)   # signed, no result yet
+        for i in range(16):                                                                     # old runs in flight that hang
+            att.append([f'o-{i:02d}', f'verify:o{i}', 'CONSUMED', f'no{i}', True, True]); w_u1.decide(att, ('X', f'o-{i:02d}')); w_u1.trouble[f'o-{i:02d}'] = 'hangs'
+        u1_first = step(w_u1.run, t0)
+        w_u1.cfg['pass_seconds'] = 0.8                                                          # floor 2 for each line
+        for a_ in att:
+            if a_[0] == 'x-run':
+                a_[2] = 'EFFECT'
+        w_u1.decide(att, ('RECONCILE', 'x-run')); w_u1.report('x-run', 'nx', 'EFFECT', S.FAIL); w_u1.store('x-run', S.FAIL)
+        w_u1.store('y-run', S.FAIL)                                                             # its entry does not change; its outcome is now FAIL
+        u1 = []
+        for k in range(1, 12):
+            att.append([f'a-new-{k:02d}', f'verify:n{k}', 'CONSUMED', f'nn{k}', True, True]); w_u1.decide(att, ('X', f'a-new-{k:02d}')); w_u1.trouble[f'a-new-{k:02d}'] = 'hangs'
+            s_ = step(w_u1.run, t0 + 10 * k); b_ = bud5(w_u1)
+            u1.append({'made': made(s_), 'lines': b_.get('lines'), 'put off': len(s_.get('put_off_runs', [])) if isinstance(s_, dict) else s_})
+            if ('y-run', 'FAIL') in (u1[-1]['made'] or []):
+                break
+        u1_y = next((k for k, x in enumerate(u1, 1) if ('y-run', 'FAIL') in (x['made'] or [])), None)
+        u1_stated = (u1[0]['lines'] or {}).get('a run of the old line is asked for at least once in every') if u1 else None
+        u1_worked = [(x['lines'] or {}) for x in u1]
+        u1_bound_ok = all(x and x['a run of the old line is asked for at least once in every'] == f"{math.ceil(x['old']['runs'] / x['asked in every pass, at least, of each line not empty'])} passes"
+                          for x in u1_worked)
+        # U2: a run after which the witness stops answering, every time or every other time
+        courier.DEADLINE = 0.3
+        u2 = {}
+        for every in (1, 2):
+            w_ = S.World(name='courier-u2', stall_after=100); att = []
+            w_.effect(att, 'k-knock', S.FAIL)                                                    # said first by the chain: asked first in the first pass
+            for aid in ('b-fail', 'c-fail', 'd-fail'):
+                w_.effect(att, aid, S.FAIL)
+            passes = []
+            for k in range(4):
+                if k % every == 0:
+                    w_.trouble['k-knock'] = 'knocks'
+                else:
+                    w_.trouble.pop('k-knock', None)
+                m0 = len(w_.events); s_ = step(w_.run, t0 + 60 * k)
+                asks = [x[2] for x in w_.events[m0:] if x[0] == 'ask' and x[1] == '/run']
+                passes.append({'made': made(s_), 'unread': unread(s_), 'status unread': [u.get('aid') for u in bud5(w_).get('unread') or []], 'asks': asks})
+            u2[every] = passes
+        # U3: a pass that puts runs off; a run read cleanly since its trouble gets no UNREADABLE when put off
+        courier.DEADLINE = 0.3
+        w_u3 = S.World(name='courier-u3', stall_after=100); w_u3.hang = 1.0; w_u3.cfg['pass_seconds'] = 0.1; att = []
+        for i in range(3):
+            att.append([f'h-{i}', f'verify:h{i}', 'CONSUMED', f'nh{i}', True, True]); w_u3.decide(att, ('X', f'h-{i}')); w_u3.trouble[f'h-{i}'] = 'hangs'
+        u3_first = step(w_u3.run, t0); u3_status = bud5(w_u3)
+        u3_watching = [o for _, o in w_u3.held() if o == 'WATCHING']
+        w_u3b = S.World(name='courier-u3', stall_after=100); w_u3b.hang = 1.0; w_u3b.cfg['pass_seconds'] = 60.0; att = []
+        att.append(['a-slow', 'verify:a', 'CONSUMED', 'na', True, True]); w_u3b.decide(att, ('X', 'a-slow'))
+        att.append(['r-trouble', 'verify:r', 'CONSUMED', 'nr', True, True]); w_u3b.decide(att, ('X', 'r-trouble')); w_u3b.trouble['r-trouble'] = 'dropped'
+        step(w_u3b.run, t0); w_u3b.trouble.pop('r-trouble'); step(w_u3b.run, t0 + 10)            # unread, then read cleanly
+        w_u3b.trouble['a-slow'] = 'hangs'; w_u3b.cfg['pass_seconds'] = 0.1
+        u3b = step(w_u3b.run, t0 + 500)                                                          # past the waiting time from its trouble; a-slow is ahead of it
+        # U4: notices that cannot be delivered, one (first), two (first and last) and three (first, between, last), in each way
+        courier.DEADLINE = 0.3
+        WAYS5 = ('refused', 'no valid receipt', 'the connection dropped', 'an answer that is not JSON', 'no answer before the deadline')
+        KIND5 = {'refused': 'refused by the mailbox', 'no valid receipt': 'the mailbox gave no valid receipt'}
+        NAMES5 = ['p-0', 'p-1', 'p-2', 'p-3', 'p-4']
+        STUCK5 = {'one, first': {'p-0'}, 'two, first and last': {'p-0', 'p-4'}, 'three': {'p-0', 'p-2', 'p-4'}}
+        u4 = {}
+        for way in WAYS5:
+            for where, stuck in STUCK5.items():
+                w_ = S.World(name='courier-u4'); att = []
+                for aid in NAMES5:
+                    w_.effect(att, aid, S.FAIL)
+                w_.mailbox_up = False; step(w_.run, t0); w_.mailbox_up = True                  # all wait, in the order made
+                mailbox_trouble(w_, stuck, way)
+                s_ = step(w_.run, t0 + 10); s2_ = step(w_.run, t0 + 20)
+                logged = [C.notice_digest(d['notice']) for d in courier.read_deliveries(w_.tmp / 'state' / 'deliveries.jsonl')]
+                nd = bud5(w_).get('notices not delivered') or []
+                u4[(way, where)] = {'delivered first pass': sorted(x['aid'] for x in s_.get('delivered', [])) if isinstance(s_, dict) else s_,
+                                    'held': sorted(a for a, o in w_.held() if o == 'FAIL'), 'outbox': sorted(r_['notice']['aid'] for r_ in w_.state().get('outbox', [])),
+                                    'listed': sorted((x.get('run'), x.get('kind'), x.get('times')) for x in nd), 'logged once': len(logged) == len(set(logged)),
+                                    'held once': len(w_.held_items()) == len({C.notice_digest(x['notice']) for x in w_.held_items()})}
+        def u4_good(way, stuck, r_):
+            others = sorted(set(NAMES5) - stuck)
+            kind = KIND5.get(way, 'could not be sent (the mailbox answered when asked for its key)')
+            return (r_['delivered first pass'] == others and r_['held'] == (others if way != 'no valid receipt' else sorted(NAMES5)) and r_['outbox'] == sorted(stuck)
+                    and r_['listed'] == sorted((f'"{a}"', kind, 2) for a in stuck) and r_['logged once'] and r_['held once'])
+        u4_ok = {k: u4_good(k[0], STUCK5[k[1]], v) for k, v in u4.items()}
+        # U5: the mailbox not answering at all: one request in a pass, whatever is waiting, then all delivered
+        courier.DEADLINE = 0.3
+        u5 = {}
+        for n_wait in (1, 10):
+            w_ = S.World(name='courier-u5'); att = []
+            for i in range(n_wait):
+                w_.effect(att, f'f-{i:02d}', S.FAIL)
+            orig = w_.urlopen
+            def silent_box(req, timeout=None, context=None, orig=orig, w_=w_):
+                if req.full_url.startswith('https://m') and w_.cfg.get('box_silent'):
+                    w_.events.append(('box asked', req.full_url[9:16])); time.sleep(courier.DEADLINE * 2); raise urllib.error.URLError(OSError('timed out'))
+                return orig(req, timeout, context)
+            w_.urlopen = silent_box; w_.cfg['box_silent'] = True
+            step(w_.run, t0)
+            w_.effect(att, 'g-new', S.FAIL)
+            m0 = len(w_.events); t_5 = time.monotonic(); s_ = step(w_.run, t0 + 10); took5 = time.monotonic() - t_5
+            asked5 = sum(1 for x in w_.events[m0:] if x[0] == 'box asked')
+            w_.cfg['box_silent'] = False; s2_ = step(w_.run, t0 + 20)
+            u5[n_wait] = {'asked': asked5, 'took': round(took5, 2), 'waiting': len(s_.get('waiting', [])) if isinstance(s_, dict) else s_, 'mailbox listed': len(s_.get('mailbox', [])) if isinstance(s_, dict) else s_,
+                          'then delivered': sorted(x['aid'] for x in s2_.get('delivered', [])) if isinstance(s2_, dict) else s2_, 'then waiting': len(w_.state().get('outbox', []))}
+        # U6: an entry of the wrong shape in the chain, in the last decision or an earlier one
+        OTHER6 = 'REQ-V/1/' + 'ef' * 16
+        u6 = {}
+        for name6, entry6 in (('a name that is not text', [7, 'verify:7', 'INDETERMINATE', 'n7', True, True]), ('too short', ['z-short', 'verify:z', 'EFFECT', 'nz']),
+                              ('not a list', 'z-text'), ('a phase that is not text', ['z-phase', 'verify:z', 5, 'nz', True, True])):
+            for where6 in ('in the last decision', 'in an earlier decision'):
+                w_ = S.World(name='courier-u6', roots=(S.ROOT, OTHER6), empty_roots=(OTHER6,)); att = []
+                w_.effect(att, 'a-fail', S.FAIL); step(w_.run, t0)
+                raw_row(w_, [list(a) for a in att] + [entry6])
+                if where6 == 'in an earlier decision':
+                    w_.effect(att, 'b-later-fail', S.FAIL)
+                s_ = step(w_.run, t0 + 10); s2_ = step(w_.run, t0 + 20)
+                u6[(name6, where6)] = {'own state': s_.get('own_state') if isinstance(s_, dict) else s_, 'malformed': courier.state_problem(w_.state()),
+                                       'stopped': bool(w_.state().get('stopped')), 'alarm': [o for a, o in w_.held() if o == 'COURIER_STOPPED'], 'refused': [x.get('root') for x in s_.get('refused', [])] if isinstance(s_, dict) else s_,
+                                       'kept': [a[0] for a in w_.state().get('attempts', [])], 'other read': (bud5(w_, OTHER6).get('coverage') or '')[:9],
+                                       'second pass own state': s2_.get('own_state') if isinstance(s2_, dict) else s2_, 'no later notice': ('b-later-fail', 'FAIL') not in w_.held()}
+        # U6, at the witness: POST /accept with a run's name that is not text (the real handler; a Store with no database, so that
+        # reaching the database is seen, and refused)
+        from http.server import ThreadingHTTPServer as _THS
+        from plea_gateway import witness_service as _WS, store as _ST, plea_budget_ref as _ref
+        from plea_gateway.receipts import Signer as _Signer
+        class _NoDB(_ST.Store):
+            def __init__(self):
+                self.mode = 'read committed'; self.reached = []
+            def connect(self):
+                self.reached.append('connect'); raise RuntimeError('no database here')
+            def state(self, root_):
+                self.reached.append('state'); return _ref.RootState(100, 0), 0, 'h'
+        nodb = _NoDB(); H6 = _WS.make_handler(nodb, _Signer(), (), False); H6.peer_allowed = lambda self: True; H6.peer_name = None
+        srv6 = _THS(('127.0.0.1', 0), H6); threading.Thread(target=srv6.serve_forever, daemon=True).start()
+        accept6 = {}
+        try:
+            for op6 in ('ACCEPT_RESERVATION', 'ACCEPT_INTENT', 'CROSS', 'RELEASE', 'RECONCILE'):
+                for k6, v6 in (('a number', 7), ('null', None), ('true', True), ('a list', ['a']), ('an object', {'a': 1})):
+                    nodb.reached.clear()
+                    req6 = urllib.request.Request(f'http://127.0.0.1:{srv6.server_address[1]}/accept', data=json.dumps({'root': S.ROOT, 'op': [op6, v6], 'evidence': None}).encode(), method='POST')
+                    try:
+                        with urllib.request.urlopen(req6, timeout=10) as r6:
+                            got6 = r6.status
+                    except urllib.error.HTTPError as exc6:
+                        got6 = exc6.code
+                    except Exception as exc6:
+                        got6 = type(exc6).__name__
+                    accept6[(op6, k6)] = (got6, 'connect' in nodb.reached)
+        finally:
+            srv6.shutdown(); srv6.server_close()
+        # U7: an answer nested too deeply, at the checkpoint, the chain and a run; a fault planted in the courier itself
+        courier.DEADLINE = 1.0
+        DEEP = b'[' * 200000 + b']' * 200000
+        u7 = {}
+        for at7 in ('/checkpoint', '/chain', '/run'):
+            w_ = S.World(name='courier-u7', stall_after=100); att = []
+            w_.effect(att, 'a-fail', S.FAIL); step(w_.run, t0)
+            w_.effect(att, 'b-deep', S.FAIL); w_.effect(att, 'c-fail', S.FAIL)
+            orig = w_.urlopen
+            def deep(req, timeout=None, context=None, orig=orig, at7=at7, w_=w_):
+                u_ = urllib.parse.urlsplit(req.full_url)
+                if u_.netloc == 'w' and u_.path == at7 and (at7 != '/run' or 'aid=b-deep' in u_.query):
+                    return S.Answer(200, DEEP, w_)
+                return orig(req, timeout, context)
+            w_.urlopen = deep
+            p1 = step(w_.run, t0 + 10); st1 = bud5(w_); p2 = step(w_.run, t0 + 200); st2 = bud5(w_)
+            u7[at7] = {'made': (made(p1), made(p2)), 'unread': (unread(p1), unread(p2)), 'blocked': [len(x.get('blocked', [])) if isinstance(x, dict) else x for x in (p1, p2)],
+                       'ended': ((st1.get('last pass') or {}).get('ended'), (st2.get('last pass') or {}).get('ended')), 'coverage': st2.get('coverage', ''),
+                       'why': [x.get('why', '')[:80] for x in (p1.get('unreachable', []) if isinstance(p1, dict) else [])] + [x.get('why', '')[:80] for x in (p1.get('unread', []) if isinstance(p1, dict) else [])]}
+        OTHER7 = 'REQ-W/1/' + '12' * 16
+        w_u7f = S.World(name='courier-u7', stall_after=100, roots=(S.ROOT, OTHER7), empty_roots=(OTHER7,)); att = []
+        w_u7f.effect(att, 'a-fail', S.FAIL); step(w_u7f.run, t0); w_u7f.effect(att, 'b-fail', S.FAIL)
+        saved_lines = courier.lines
+        def planted(todo, *a, **k):
+            if todo:
+                raise RuntimeError('a fault planted in the courier')
+            return saved_lines(todo, *a, **k)
+        try:
+            courier.lines = planted
+            f1 = step(w_u7f.run, t0 + 10); fs1 = bud5(w_u7f); f2 = step(w_u7f.run, t0 + 200); fs2 = bud5(w_u7f); fo = bud5(w_u7f, OTHER7)
+        finally:
+            courier.lines = saved_lines
+        f3 = step(w_u7f.run, t0 + 300); fs3 = bud5(w_u7f)
+        alarms7 = [x['notice'] for x in w_u7f.held_items() if x['notice'].get('outcome') == 'COURIER_FAILED']
+        u7f = {'made': (made(f1), made(f2), made(f3)), 'failed': [len(x.get('courier_failed', [])) if isinstance(x, dict) else x for x in (f1, f2, f3)],
+               'unreachable': [x.get('unreachable') if isinstance(x, dict) else x for x in (f1, f2)], 'refused': [x.get('refused') if isinstance(x, dict) else x for x in (f1, f2)],
+               'ended': [(x.get('last pass') or {}).get('ended') for x in (fs1, fs2, fs3)], 'courier': fs2.get('courier', ''), 'coverage': (fs2.get('coverage', ''), fs3.get('coverage', '')),
+               'other': (fo.get('last pass') or {}).get('ended'), 'exit': [courier.failed(x) if isinstance(x, dict) else x for x in (f1, f2, f3)],
+               'words': [n_['text'].split('\n')[:3] for n_ in alarms7], 'checked': [C.notice_problems(n_, [w_u7f.ckey.public_hex]) for n_ in alarms7]}
+        # U8: after each way a pass can end, the status says that way and no other
+        courier.DEADLINE = 0.3
+        u8 = {}
+        for end8 in ('read whole', 'read, runs put off', 'the witness could not be reached', 'what the witness said cannot be believed', 'the courier itself failed'):
+            w_ = S.World(name='courier-u8', stall_after=100); w_.hang = 1.0; att = []
+            w_.effect(att, 'a-fail', S.FAIL)
+            for i in range(2):
+                att.append([f'h-{i}', f'verify:h{i}', 'CONSUMED', f'nh{i}', True, True]); w_.decide(att, ('X', f'h-{i}'))
+            step(w_.run, t0)                                                                       # a whole pass: CONFIRMED
+            if end8 == 'read, runs put off':
+                w_.trouble.update({'h-0': 'hangs', 'h-1': 'hangs'}); w_.cfg['pass_seconds'] = 0.1
+            elif end8 == 'the witness could not be reached':
+                w_.down = True
+            elif end8 == 'what the witness said cannot be believed':
+                raw_row(w_, [list(a) for a in att] + [[7, 'verify:7', 'INDETERMINATE', 'n7', True, True]])
+            saved_floor = courier.floor_of
+            try:
+                if end8 == 'the courier itself failed':
+                    courier.floor_of = lambda *a: (_ for _ in ()).throw(KeyError('planted'))
+                s_ = step(w_.run, t0 + 10)
+            finally:
+                courier.floor_of = saved_floor
+            b_ = bud5(w_)
+            u8[end8] = {'ended': (b_.get('last pass') or {}).get('ended'), 'how': (b_.get('last pass') or {}).get('how', ''), 'coverage': b_.get('coverage', ''), 'courier': b_.get('courier', ''),
+                        'exit': courier.failed(s_) if isinstance(s_, dict) else s_}
+    finally:
+        courier.DEADLINE = old_deadline
+    # the state the fourth form (769f6e4) wrote, read by this one (tests/r30_states_769f6e4.json, made by that courier)
+    olds = json.loads((GATEWAY / 'tests' / 'r30_states_769f6e4.json').read_text())
+    old5 = {}
+    for name_o, fx in olds.items():
+        w_ = S.World(name=fx['name'], stall_after=fx['stall_after'], keys=fx['keys'])
+        w_.rows, w_.runs = fx['rows'], fx['runs']
+        (w_.tmp / 'state').mkdir(parents=True, exist_ok=True)
+        (w_.tmp / 'state' / 'state.json').write_text(json.dumps(fx['state'])); (w_.tmp / 'state' / 'deliveries.jsonl').write_text(fx['deliveries'])
+        before_o = step(w_.status)
+        s_ = step(w_.run, t0 + 100); s2_ = step(w_.run, t0 + 200)
+        b_o = (before_o or {}).get('budgets', {}).get(S.ROOT, {}) if isinstance(before_o, dict) else {'state': before_o}
+        old5[name_o] = {'status before': (b_o.get('state'), b_o.get('coverage', '')[:40]),
+                        'own state': [x.get('own_state') for x in (s_, s2_) if isinstance(x, dict)], 'upgraded': s_.get('state_upgraded') if isinstance(s_, dict) else s_,
+                        'made': (made(s_), made(s2_)), 'delivered': sorted(x['aid'] for x in s_.get('delivered', [])) if isinstance(s_, dict) else s_,
+                        'malformed': courier.state_problem(w_.state()), 'old fields': sorted(k for k in courier.OLD_FIELDS + ('pending',) if k in w_.state()),
+                        'stopped': bool(w_.state().get('stopped')), 'refused': [x.get('why', '')[:100] for x in s_.get('refused', [])] if isinstance(s_, dict) else s_,
+                        'coverage': bud5(w_).get('coverage', '')}
+    e['fifth form'] = {'U1': (made(u1_first), u1, u1_y, u1_stated), 'U2': u2, 'U3': (made(u3_first), courier.failed(u3_first) if isinstance(u3_first, dict) else u3_first, u3_status.get('lines'), u3_watching,
+                       made(u3b), [x.get('aid') for x in u3b.get('put_off_runs', [])] if isinstance(u3b, dict) else u3b),
+                       'U4': {f'{k[0]}, {k[1]}': v for k, v in u4.items() if not u4_ok[k]} or 'every case as expected', 'U5': u5,
+                       'U6': {f'{k[0]}, {k[1]}': v for k, v in u6.items()}, 'U6 accept': {f'{k[0]} {k[1]}': v for k, v in accept6.items()}, 'U7': u7, 'U7 fault': u7f, 'U8': u8, 'state of 769f6e4': old5}
 
     # ---------------------------------------------------------------- T4, T6 and T7 with the real deployment
     r = Run('R30'); here = OUT / 'R30'
@@ -4236,6 +4505,54 @@ def r30():
                   and [l[:16] for l in forged_ok] == ['RECORD VERIFIED ', 'STATUS: DECLARED', 'NOTICES: NOT CHE', 'COURIER COVERAGE', 'CURRENCY: CURREN']),
         'an honest record with a title, a statement, an engineer\'s name and units holding characters past ASCII (\u2264, \u00b0, \u2014, accents) prints each of those values as data, escaped, and the statement in one pair of quotation marks':
             holds(lambda: len(honest_lines) == 4 and honest_lines[0] == honest_want[0] and honest_lines[1] == honest_want[1] and honest_lines[2].startswith(honest_want[2]) and honest_lines[3] == honest_want[3]),
+        # fifth form (the addendum's U1 to U8)
+        'U1: with sixteen old runs in flight that hang and a new slow run added at every pass (floor 2), a run whose entry in the chain comes to say FAIL is noticed in that pass, and a run whose entry does not change but whose outcome becomes FAIL, last of the old line, is noticed within the number of passes the status states; that number is ceil(old line / floor), from the lines the status gives, at every pass':
+            holds(lambda: ('x-run', 'FAIL') in u1[0]['made'] and u1[0]['put off'] > 0 and u1_y is not None and u1_y <= int(u1_stated.split()[0]) and u1_bound_ok
+                  and u1_stated == f"{math.ceil(u1[0]['lines']['old']['runs'] / 2)} passes" and u1[0]['lines']['asked in every pass, at least, of each line not empty'] == 2),
+        'U2: a run after which the witness stops answering every time: every other run that failed is noticed at the next pass, the run is asked for last, it is listed as unread in the summary and the status at every pass, and it gets one UNREADABLE notice once the waiting time has passed':
+            holds(lambda: u2[1][0]['made'] == [] and u2[1][1]['made'] == [('b-fail', 'FAIL'), ('c-fail', 'FAIL'), ('d-fail', 'FAIL')] and u2[1][1]['asks'][-1] == 'k-knock'
+                  and all(x['unread'] == ['k-knock'] and x['status unread'] == ['"k-knock"'] for x in u2[1]) and [x['made'] for x in u2[1][2:]] == [[('', 'COURIER_BLOCKED'), ('k-knock', 'UNREADABLE')], []]
+                  and sum(1 for x in u2[1] for m_ in x['made'] if m_[1] == 'UNREADABLE') == 1),
+        'U2: a run after which the witness stops answering every other time: every other run that failed is noticed at the next pass, in which the run is asked for last, read, and its FAIL notice made; it is listed as unread only after the pass in which it knocked, and gets no UNREADABLE notice':
+            holds(lambda: u2[2][0]['made'] == [] and u2[2][1]['made'] == [('b-fail', 'FAIL'), ('c-fail', 'FAIL'), ('d-fail', 'FAIL'), ('k-knock', 'FAIL')] and u2[2][1]['asks'][-1] == 'k-knock'
+                  and u2[2][0]['unread'] == ['k-knock'] and u2[2][1]['unread'] == [] and u2[2][1]['status unread'] == [] and not any(m_[1] == 'UNREADABLE' for x in u2[2] for m_ in x['made'])),
+        'U3: a first pass that put runs off makes no WATCHING statement and exits 1, and the status says how many runs of each line were put off; a run read cleanly since its trouble, put off later past the waiting time, gets no UNREADABLE notice and is listed as put off':
+            holds(lambda: made(u3_first) == [] and courier.failed(u3_first) is True and u3_watching == [] and u3_status['lines']['new']['put off'] == 2 and u3_status['lines']['old']['put off'] == 0
+                  and u3_status['lines']['new']['asked at the last pass'] == 1 and ('r-trouble', 'UNREADABLE') not in made(u3b) and 'r-trouble' in [x.get('aid') for x in u3b.get('put_off_runs', [])]),
+        'U4: with one (first), two (first and last) or three (first, between, last) notices that cannot be delivered, in each way (refused; no valid receipt; the connection dropped; an answer that is not JSON; no answer before the deadline), every other notice is accepted in the same pass; each stuck notice stays in the outbox, listed in the status with its kind and count; none is lost, and none is logged or held twice':
+            holds(lambda: len(u4_ok) == 15 and all(u4_ok.values())),
+        'U5: with the mailbox not answering at all, a pass asks it one thing (its key) and costs one deadline, whether one notice waits or ten, and says the mailbox could not be reached; when it answers again, all are delivered at the next pass and none waits':
+            holds(lambda: all(v['asked'] == 1 and v['took'] < 3 * 0.3 and v['mailbox listed'] == 1 and v['waiting'] == n + 1 and len(v['then delivered']) == n + 1 and v['then waiting'] == 0 for n, v in u5.items()) and len(u5) == 2),
+        'U6: an entry of the chain whose name is not text, that is too short, that is not a list, or whose phase is not text, in the last decision or an earlier one: the courier\'s own state is not made malformed (not at that pass, not at the next), the entry is not kept, the budget is stopped with its COURIER_STOPPED alarm accepted by the mailbox, no later notice of the budget is made, and the next budget is read':
+            holds(lambda: len(u6) == 8 and all(v['own state'] == [] and v['malformed'] is None and v['stopped'] and v['alarm'] == ['COURIER_STOPPED'] and v['refused'] == [S.ROOT]
+                                                and v['kept'] == ['a-fail'] and v['other read'] == 'CONFIRMED' and v['second pass own state'] == [] and v['no later notice'] for v in u6.values())),
+        'U6: the witness\'s POST /accept (its real handler) refuses each of ACCEPT_RESERVATION, ACCEPT_INTENT, CROSS, RELEASE and RECONCILE for a run named by a number, null, true, a list or an object (400), before its store reaches the database: it adds no decision':
+            holds(lambda: len(accept6) == 25 and all(v == (400, False) for v in accept6.values())),
+        'U7: an answer nested too deeply at the checkpoint or at the chain ends the pass as "the witness could not be reached", the answer not readable, with COURIER_BLOCKED after the waiting time; at a run, that run is unread and the others are read, and it gets its UNREADABLE notice after the waiting time':
+            holds(lambda: all(u7[k]['made'] == ([], [('', 'COURIER_BLOCKED')]) and u7[k]['unread'] == ([], []) and u7[k]['blocked'] == [1, 1] and u7[k]['ended'] == ('the witness could not be reached',) * 2
+                              and 'did not read this budget' in u7[k]['coverage'] and 'not readable' in u7[k]['why'][0] for k in ('/checkpoint', '/chain'))
+                  and u7['/run']['made'] == ([('c-fail', 'FAIL')], [('b-deep', 'UNREADABLE')]) and u7['/run']['unread'] == (['b-deep'], ['b-deep']) and u7['/run']['ended'] == ('read', 'read')
+                  and 'not readable' in u7['/run']['why'][0]),
+        'U7: a fault planted in the courier\'s own handling of a pass is recorded as the courier\'s failure, not the witness\'s (not refused, not unreachable), shown in the status, the pass exits 1, the next budget is read, and after the waiting time one COURIER_FAILED alarm, in words that say the fault is the courier\'s, is accepted; once the fault is gone the pass reads the budget again':
+            holds(lambda: u7f['made'][:2] == ([], [('', 'COURIER_FAILED')]) and u7f['failed'][:2] == [1, 1] and u7f['unreachable'] == [[], []] and u7f['refused'] == [[], []]
+                  and u7f['ended'] == ['the courier itself failed', 'the courier itself failed', 'read'] and 'the courier itself failed' in u7f['courier'] and "the fault is the courier's" in u7f['courier']
+                  and 'but the last pass did not read this budget: the courier itself failed' in u7f['coverage'][0] and u7f['coverage'][1].startswith('CONFIRMED') and 'but' not in u7f['coverage'][1]
+                  and u7f['other'] == 'read' and u7f['exit'][:2] == [True, True] and u7f['made'][2] == [('b-fail', 'FAIL')]
+                  and len(u7f['words']) == 1 and u7f['words'][0][0] == 'THE COURIER CANNOT READ THIS BUDGET: THE FAULT IS IN THE COURIER ITSELF' and "The fault is the courier's" in u7f['words'][0][2] and u7f['checked'] == [[]]),
+        'U8: after each way a pass can end (read whole; read with runs put off; the witness could not be reached; what the witness said cannot be believed; the courier itself failed), the status says that way and no other, and coverage reads plainly CONFIRMED only after the pass that read the budget whole; every other pass exits 1':
+            holds(lambda: [v['ended'] for v in u8.values()] == ['read', 'read', 'the witness could not be reached', 'what the witness said cannot be believed', 'the courier itself failed']
+                  and u8['read whole']['coverage'].startswith('CONFIRMED') and 'but' not in u8['read whole']['coverage'] and u8['read whole']['how'] == 'read whole' and u8['read whole']['exit'] is False
+                  and u8['read, runs put off']['coverage'].endswith('but the last pass did not complete: 1 run put off') and u8['read, runs put off']['how'].startswith('read, with 1 run put off')
+                  and 'but the last pass did not read this budget: the courier is blocked' in u8['the witness could not be reached']['coverage']
+                  and u8['what the witness said cannot be believed']['coverage'].startswith('NOT CONFIRMED (stopped')
+                  and 'but the last pass did not read this budget: the courier itself failed' in u8['the courier itself failed']['coverage']
+                  and all(v['exit'] is True for k, v in u8.items() if k != 'read whole')),
+        'the state the fourth form (769f6e4) wrote, with its tiers\' marks, refusals, a notice waiting and runs put off, is read by this form: not judged malformed in the status before or at any pass, brought to this form\'s shape (no field of the earlier forms left), its waiting notice delivered, its runs in trouble read and noticed, and the budget then CONFIRMED':
+            holds(lambda: (lambda v: v['status before'][0] is None and v['own state'] == [[], []] and v['upgraded'] and v['malformed'] is None and v['old fields'] == [] and 'b-poison' in v['delivered']
+                           and ('k-knock', 'FAIL') in v['made'][0] + v['made'][1] and ('d-drop', 'FAIL') in v['made'][0] + v['made'][1] and not v['stopped'] and v['coverage'].startswith('CONFIRMED'))(old5['fourth form, tiers, refusals and waiting notices'])),
+        'the state the fourth form (769f6e4) wrote with a run named by a number in its entries (review 4, exp_b) is not judged malformed: the budget is stopped with its COURIER_STOPPED alarm, in words that say an earlier form kept the entry from what the witness said or the file was damaged':
+            holds(lambda: (lambda v: v['status before'][0] is None and v['own state'] == [[], []] and v['malformed'] is None and v['stopped'] and v['made'][0] == [('', 'COURIER_STOPPED')]
+                           and v['refused'][0].startswith('an entry of a run that the courier kept from the chain at an earlier pass') and v['coverage'].startswith('NOT CONFIRMED (stopped'))(old5['fourth form, a run named by a number'])),
     }
     return checks, e
 

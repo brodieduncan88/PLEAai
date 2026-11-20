@@ -1,0 +1,996 @@
+{
+ "fourth form, a run named by a number": {
+  "deliveries": "{\"notice\": {\"aid\": \"a-fail\", \"courier\": \"courier-old\", \"detail\": \"d\", \"form\": 2, \"head\": \"f4557c176b6ff1e8da24ec053a5d931aadfff467209693d8b2732dcc3a2692ae\", \"outcome\": \"FAIL\", \"reason_code\": \"LIMIT_NOT_MET\", \"request_key\": \"verify:0\", \"result_digest\": \"b37781fe80ff796c7bccdc8171a8d212c91a48c4ac2c4c2cffb97299fd3e9c83\", \"root\": \"REQ-T/1/abababababababababababababababab\", \"seq\": 1, \"signature\": \"1a45f63dde03d02dac5ba2818fffb3c0cd5d3341a7bb8e75fc25109f920664c004d2d044ac2d2d9d81db787b3a49aa7b54b02c4a8d06e2c5c8b3c29b03bc8f01\", \"signer\": \"80b40c05233412c191abff5573726925ece035c1cc4e2b870d79513c76fb7c46\", \"statement\": \"NOTICE\", \"text\": \"DECLARED CHECK NOT MET (FAIL)\\nRun \\\"a-fail\\\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\\nThe service's reason code: \\\"LIMIT_NOT_MET\\\".  Its criteria: criterion \\\"service_temperature\\\" achieved \\\"180\\\", comparison \\\">=\\\", limit \\\"200\\\", units \\\"C\\\".  Its detail: \\\"d\\\".\\nThis notice was made by the courier courier-old from what the witness gave it, read to decision 1.  Words in quotation marks are shown as data: they are the service's, or what the courier was told, and not the courier's own words.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.\", \"time\": \"2026-11-20T18:59:01Z\"}, \"receipt\": {\"aid\": \"a-fail\", \"mailbox\": \"mb\", \"notice\": \"ae93a640bab448d9504a37ea6312b59447c08ece9940e62792d65c99bf8bb5bd\", \"outcome\": \"FAIL\", \"root\": \"REQ-T/1/abababababababababababababababab\", \"signature\": \"4b38817c013a1261b222a0f35b57f3cbb323086601099112706b69502e9efecac5738590f5bdd8195813057f495ef0c8fd842023fb44c0410aeac8f72112bb0c\", \"signer\": \"f1b5112988d28bed22fabfa0d12afc642ea3d2beeebb943c0f536e54c0f32971\", \"statement\": \"DELIVERED\", \"time\": \"2026-11-20T18:59:01Z\"}}\n{\"notice\": {\"aid\": \"\", \"courier\": \"courier-old\", \"detail\": null, \"form\": 2, \"head\": \"f4557c176b6ff1e8da24ec053a5d931aadfff467209693d8b2732dcc3a2692ae\", \"outcome\": \"WATCHING\", \"reason_code\": null, \"request_key\": null, \"result_digest\": null, \"root\": \"REQ-T/1/abababababababababababababababab\", \"seq\": 1, \"signature\": \"b982004280efb7294552297e0d87e77d48a417e2c6a6cf5a72b42146d46f93f5eaef2e3fe572cec44a49fa5ba839cae8bd9215a8d2fd4c0adb25c2e7e5f81005\", \"signer\": \"80b40c05233412c191abff5573726925ece035c1cc4e2b870d79513c76fb7c46\", \"statement\": \"NOTICE\", \"text\": \"THE COURIER HAS BEGUN TO WATCH THIS BUDGET\\nBudget REQ-T/1/abababababababababababababababab.\\nThe courier has read this budget's chain from the witness to decision 1, whose hash is f4557c176b6ff1e8da24ec053a5d931aadfff467209693d8b2732dcc3a2692ae, and has asked the witness for every run in it that may call for a notice; a run it cannot read is reported in a notice of its own (UNREADABLE).  From that decision on, it makes a notice of each run that calls for one.  This statement says the courier began to watch; it is not a notice of any run.\\nThis notice was made by the courier courier-old from what the witness gave it, read to decision 1.  Words in quotation marks are shown as data: they are the service's, or what the courier was told, and not the courier's own words.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.\", \"time\": \"2026-11-20T18:59:01Z\"}, \"receipt\": {\"aid\": \"\", \"mailbox\": \"mb\", \"notice\": \"50cd99d2dda7b93f1d8457f2fd46909704e6262d18b1a878594ceb00e831e6cb\", \"outcome\": \"WATCHING\", \"root\": \"REQ-T/1/abababababababababababababababab\", \"signature\": \"e1d44b5b672d42b19bf38e8d5ab405657c0298fca1834044e21d017f13e45d8ec84b49da8dc946779a197bc08ccb48bbbd0589bc1099ac3c6262b5dee4246405\", \"signer\": \"f1b5112988d28bed22fabfa0d12afc642ea3d2beeebb943c0f536e54c0f32971\", \"statement\": \"DELIVERED\", \"time\": \"2026-11-20T18:59:01Z\"}}\n{\"notice\": {\"aid\": \"cut name: \\\"7\\\"\", \"courier\": \"courier-old\", \"detail\": null, \"form\": 2, \"head\": \"fb62c74ebb77b1eeacc36d024adc173cc3fc9ded1569426da6812651fb83208d\", \"outcome\": \"INDETERMINATE\", \"reason_code\": null, \"request_key\": \"verify:7\", \"result_digest\": null, \"root\": \"REQ-T/1/abababababababababababababababab\", \"seq\": 2, \"signature\": \"d19ec7a7882b5e45eb9988f87995437f388def2b626d3290ada28ff6c2644345eedb6754ba7a41a6355c47a1f1bfd89a50a28a6937db0298d244983f65fe7d01\", \"signer\": \"80b40c05233412c191abff5573726925ece035c1cc4e2b870d79513c76fb7c46\", \"statement\": \"NOTICE\", \"text\": \"THE RUN WAS MADE INDETERMINATE BY THE CONTROL PLANE: FROZEN AND COUNTED, WITH NO VERDICT RECORDED\\nRun \\\"7\\\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\\nThe control plane re-registered the budget: the run is frozen and counted, and the witness records no verdict for it.\\nThis notice was made by the courier courier-old from what the witness gave it, read to decision 2.  Words in quotation marks are shown as data: they are the service's, or what the courier was told, and not the courier's own words.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.\", \"time\": \"2026-11-20T18:59:01Z\"}, \"receipt\": {\"aid\": \"cut name: \\\"7\\\"\", \"mailbox\": \"mb\", \"notice\": \"ee358e886059c36f96a35ef2a5976733661075289f11d198a06fd1cfe02baab0\", \"outcome\": \"INDETERMINATE\", \"root\": \"REQ-T/1/abababababababababababababababab\", \"signature\": \"dda19867085de66a5dc54810278d87401ae80ae9bc04e216ad824499d0d3a63443e161a54155bdd29eb251cefaf47569a2d927d69c3ca6b557c3ea7b3a2cd309\", \"signer\": \"f1b5112988d28bed22fabfa0d12afc642ea3d2beeebb943c0f536e54c0f32971\", \"statement\": \"DELIVERED\", \"time\": \"2026-11-20T18:59:01Z\"}}\n",
+  "keys": {
+   "courier": "1cfc5a58bc709a11b8fb78806cc63a511c4a1dcf8aa865d6f708d9d27c6def65",
+   "gate": "ee5fc10b608a2546115647b112727239cffcc810e56b09b0098ec54ff4195736",
+   "mailbox": "6b8011817f4985558aab7333e3bc5a116924599e0e6c37544a003597e560e1d2",
+   "witness": "2b527474e20b2ebdf0b6aad7434476cc71cd7cf395cb71772cc2c342196eb870"
+  },
+  "name": "courier-old",
+  "rows": [
+   {
+    "code": "OK",
+    "hash": "f4557c176b6ff1e8da24ec053a5d931aadfff467209693d8b2732dcc3a2692ae",
+    "kind": "APPLIED",
+    "observation": {
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ]
+     ],
+     "k": 100,
+     "live": [
+      0,
+      1,
+      0
+     ],
+     "m": 0
+    },
+    "op": [
+     "RECONCILE",
+     "a-fail"
+    ],
+    "prev_hash": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+    "seq": 1
+   },
+   {
+    "code": "OK",
+    "hash": "fb62c74ebb77b1eeacc36d024adc173cc3fc9ded1569426da6812651fb83208d",
+    "kind": "APPLIED",
+    "observation": {
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ],
+      [
+       7,
+       "verify:7",
+       "INDETERMINATE",
+       "n7",
+       true,
+       true
+      ]
+     ],
+     "k": 100,
+     "live": [
+      0,
+      0,
+      0
+     ],
+     "m": 0
+    },
+    "op": [
+     "X",
+     7
+    ],
+    "prev_hash": "f4557c176b6ff1e8da24ec053a5d931aadfff467209693d8b2732dcc3a2692ae",
+    "seq": 2
+   }
+  ],
+  "runs": {
+   "a-fail": {
+    "evidence": [
+     {
+      "derived": "EFFECT",
+      "evidence": {
+       "aid": "a-fail",
+       "claim": "EFFECT",
+       "kind": "EFFECT_REPORT",
+       "nonce": "n-0",
+       "result_digest": "b37781fe80ff796c7bccdc8171a8d212c91a48c4ac2c4c2cffb97299fd3e9c83",
+       "root": "REQ-T/1/abababababababababababababababab",
+       "signature": "3b98bb76a30fc0aaf94d9e6f780773e5ce546c04bfb7fcc1b4a75da6a23aed5737a2eca3e14fe041b42b3887c215782ddc6a0ea04e470b8104270630854f7d0a",
+       "signer": "7db5fe53ff8348905e2acab1b3cdc4c4d04589608d8f5ec558ccbe4293d40ee4"
+      },
+      "seq": 1
+     }
+    ],
+    "request_key": "verify:0",
+    "result": {
+     "outcome": "value",
+     "value": {
+      "criteria": [
+       {
+        "achieved": "180",
+        "comparison": ">=",
+        "id": "service_temperature",
+        "limit": "200",
+        "met": false,
+        "units": "C"
+       }
+      ],
+      "detail": "d",
+      "format": "verification-verdict/1",
+      "reason_code": "LIMIT_NOT_MET",
+      "verdict": "FAIL"
+     }
+    }
+   }
+  },
+  "stall_after": 900,
+  "state": {
+   "roots": {
+    "REQ-T/1/abababababababababababababababab": {
+     "asked": {
+      "7": {
+       "at": 1000010.0,
+       "entry": "86e2507b69e0d1a743a31794a5fe9b05257d4160f33f79d240b66cbde5e784a6"
+      }
+     },
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ],
+      [
+       7,
+       "verify:7",
+       "INDETERMINATE",
+       "n7",
+       true,
+       true
+      ]
+     ],
+     "final": [
+      "a-fail"
+     ],
+     "first_seen": {},
+     "head": "fb62c74ebb77b1eeacc36d024adc173cc3fc9ded1569426da6812651fb83208d",
+     "last_pass": {
+      "at": 1000010.0,
+      "read": true
+     },
+     "pending": [],
+     "refusals": {},
+     "sent": [
+      "a-fail|FAIL",
+      "7|INDETERMINATE"
+     ],
+     "seq": 2,
+     "suspect": {},
+     "unread": {},
+     "watching": {
+      "accepted": "2026-11-20T18:59:01Z",
+      "head": "f4557c176b6ff1e8da24ec053a5d931aadfff467209693d8b2732dcc3a2692ae",
+      "made": "2026-11-20T18:59:01Z",
+      "notice": "50cd99d2dda7b93f1d8457f2fd46909704e6262d18b1a878594ceb00e831e6cb",
+      "seq": 1
+     }
+    }
+   }
+  }
+ },
+ "fourth form, tiers, refusals and waiting notices": {
+  "deliveries": "{\"notice\": {\"aid\": \"a-fail\", \"courier\": \"courier-old\", \"detail\": \"d\", \"form\": 2, \"head\": \"39a2327ee18769a0b13687fcafea8a5ffc0c358be081a47f43e0417e69270c2a\", \"outcome\": \"FAIL\", \"reason_code\": \"LIMIT_NOT_MET\", \"request_key\": \"verify:0\", \"result_digest\": \"b37781fe80ff796c7bccdc8171a8d212c91a48c4ac2c4c2cffb97299fd3e9c83\", \"root\": \"REQ-T/1/abababababababababababababababab\", \"seq\": 8, \"signature\": \"976dcaa5910b2c45b850c757305853011f9cfb96098751ace66091dd54c11138ed67e605e6c7417ff8fe5d7f170ce103cb0ffe26eda1147b9897768b11688d0f\", \"signer\": \"f7239bf15041b351bcc7baf254ba9c171422afd71bd60313fa3a3f40428f2078\", \"statement\": \"NOTICE\", \"text\": \"DECLARED CHECK NOT MET (FAIL)\\nRun \\\"a-fail\\\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\\nThe service's reason code: \\\"LIMIT_NOT_MET\\\".  Its criteria: criterion \\\"service_temperature\\\" achieved \\\"180\\\", comparison \\\">=\\\", limit \\\"200\\\", units \\\"C\\\".  Its detail: \\\"d\\\".\\nThis notice was made by the courier courier-old from what the witness gave it, read to decision 8.  Words in quotation marks are shown as data: they are the service's, or what the courier was told, and not the courier's own words.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.\", \"time\": \"2026-11-20T18:59:00Z\"}, \"receipt\": {\"aid\": \"a-fail\", \"mailbox\": \"mb\", \"notice\": \"899a31470c9ff26e0012133e0d6b8edea315f0fea61db381b900e51db050a6e9\", \"outcome\": \"FAIL\", \"root\": \"REQ-T/1/abababababababababababababababab\", \"signature\": \"0b1155c6fc57dfa8a93209064de1bd2c4f6a9ada95756611e708cd6a0748ae9b06e17834a09bce007ad52f10a9bbeaf32f482ddb08a24e15a1e792172260f302\", \"signer\": \"34a52ac45d33d327edf3c1ee2105d2e7bd172bdbded86f1bc448855d7e2cb089\", \"statement\": \"DELIVERED\", \"time\": \"2026-11-20T18:59:00Z\"}}\n",
+  "keys": {
+   "courier": "2c47599be2ee8b97b60915f3a642a3121ce0e0bf16ce106d89105b608ade6c32",
+   "gate": "8482ddb36201623aace05fb8c968186b675eeba5aeb4a02e1aa722458114e287",
+   "mailbox": "b4f375598490fddcd26a01f75e4762968ae9e54f15bb98c35af6b44911011228",
+   "witness": "313a71b4802dda46e4fd97d8237c1ffa4e8398df5d5b7062e33c9349ca2ebdc3"
+  },
+  "name": "courier-old",
+  "rows": [
+   {
+    "code": "OK",
+    "hash": "f4557c176b6ff1e8da24ec053a5d931aadfff467209693d8b2732dcc3a2692ae",
+    "kind": "APPLIED",
+    "observation": {
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ]
+     ],
+     "k": 100,
+     "live": [
+      0,
+      1,
+      0
+     ],
+     "m": 0
+    },
+    "op": [
+     "RECONCILE",
+     "a-fail"
+    ],
+    "prev_hash": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+    "seq": 1
+   },
+   {
+    "code": "OK",
+    "hash": "9b6f3194f0401b83abbdbab72db32e4a9c51df4f5bfd05b973ecf1be2e340186",
+    "kind": "APPLIED",
+    "observation": {
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ],
+      [
+       "b-poison",
+       "verify:1",
+       "EFFECT",
+       "n-1",
+       true,
+       true
+      ]
+     ],
+     "k": 100,
+     "live": [
+      0,
+      2,
+      0
+     ],
+     "m": 0
+    },
+    "op": [
+     "RECONCILE",
+     "b-poison"
+    ],
+    "prev_hash": "f4557c176b6ff1e8da24ec053a5d931aadfff467209693d8b2732dcc3a2692ae",
+    "seq": 2
+   },
+   {
+    "code": "OK",
+    "hash": "1763379c53c80f70fbaf178b1f4929d3344f2bb3e944abcc4e21cd31aac1f80b",
+    "kind": "APPLIED",
+    "observation": {
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ],
+      [
+       "b-poison",
+       "verify:1",
+       "EFFECT",
+       "n-1",
+       true,
+       true
+      ],
+      [
+       "d-drop",
+       "verify:2",
+       "EFFECT",
+       "n-2",
+       true,
+       true
+      ]
+     ],
+     "k": 100,
+     "live": [
+      0,
+      3,
+      0
+     ],
+     "m": 0
+    },
+    "op": [
+     "RECONCILE",
+     "d-drop"
+    ],
+    "prev_hash": "9b6f3194f0401b83abbdbab72db32e4a9c51df4f5bfd05b973ecf1be2e340186",
+    "seq": 3
+   },
+   {
+    "code": "OK",
+    "hash": "96259527e6f5e016ce9a0655433c15fa054320e989a7ed6b94d042b71b0b38ce",
+    "kind": "APPLIED",
+    "observation": {
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ],
+      [
+       "b-poison",
+       "verify:1",
+       "EFFECT",
+       "n-1",
+       true,
+       true
+      ],
+      [
+       "c-wait",
+       "verify:c",
+       "INTENT_PENDING",
+       "nc",
+       true,
+       false
+      ],
+      [
+       "d-drop",
+       "verify:2",
+       "EFFECT",
+       "n-2",
+       true,
+       true
+      ]
+     ],
+     "k": 100,
+     "live": [
+      0,
+      4,
+      0
+     ],
+     "m": 0
+    },
+    "op": [
+     "X",
+     "c-wait"
+    ],
+    "prev_hash": "1763379c53c80f70fbaf178b1f4929d3344f2bb3e944abcc4e21cd31aac1f80b",
+    "seq": 4
+   },
+   {
+    "code": "OK",
+    "hash": "babb2db05c83b54b3f0f5b4d000df525a82e9d6623aee0ab88892e17a045a1c6",
+    "kind": "APPLIED",
+    "observation": {
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ],
+      [
+       "b-poison",
+       "verify:1",
+       "EFFECT",
+       "n-1",
+       true,
+       true
+      ],
+      [
+       "c-wait",
+       "verify:c",
+       "INTENT_PENDING",
+       "nc",
+       true,
+       false
+      ],
+      [
+       "d-drop",
+       "verify:2",
+       "EFFECT",
+       "n-2",
+       true,
+       true
+      ],
+      [
+       "h-0",
+       "verify:h0",
+       "CONSUMED",
+       "nh0",
+       true,
+       true
+      ]
+     ],
+     "k": 100,
+     "live": [
+      0,
+      5,
+      0
+     ],
+     "m": 0
+    },
+    "op": [
+     "X",
+     "h-0"
+    ],
+    "prev_hash": "96259527e6f5e016ce9a0655433c15fa054320e989a7ed6b94d042b71b0b38ce",
+    "seq": 5
+   },
+   {
+    "code": "OK",
+    "hash": "7872f4e5ff883c061686d9d6f239f5c0a8026016cd6d7ae85b27abc55e5393f6",
+    "kind": "APPLIED",
+    "observation": {
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ],
+      [
+       "b-poison",
+       "verify:1",
+       "EFFECT",
+       "n-1",
+       true,
+       true
+      ],
+      [
+       "c-wait",
+       "verify:c",
+       "INTENT_PENDING",
+       "nc",
+       true,
+       false
+      ],
+      [
+       "d-drop",
+       "verify:2",
+       "EFFECT",
+       "n-2",
+       true,
+       true
+      ],
+      [
+       "h-0",
+       "verify:h0",
+       "CONSUMED",
+       "nh0",
+       true,
+       true
+      ],
+      [
+       "h-1",
+       "verify:h1",
+       "CONSUMED",
+       "nh1",
+       true,
+       true
+      ]
+     ],
+     "k": 100,
+     "live": [
+      0,
+      6,
+      0
+     ],
+     "m": 0
+    },
+    "op": [
+     "X",
+     "h-1"
+    ],
+    "prev_hash": "babb2db05c83b54b3f0f5b4d000df525a82e9d6623aee0ab88892e17a045a1c6",
+    "seq": 6
+   },
+   {
+    "code": "OK",
+    "hash": "4c16daffaf6a6d5d5784f2f4c0880daea8bf46acf5c1235fa3a93609c51bc11f",
+    "kind": "APPLIED",
+    "observation": {
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ],
+      [
+       "b-poison",
+       "verify:1",
+       "EFFECT",
+       "n-1",
+       true,
+       true
+      ],
+      [
+       "c-wait",
+       "verify:c",
+       "INTENT_PENDING",
+       "nc",
+       true,
+       false
+      ],
+      [
+       "d-drop",
+       "verify:2",
+       "EFFECT",
+       "n-2",
+       true,
+       true
+      ],
+      [
+       "h-0",
+       "verify:h0",
+       "CONSUMED",
+       "nh0",
+       true,
+       true
+      ],
+      [
+       "h-1",
+       "verify:h1",
+       "CONSUMED",
+       "nh1",
+       true,
+       true
+      ],
+      [
+       "h-2",
+       "verify:h2",
+       "CONSUMED",
+       "nh2",
+       true,
+       true
+      ]
+     ],
+     "k": 100,
+     "live": [
+      0,
+      7,
+      0
+     ],
+     "m": 0
+    },
+    "op": [
+     "X",
+     "h-2"
+    ],
+    "prev_hash": "7872f4e5ff883c061686d9d6f239f5c0a8026016cd6d7ae85b27abc55e5393f6",
+    "seq": 7
+   },
+   {
+    "code": "OK",
+    "hash": "39a2327ee18769a0b13687fcafea8a5ffc0c358be081a47f43e0417e69270c2a",
+    "kind": "APPLIED",
+    "observation": {
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ],
+      [
+       "b-poison",
+       "verify:1",
+       "EFFECT",
+       "n-1",
+       true,
+       true
+      ],
+      [
+       "c-wait",
+       "verify:c",
+       "INTENT_PENDING",
+       "nc",
+       true,
+       false
+      ],
+      [
+       "d-drop",
+       "verify:2",
+       "EFFECT",
+       "n-2",
+       true,
+       true
+      ],
+      [
+       "h-0",
+       "verify:h0",
+       "CONSUMED",
+       "nh0",
+       true,
+       true
+      ],
+      [
+       "h-1",
+       "verify:h1",
+       "CONSUMED",
+       "nh1",
+       true,
+       true
+      ],
+      [
+       "h-2",
+       "verify:h2",
+       "CONSUMED",
+       "nh2",
+       true,
+       true
+      ],
+      [
+       "k-knock",
+       "verify:7",
+       "EFFECT",
+       "n-7",
+       true,
+       true
+      ]
+     ],
+     "k": 100,
+     "live": [
+      0,
+      8,
+      0
+     ],
+     "m": 0
+    },
+    "op": [
+     "RECONCILE",
+     "k-knock"
+    ],
+    "prev_hash": "4c16daffaf6a6d5d5784f2f4c0880daea8bf46acf5c1235fa3a93609c51bc11f",
+    "seq": 8
+   }
+  ],
+  "runs": {
+   "a-fail": {
+    "evidence": [
+     {
+      "derived": "EFFECT",
+      "evidence": {
+       "aid": "a-fail",
+       "claim": "EFFECT",
+       "kind": "EFFECT_REPORT",
+       "nonce": "n-0",
+       "result_digest": "b37781fe80ff796c7bccdc8171a8d212c91a48c4ac2c4c2cffb97299fd3e9c83",
+       "root": "REQ-T/1/abababababababababababababababab",
+       "signature": "8051f1fe49deb4d8decfe92a86191b0fdc5558822cc81deb8d7d83ba621b4038cf22b2d0287abbe0ca3a33ecd2829a182e31b918a5fc0ba2e96971aabdddd301",
+       "signer": "b2ad9db4a88fc5e00be71cecc1e343066a55aefbcd39cdffb658caafd887b02b"
+      },
+      "seq": 1
+     }
+    ],
+    "request_key": "verify:0",
+    "result": {
+     "outcome": "value",
+     "value": {
+      "criteria": [
+       {
+        "achieved": "180",
+        "comparison": ">=",
+        "id": "service_temperature",
+        "limit": "200",
+        "met": false,
+        "units": "C"
+       }
+      ],
+      "detail": "d",
+      "format": "verification-verdict/1",
+      "reason_code": "LIMIT_NOT_MET",
+      "verdict": "FAIL"
+     }
+    }
+   },
+   "b-poison": {
+    "evidence": [
+     {
+      "derived": "EFFECT",
+      "evidence": {
+       "aid": "b-poison",
+       "claim": "EFFECT",
+       "kind": "EFFECT_REPORT",
+       "nonce": "n-1",
+       "result_digest": "b37781fe80ff796c7bccdc8171a8d212c91a48c4ac2c4c2cffb97299fd3e9c83",
+       "root": "REQ-T/1/abababababababababababababababab",
+       "signature": "47289d215ef1fab0c406a23274cce1db9dcf8b47a1abd5be2e5d1160a1b3c3724a8c514c281bb0d4b8dd3b7bc3e67350d939f53420d1d2a5b262997d45ca6503",
+       "signer": "b2ad9db4a88fc5e00be71cecc1e343066a55aefbcd39cdffb658caafd887b02b"
+      },
+      "seq": 2
+     }
+    ],
+    "request_key": "verify:1",
+    "result": {
+     "outcome": "value",
+     "value": {
+      "criteria": [
+       {
+        "achieved": "180",
+        "comparison": ">=",
+        "id": "service_temperature",
+        "limit": "200",
+        "met": false,
+        "units": "C"
+       }
+      ],
+      "detail": "d",
+      "format": "verification-verdict/1",
+      "reason_code": "LIMIT_NOT_MET",
+      "verdict": "FAIL"
+     }
+    }
+   },
+   "d-drop": {
+    "evidence": [
+     {
+      "derived": "EFFECT",
+      "evidence": {
+       "aid": "d-drop",
+       "claim": "EFFECT",
+       "kind": "EFFECT_REPORT",
+       "nonce": "n-2",
+       "result_digest": "b37781fe80ff796c7bccdc8171a8d212c91a48c4ac2c4c2cffb97299fd3e9c83",
+       "root": "REQ-T/1/abababababababababababababababab",
+       "signature": "0b18fc4c7c593e2ed5154e5e6eea6b78d6f844b4396585d76d1ad6ee5d4b1d989f83e3b6cf0b787c4b30be718c7ec369591823752d8237d5aa1964e9941e800f",
+       "signer": "b2ad9db4a88fc5e00be71cecc1e343066a55aefbcd39cdffb658caafd887b02b"
+      },
+      "seq": 3
+     }
+    ],
+    "request_key": "verify:2",
+    "result": {
+     "outcome": "value",
+     "value": {
+      "criteria": [
+       {
+        "achieved": "180",
+        "comparison": ">=",
+        "id": "service_temperature",
+        "limit": "200",
+        "met": false,
+        "units": "C"
+       }
+      ],
+      "detail": "d",
+      "format": "verification-verdict/1",
+      "reason_code": "LIMIT_NOT_MET",
+      "verdict": "FAIL"
+     }
+    }
+   },
+   "k-knock": {
+    "evidence": [
+     {
+      "derived": "EFFECT",
+      "evidence": {
+       "aid": "k-knock",
+       "claim": "EFFECT",
+       "kind": "EFFECT_REPORT",
+       "nonce": "n-7",
+       "result_digest": "b37781fe80ff796c7bccdc8171a8d212c91a48c4ac2c4c2cffb97299fd3e9c83",
+       "root": "REQ-T/1/abababababababababababababababab",
+       "signature": "04a8c2214db004d99819329df52b436502405af6e47947f12b680f5c540b4778e64172632825f5b3bfbdc2a91a1d1ca3f1884938405bd4e3883da15648fed203",
+       "signer": "b2ad9db4a88fc5e00be71cecc1e343066a55aefbcd39cdffb658caafd887b02b"
+      },
+      "seq": 8
+     }
+    ],
+    "request_key": "verify:7",
+    "result": {
+     "outcome": "value",
+     "value": {
+      "criteria": [
+       {
+        "achieved": "180",
+        "comparison": ">=",
+        "id": "service_temperature",
+        "limit": "200",
+        "met": false,
+        "units": "C"
+       }
+      ],
+      "detail": "d",
+      "format": "verification-verdict/1",
+      "reason_code": "LIMIT_NOT_MET",
+      "verdict": "FAIL"
+     }
+    }
+   }
+  },
+  "stall_after": 100,
+  "state": {
+   "roots": {
+    "REQ-T/1/abababababababababababababababab": {
+     "asked": {
+      "c-wait": {
+       "at": 1000010.0,
+       "entry": "70037ddaaa025e983f497852f5ea10f753c8c28a52560acd268e65c1e8bb979b"
+      },
+      "d-drop": {
+       "at": 1000010.0,
+       "entry": "12938587feb56bbd2a7a2d4207e262d4f0f132ebd7cfdf38da21679411a65424"
+      },
+      "h-0": {
+       "at": 1000010.0,
+       "entry": "3e38d0f256c96250e11214e37d95a621569750b9a544b0b13ce0f37796894023"
+      },
+      "h-1": {
+       "at": 1000000.0,
+       "entry": "619fec611b7a08bcaefe4acaebf118279c51b5e416201e827d51ac425cd460df"
+      },
+      "h-2": {
+       "at": 1000000.0,
+       "entry": "7f69fde13b94973ae22ac08fd050f308414c776b1e34dbb99d890d05ed318f5c"
+      },
+      "k-knock": {
+       "at": 1000000.0,
+       "entry": "0e006ca0a53f3ffce46639c12bc59804c3d351635da0ddf8b0bf4b97933be44d"
+      }
+     },
+     "attempts": [
+      [
+       "a-fail",
+       "verify:0",
+       "EFFECT",
+       "n-0",
+       true,
+       true
+      ],
+      [
+       "b-poison",
+       "verify:1",
+       "EFFECT",
+       "n-1",
+       true,
+       true
+      ],
+      [
+       "c-wait",
+       "verify:c",
+       "INTENT_PENDING",
+       "nc",
+       true,
+       false
+      ],
+      [
+       "d-drop",
+       "verify:2",
+       "EFFECT",
+       "n-2",
+       true,
+       true
+      ],
+      [
+       "h-0",
+       "verify:h0",
+       "CONSUMED",
+       "nh0",
+       true,
+       true
+      ],
+      [
+       "h-1",
+       "verify:h1",
+       "CONSUMED",
+       "nh1",
+       true,
+       true
+      ],
+      [
+       "h-2",
+       "verify:h2",
+       "CONSUMED",
+       "nh2",
+       true,
+       true
+      ],
+      [
+       "k-knock",
+       "verify:7",
+       "EFFECT",
+       "n-7",
+       true,
+       true
+      ]
+     ],
+     "final": [
+      "a-fail",
+      "b-poison"
+     ],
+     "first_seen": {
+      "c-wait|NO_OUTCOME|INTENT_PENDING": 1000000.0
+     },
+     "head": "39a2327ee18769a0b13687fcafea8a5ffc0c358be081a47f43e0417e69270c2a",
+     "last_pass": {
+      "at": 1000010.0,
+      "read": true
+     },
+     "pending": [
+      {
+       "aid": "b-poison",
+       "courier": "courier-old",
+       "detail": "d",
+       "form": 2,
+       "head": "39a2327ee18769a0b13687fcafea8a5ffc0c358be081a47f43e0417e69270c2a",
+       "outcome": "FAIL",
+       "reason_code": "LIMIT_NOT_MET",
+       "request_key": "verify:1",
+       "result_digest": "b37781fe80ff796c7bccdc8171a8d212c91a48c4ac2c4c2cffb97299fd3e9c83",
+       "root": "REQ-T/1/abababababababababababababababab",
+       "seq": 8,
+       "signature": "4f55100fe736db088036269fc0dc83e280c630932d518fb714fe58eac5346823e2aead74488151b97142387452e5cf285119bd179fb62c6e5b2cb676bdf77003",
+       "signer": "f7239bf15041b351bcc7baf254ba9c171422afd71bd60313fa3a3f40428f2078",
+       "statement": "NOTICE",
+       "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"b-poison\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-old from what the witness gave it, read to decision 8.  Words in quotation marks are shown as data: they are the service's, or what the courier was told, and not the courier's own words.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+       "time": "2026-11-20T18:59:00Z"
+      }
+     ],
+     "put_off_last": {
+      "at": 1000010.0,
+      "in_trouble": [
+       "h-1",
+       "h-2",
+       "k-knock"
+      ],
+      "tiers": {
+       "B": 0,
+       "C": 3
+      }
+     },
+     "refusals": {
+      "25824b544ccfd83dbe4d17b34430bbb9f970f10d703e3c91b3c0158211578ba8": {
+       "aid": "b-poison",
+       "count": 2,
+       "kind": "refused by the mailbox",
+       "last": "2026-11-20T18:59:01Z",
+       "outcome": "FAIL",
+       "why": "the mailbox answered 400: refused: (for good)"
+      }
+     },
+     "sent": [
+      "a-fail|FAIL",
+      "b-poison|FAIL"
+     ],
+     "seq": 8,
+     "suspect": {
+      "k-knock": {
+       "clean": 0,
+       "last": 1000000.0,
+       "since": 1000000.0,
+       "times": 1
+      }
+     },
+     "unread": {
+      "d-drop": {
+       "last": 1000010.0,
+       "since": 1000000.0,
+       "why": "w could not be asked (IncompleteRead)"
+      },
+      "h-0": {
+       "last": 1000010.0,
+       "since": 1000000.0,
+       "why": "w did not answer within 0 seconds"
+      },
+      "h-1": {
+       "last": 1000000.0,
+       "since": 1000000.0,
+       "why": "w did not answer within 0 seconds"
+      },
+      "h-2": {
+       "last": 1000000.0,
+       "since": 1000000.0,
+       "why": "w did not answer within 0 seconds"
+      }
+     }
+    }
+   }
+  }
+ }
+}

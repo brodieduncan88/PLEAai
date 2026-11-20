@@ -69,7 +69,8 @@ marked done.
 
 What a pass asks for (Amendment 16, fifth form, A).  Runs whose outcome needs no request to the witness are settled in every
 pass.  Every other run not done is in one of two lines: new (never asked for, or its entry in the chain is not what it was
-when last asked for), in the chain's order; old (all the others), the one asked for longest ago first, so a run after which
+when last asked for), in the chain's order (by the decision at which the chain came to say what it now says of the run);
+old (all the others), the one asked for longest ago first, so a run after which
 the witness stopped answering stands last.  A budget's pass has `pass_seconds` (600 unless set) for asking: while both lines
 hold runs each has half, and a line that is empty gives its half to the other; whatever the time, at least `floor` runs of
 each line not empty are asked for, floor being what half of pass_seconds holds at two deadlines a run (a request and the
@@ -333,9 +334,9 @@ def verify_rows(rows, after: int, prev: str, upto: int, head: str) -> list:
     return out
 
 
-def chain(cfg, root, after: int, prev: str, cp):
+def chain(cfg, root, after: int, prev: str, cp, each=lambda row: None):
     """The last decision up to the checkpoint's, after checking every one since `after`, page by page (None if none is new).
-    Only the last is kept: a page is checked and let go before the next is asked."""
+    Only the last is kept: a page is checked, given row by row to `each`, and let go before the next is asked."""
     n, last = after, None
     while n < cp['seq']:
         status, page = https('GET', f"{cfg['witness_url']}/chain?" + q(root=root, after=n, limit=max(1, min(PAGE, int(cfg.get('page', PAGE))))), cfg)
@@ -348,6 +349,8 @@ def chain(cfg, root, after: int, prev: str, cp):
         part = rows[:upto - n]
         end = cp['head'] if upto == cp['seq'] else (part[-1].get('hash') if isinstance(part[-1], dict) else None)   # each row's own hash is recomputed; the last page must end at the checkpoint
         got = verify_rows(part, n, prev, upto, end)
+        for row in got:
+            each(row)
         n, prev, last = upto, got[-1]['hash'], got[-1]
     return last
 
@@ -552,10 +555,12 @@ def asked_at(asked: dict, aid):
     return _number(v, 0), None
 
 
-def lines(todo, asked) -> tuple:
+def lines(todo, asked, said) -> tuple:
     """The two lines of a pass (Amendment 16, fifth form, A): new, the runs never asked for or whose entry in the chain is not
-    what it was when last asked for, in the chain's order; old, all the others, the one asked for longest ago first."""
-    new = [a for a in todo if asked_at(asked, a[0])[1] != entry_digest(a)]
+    what it was when last asked for, in the chain's order: by the decision at which the chain came to say what it now says of
+    the run (said), so that no run, however named, waits behind runs the chain spoke of after it; old, all the others, the
+    one asked for longest ago first."""
+    new = sorted([a for a in todo if asked_at(asked, a[0])[1] != entry_digest(a)], key=lambda a: _number(said.get(a[0]), 0))
     old = sorted([a for a in todo if asked_at(asked, a[0])[1] == entry_digest(a)], key=lambda a: asked_at(asked, a[0])[0])
     return new, old
 
@@ -569,11 +574,21 @@ def floor_of(pass_seconds: float) -> int:
 def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, post) -> int:
     """One budget's reading: the checkpoint, the chain, then every run not yet done.  Returns how many runs were put off."""
     root = watch['root']
-    entries(st.get('attempts', []))                                  # what an earlier form kept is checked as what comes in now is
+    try:
+        entries(st.get('attempts', []))                              # what an earlier form kept is checked as what comes in now is
+    except Refused:
+        raise Refused('an entry of a run that the courier kept from the chain at an earlier pass is not of the chain\'s shape: an earlier form of the '
+                      'courier kept it from what the witness said, or the state file was damaged; after courier.py resume the budget is read again from its start')
     cp = checkpoint(cfg, root, st.get('seq', 0))
     if st.get('seq', 0) and cp['head_at'] != st['head']:
         raise Refused(f"FORK: the witness says another head for decision {st['seq']} than the one the courier read", cp)
-    last = chain(cfg, root, st.get('seq', 0), cp['head_at'] if not st.get('seq') else st['head'], cp)
+    said = st.setdefault('said', {})                                 # each run: the decision at which the chain came to say what it now says of it
+    known = {a[0]: a for a in st.get('attempts', [])}
+    def each(row):                                                   # every decision's entries are checked, not only the last one's
+        for a in entries(row['observation'].get('attempts', [])):
+            if known.get(a[0]) != a:
+                known[a[0]] = a; said[a[0]] = row['seq']
+    last = chain(cfg, root, st.get('seq', 0), cp['head_at'] if not st.get('seq') else st['head'], cp, each)
     if last is not None:
         st['attempts'] = entries(last['observation'].get('attempts', []))
     st['seq'], st['head'] = cp['seq'], cp['head']
@@ -602,8 +617,8 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, p
     todo = [a for a in st.get('attempts', []) if a[0] not in final and a[2] in READ]
     for attempt in st.get('attempts', []):
         if attempt[0] in final or attempt[2] not in READ:
-            unread.pop(attempt[0], None); asked.pop(attempt[0], None)
-    new, old = lines([a for a in todo if a[2] in ASKS], asked)
+            unread.pop(attempt[0], None); asked.pop(attempt[0], None); said.pop(attempt[0], None)
+    new, old = lines([a for a in todo if a[2] in ASKS], asked, said)
     count = {'new': [len(new), 0, 0], 'old': [len(old), 0, 0]}       # length, asked, put off
     spent = {'new': 0.0, 'old': 0.0}
     put_off = []
@@ -916,7 +931,7 @@ def state_problem(st) -> str | None:
     upgrade(), a state damaged on disk.  What the witness said never reaches the state unchecked (entries())."""
     if not isinstance(st, dict):
         return 'the budget\'s entry is not an object'
-    shapes = {'unread': dict, 'asked': dict, 'first_seen': dict, 'sent': list, 'final': list, 'outbox': list, 'pending': list, 'attempts': list, 'lines': dict, 'last_pass': dict}
+    shapes = {'unread': dict, 'asked': dict, 'said': dict, 'first_seen': dict, 'sent': list, 'final': list, 'outbox': list, 'pending': list, 'attempts': list, 'lines': dict, 'last_pass': dict}
     for field, kind in shapes.items():
         if field in st and not isinstance(st[field], kind):
             return f'its field {field} is not a{"n object" if kind is dict else " list"}'
@@ -926,9 +941,10 @@ def state_problem(st) -> str | None:
     for k, v in (st.get('asked') or {}).items():
         if not (_finite(v) or (isinstance(v, dict) and _finite(v.get('at')))):
             return f'its field asked holds a value for {C.shown(k, 80)} that is not a time'
-    for k, v in (st.get('first_seen') or {}).items():
-        if not _finite(v):
-            return f'its field first_seen holds a value for {C.shown(k, 80)} that is not a finite number'
+    for field in ('first_seen', 'said'):
+        for k, v in (st.get(field) or {}).items():
+            if not _finite(v):
+                return f'its field {field} holds a value for {C.shown(k, 80)} that is not a finite number'
     if any(not isinstance(x, str) for x in st.get('sent') or []) or any(not isinstance(x, str) for x in st.get('final') or []):
         return 'its field sent or final holds something that is not text'
     if any(not (isinstance(r, dict) and isinstance(r.get('notice'), dict)) for r in st.get('outbox') or []):
@@ -1012,7 +1028,7 @@ def resume(cfg, root) -> dict:
         if st is None:
             raise ValueError(f'the courier holds nothing for {root}')
         upgrade(st)
-        for k in ('stopped', 'seq', 'head', 'attempts', 'blocked_since', 'blocked_sent', 'failed_since', 'failed_sent', 'final', 'first_seen', 'unread', 'asked', 'watching',
+        for k in ('stopped', 'seq', 'head', 'attempts', 'blocked_since', 'blocked_sent', 'failed_since', 'failed_sent', 'final', 'first_seen', 'unread', 'asked', 'said', 'watching',
                   'lines', 'last_pass'):
             st.pop(k, None)
         _write_whole(sd / 'state.json', json.dumps(state, indent=1, sort_keys=True) + '\n')
