@@ -2855,7 +2855,7 @@ def r28():
     first declared form: connections are counted where the database driver opens them; a reading is cut at the very decision of a
     report and at the one before; and the store is then changed by hand, to show what the reading must not do: take another
     budget's reports, receipts or results for a run of the same name, take a result for a run that had no effect or a result
-    that is no value, or fail on a run that has no report and no receipt.  (Amendments 13 and 14.)"""
+    that is no value, or fail on a run that has no report, no receipt and no result.  (Amendments 13 and 14.)"""
     r = Run('R28', crash_at='verify_running'); e = {}
     try:
         import psycopg
@@ -2892,15 +2892,27 @@ def r28():
         def at(upto, aid):
             """What each reading shows of one run's reports, cut at a decision: (the new reading's, the old one's)."""
             pick = lambda attempts: [x['seq'] for a in attempts if a['aid'] == aid for x in a['evidence']]
-            return pick(VR.attempts_of(store, root, journal(), upto=upto)[0]), pick(_attempts_one_by_one(store, root, journal(), upto=upto))
+            try:
+                return pick(VR.attempts_of(store, root, journal(), upto=upto)[0]), pick(_attempts_one_by_one(store, root, journal(), upto=upto))
+            except Exception as exc:
+                return (f'{type(exc).__name__}: {exc}'[:120], None)
+
+        unread = lambda exc: {'runs': 0, 'opened': None, 'opened_one_by_one': 0, 'same': False, 'same_cut': False, 'cut_at': 0, 'cut_differs': False, 'outcomes': [], 'most_reports': 0,
+                              'in_order': False, 'without_result': 0, 'with_receipts': 0, 'attempts': [], 'raised': f'{type(exc).__name__}: {exc}'[:160]}
+
+        def measured():                                                  # a reading that raises is a reading that failed: the checks say so, and the test goes on
+            try:
+                return measure()
+            except Exception as exc:
+                return unread(exc)
 
         during = r.submit(GOOD); time.sleep(0.3); r.s.stop_host(); r.s.start_host()     # the host dies during the first run; asked again, it is interrupted
         again = r.submit(GOOD)
         first = [r.submit(d)[0] for d in (BAD, {'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'})]
-        few = measure()
+        few = measured()
         more = [r.submit({'material': 'PA66-GF30', 'wall_mm': round(3.1 + i / 10, 1), 'mode': 'normal'})[0] for i in range(11)]
         outside = r.submit({'material': 'PA66-GF30', 'wall_mm': 99, 'mode': 'normal'})[0]          # outside the design space: a FAIL with no check run
-        many = measure()
+        many = measured()
         failed = [a for a in many['attempts'] if a['outcome'] == 'FAIL' and a['evidence'] and len(a['receipts']) == 3]
         none = {'aid': 'none', 'evidence': [{'seq': 2, 'evidence': {}}], 'receipts': {}, 'result': None}           # if no run reads as a FAIL, the checks say so
         victim, emptied, tampered = (failed + [none, none, none])[:3]
@@ -2924,10 +2936,11 @@ def r28():
                     for op in VR.RECEIPT_OPS:
                         put('INSERT INTO receipts (root_id, aid, op, seq, receipt) VALUES (%s, %s, %s, %s, %s)', root2, aid, op, 1, json.dumps(dict(other, seq=1)))
                     put('INSERT INTO results (root_id, aid, result) VALUES (%s, %s, %s)', root2, aid, json.dumps({'outcome': 'value', 'value': dict(other, verdict='PASS')}))
-                # in this budget: a second, earlier report for one run; one run left with no report and no receipt;
+                # in this budget: a second, earlier report for one run; one run left with no report, no receipt and no result;
                 put('INSERT INTO evidence (root_id, aid, seq, evidence, derived) VALUES (%s, %s, %s, %s, %s)', root, victim['aid'], free, json.dumps({'claim': 'EARLIER', 'of': 'this budget'}), 'PLANTED')
                 put('DELETE FROM evidence WHERE root_id = %s AND aid = %s', root, emptied['aid'])
                 put('DELETE FROM receipts WHERE root_id = %s AND aid = %s', root, emptied['aid'])
+                put('DELETE FROM results WHERE root_id = %s AND aid = %s', root, emptied['aid'])          # so that another budget's result for its name would show, whichever row is read last
                 # a result that says PASS for the run that had no effect (it was interrupted); and one run's result made into one that is no value
                 put('INSERT INTO results (root_id, aid, result) VALUES (%s, %s, %s) ON CONFLICT (root_id, aid) DO UPDATE SET result = EXCLUDED.result', root, halted['aid'],
                     json.dumps({'outcome': 'value', 'value': {'verdict': 'PASS', 'put': 'by hand'}}))
@@ -2936,7 +2949,7 @@ def r28():
             planted = ['done', [free, own]]
         except Exception as exc:
             planted = [f'{type(exc).__name__}: {exc}'[:200]]
-        beside = measure()
+        beside = measured()
         find = lambda aid: next((a for a in beside['attempts'] if a['aid'] == aid), {'evidence': None, 'receipts': None, 'result': 'missing', 'outcome': 'missing'})
         mine, bare, halted2, tampered2 = find(victim['aid']), find(emptied['aid']), find(halted['aid']), find(tampered['aid'])
         leaked = 'another budget' in canonical(beside['attempts'])
@@ -2944,7 +2957,7 @@ def r28():
             m.pop('attempts')
         e.update(during=during[0], again=(again[0], head(again[1])), first=first, more=more, outside=outside, few=few, many=many, beside=beside, planted=planted, other_root=root2 != root,
                  edge=edge, own=own, leaked=leaked, mine_reports=[(x['seq'], x['evidence'].get('claim')) for x in (mine['evidence'] or [])], mine_outcome=mine['outcome'],
-                 mine_receipts_same=canonical(mine['receipts']) == canonical(victim['receipts']), bare=(bare['evidence'], bare['receipts'], bare['outcome']),
+                 mine_receipts_same=canonical(mine['receipts']) == canonical(victim['receipts']), bare=(bare['evidence'], bare['receipts'], bare['result'], bare['outcome']),
                  halted=(halted2['outcome'], halted2['result']), tampered=(tampered2['outcome'], tampered2['result']), three_runs=len({victim['aid'], emptied['aid'], tampered['aid'], halted['aid']}),
                  record_verifies=ok, why=why, counts=(s.get('official_runs'), s.get('met'), s.get('not_met')))
         checks = {'the runs are there to read: 3, then 15, one of them interrupted, with no result; and the record verifies':
@@ -2961,8 +2974,8 @@ def r28():
                       planted[0] == 'done' and e['other_root'] and e['three_runs'] == 4 and beside['same'] and beside['same_cut'] and beside['runs'] == 15 and not leaked
                       and beside['most_reports'] == 2 and beside['in_order'] and [c for _, c in e['mine_reports']] == ['EARLIER', victim['evidence'][0]['evidence'].get('claim')]
                       and e['mine_reports'][0][0] < e['mine_reports'][1][0] and e['mine_receipts_same'] and e['mine_outcome'] == 'FAIL',
-                  'a run left with no report and no receipt is read as having none, and keeps its FAIL; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken':
-                      planted[0] == 'done' and beside['same'] and e['bare'] == ([], {}, 'FAIL') and e['halted'] == ('INTERRUPTED', None) and e['tampered'][1] is None and e['tampered'][0] != 'FAIL'}
+                  'a run left with no report, no receipt and no result is read as having none, and is no longer a FAIL or a PASS; a PASS put by hand for the run that had no effect is not taken, and it stays interrupted; and a result made into one that is no value is not taken':
+                      planted[0] == 'done' and beside['same'] and e['bare'] == ([], {}, None, 'INVALID') and e['halted'] == ('INTERRUPTED', None) and e['tampered'][1] is None and e['tampered'][0] != 'FAIL'}
     finally:
         r.stop()
     return {k: bool(v) for k, v in checks.items()}, e
