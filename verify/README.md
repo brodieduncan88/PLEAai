@@ -91,8 +91,12 @@ sandbox's own, not the check, and the run ends with it. If the service dies duri
 unless it dies while they are frozen for their kill; what the run leaves, those included, is removed by a later run once
 ten minutes old. If it cannot be made, the check is not
 run and the verdict is UNKNOWN. The check gets the Python standard library only. The service must run as root on x86-64,
-with cgroup v1 memory, pids and freezer controllers, on a machine whose file table (fs.file-max) is at least 2^40, as
-systemd sets it: a run can hold files open through memory mappings, and a smaller table could be filled by one run. The filter narrows the calls a check can make; it does not close
+with cgroup v1 memory, pids and freezer controllers (a machine with cgroup v2 only is refused), on a machine whose file
+table (fs.file-max) is at least twice what one service's runs can keep open at once: about 33.6 million with the usual
+limits (Amendment 15). A run can hold files open through memory mappings; one was measured holding 2.6 million, more than
+this machine's own table of 1.6 million. `python3 sandbox.py --prerequisites` says what is met and what is not; the setting
+is not kept when the machine is started again, unless the operator makes it so (`fs.file-max` in `/etc/sysctl.d`). The
+filter narrows the calls a check can make; it does not close
 them: a flaw in the kernel's other calls would still be a way out. The sandbox is no virtual machine.
 
 `DECLARED_VERIFY.md` states what the tests were expected to show before the official run; `REPORT_VERIFY.md` gives

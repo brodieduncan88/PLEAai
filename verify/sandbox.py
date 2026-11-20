@@ -43,12 +43,17 @@ The check is run by the Python standard library alone (python -I -S): no site pa
 
 If the sandbox cannot be made, the check is not run, and the run says why: the outcome is SANDBOX_UNAVAILABLE.  Nothing ever
 falls back to running a check outside it.  The sandbox needs the service to run as root (to choose the run's identities and
-make its control groups); otherwise every run is SANDBOX_UNAVAILABLE.  So is every run on a machine whose file table
-(fs.file-max) is below 2^40: a run can keep files open through memory mappings, beyond its limit on descriptors, and only
-its memory bounds how many, so a smaller table could be filled by one run.  Nothing is mounted, and nothing run, unless the
-process doing it is the first of new user, mount, process, network, IPC and host-name namespaces, none of them the
-service's, with no network but a loopback, and with the run's own two ids mapped.  It says that the sandbox is ready on a pipe the check does not inherit,
-and, if the check cannot be started, says that too, so a check cannot pretend that it was or was not run.
+make its control groups); otherwise every run is SANDBOX_UNAVAILABLE.  What the machine must give is looked at before
+every run (prerequisites(), and for an operator `sandbox.py --prerequisites`): root; x86-64; cgroup v1 memory, pids and
+freezer control groups (a machine with cgroup v2 only is refused in those words); user namespaces; and a file table
+(fs.file-max) of at least twice what the runs of one service can keep open at once.  A run can keep files open through
+memory mappings, beyond its limit on descriptors: one run was measured keeping 2.6 million open.  The floor is worked out
+from the machine's own limit on mappings, and is about 33.6 million where that limit is the usual 65,530; a machine
+started again with a smaller table runs no check until the table is raised.  Nothing is mounted, and nothing run, unless
+the process doing it is the first of new user, mount, process, network, IPC and host-name namespaces, none of them the
+service's, with no network but a loopback, and with the run's own two ids mapped.  It says that the sandbox is ready on a
+pipe the check does not inherit, and, if the check cannot be started, says that too, so a check cannot pretend that it was
+or was not run.
 
 What it does not do.  Its filter narrows the kernel's interface; it does not close it: the check can still make every
 other call as an unprivileged user in its own namespaces, and a kernel flaw there would be a way out.  It is no virtual
@@ -56,6 +61,9 @@ machine.  It has no limit on the check's
 share of the CPU beyond its time limit, nor on its disk reads; many runs at once share the machine.  The Python installation
 under /usr is visible as it is.  Programs that need /proc or /dev/shm (multiprocessing) do not work.  In the demonstration
 the service itself runs as root on the same machine.
+
+    sandbox.py --prerequisites
+        for an operator: what the machine must give, each said to be met or not; exit status 0 only if all are
 
     sandbox.py --inside JAIL WORK FD_READY FD_SYNC_OUT FD_SYNC_IN NS_INODES LIMITS ALLOWED_SECONDS OWNER_UID [--no-unshare] -- PROGRAM ARGS...
         the launcher, run by run(); --no-unshare is for a test, to show that a launcher outside new namespaces refuses
@@ -91,9 +99,13 @@ READY, EXEC_FAILED = b'SANDBOX-READY\n', b'SANDBOX-EXEC-FAILED\n'
 UID_BASE, UID_SPAN = 2_000_400_000, 1 << 25                           # host ids for runs, above the usual directory-service and container ranges: two each, at random
 GRACE = 5.0                                                             # seconds the launcher allows past the run's own time before it ends the run itself
 STALE = 600.0                                                           # a run's leftovers older than this are swept away
-FILE_MAX_PATH, FILE_MAX_FLOOR = '/proc/sys/fs/file-max', 1 << 40          # the machine's file table: beyond what any run's memory could fill
+FILE_MAX_PATH = os.environ.get('VERIFY_SANDBOX_FILE_MAX', '/proc/sys/fs/file-max')        # the machine's file table; a test may point this elsewhere, to show the run fails closed
+MAP_COUNT_PATH = '/proc/sys/vm/max_map_count'                           # the mappings one process may have: each can keep a file open
+USERNS_PATH = '/proc/sys/user/max_user_namespaces'
+SELF_CGROUP = '/proc/self/cgroup'
+RUNS_AT_ONCE, FILE_MAX_MARGIN = 4, 2                                    # runs at once in one service; the file table must hold this many times what they can keep open
 LATE = 0.5                                                              # seconds past the run's time that output still waiting may hold the clock
-AT_ONCE = threading.BoundedSemaphore(4)                                 # runs at once, in one service
+AT_ONCE = threading.BoundedSemaphore(RUNS_AT_ONCE)
 CGROUP_ROOT = os.environ.get('VERIFY_SANDBOX_CGROUP_ROOT', '/sys/fs/cgroup')   # a test may point this elsewhere, to show the run fails closed
 NAMESPACES = ('user', 'mnt', 'pid', 'net', 'ipc', 'uts')
 
@@ -265,6 +277,70 @@ def _free_ids() -> int:
     raise OSError('no free pair of ids for the run')
 
 
+# ---------------------------------------------------------------------------------------------------- what the machine must give
+def _number(path: str):
+    try:
+        return int(open(path).read().split()[0])
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def file_table_floor(limits: dict | None = None):
+    """The smallest file table (fs.file-max) the sandbox runs on, or None if it cannot be worked out.  A run can keep files open
+    beyond its limit on descriptors, through memory mappings: one for each mapping each of its processes may have.  So the runs
+    one service makes at once can keep open RUNS_AT_ONCE x processes x (vm.max_map_count + open files); the table must hold
+    FILE_MAX_MARGIN times that, so that they cannot fill it.  Measured on the machine this was written on: one run kept 2.6
+    million files open before its memory ran out, where the machine's own table was 1.6 million (Amendment 15)."""
+    limits = dict(LIMITS, **(limits or {}))
+    mappings = _number(MAP_COUNT_PATH)
+    return None if mappings is None else FILE_MAX_MARGIN * RUNS_AT_ONCE * limits['processes'] * (mappings + limits['open_files'])
+
+
+def prerequisites(limits: dict | None = None) -> list:
+    """What the machine must give for a check to be run at all: [(name, met, words)], the words saying what was found.  The
+    service looks at these before every run, and an operator can ask for them: python3 sandbox.py --prerequisites.  Nothing here
+    changes the machine.  (Amendment 15.)"""
+    out = [('root', os.geteuid() == 0,
+            'the service runs as root' if os.geteuid() == 0 else
+            'the sandbox needs the service to run as root, to give each run identities and control groups of its own'),
+           ('x86-64', platform.machine() == 'x86_64',
+            'the machine is x86-64' if platform.machine() == 'x86_64' else
+            f'the sandbox\'s system-call filter is written for x86-64 only, and this machine is {platform.machine()}')]
+    try:
+        lines = [l.split(':', 2) for l in open(SELF_CGROUP).read().splitlines() if l.count(':') >= 2]
+    except OSError as exc:
+        lines = None; why = f'the sandbox\'s control groups cannot be made: {SELF_CGROUP} cannot be read ({type(exc).__name__})'
+    if lines is not None:
+        mine = {c: path for _, ctrls, path in lines for c in ctrls.split(',') if c}
+        missing = [c for c in ('memory', 'pids', 'freezer') if c not in mine]
+        absent = [c for c in ('memory', 'pids', 'freezer') if c in mine and not (pathlib.Path(CGROUP_ROOT) / c / mine[c].lstrip('/')).is_dir()]
+        if missing and not mine and any(ctrls == '' for _, ctrls, _ in lines):
+            why = ('the sandbox\'s control groups cannot be made: this machine gives its processes cgroup v2 only, and the sandbox uses cgroup v1 '
+                   '(memory, pids and freezer); it does not run here')
+        elif missing:
+            why = f'the sandbox\'s control groups cannot be made: this process has no cgroup v1 {", ".join(missing)} control group'
+        elif absent:
+            why = f'the sandbox\'s control groups cannot be made: the {", ".join(absent)} control group of this process is not under {CGROUP_ROOT}'
+        else:
+            why = None
+    out.append(('control groups', why is None, why or 'cgroup v1 memory, pids and freezer control groups are there'))
+    spaces = _number(USERNS_PATH)
+    out.append(('user namespaces', spaces != 0,
+                'user namespaces may be made' if spaces != 0 else 'the sandbox needs user namespaces, and this machine allows none (user.max_user_namespaces is 0)'))
+    table, floor = _number(FILE_MAX_PATH), file_table_floor(limits)
+    lim = dict(LIMITS, **(limits or {}))
+    if table is None or floor is None:
+        out.append(('file table', False, 'the machine\'s file table (fs.file-max) or the mappings a process may have (vm.max_map_count) cannot be read, '
+                                         'so it cannot be shown that a run could not fill the file table'))
+    else:
+        held = floor // FILE_MAX_MARGIN
+        out.append(('file table', table >= floor,
+                    (f'the machine\'s file table (fs.file-max, {table}) holds at least {floor}' if table >= floor else
+                     f'the machine\'s file table (fs.file-max, {table}) is below {floor}, {FILE_MAX_MARGIN} times the {held} files that {RUNS_AT_ONCE} runs at once can '
+                     f'keep open through memory mappings ({lim["processes"]} processes each); runs could fill it, so the sandbox does not run')))
+    return out
+
+
 # ---------------------------------------------------------------------------------------------------- the service's side
 def run(files: dict, script: str, stdin: bytes, timeout: float = 30.0, limits: dict | None = None, _no_unshare: bool = False) -> Outcome:
     """Run `script` (one of `files`, name -> bytes) in a new sandbox, with `stdin`, and throw the sandbox away."""
@@ -277,16 +353,9 @@ def run(files: dict, script: str, stdin: bytes, timeout: float = 30.0, limits: d
 
 
 def _run(files: dict, script: str, stdin: bytes, timeout: float, limits: dict, _no_unshare: bool) -> Outcome:
-    if os.geteuid() != 0:
-        return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'the sandbox needs the service to run as root, to give each run identities and control groups of its own')
-    if platform.machine() != 'x86_64':
-        return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'the sandbox\'s system-call filter is written for x86-64 only')
-    try:
-        file_max = int(open(FILE_MAX_PATH).read().split()[0])
-    except (OSError, ValueError, IndexError):
-        file_max = 0
-    if file_max < FILE_MAX_FLOOR:
-        return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', f'the machine\'s file table (fs.file-max, {file_max}) is small enough for one run to fill; the sandbox needs at least 2^40')
+    for _name, met, words in prerequisites(limits):                      # each is looked at before every run: a machine that stops meeting one stops running checks
+        if not met:
+            return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', words[:300])
     def fit(name) -> bool:
         try:
             return isinstance(name, str) and '/' not in name and '\0' not in name and name not in ('', '.', '..') and not name.startswith('-') and len(name.encode()) <= 200
@@ -637,6 +706,13 @@ def launcher(a: list) -> None:
 
 def main():
     a = sys.argv[1:]
+    if a == ['--prerequisites']:                                         # for an operator, after a machine is set up or started again: what is met, and what is not
+        found = prerequisites()
+        for name, met, words in found:
+            print(f'{"met    " if met else "NOT MET"}  {name}: {words}')
+        print('The sandbox can run checks on this machine.' if all(met for _, met, _ in found) else
+              'The sandbox cannot run checks on this machine: every run would be UNKNOWN, "the check was not run".')
+        raise SystemExit(0 if all(met for _, met, _ in found) else 1)
     if not a or a[0] != '--inside' or '--' not in a:
         raise SystemExit(__doc__)
     try:
