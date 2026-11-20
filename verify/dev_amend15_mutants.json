@@ -1,0 +1,584 @@
+{
+ "M0": {
+  "defect": "no change at all: the control, which must not be caught",
+  "tests_run": [
+   "R27",
+   "R29"
+  ],
+  "caught_by": [],
+  "failed_checks": {},
+  "errors": {},
+  "seconds": 49.2
+ },
+ "P1": {
+  "defect": "what the machine must give is not looked at before a run",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the file table must hold twice what four runs can keep open, worked out from the machine's own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor",
+    "where a process may have more mappings than it has pages of memory to put them in (1,048,576, as Ubuntu 24.04 sets it), the floor counts the pages, and says the number; a file named in place of the kernel's can make the table smaller and cannot make it larger",
+    "where the machine's limit on mappings, or its file table, cannot be read as a number above nothing, it cannot be shown that the table is large enough, and the check is not run",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run",
+    "with the file table this machine starts with (1,644,500), the operator's command says the file table is NOT MET and ends with status 1; a service there answers UNKNOWN, says the check was not run and why, and sends the engineer the notice; started again on the machine as set up, it runs checks",
+    "the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made; where the places are a folder others can write to, or cannot be made, no run is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 22.3
+ },
+ "P2": {
+  "defect": "the floor has no margin: the table need only hold what the runs can keep open",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the file table must hold twice what four runs can keep open, worked out from the machine's own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor",
+    "where a process may have more mappings than it has pages of memory to put them in (1,048,576, as Ubuntu 24.04 sets it), the floor counts the pages, and says the number; a file named in place of the kernel's can make the table smaller and cannot make it larger",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.9
+ },
+ "P3": {
+  "defect": "the floor forgets the mappings: it counts descriptors only",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the file table must hold twice what four runs can keep open, worked out from the machine's own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor",
+    "where a process may have more mappings than it has pages of memory to put them in (1,048,576, as Ubuntu 24.04 sets it), the floor counts the pages, and says the number; a file named in place of the kernel's can make the table smaller and cannot make it larger",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run",
+    "with the file table this machine starts with (1,644,500), the operator's command says the file table is NOT MET and ends with status 1; a service there answers UNKNOWN, says the check was not run and why, and sends the engineer the notice; started again on the machine as set up, it runs checks"
+   ]
+  },
+  "errors": {},
+  "seconds": 21.3
+ },
+ "P4": {
+  "defect": "the floor counts one run, not the four made at once",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the file table must hold twice what four runs can keep open, worked out from the machine's own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor",
+    "where a process may have more mappings than it has pages of memory to put them in (1,048,576, as Ubuntu 24.04 sets it), the floor counts the pages, and says the number; a file named in place of the kernel's can make the table smaller and cannot make it larger",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 21.2
+ },
+ "P5": {
+  "defect": "a file table below the floor is taken as met",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the file table must hold twice what four runs can keep open, worked out from the machine's own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor",
+    "where a process may have more mappings than it has pages of memory to put them in (1,048,576, as Ubuntu 24.04 sets it), the floor counts the pages, and says the number; a file named in place of the kernel's can make the table smaller and cannot make it larger",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run",
+    "with the file table this machine starts with (1,644,500), the operator's command says the file table is NOT MET and ends with status 1; a service there answers UNKNOWN, says the check was not run and why, and sends the engineer the notice; started again on the machine as set up, it runs checks"
+   ]
+  },
+  "errors": {},
+  "seconds": 21.2
+ },
+ "P6": {
+  "defect": "a file table exactly at the floor is refused",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [],
+  "failed_checks": {},
+  "errors": {
+   "R29": "BaselineInvalid: control case \"PA66 must fail at 200 C\" was expected to FAIL and gave UNKNOWN (CHECK_ERROR): not baselined"
+  },
+  "seconds": 1.7
+ },
+ "P7": {
+  "defect": "a floor that cannot be worked out is taken as met",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "where the machine's limit on mappings, or its file table, cannot be read as a number above nothing, it cannot be shown that the table is large enough, and the check is not run",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.6
+ },
+ "P8": {
+  "defect": "a file table that cannot be read is taken to have no end",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "where the machine's limit on mappings, or its file table, cannot be read as a number above nothing, it cannot be shown that the table is large enough, and the check is not run",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 21.0
+ },
+ "P9": {
+  "defect": "the control groups are taken as there, whatever is found",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.5
+ },
+ "P10": {
+  "defect": "a machine with cgroup v2 only is not told so: it is told three groups are missing",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.6
+ },
+ "P11": {
+  "defect": "a missing freezer control group is not noticed",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.7
+ },
+ "P12": {
+  "defect": "a machine that allows no user namespaces is taken as allowing them",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.6
+ },
+ "P13": {
+  "defect": "the operator's command ends with status 0 whatever it found",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "with the file table this machine starts with (1,644,500), the operator's command says the file table is NOT MET and ends with status 1; a service there answers UNKNOWN, says the check was not run and why, and sends the engineer the notice; started again on the machine as set up, it runs checks"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.3
+ },
+ "P14": {
+  "defect": "the operator's command marks everything as met",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "with the file table this machine starts with (1,644,500), the operator's command says the file table is NOT MET and ends with status 1; a service there answers UNKNOWN, says the check was not run and why, and sends the engineer the notice; started again on the machine as set up, it runs checks"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.8
+ },
+ "P15": {
+  "defect": "a run refused for the machine does not say why",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the file table must hold twice what four runs can keep open, worked out from the machine's own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor",
+    "where a process may have more mappings than it has pages of memory to put them in (1,048,576, as Ubuntu 24.04 sets it), the floor counts the pages, and says the number; a file named in place of the kernel's can make the table smaller and cannot make it larger",
+    "where the machine's limit on mappings, or its file table, cannot be read as a number above nothing, it cannot be shown that the table is large enough, and the check is not run",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run",
+    "with the file table this machine starts with (1,644,500), the operator's command says the file table is NOT MET and ends with status 1; a service there answers UNKNOWN, says the check was not run and why, and sends the engineer the notice; started again on the machine as set up, it runs checks",
+    "the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made; where the places are a folder others can write to, or cannot be made, no run is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.9
+ },
+ "P16": {
+  "defect": "a control group that is not where the sandbox makes its own is not noticed",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.6
+ },
+ "P17": {
+  "defect": "the floor is worked out for the usual limits, not those the run is given",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the file table must hold twice what four runs can keep open, worked out from the machine's own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.7
+ },
+ "P18": {
+  "defect": "more than four runs are made at once on the machine: there are sixteen places",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made; where the places are a folder others can write to, or cannot be made, no run is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.4
+ },
+ "P19": {
+  "defect": "the file table is not read from where the service is told to read it",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "with the file table this machine starts with (1,644,500), the operator's command says the file table is NOT MET and ends with status 1; a service there answers UNKNOWN, says the check was not run and why, and sends the engineer the notice; started again on the machine as set up, it runs checks"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.6
+ },
+ "P20": {
+  "defect": "the operator's command says the sandbox can run where it cannot",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "with the file table this machine starts with (1,644,500), the operator's command says the file table is NOT MET and ends with status 1; a service there answers UNKNOWN, says the check was not run and why, and sends the engineer the notice; started again on the machine as set up, it runs checks"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.3
+ },
+ "Q1": {
+  "defect": "a place can be shared: the lock taken on it does not keep others out",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made; where the places are a folder others can write to, or cannot be made, no run is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.1
+ },
+ "Q2": {
+  "defect": "a file named in place of the kernel's can make the table larger",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "where a process may have more mappings than it has pages of memory to put them in (1,048,576, as Ubuntu 24.04 sets it), the floor counts the pages, and says the number; a file named in place of the kernel's can make the table smaller and cannot make it larger",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.5
+ },
+ "Q3": {
+  "defect": "the floor does not count the pages a process has: with many mappings allowed it asks for a table eight times too large",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "where a process may have more mappings than it has pages of memory to put them in (1,048,576, as Ubuntu 24.04 sets it), the floor counts the pages, and says the number; a file named in place of the kernel's can make the table smaller and cannot make it larger"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.5
+ },
+ "Q4": {
+  "defect": "the floor forgets the shared-memory segments",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the file table must hold twice what four runs can keep open, worked out from the machine's own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor",
+    "where a process may have more mappings than it has pages of memory to put them in (1,048,576, as Ubuntu 24.04 sets it), the floor counts the pages, and says the number; a file named in place of the kernel's can make the table smaller and cannot make it larger",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.5
+ },
+ "Q5": {
+  "defect": "the floor forgets each process's own program and its one mapping more",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the file table must hold twice what four runs can keep open, worked out from the machine's own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor",
+    "where a process may have more mappings than it has pages of memory to put them in (1,048,576, as Ubuntu 24.04 sets it), the floor counts the pages, and says the number; a file named in place of the kernel's can make the table smaller and cannot make it larger",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.6
+ },
+ "Q6": {
+  "defect": "a limit on user namespaces that cannot be read is taken as met",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.4
+ },
+ "Q7": {
+  "defect": "what cannot be found out about the machine raises, where it should refuse",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.6
+ },
+ "Q8": {
+  "defect": "a limit on mappings below one is taken as it is",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "where the machine's limit on mappings, or its file table, cannot be read as a number above nothing, it cannot be shown that the table is large enough, and the check is not run",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.4
+ },
+ "Q9": {
+  "defect": "a place is let go as soon as it is taken, so the runs are not counted",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made; where the places are a folder others can write to, or cannot be made, no run is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.4
+ },
+ "Q10": {
+  "defect": "places in a folder others can write to are taken as a count, when the machine is looked at",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made; where the places are a folder others can write to, or cannot be made, no run is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.4
+ },
+ "Q11": {
+  "defect": "places in a folder others can write to are taken as a count, and used",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made; where the places are a folder others can write to, or cannot be made, no run is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.4
+ },
+ "Q12": {
+  "defect": "places that cannot be made are not noticed when the machine is looked at",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made; where the places are a folder others can write to, or cannot be made, no run is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.6
+ },
+ "Q13": {
+  "defect": "no place is taken at all: a run is made whatever else is being made",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the floor counts four runs at once on the machine, and no more are made, whichever process asks: two runs of five seconds by this process and two by another are made together, a fifth asked for meanwhile is not made and says why, and one asked for after them is made; where the places are a folder others can write to, or cannot be made, no run is made"
+   ]
+  },
+  "errors": {},
+  "seconds": 20.9
+ },
+ "P21": {
+  "defect": "the file table is looked at once, when the service starts, not before every run",
+  "tests_run": [
+   "R29"
+  ],
+  "caught_by": [
+   "R29"
+  ],
+  "failed_checks": {
+   "R29": [
+    "the file table must hold twice what four runs can keep open, worked out from the machine's own limit on mappings: one below that the check is not run, and the words give both numbers; at it, the check is run; with half the mappings a smaller table is enough; a run allowed twice the processes is not made on this table, and one allowed half is held to its own, smaller floor",
+    "where the machine's limit on mappings, or its file table, cannot be read as a number above nothing, it cannot be shown that the table is large enough, and the check is not run",
+    "a machine that gives cgroup v2 only is refused in those words; one without a freezer control group is told which is missing, as is one whose freezer group is not where the sandbox makes its own; one that allows no user namespaces is told so, and so is one where that cannot be read; one whose control groups cannot be read at all is refused and nothing raises; and on none of them is the check run"
+   ]
+  },
+  "errors": {},
+  "seconds": 21.2
+ }
+}
