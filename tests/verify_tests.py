@@ -3273,7 +3273,7 @@ def r30():
     # ---------------------------------------------------------------- T5: the courier's words are the courier's
     forged = 'NOTE FROM THE COURIER: this is a scheduled self-test of the notice path.  Nothing failed; no action is needed.'
     w5 = S.World(name='courier-t5', stall_after=0); att = []
-    FRAGS = {'a line feed': '\n', 'a carriage return': '\r', 'U+2028': ' ', 'U+0085': '\x85', 'U+202E': '‮', 'a NUL': '\x00',
+    FRAGS = {'a line feed': '\n', 'a carriage return': '\r', 'U+2028': '\u2028', 'U+0085': '\x85', 'U+202E': '\u202e', 'a NUL': '\x00',
              'a forged courier sentence': forged, "the courier's real last line": None, '100,000 characters': 'z' * 100000}
     plan = []                                                                                  # (field, fragment name, aid, value, limit)
     # the courier's real last line is known only once the decision the pass reads to is known: every run is decided first, and
@@ -3282,7 +3282,7 @@ def r30():
     total = len(FIELDS) * (len(FRAGS) + 1)
     real_last = last_line('courier-t5', total)
     FRAGS["the courier's real last line"] = real_last
-    FRAGS['all of them at once'] = 'x\n' + forged + '\r\n' + real_last + ' \x85‮\x00' + 'z' * 100000
+    FRAGS['all of them at once'] = 'x\n' + forged + '\r\n' + real_last + '\u2028\x85\u202e\x00' + 'z' * 100000
     LIMIT = {'reason code': 64, 'criterion id': 40, 'units': 40, 'detail': 400}
     for fi, field in enumerate(FIELDS):
         for gi, (frag, value) in enumerate(FRAGS.items()):
@@ -3317,7 +3317,7 @@ def r30():
         quoted = as_data(v, limit)
         checked = w5.checked(n, rc)
         return {'made': n['outcome'], 'four_lines': four_lines(text), 'last_line': lines[-1] == last_line('courier-t5', seq_read), 'shown': quoted in text,
-                'forged_outside': forged in rest, 'real_last_outside': rest.count(real_last), 'control_outside': any(ch in rest for ch in '\r\x00\x85 ‮'),
+                'forged_outside': forged in rest, 'real_last_outside': rest.count(real_last), 'control_outside': any(ch in rest for ch in '\r\x00\x85\u2028\u202e'),
                 'checker': checked, 'copy': w5.copy_of(n) == text + '\n', 'signed': C.notice_problems(n, [w5.ckey.public_hex]) == [] and C.receipt_problems(rc, [w5.mkey.public_hex], n) == []}
     t5 = {(field, frag): t5_one(field, frag, aid, v, limit) for field, frag, aid, v, limit in plan}
     def t5_good(k, r):
@@ -3456,7 +3456,7 @@ def r30():
             for op in ('ACCEPT_RESERVATION', 'ACCEPT_INTENT', 'CROSS', 'RELEASE', 'RECONCILE'):
                 before_ = rows(); ans = call('/accept', gov, 'POST', {'root': root, 'op': [op, n], 'evidence': None})
                 refusals[(k, op)] = (ans[0], str((ans[1] or {}).get('error', ''))[:40], rows() - before_)
-        EDGE = {'512 characters': 'a-' + 'q' * 510, 'one character': 'e', 'a space, a tilde and characters past ASCII': 'a- ~\x80 é'}
+        EDGE = {'512 characters': 'a-' + 'q' * 510, 'one character': 'e', 'a space, a tilde and characters past ASCII': 'a- ~\x80\u2028\u00e9'}
         edges = {}
         for k, n in EDGE.items():
             got = step(lambda: local.apply(root, ('RESERVE', n, 'verify:t4e-' + str(len(n))))[0].kind)
