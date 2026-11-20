@@ -980,7 +980,7 @@ def render(ok: bool, checks: list, s: dict, current=None) -> str:
         return '\n'.join(L + ['', 'FAILED: do not rely on this record.'])
     req = s['requirement']
     P = printable                                  # Amendment 16 (G8): every value taken from the record, as data when it is not plain
-    L += ['', f"  {P(req.get('id'))} rev {P(req.get('revision'))}: {P(req.get('title'))}", f"  \"{P(req.get('statement'), 2000)}\"",
+    L += ['', f"  {P(req.get('id'))} rev {P(req.get('revision'))}: {P(req.get('title'))}", f"  \"{req.get('statement')}\"" if _ascii_line(str(req.get('statement'))) else f"  {shown(req.get('statement'), 2000)}",   # H9: shown() brings its own quotes
           f"  baselined {P(s['baselined_at'])} by {P(s['engineer'])}.  Baseline {P(s['baseline_sha256'][:16])}…   Record as of {P(s['as_of'].get('time'))}, sequence number {P(s['as_of'].get('seq'))}."]
     if s['supersedes']:
         sp = s['supersedes']
