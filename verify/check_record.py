@@ -92,9 +92,10 @@ RUN_NOTICES = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INDETERMINATE', 'INVALID', 'RE
 ALARMS = ('COURIER_STOPPED', 'COURIER_BLOCKED')                                         # a courier's notices about itself: of no run, never in a record
 COURIER_OWN = ('UNREADABLE', 'INCONSISTENT')        # Amendment 16: the courier's own judgement of one run; delivered, but never taken as that run's outcome
 WATCHING = 'WATCHING'                               # Amendment 16: the courier's statement that it has begun to watch a budget (coverage)
-NOT_OF_A_RUN = ALARMS + COURIER_OWN + (WATCHING,)   # check 10 never takes these as a notice of a run's outcome; a run with only these has no notice delivered
+COURIER_FAULT = 'COURIER_FAILED'                    # Amendment 16, fifth form: the courier's alarm that a fault of its own keeps it from reading a budget (form 2 only)
+NOT_OF_A_RUN = ALARMS + (COURIER_FAULT,) + COURIER_OWN + (WATCHING,)   # check 10 never takes these as a notice of a run's outcome; a run with only these has no notice delivered
 NOTICE_OUTCOMES = RUN_NOTICES + ALARMS
-NOTICE_OUTCOMES_2 = NOTICE_OUTCOMES + COURIER_OWN + (WATCHING,)                          # what a notice of form 2 may say (Amendment 16)
+NOTICE_OUTCOMES_2 = NOTICE_OUTCOMES + (COURIER_FAULT,) + COURIER_OWN + (WATCHING,)                          # what a notice of form 2 may say (Amendment 16)
 NOTICE_FIELDS_2 = NOTICE_FIELDS + ('form',)         # Amendment 16: a notice of form 2 signs these; one without 'form' is of Amendment 11's form
 DUE = ('FAIL', 'UNKNOWN', 'INTERRUPTED', 'INDETERMINATE', 'INVALID', 'REFUNDED')        # a run's outcome in a record that calls for a notice
 HEADLINES = {'FAIL': 'DECLARED CHECK NOT MET (FAIL)', 'UNKNOWN': 'NO VERDICT: THE CHECK DID NOT DECIDE (UNKNOWN)',
@@ -104,6 +105,7 @@ HEADLINES = {'FAIL': 'DECLARED CHECK NOT MET (FAIL)', 'UNKNOWN': 'NO VERDICT: TH
              'UNVERIFIED': 'THE STORED RESULT DOES NOT MATCH THE GATE\'S SIGNATURE', 'NO_OUTCOME': 'A RUN WAS ADMITTED AND HAS NO OUTCOME',
              'COURIER_STOPPED': 'THE COURIER HAS STOPPED READING THIS BUDGET: WHAT THE WITNESS SAID CANNOT BE BELIEVED',
              'COURIER_BLOCKED': 'THE COURIER CANNOT READ THIS BUDGET FROM THE WITNESS',
+             'COURIER_FAILED': 'THE COURIER CANNOT READ THIS BUDGET: THE FAULT IS IN THE COURIER ITSELF',   # Amendment 16, fifth form
              'UNREADABLE': 'THE COURIER CANNOT READ ONE RUN FROM THE WITNESS: ITS OUTCOME IS NOT KNOWN',       # Amendment 16, form 2 only
              'INCONSISTENT': 'THE GATE SIGNED PASS, BUT THE NUMBERS IN THE SAME SIGNED RESULT DO NOT MEET ITS STATED LIMIT',
              'WATCHING': 'THE COURIER HAS BEGUN TO WATCH THIS BUDGET'}
@@ -335,7 +337,7 @@ def notice_text_2(outcome, aid, root, result, seq, courier, why=None) -> str:
     or an unreadable run; anything in it that is not printable ASCII is shown as data too.  A record's checker makes the
     words of a notice of a run again by this rule and compares."""
     r = result if isinstance(result, dict) else {}
-    subject = f'Run {shown(aid, 200)}, as the service named it, on budget {token(root)}.' if aid != '' or outcome not in ALARMS + (WATCHING,) else f'Budget {token(root)}.'
+    subject = f'Run {shown(aid, 200)}, as the service named it, on budget {token(root)}.' if aid != '' or outcome not in ALARMS + (COURIER_FAULT, WATCHING) else f'Budget {token(root)}.'
     parts = [WHY_2[outcome]] if outcome in WHY_2 and (outcome in COURIER_OWN or not r.get('reason_code')) else []
     if r.get('reason_code'):
         numbers = _criteria_2(r)

@@ -176,6 +176,9 @@ class World:
         if u.netloc == 'm':
             if not self.mailbox_up:
                 raise urllib.error.URLError(ConnectionRefusedError(111, 'Connection refused'))
+            if u.path == '/pubkey':                                    # as the mailbox answers it (Amendment 16, fifth form: asked before sending)
+                self.events.append(('pubkey',))
+                return Answer(200, json.dumps({'public_key': self.mkey.public_hex, 'name': 'mb'}).encode(), self)
             if len(req.data) > M.MAX_NOTICE:                           # as the mailbox's HTTP handler refuses it
                 status, ans = 400, {'error': 'a notice is 1 byte to 64 KiB of JSON'}
             else:
