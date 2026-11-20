@@ -46,10 +46,12 @@ falls back to running a check outside it.  The sandbox needs the service to run 
 make its control groups); otherwise every run is SANDBOX_UNAVAILABLE.  What the machine must give is looked at before
 every run (prerequisites(), and for an operator `sandbox.py --prerequisites`): root; x86-64; cgroup v1 memory, pids and
 freezer control groups (a machine with cgroup v2 only is refused in those words); user namespaces; and a file table
-(fs.file-max) of at least twice what the runs of one service can keep open at once.  A run can keep files open through
-memory mappings, beyond its limit on descriptors: one run was measured keeping 2.6 million open.  The floor is worked out
-from the machine's own limit on mappings, and is about 33.6 million where that limit is the usual 65,530; a machine
-started again with a smaller table runs no check until the table is raised.  Nothing is mounted, and nothing run, unless
+(fs.file-max) of at least twice what the four runs the machine makes at once can keep open.  A run can keep files open
+through memory mappings, beyond its limit on descriptors: one run was measured keeping 2.6 million open.  The floor is
+worked out from the machine's own limit on mappings and the run's limits: about 33.6 million where a process may have
+65,530 mappings, the kernel's own default, and about 134 million where it may have 1,048,576, as Ubuntu 24.04 sets it.
+The four are counted for the machine, by locks every service takes (in /run/verify-sandbox), not for each service.  A
+machine started again with a smaller table runs no check until the table is raised.  Nothing is mounted, and nothing run, unless
 the process doing it is the first of new user, mount, process, network, IPC and host-name namespaces, none of them the
 service's, with no network but a loopback, and with the run's own two ids mapped.  It says that the sandbox is ready on a
 pipe the check does not inherit, and, if the check cannot be started, says that too, so a check cannot pretend that it was
@@ -74,10 +76,12 @@ from __future__ import annotations
 
 import ctypes
 import ctypes.util
+import fcntl
 import glob
 import os
 import platform
 import pwd
+import stat
 import threading
 import pathlib
 import random
@@ -103,7 +107,11 @@ FILE_MAX_PATH = os.environ.get('VERIFY_SANDBOX_FILE_MAX', '/proc/sys/fs/file-max
 MAP_COUNT_PATH = '/proc/sys/vm/max_map_count'                           # the mappings one process may have: each can keep a file open
 USERNS_PATH = '/proc/sys/user/max_user_namespaces'
 SELF_CGROUP = '/proc/self/cgroup'
-RUNS_AT_ONCE, FILE_MAX_MARGIN = 4, 2                                    # runs at once in one service; the file table must hold this many times what they can keep open
+RUNS_AT_ONCE, FILE_MAX_MARGIN = 4, 2                                    # runs at once on the machine; the file table must hold this many times what they can keep open
+REAL_FILE_MAX = '/proc/sys/fs/file-max'                                 # the kernel's own: a file named by the environment can make the table smaller, never larger
+SLOTS_DIR = '/run/verify-sandbox'                                       # one lock for each run that may be made at once, held by every service on the machine
+SHM_SEGMENTS = 4096                                                     # kernel.shmmni in a new IPC namespace: each segment is a file with no descriptor and no mapping
+PAGE = os.sysconf('SC_PAGE_SIZE')
 LATE = 0.5                                                              # seconds past the run's time that output still waiting may hold the clock
 AT_ONCE = threading.BoundedSemaphore(RUNS_AT_ONCE)
 CGROUP_ROOT = os.environ.get('VERIFY_SANDBOX_CGROUP_ROOT', '/sys/fs/cgroup')   # a test may point this elsewhere, to show the run fails closed
@@ -285,21 +293,40 @@ def _number(path: str):
         return None
 
 
-def file_table_floor(limits: dict | None = None):
-    """The smallest file table (fs.file-max) the sandbox runs on, or None if it cannot be worked out.  A run can keep files open
-    beyond its limit on descriptors, through memory mappings: one for each mapping each of its processes may have.  So the runs
-    one service makes at once can keep open RUNS_AT_ONCE x processes x (vm.max_map_count + open files); the table must hold
-    FILE_MAX_MARGIN times that, so that they cannot fill it.  Measured on the machine this was written on: one run kept 2.6
-    million files open before its memory ran out, where the machine's own table was 1.6 million (Amendment 15)."""
+def files_one_run_can_hold(limits: dict | None = None):
+    """The most files one run can keep open at once, or None if it cannot be worked out.  For each of its processes: a file for
+    each descriptor; a file for each mapping, which stays open after its descriptor is closed; and its own program.  A process
+    may have vm.max_map_count mappings and one more, and no more than there are pages in the address space it is allowed, since
+    each takes a page.  For the run: a file for each shared-memory segment of its own IPC namespace.  A process of the run cannot
+    make namespaces of its own, having no user namespaces to make them in (it is in a chroot), so there is one such count."""
     limits = dict(LIMITS, **(limits or {}))
     mappings = _number(MAP_COUNT_PATH)
-    return None if mappings is None else FILE_MAX_MARGIN * RUNS_AT_ONCE * limits['processes'] * (mappings + limits['open_files'])
+    if mappings is None or mappings < 1:
+        return None
+    return limits['processes'] * (min(mappings + 1, limits['memory_bytes'] // PAGE) + limits['open_files'] + 1) + SHM_SEGMENTS
+
+
+def file_table_floor(limits: dict | None = None):
+    """The smallest file table (fs.file-max) the sandbox runs on, or None if it cannot be worked out: FILE_MAX_MARGIN times what
+    the RUNS_AT_ONCE runs the machine makes at once can keep open, so that they cannot fill it.  Measured on the machine this was
+    written on: one run kept 2.6 million files open before its memory ran out, where the machine's own table was 1.6 million
+    (Amendment 15)."""
+    one = files_one_run_can_hold(limits)
+    return None if one is None else FILE_MAX_MARGIN * RUNS_AT_ONCE * one
 
 
 def prerequisites(limits: dict | None = None) -> list:
     """What the machine must give for a check to be run at all: [(name, met, words)], the words saying what was found.  The
     service looks at these before every run, and an operator can ask for them: python3 sandbox.py --prerequisites.  Nothing here
-    changes the machine.  (Amendment 15.)"""
+    changes the machine, and no run is made: that these are met does not show that a run can be.  What cannot be found out is
+    not met.  (Amendment 15.)"""
+    try:
+        return _prerequisites(limits)
+    except Exception as exc:
+        return [('the machine', False, f'what the machine gives could not be found out ({type(exc).__name__}: {exc})'[:300])]
+
+
+def _prerequisites(limits):
     out = [('root', os.geteuid() == 0,
             'the service runs as root' if os.geteuid() == 0 else
             'the sandbox needs the service to run as root, to give each run identities and control groups of its own'),
@@ -325,9 +352,17 @@ def prerequisites(limits: dict | None = None) -> list:
             why = None
     out.append(('control groups', why is None, why or 'cgroup v1 memory, pids and freezer control groups are there'))
     spaces = _number(USERNS_PATH)
-    out.append(('user namespaces', spaces != 0,
-                'user namespaces may be made' if spaces != 0 else 'the sandbox needs user namespaces, and this machine allows none (user.max_user_namespaces is 0)'))
+    out.append(('user namespaces', spaces is not None and spaces > 0,
+                'the machine\'s limit on user namespaces allows some' if spaces is not None and spaces > 0 else
+                'the sandbox needs user namespaces, and this machine allows none (user.max_user_namespaces is 0)' if spaces == 0 else
+                'the sandbox needs user namespaces, and how many this machine allows (user.max_user_namespaces) cannot be read'))
     table, floor = _number(FILE_MAX_PATH), file_table_floor(limits)
+    named = ''
+    if FILE_MAX_PATH != REAL_FILE_MAX:                                   # a file named in place of the kernel's can lower the table, for a test; it cannot raise it
+        real = _number(REAL_FILE_MAX); named = f', the smaller of the kernel\'s and {FILE_MAX_PATH}'
+        table = None if table is None or real is None else min(table, real)
+    if table is not None and table < 1:
+        table = None
     lim = dict(LIMITS, **(limits or {}))
     if table is None or floor is None:
         out.append(('file table', False, 'the machine\'s file table (fs.file-max) or the mappings a process may have (vm.max_map_count) cannot be read, '
@@ -335,8 +370,8 @@ def prerequisites(limits: dict | None = None) -> list:
     else:
         held = floor // FILE_MAX_MARGIN
         out.append(('file table', table >= floor,
-                    (f'the machine\'s file table (fs.file-max, {table}) holds at least {floor}' if table >= floor else
-                     f'the machine\'s file table (fs.file-max, {table}) is below {floor}, {FILE_MAX_MARGIN} times the {held} files that {RUNS_AT_ONCE} runs at once can '
+                    (f'the machine\'s file table (fs.file-max, {table}{named}) holds at least {floor}' if table >= floor else
+                     f'the machine\'s file table (fs.file-max, {table}{named}) is below {floor}, {FILE_MAX_MARGIN} times the {held} files that {RUNS_AT_ONCE} runs at once can '
                      f'keep open through memory mappings ({lim["processes"]} processes each); runs could fill it, so the sandbox does not run')))
     return out
 
@@ -346,16 +381,47 @@ def run(files: dict, script: str, stdin: bytes, timeout: float = 30.0, limits: d
     """Run `script` (one of `files`, name -> bytes) in a new sandbox, with `stdin`, and throw the sandbox away."""
     if not AT_ONCE.acquire(timeout=timeout):
         return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'too many checks are running at once')
+    slot = None
     try:
-        return _run(files, script, stdin, timeout, dict(LIMITS, **(limits or {})), _no_unshare)
+        limits = dict(LIMITS, **(limits or {}))
+        for _name, met, words in prerequisites(limits):                  # each is looked at before every run: a machine that stops meeting one stops running checks
+            if not met:
+                return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', words[:300])
+        try:
+            slot = _slot(time.time() + timeout)                          # the file table is the machine's, so the count of runs is the machine's too
+        except OSError as exc:
+            return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', f'the machine\'s count of runs at once could not be kept: {exc}'[:300])
+        if slot is None:
+            return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', 'too many checks are running at once on this machine')
+        return _run(files, script, stdin, timeout, limits, _no_unshare)
     finally:
+        if slot is not None:
+            os.close(slot)
         AT_ONCE.release()
 
 
+def _slot(deadline: float):
+    """One of the machine's RUNS_AT_ONCE places for a run: a lock on a file of root's, held until the run is over and let go by
+    the kernel if the service dies.  None if none comes free in time.  Every service on the machine takes its places here, so
+    the runs the floor counts are all the machine's, whichever service makes them."""
+    os.makedirs(SLOTS_DIR, mode=0o700, exist_ok=True)
+    st = os.lstat(SLOTS_DIR)
+    if not stat.S_ISDIR(st.st_mode) or st.st_uid != 0 or st.st_mode & 0o022:
+        raise OSError(f'{SLOTS_DIR} is not a folder of root\'s alone')
+    while True:
+        for i in range(RUNS_AT_ONCE):
+            fd = os.open(f'{SLOTS_DIR}/place-{i}', os.O_RDWR | os.O_CREAT | os.O_CLOEXEC | os.O_NOFOLLOW, 0o600)
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                return fd
+            except OSError:
+                os.close(fd)
+        if time.time() >= deadline:
+            return None
+        time.sleep(0.05)
+
+
 def _run(files: dict, script: str, stdin: bytes, timeout: float, limits: dict, _no_unshare: bool) -> Outcome:
-    for _name, met, words in prerequisites(limits):                      # each is looked at before every run: a machine that stops meeting one stops running checks
-        if not met:
-            return Outcome('SANDBOX_UNAVAILABLE', None, b'', b'', words[:300])
     def fit(name) -> bool:
         try:
             return isinstance(name, str) and '/' not in name and '\0' not in name and name not in ('', '.', '..') and not name.startswith('-') and len(name.encode()) <= 200
@@ -710,7 +776,7 @@ def main():
         found = prerequisites()
         for name, met, words in found:
             print(f'{"met    " if met else "NOT MET"}  {name}: {words}')
-        print('The sandbox can run checks on this machine.' if all(met for _, met, _ in found) else
+        print('Each of these is met, for this process, as it was started. No run was made: this does not show that one can be.' if all(met for _, met, _ in found) else
               'The sandbox cannot run checks on this machine: every run would be UNKNOWN, "the check was not run".')
         raise SystemExit(0 if all(met for _, met, _ in found) else 1)
     if not a or a[0] != '--inside' or '--' not in a:
