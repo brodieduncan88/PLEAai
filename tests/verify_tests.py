@@ -2894,22 +2894,22 @@ def r28():
         # another budget, in the same store, given a report and a receipt for a run of the same name as one of this budget's
         card2 = draft(requirement=dict(r.env['card']['requirement'], id='REQ-OTHER-028'))
         env2 = r.s.baseline(CASE, card2); root2 = B.root_for(env2['card'])
-        victim = next(a for a in many['attempts'] if a['outcome'] == 'FAIL')
+        victim = next((a for a in many['attempts'] if a['outcome'] == 'FAIL' and a['evidence']), None) or {'aid': 'none', 'evidence': [{'seq': 2, 'evidence': {}}], 'receipts': {}}   # if no run reads as a FAIL, the checks say so
         ok, why, s = r.checked({'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'})          # the record, before anything is put into the store by hand
         try:                                                              # by the owner's role, as the tests' own preparation is: no service's role may write a report
             w = Store(os.environ.get('PLEA_ADMIN_DSN', 'postgresql://plea:plea@127.0.0.1:5432/plea'))
-            w.put_evidence(root2, victim['aid'], 900001, {'claim': 'PLANTED', 'of': 'another budget'}, 'PLANTED')
+            w.put_evidence(root2, victim['aid'], 1, {'claim': 'PLANTED', 'of': 'another budget'}, 'PLANTED')      # at a decision numbered within this budget's log, so that no cut hides it
             w.put_receipt(root2, victim['aid'], 900002, {'seq': 1, 'planted': 'another budget'}, 'CROSS')
             with w.connect() as conn:
                 taken = {row[0] for row in conn.execute('SELECT seq FROM evidence WHERE root_id = %s', (root,)).fetchall()}
             own = victim['evidence'][0]['seq']
-            free = max(q for q in range(1, own) if q not in taken)       # a decision of this budget before the run's own report, with no report of its own
+            free = max((q for q in range(1, own) if q not in taken), default=0)       # a decision of this budget before the run's own report, with no report of its own
             w.put_evidence(root, victim['aid'], free, {'claim': 'EARLIER', 'of': 'this budget'}, 'PLANTED')
             planted = [bool(w.evidence_for(root2, victim['aid'])), w.get_receipt(root2, victim['aid'], 'CROSS') is not None, [free, own]]
         except Exception as exc:
             planted = [f'{type(exc).__name__}: {exc}'[:160]]
         beside = measure()
-        mine = next(a for a in beside['attempts'] if a['aid'] == victim['aid'])
+        mine = next((a for a in beside['attempts'] if a['aid'] == victim['aid']), {'evidence': [], 'receipts': None})
         for m in (few, many, beside):
             m.pop('attempts')
         e.update(during=during[0], again=(again[0], head(again[1])), first=first, more=more, outside=outside, few=few, many=many, beside=beside, planted=planted, other_root=root2 != root,
