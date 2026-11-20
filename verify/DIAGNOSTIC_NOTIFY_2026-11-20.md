@@ -4,8 +4,9 @@ Private working material. Internal work by the author's side, under the owner's 
 validation.
 
 This branch, `diagnostic-notify-2026-11-20`, is made from `verification-amendment-15` at `1b132e2`. It changes no code of the
-service and no declared test, and has no official run. It adds this file and four small experiments in
-`tests/diag_notify/`. Nothing here is repaired: a repair would change behaviour, and so needs a dated amendment with its
+service and no declared test, and has no official run. It adds this file and three small experiments, with the stand-in
+witness they share (`harness.py`), in `tests/diag_notify/`. (As first committed, at `f6d1e33`, this sentence said four
+experiments. There are three. Corrected here, in a commit of its own.) Nothing here is repaired: a repair would change behaviour, and so needs a dated amendment with its
 own declaration and official runs.
 
 ## What was done
