@@ -2850,10 +2850,11 @@ def _attempts_one_by_one(store, root: str, submissions: list, upto: int | None =
 
 
 def r28():
-    """The reading of a baseline's runs, which every answer makes, costs the same whatever the number of runs already made: it opens
-    the same number of connections to the store for 14 runs as for 2, and gives exactly what reading each run by itself gives.
-    (Amendment 13.)"""
-    r = Run('R28'); e = {}
+    """The reading of a baseline's runs, which every answer makes, opens the same number of connections to the store whatever the
+    number of runs already made, 2 for 15 runs as for 3, and gives exactly what reading each run by itself gives: also for a run
+    that was interrupted and has no result, for a run with two reports, for a reading cut at an earlier decision, and when
+    another budget holds rows for a run of the same name.  (Amendment 13.)"""
+    r = Run('R28', crash_at='verify_running'); e = {}
     try:
         import verify_record as VR
 
@@ -2866,9 +2867,9 @@ def r28():
 
         store = Counted(deploy.LOCAL_DSN)
         journal = lambda: [json.loads(l) for l in (r.ws / '.verify' / 'submissions.jsonl').read_text().splitlines()]
+        root = B.root_for(r.env['card'])
 
         def measure():
-            root = r.record()['root']
             Counted.opened = 0
             new, snap = VR.attempts_of(store, root, journal())
             opened = Counted.opened
@@ -2877,30 +2878,57 @@ def r28():
             new_half, _ = VR.attempts_of(store, root, journal(), upto=half)
             old_half = _attempts_one_by_one(store, root, journal(), upto=half)
             Counted.opened = 0; old_again = _attempts_one_by_one(store, root, journal()); opened_old = Counted.opened
+            rows = [[x['seq'] for x in a['evidence']] for a in new]
             return {'runs': len(new), 'opened': opened, 'opened_one_by_one': opened_old, 'same': canonical(new) == canonical(old) == canonical(old_again),
                     'same_cut': canonical(new_half) == canonical(old_half), 'cut_at': half, 'cut_differs': canonical(new_half) != canonical(new),
-                    'outcomes': sorted(a['outcome'] for a in new), 'with_evidence': sum(bool(a['evidence']) for a in new), 'with_receipts': sum(len(a['receipts']) for a in new)}
+                    'outcomes': sorted(a['outcome'] for a in new), 'most_reports': max(map(len, rows), default=0), 'in_order': all(x == sorted(x) for x in rows),
+                    'without_result': sum(a['result'] is None for a in new), 'with_receipts': sum(len(a['receipts']) for a in new), 'attempts': new}
 
-        first = [r.submit(d)[0] for d in (BAD, GOOD)]
+        during = r.submit(GOOD); time.sleep(0.3); r.s.stop_host(); r.s.start_host()     # the host dies during the first run; asked again, it is interrupted
+        again = r.submit(GOOD)
+        first = [r.submit(d)[0] for d in (BAD, {'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'})]
         few = measure()
         more = [r.submit({'material': 'PA66-GF30', 'wall_mm': round(3.1 + i / 10, 1), 'mode': 'normal'})[0] for i in range(11)]
         outside = r.submit({'material': 'PA66-GF30', 'wall_mm': 99, 'mode': 'normal'})[0]          # outside the design space: a FAIL with no check run
         many = measure()
-        ok, why, s = r.checked(GOOD)
-        e.update(first=first, more=more, outside=outside, few=few, many=many, record_verifies=ok, why=why, counts=(s.get('official_runs'), s.get('met'), s.get('not_met')))
-        checks = {'the runs are there to read: 2, then 14, each with its evidence and its receipts, and the record verifies':
-                      first == [2, 0] and more == [2] * 11 and outside == 2 and few['runs'] == 2 and many['runs'] == 14 and many['with_evidence'] == 14
-                      and many['with_receipts'] >= 14 and ok and e['counts'] == (14, 1, 13),
-                  'the reading gives exactly what reading each run by itself gives, for 2 runs and for 14':
-                      few['same'] and many['same'],
+        # another budget, in the same store, given a report and a receipt for a run of the same name as one of this budget's
+        card2 = draft(requirement=dict(r.env['card']['requirement'], id='REQ-OTHER-028'))
+        env2 = r.s.baseline(CASE, card2); root2 = B.root_for(env2['card'])
+        victim = next(a for a in many['attempts'] if a['outcome'] == 'FAIL')
+        ok, why, s = r.checked({'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'})          # the record, before anything is put into the store by hand
+        try:                                                              # by the owner's role, as the tests' own preparation is: no service's role may write a report
+            w = Store(os.environ.get('PLEA_ADMIN_DSN', 'postgresql://plea:plea@127.0.0.1:5432/plea'))
+            w.put_evidence(root2, victim['aid'], 900001, {'claim': 'PLANTED', 'of': 'another budget'}, 'PLANTED')
+            w.put_receipt(root2, victim['aid'], 900002, {'seq': 1, 'planted': 'another budget'}, 'CROSS')
+            with w.connect() as conn:
+                taken = {row[0] for row in conn.execute('SELECT seq FROM evidence WHERE root_id = %s', (root,)).fetchall()}
+            own = victim['evidence'][0]['seq']
+            free = max(q for q in range(1, own) if q not in taken)       # a decision of this budget before the run's own report, with no report of its own
+            w.put_evidence(root, victim['aid'], free, {'claim': 'EARLIER', 'of': 'this budget'}, 'PLANTED')
+            planted = [bool(w.evidence_for(root2, victim['aid'])), w.get_receipt(root2, victim['aid'], 'CROSS') is not None, [free, own]]
+        except Exception as exc:
+            planted = [f'{type(exc).__name__}: {exc}'[:160]]
+        beside = measure()
+        mine = next(a for a in beside['attempts'] if a['aid'] == victim['aid'])
+        for m in (few, many, beside):
+            m.pop('attempts')
+        e.update(during=during[0], again=(again[0], head(again[1])), first=first, more=more, outside=outside, few=few, many=many, beside=beside, planted=planted, other_root=root2 != root,
+                 mine_reports=[(x['seq'], x['evidence'].get('claim')) for x in mine['evidence']], mine_receipts_same=canonical(mine['receipts']) == canonical(victim['receipts']), record_verifies=ok, why=why, counts=(s.get('official_runs'), s.get('met'), s.get('not_met')))
+        checks = {'the runs are there to read: 3, then 15, one of them interrupted, with no result; and the record verifies':
+                      again[0] == 3 and head(again[1]) == 'UNKNOWN: THE RUN WAS INTERRUPTED' and first == [2, 0] and more == [2] * 11 and outside == 2 and few['runs'] == 3
+                      and many['runs'] == 15 and 'INTERRUPTED' in many['outcomes'] and many['without_result'] >= 1 and ok and e['counts'] == (15, 1, 13),
+                  'the reading gives exactly what reading each run by itself gives, for 3 runs and for 15, each run\'s reports in the order of their decisions':
+                      few['same'] and many['same'] and few['in_order'] and many['in_order'],
                   'and so does a reading cut at an earlier decision, which is not the whole reading':
                       few['same_cut'] and many['same_cut'] and many['cut_differs'] and 0 < many['cut_at'],
-                  'it opens the same number of connections to the store for 14 runs as for 2, where reading each run by itself opens more for every run':
-                      few['opened'] == many['opened'] and 0 < many['opened'] <= 3 and many['opened_one_by_one'] > few['opened_one_by_one'] > few['opened']}
+                  'it opens the same number of connections to the store for 15 runs as for 3, where reading each run by itself opens more for every run':
+                      few['opened'] == many['opened'] and 0 < many['opened'] <= 3 and many['opened_one_by_one'] > few['opened_one_by_one'] > few['opened'],
+                  'with a second, earlier report put into the store for one run, and a report and a receipt for a run of the same name put under another budget: the run shows its own two reports, the earlier first, and nothing of the other budget\'s, as reading each run by itself gives':
+                      planted[:2] == [True, True] and e['other_root'] and beside['same'] and beside['same_cut'] and beside['runs'] == 15 and beside['most_reports'] == 2 and beside['in_order']
+                      and [c for _, c in e['mine_reports']] == ['EARLIER', victim['evidence'][0]['evidence'].get('claim')] and e['mine_reports'][0][0] < e['mine_reports'][1][0] and e['mine_receipts_same']}
     finally:
         r.stop()
     return {k: bool(v) for k, v in checks.items()}, e
-
 
 TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28}
 
