@@ -4160,6 +4160,40 @@ def r30():
             b_ = bud5(w_)
             u8[end8] = {'ended': (b_.get('last pass') or {}).get('ended'), 'how': (b_.get('last pass') or {}).get('how', ''), 'coverage': b_.get('coverage', ''), 'courier': b_.get('courier', ''),
                         'exit': courier.failed(s_) if isinstance(s_, dict) else s_}
+        # A: the shares (the new line has half while the old holds runs), and runs that need no request never take a line's floor
+        courier.DEADLINE = 0.1
+        w_sh = S.World(name='courier-u1', stall_after=10_000); w_sh.hang = 0.3; w_sh.cfg['pass_seconds'] = 60.0; att = []
+        for i in range(2):
+            att.append([f'a-old-{i}', f'verify:a{i}', 'CONSUMED', f'na{i}', True, True]); w_sh.decide(att, ('X', f'a-old-{i}'))
+        step(w_sh.run, t0); w_sh.cfg['pass_seconds'] = 0.8
+        for i in range(10):
+            att.append([f'n-{i:02d}', f'verify:n{i}', 'CONSUMED', f'nn{i}', True, True]); w_sh.decide(att, ('X', f'n-{i:02d}')); w_sh.trouble[f'n-{i:02d}'] = 'hangs'
+        step(w_sh.run, t0 + 10); shares = bud5(w_sh).get('lines')
+        w_nr = S.World(name='courier-u1', stall_after=0); att = []
+        att.append(['a-intent', 'verify:a', 'INTENT_PENDING', 'na', True, False]); w_nr.decide(att, ('X', 'a-intent'))
+        att.append(['b-run', 'verify:b', 'CONSUMED', 'nb', True, True]); w_nr.decide(att, ('X', 'b-run'))
+        w_nr.cfg['pass_seconds'] = 0.0; s_nr = step(w_nr.run, t0)
+        no_request = (made(s_nr), [x.get('aid') for x in s_nr.get('put_off_runs', [])] if isinstance(s_nr, dict) else s_nr, bud5(w_nr).get('lines'))
+        # B: a mailbox that answers with a key not given; the one tried longest ago first, when the mailbox drops out after one notice
+        courier.DEADLINE = 0.3
+        w_k = S.World(name='courier-u4'); att = []
+        w_k.effect(att, 'a-fail', S.FAIL); w_k.cfg['watches'][0]['mailbox_keys'] = [S.M.MailboxKey().public_hex]
+        s_k = step(w_k.run, t0)
+        wrong_key = ([x.get('why', '')[:120] for x in s_k.get('mailbox', [])] if isinstance(s_k, dict) else s_k, s_k.get('undelivered') if isinstance(s_k, dict) else s_k,
+                     len(w_k.held_items()), sorted(r_['notice'].get('outcome') for r_ in w_k.state().get('outbox', [])))
+        w_o = S.World(name='courier-u4'); att = []
+        for aid in ('p-0', 'p-1', 'p-2'):
+            w_o.effect(att, aid, S.FAIL)
+        w_o.mailbox_up = False; step(w_o.run, t0); w_o.mailbox_up = True
+        orig_o = w_o.urlopen; flap = {'down': False}
+        def flapping(req, timeout=None, context=None):
+            if req.full_url.startswith('https://m/pubkey') and flap['down']:
+                flap['down'] = False; raise urllib.error.URLError(ConnectionRefusedError(111, 'refused'))
+            if req.full_url.startswith('https://m/deliver') and b'"p-0"' in (req.data or b''):
+                flap['down'] = True; raise http.client.RemoteDisconnected('closed')       # after p-0, the mailbox is gone for one request
+            return orig_o(req, timeout, context)
+        w_o.urlopen = flapping
+        oldest = [sorted(x['aid'] for x in (step(w_o.run, t0 + 10 * k) or {}).get('delivered', [])) for k in (1, 2, 3)]
     finally:
         courier.DEADLINE = old_deadline
     # the state the fourth form (769f6e4) wrote, read by this one (tests/r30_states_769f6e4.json, made by that courier)
@@ -4550,6 +4584,14 @@ def r30():
                   and u8['what the witness said cannot be believed']['coverage'].startswith('NOT CONFIRMED (stopped')
                   and 'but the last pass did not read this budget: the courier itself failed' in u8['the courier itself failed']['coverage']
                   and all(v['exit'] is True for k, v in u8.items() if k != 'read whole')),
+        'while both lines hold runs, the new line has half of pass_seconds: with ten new runs that hang and two old ones, a pass of eight deadlines asks for at least two and at most six new runs, and both old ones':
+            holds(lambda: 2 <= shares['new']['asked at the last pass'] <= 6 and shares['old']['asked at the last pass'] == 2 and shares['old']['put off'] == 0),
+        'a run that needs no request is settled in every pass and takes no line\'s floor: with pass_seconds 0, its notice is made and the one run that needs a request is still asked for':
+            holds(lambda: no_request[0] == [('a-intent', 'NO_OUTCOME'), ('b-run', 'NO_OUTCOME')] and no_request[1] == [] and no_request[2]['new']['asked at the last pass'] == 1),
+        'a mailbox that answers with a key not given to the courier is not reached: nothing is sent to it, the pass says so, and the notices wait':
+            holds(lambda: len(wrong_key[0]) == 1 and 'not one given to the courier' in wrong_key[0][0] and wrong_key[1] == [] and wrong_key[2] == 0 and wrong_key[3] == ['FAIL', 'WATCHING']),
+        'the notice tried longest ago is tried first: when the mailbox drops out after one notice at each pass, the others are delivered at the next pass, not held behind it':
+            holds(lambda: oldest[0] == [] and oldest[1] == ['p-1', 'p-2']),
         'the state the fourth form (769f6e4) wrote, with its tiers\' marks, refusals, a notice waiting and runs put off, is read by this form: not judged malformed in the status before or at any pass, brought to this form\'s shape (no field of the earlier forms left), its waiting notice delivered, its runs in trouble read and noticed, and the budget then CONFIRMED':
             holds(lambda: (lambda v: v['status before'][0] is None and v['own state'] == [[], []] and v['upgraded'] and v['malformed'] is None and v['old fields'] == [] and 'b-poison' in v['delivered']
                            and ('k-knock', 'FAIL') in v['made'][0] + v['made'][1] and ('d-drop', 'FAIL') in v['made'][0] + v['made'][1] and not v['stopped'] and v['coverage'].startswith('CONFIRMED'))(old5['fourth form, tiers, refusals and waiting notices'])),
