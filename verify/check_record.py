@@ -43,6 +43,8 @@ which must never happen) have a notice accepted by the mailbox, with its signed 
 says the mailbox process, holding the key given, stored the notice; it is not a person's acknowledgement, and nothing here
 shows that anyone read a notice.  A record built before a notice was accepted has none for it.  It says whether the
 courier's coverage of the budget is CONFIRMED (from the decision its statement names) or NOT CONFIRMED, and why.
+CONFIRMED shows that the courier began to watch at that decision; it does not show that it still does (the courier's own
+status, courier.py status, does).
 --require-delivery makes the exit status 1 unless every such run has one and coverage is CONFIRMED.
 
 With --checkpoint FILE it also says whether the record is current (Amendment 10).  The file is a checkpoint the witness
@@ -272,6 +274,26 @@ def token(value) -> str:
     return value if isinstance(value, str) and PLAIN_TOKEN.fullmatch(value) else shown(value)
 
 
+FIELD_NAME_LIMIT = 512
+
+
+def field_name(value):
+    """What a notice of form 2 states in its signed fields `aid` and `request_key` (Amendment 16, F4): the value itself when it
+    is text of at most 512 characters (or None), otherwise a bounded text that says it is cut and gives the first 200
+    characters as data with the length and SHA-256 of the whole: 'cut name: "..." (cut: N characters in all, SHA-256 H)'.
+    So a notice stays well under a mailbox's 64 KiB whatever names the chain holds."""
+    if value is None or (isinstance(value, str) and len(value) <= FIELD_NAME_LIMIT):
+        return value
+    return 'cut name: ' + shown(value, 200)
+
+
+def printable(value) -> str:
+    """A value the service chose, as the checker prints it in a line of its own (Amendment 16, F5): as it is when every
+    character of it is printable ASCII, otherwise shown as data, so it cannot begin a line of its own or look like one."""
+    words = value if isinstance(value, str) else str(value)
+    return words if _ascii_line(words) else shown(value, 200)
+
+
 def _ascii_line(words) -> bool:
     return isinstance(words, str) and all(0x20 <= ord(ch) <= 0x7e for ch in words)
 
@@ -330,8 +352,9 @@ def notice_text_2(outcome, aid, root, result, seq, courier, why=None) -> str:
 
 def watching_text(root, seq, head, courier) -> str:
     """The words of the courier's statement that it watches a budget (Amendment 16, P6), made from its signed fields."""
-    why = (f"The courier has read this budget's chain from the witness to decision {seq if type(seq) is int else shown(seq)}, whose hash is {token(head)}, and has looked at every run in it.  "
-           'From that decision on, it makes a notice of each run that calls for one.  This statement says the courier is watching; it is not a notice of any run.')
+    why = (f"The courier has read this budget's chain from the witness to decision {seq if type(seq) is int else shown(seq)}, whose hash is {token(head)}, "
+           'and has asked the witness for every run in it that may call for a notice; a run it cannot read is reported in a notice of its own (UNREADABLE).  '
+           'From that decision on, it makes a notice of each run that calls for one.  This statement says the courier began to watch; it is not a notice of any run.')
     return notice_text_2(WATCHING, '', root, None, seq, courier, why)
 
 
@@ -345,24 +368,43 @@ def delivery_problem(d, root, audit, attempts_by_aid, gate_key, courier_keys, ma
     msgs = receipt_problems(rc, mailbox_keys, n)
     if msgs:
         return f'the receipt: {msgs[0]}', n
-    a, seq = attempts_by_aid.get(n['aid']), n['seq']
+    form = notice_form(n)
+    aid, why = run_named(n, attempts_by_aid)
+    if why is not None:
+        return why, n
+    a, seq = attempts_by_aid.get(aid) if aid is not None else None, n['seq']
     if n['root'] != root or a is None or n['outcome'] in NOT_OF_A_RUN:
         return 'the notice is of a run that is not in this record', n
     if not chain_ok or not 1 <= seq <= len(audit) or audit[seq - 1]['hash'] != n['head']:
         return 'the notice names a decision that is not in this record\'s chain', n
-    then = next((x for x in audit[seq - 1]['observation'].get('attempts', []) if x[0] == n['aid']), None)
+    then = next((x for x in audit[seq - 1]['observation'].get('attempts', []) if x[0] == aid), None)
     if then is None:
         return 'the run was not in the chain at the decision the notice names', n
     ev = [e for e in a.get('evidence') or [] if isinstance(e.get('seq'), int) and e['seq'] <= seq]
     res = a.get('result') if then[2] == 'EFFECT' and n['result_digest'] is not None else None   # a notice with no digest vouches for no result: UNVERIFIED
-    said = run_outcome(then[2], ev, res, gate_key, root, n['aid'], then[3])
-    if n['outcome'] != said or n['request_key'] != a.get('request_key') or n['result_digest'] != (sha(canonical(res)) if isinstance(res, dict) else None):
-        return f'the notice says {n["outcome"]} of {n["aid"]}; this record says {said} at decision {seq}', n
-    form = notice_form(n)
-    words = notice_text(n['outcome'], n['aid'], root, res, seq, n['courier']) if form == 1 else notice_text_2(n['outcome'], n['aid'], root, res, seq, n['courier'])
+    said = run_outcome(then[2], ev, res, gate_key, root, aid, then[3])
+    rk = a.get('request_key') if form == 1 else field_name(a.get('request_key'))
+    if n['outcome'] != said or n['request_key'] != rk or n['result_digest'] != (sha(canonical(res)) if isinstance(res, dict) else None):
+        return f'the notice says {n["outcome"]} of {shown(n["aid"], 80)}; this record says {said} at decision {seq}', n
+    words = notice_text(n['outcome'], aid, root, res, seq, n['courier']) if form == 1 else notice_text_2(n['outcome'], aid, root, res, seq, n['courier'])
     if n['reason_code'] != notice_reason(res, form) or n['detail'] != notice_detail(res) or n['text'] != words:
-        return f'what the notice gives a person to read is not what this record says of {n["aid"]}', n
+        return f'what the notice gives a person to read is not what this record says of {shown(n["aid"], 80)}', n
     return None, n
+
+
+def run_named(n, attempts_by_aid):
+    """(the run's own name, None) for the run of a record a notice names, or (None, why) when it names more than one; (None,
+    None) when it names none.  A notice of form 1 names a run by its name; one of form 2 by field_name() of it (Amendment 16):
+    a name longer than 512 characters is carried cut, so two runs whose cut names are the same cannot be told apart, and a
+    notice naming either is refused."""
+    if not isinstance(n, dict):
+        return None, None
+    if notice_form(n) == 1:
+        return (n.get('aid') if n.get('aid') in attempts_by_aid else None), None
+    found = [k for k in attempts_by_aid if field_name(k) == n.get('aid')]
+    if len(found) > 1:
+        return None, 'the notice names more than one run of this record'
+    return (found[0] if found else None), None
 
 
 def coverage_problem(c, root, audit, provisioning_hash, courier_keys, mailbox_keys, chain_ok: bool = True):
@@ -895,7 +937,7 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
                 why, n = delivery_problem(d, root, audit, by_aid, gkey, ckeys, mkeys, chain_ok)
                 if why is not None:
                     bad(10, f'delivery {i}: {why}'); continue
-                delivered.setdefault(n['aid'], set()).add(n['outcome'])
+                delivered.setdefault(run_named(n, by_aid)[0], set()).add(n['outcome'])
         if held is not None and ckeys and mkeys:
             why = coverage_problem(held, root, audit, (prov or {}).get('hash'), ckeys, mkeys, chain_ok)
             if why is None:
@@ -933,7 +975,7 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
 
 
 def render(ok: bool, checks: list, s: dict, current=None) -> str:
-    L = [f"  {'ok  ' if good else 'FAIL'} {n}  {title}" + (f': {detail}' if detail else '') for n, title, good, detail in checks]
+    L = [f"  {'ok  ' if good else 'FAIL'} {n}  {title}" + (f': {printable(detail)}' if detail else '') for n, title, good, detail in checks]   # Amendment 16: a detail may quote a run's name
     if not s:
         return '\n'.join(L + ['', 'FAILED: do not rely on this record.'])
     req = s['requirement']
@@ -948,13 +990,13 @@ def render(ok: bool, checks: list, s: dict, current=None) -> str:
         L.append('  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: ' + ', '.join(f"{str(b.get('baseline_sha256', ''))[:16]}… (rev {b.get('revision', '?')})" for b in al.get('baselines') or [])
                  + f".  Reason given by the engineer: {al.get('reason')}")
     for c in s['criteria']:
-        L.append(f"  limit: {c['quantity']} {'at most' if c['comparison'] == '<=' else 'at least'} {c['limit']} {c['units']}")
+        L.append(f"  limit: {printable(c['quantity'])} {'at most' if c['comparison'] == '<=' else 'at least'} {printable(c['limit'])} {printable(c['units'])}")   # Amendment 16: as data when not plain
     L += ['', f"  Official runs through the service: {s['official_runs']}.  Met {s['met']}, not met {s['not_met']}, unknown {s['unknown']}.  Awaiting the engineer's disposition: {s['open']}."]
     for r in s['runs']:
-        what = ('; '.join(f"{c['id']} {c['achieved']} vs limit {c['limit']} {c['units']}" for c in r['criteria'] if c.get('achieved') is not None)
-                or (outside_reason(s.get('design_space'), r.get('design')) if r['reason_code'] == 'DESIGN_OUTSIDE_BASELINE' else recorded(r['detail'])))
+        what = ('; '.join(f"{printable(c['id'])} {printable(c['achieved'])} vs limit {printable(c['limit'])} {printable(c['units'])}" for c in r['criteria'] if c.get('achieved') is not None)
+                or (outside_reason(s.get('design_space'), r.get('design')) if r['reason_code'] == 'DESIGN_OUTSIDE_BASELINE' else printable(recorded(r['detail']))))   # Amendment 16 (F5)
         tail = '' if r['outcome'] == 'PASS' else ('   acknowledged' if r['acknowledged'] else '   OPEN')
-        L.append(f"    {r['aid']}  design {str(r['design_sha256'])[:10]}…  {'MET' if r['outcome'] == 'PASS' else r['outcome']:<11} {r['reason_code'] or '':<24} {what}{tail}")   # Amendment 9: MET, not PASS
+        L.append(f"    {printable(r['aid'])}  design {printable(str(r['design_sha256'])[:10])}…  {'MET' if r['outcome'] == 'PASS' else printable(r['outcome']):<11} {printable(r['reason_code'] or ''):<24} {what}{tail}")   # Amendment 9: MET, not PASS
     L.append('')
     if not ok:
         L.append('FAILED: do not rely on this record.')
@@ -992,7 +1034,8 @@ def render(ok: bool, checks: list, s: dict, current=None) -> str:
     cov = s.get('coverage') or {}                  # Amendment 16: whether a courier is confirmed to watch this budget
     if cov.get('state') == 'CONFIRMED':
         L.append(f"COURIER COVERAGE: CONFIRMED from decision {cov['seq']}.  The record carries the courier's statement that it watches this budget from that decision, "
-                 'with a mailbox\'s signed receipt for it; a receipt is not a person\'s acknowledgement.')
+                 'with a mailbox\'s signed receipt for it; a receipt is not a person\'s acknowledgement.  This shows that the courier began to watch at that decision; '
+                 'it does not show that it still does (the courier\'s own status does).')
     else:
         L.append(f"COURIER COVERAGE: NOT CONFIRMED ({cov.get('why') or 'no statement checked'}).  Nothing in this record shows that a courier watches this budget.")
     if current is not None:
