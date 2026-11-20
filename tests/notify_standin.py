@@ -13,6 +13,8 @@ A run can be made unreadable in several ways (World.trouble[aid]):
   'dropped'   the connection is dropped while the answer is read
   'garbled'   the answer is not JSON
   'hangs'     the answer comes a byte at a time and would take `hang` seconds (it stops when the courier closes it)
+  'blocks'    one read waits for `hang` seconds, and returns only when the courier closes the answer
+  'deaf'      as 'hangs', but closing the answer does not stop it: only the reader's own deadline does
   'dies'      the connection is dropped and, from then on, the witness answers nothing at all
   'knocks'    the connection is dropped and the witness answers nothing for the next `down_for` requests, then comes back
               (a run whose reading knocks the witness over, which restarts)
@@ -68,6 +70,14 @@ class Answer:
             self.mode = 'done-garbled'; return out
         if self.mode == 'done-garbled':
             return b''
+        if self.mode == 'blocks':                                  # one read that waits until the answer is closed, or `hang` seconds
+            while not self.closed and time.monotonic() - self.started < self.world.hang:
+                time.sleep(0.01)
+            self._end('closed' if self.closed else 'finished'); raise OSError('the answer was closed while it was read')
+        if self.mode == 'deaf':                                    # a byte at a time; closing it changes nothing
+            if time.monotonic() - self.started < self.world.hang:
+                time.sleep(0.02); return b' '
+            self._end('finished'); self.mode = None
         if self.mode == 'hangs':                                   # a byte at a time, until `hang` seconds have gone
             if time.monotonic() - self.started < self.world.hang:
                 time.sleep(0.02); return b' '
@@ -77,7 +87,8 @@ class Answer:
         return out
 
     def close(self):
-        self.closed = True
+        if self.mode != 'deaf':
+            self.closed = True
 
     def __enter__(self):
         return self
@@ -173,9 +184,9 @@ class World:
                 self.down = True
             if mode == 'knocks':
                 self.refuse_next = self.down_for
-            if mode == 'hangs':
+            if mode in ('hangs', 'blocks', 'deaf'):
                 status, ans = self._witness(u.path, q)
-                return Answer(200, json.dumps(ans).encode(), world=self, mode='hangs', aid=q.get('aid'))
+                return Answer(200, json.dumps(ans).encode(), world=self, mode=mode, aid=q.get('aid'))
             if mode:
                 return Answer(200, world=self, mode=mode, aid=q.get('aid'))
             status, ans = self._witness(u.path, q)

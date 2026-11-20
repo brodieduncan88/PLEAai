@@ -3243,6 +3243,13 @@ def r30():
         for k in range(3):
             step(w10.run, t0 + k); time.sleep(0.3); extra_threads.append(threading.active_count() - base_threads)
         closed = [x for x in w10.events if x[0] == 'end' and str(x[1]).startswith('h-')]
+        lone = {}
+        for mode in ('blocks', 'deaf'):                                                     # each of the two ways a reader ends, alone
+            wl = S.World(name='courier-t1'); att = []
+            for i in range(3):
+                wl.effect(att, f'h-{i}', S.FAIL); wl.trouble[f'h-{i}'] = mode
+            wl.hang = 30.0; b_ = threading.active_count(); step(wl.run, t0); time.sleep(0.4)
+            lone[mode] = (threading.active_count() - b_, len([x for x in wl.events if x[0] == 'end' and str(x[1]).startswith('h-')]))
         w11 = S.World(name='courier-t1'); att = []
         w11.effect(att, 'a-fail', S.FAIL)
         for i in range(4):
@@ -3259,17 +3266,20 @@ def r30():
         w12.hang = 30.0; w12.cfg['pass_seconds'] = 0.5
         rot0 = step(w12.run, t0)
         rotation = []
+        unr_first = None
         for k in range(1, 7):
             w12.effect(att, f'z-fresh-{k}', S.FAIL)
             mark = len(w12.asked); s12 = step(w12.run, t0 + 1000 * k)
+            if k == 1:
+                unr_first = sorted(a for a, o in w12.held() if o == 'UNREADABLE')
             rotation.append({'made': made(s12), 'asked': sorted({x[2] for x in w12.asked[mark:] if x[1] == '/run' and str(x[2]).startswith('h-')}),
                              'unread': unread(s12), 'put_off': sum(p_.get('runs', 0) for p_ in s12.get('put_off', [])) if isinstance(s12, dict) else s12})
         unr12 = sorted(a for a, o in w12.held() if o == 'UNREADABLE')
     finally:
         courier.DEADLINE = old_deadline
-    e['t1_threads'] = (extra_threads, len(closed))
+    e['t1_threads'] = (extra_threads, len(closed), lone)
     e['t1_deliver_as_made'] = (take_at, first_hang_ask, last_hang_end, len(ev11))
-    e['t1_rotation'] = (unread(rot0), rotation, unr12)
+    e['t1_rotation'] = (unread(rot0), rotation, unr12, unr_first)
 
     # ---------------------------------------------------------------- T2: an unreadable run stays unresolved and visible, then noticed, then read
     w2 = S.World(name='courier-t2'); att = []
@@ -3427,7 +3437,16 @@ def r30():
     wbig.effect(att, 'L' + 'x' * 100000, worst_res); att[-1][1] = 'R' + 'y' * 100000
     wbig.decide(att, ('X',)); wbig.runs['L' + 'x' * 100000]['request_key'] = att[-1][1]
     sbig = step(wbig.run, t0)
+    big_aid = 'B' + 'x' * 70000
+    big_body = {'statement': 'NOTICE', 'root': S.ROOT, 'aid': big_aid, 'request_key': 'verify:big', 'outcome': 'NO_OUTCOME', 'reason_code': None, 'detail': None,
+                'result_digest': None, 'seq': 1, 'head': wbig.rows[0]['hash'], 'time': courier.now(), 'courier': 'courier-t5', 'text': C.notice_text('NO_OUTCOME', big_aid, S.ROOT, None, 1, 'courier-t5')}
+    big1 = dict(big_body, signer=wbig.ckey.public_hex, signature=wbig.ckey.sign(C.canonical(big_body).encode()))
+    held_before = len(wbig.held_items())
+    with wbig.wired():
+        big_refused = step(courier.deliver, wbig.cfg, wbig.cfg['watches'][0], big1)
+    big_limit = (len(json.dumps(big1).encode()) > MB.MAX_NOTICE, str(big_refused)[:80], len(wbig.held_items()) - held_before)
     e['t5_sizes'] = {f'{k[0]}, {k[1]}': v for k, v in sizes.items()}
+    e['t5_big_limit'] = big_limit
     e['t5_big_pass'] = (made(sbig), [(a[:12], o) for a, o in wbig.held()], (sbig or {}).get('waiting') if isinstance(sbig, dict) else sbig)
     e['t5_counts'] = {'cases': len(t5), 'as_expected': sum(t5_ok.values()), 'notices_held': len(held5), 'seq': seq_read, 'listing_lines': len(list_lines), 'listing_exit': listing.returncode}
     e['t5_form1'] = (a11_same, form1_ok, [x[:1] for x in form_games], copy_odd_ok, copy_odd[:240] if isinstance(copy_odd, str) else copy_odd)
@@ -3648,12 +3667,15 @@ def r30():
             holds(lambda: made(sh) == [(a, 'FAIL') for a in FAILS] and unread(sh) == ['a-hangs'] and hang_seconds < 4.0),
         'a reader given up at the courier\'s deadline ends: over three passes of five answers that come a byte at a time for 30 seconds, no thread is left over after each pass, and every slow answer is closed':
             holds(lambda: extra_threads == [0, 0, 0] and len(closed) == 15),
+        'a reader blocked inside one read ends when the courier closes the answer at its deadline, and a reader whose answer ignores being closed ends at its own deadline: no thread is left over either way':
+            holds(lambda: lone == {'blocks': (0, 3), 'deaf': (0, 3)}),
         'a notice is sent as soon as it is made: the FAIL notice of a run read before four slow ones is in the stand-in mailbox before the first slow run is asked for, and so before the last slow answer ends':
             holds(lambda: take_at is not None and first_hang_ask is not None and last_hang_end is not None and take_at < first_hang_ask < last_hang_end),
-        'with six unreadable runs and a pass allowed half a second for runs already in trouble, each of six later passes reads its new run and makes its FAIL notice, the six stay listed as unread, some are put off and said so, every one is asked for again within the six passes, and each gets its UNREADABLE notice after the waiting time whether or not it was asked for in that pass':
+        'with six unreadable runs and a pass allowed half a second for runs already in trouble, each of six later passes reads its new run and makes its FAIL notice, the six stay listed as unread, some are put off and said so, every one is asked for again within the six passes, and each gets its UNREADABLE notice in the first pass after the waiting time, whether or not it was asked for in that pass':
             holds(lambda: unread(rot0) == [f'h-{i}' for i in range(6)] and all((f'z-fresh-{k}', 'FAIL') in r_['made'] for k, r_ in enumerate(rotation, 1))
                   and all(r_['unread'] == [f'h-{i}' for i in range(6)] for r_ in rotation) and any(r_['put_off'] > 0 for r_ in rotation)
-                  and sorted(set().union(*[r_['asked'] for r_ in rotation])) == [f'h-{i}' for i in range(6)] and unr12 == [f'h-{i}' for i in range(6)]),
+                  and sorted(set().union(*[r_['asked'] for r_ in rotation])) == [f'h-{i}' for i in range(6)] and unr12 == [f'h-{i}' for i in range(6)]
+                  and rotation[0]['put_off'] > 0 and unr_first == [f'h-{i}' for i in range(6)]),
         # T2
         'two runs that cannot be read are listed as unread, with the time since and why, in the summary of each of three passes inside the waiting time and in the courier\'s status; neither is marked done, no notice of them is made, and the blocked mark is not set':
             holds(lambda: all(unread(x) == ['a-u1', 'c-u2'] and all(u.get('since') == t0 and u.get('why') for u in x['unread']) for x in early)
@@ -3700,9 +3722,10 @@ def r30():
                   and sum(r_.get('checker') is None for r_ in t5.values()) == len(t5) - n_unr),
         'the mailbox\'s readable copy of a notice of Amendment 11\'s form whose run name holds U+2028, U+0085 and U+202E writes each of them as an escape, and opens with a line saying its lines may hold words the service chose':
             holds(lambda: copy_odd_ok),
-        'the notices the courier makes for a name and a request key of 100,000 characters, of 512 astral characters or of 512 double quotes, with a result whose reason code, detail, criteria ids and units are 100,000 astral characters each (50 criteria), of each outcome, are all under the mailbox\'s 64 KiB; and a run so named in the stand-in\'s chain has its notice accepted by the stand-in mailbox at the first pass':
+        'the notices the courier makes for a name and a request key of 100,000 characters, of 512 astral characters or of 512 double quotes, with a result whose reason code, detail, criteria ids and units are 100,000 astral characters each (50 criteria), of each outcome, are all under the mailbox\'s 64 KiB; and a run so named in the stand-in\'s chain has its notice accepted by the stand-in mailbox at the first pass, which refuses (400) and does not keep a notice of Amendment 11\'s form over 64 KiB':
             holds(lambda: len(sizes) == 18 and all(isinstance(v, int) and v < MB.MAX_NOTICE for v in sizes.values())
-                  and sorted(o for a, o in wbig.held() if a.startswith('cut name: ')) == ['UNREADABLE'] and not sbig.get('waiting')),
+                  and sorted(o for a, o in wbig.held() if a.startswith('cut name: ')) == ['UNREADABLE'] and not sbig.get('waiting')
+                  and big_limit[0] and 'the mailbox answered 400' in big_limit[1] and big_limit[2] == 0),
         'the mailbox\'s listing gives one line for each notice it holds, whatever the names':
             holds(lambda: listing.returncode == 0 and len(list_lines) == len(w5.held_items()) and all(all(32 <= ord(ch) <= 126 for ch in l) for l in list_lines)),
         'Amendment 11\'s words, for a notice without a form, are byte for byte as written out here; a notice of that form is still accepted by the mailbox and taken by the checker; taking the form away from a notice of form 2, or adding form 2 to one of Amendment 11, breaks its signature, and form 3 is refused':
