@@ -3329,6 +3329,7 @@ def r30():
     for k, dt in enumerate((0, 300, 600, 1000, 1100)):
         knock.append(step(w9.run, t0 + dt)); knock_status.append(step(w9.status))
     w9.trouble.pop('a-knock'); knock_back = step(w9.run, t0 + 1200); knock_status_back = step(w9.status)
+    knock_back2 = step(w9.run, t0 + 1300); knock_status_back2 = step(w9.status)
     knock_blocked = [x['notice']['text'] for x in w9.held_items() if x['notice'].get('outcome') == 'COURIER_BLOCKED']
     ks = lambda st_, key_: (st_ or {}).get('budgets', {}).get(S.ROOT, {}).get(key_) if isinstance(st_, dict) else st_
     e['t3'] = {'down': [(made(s_), unread(s_), len(s_.get('blocked', [])) if isinstance(s_, dict) else None) for s_ in down], 'blocked_words': [t.split('\n')[2][:200] for t in blocked_texts],
@@ -3528,6 +3529,200 @@ def r30():
     e['t8'] = {'without it': base8['made'], 'final': base8['final'], 'inconsistent notices': incs, 'others as without it': same8,
                'words': next(iter(t8['as built']['texts'].values()), '').split('\n')[:3], 'checked': t8['as built']['checked']}
 
+    # ---------------------------------------------------------------- third form (G1 to G10)
+    old_deadline = courier.DEADLINE
+    try:
+        # G1: a run after which the witness once stopped answering is not put off for ever behind slow runs (review 2, exp_i2)
+        courier.DEADLINE = 1.0
+        wi = S.World(name='courier-t1', stall_after=100); wi.cfg['pass_seconds'] = 0.5; wi.hang = 0.3; att = []
+        for i in range(3):
+            att.append([f'a-slow-{i}', f'verify:s{i}', 'CONSUMED', f'ns{i}', True, True]); wi.decide(att, ('X', f'a-slow-{i}'))
+        wi.effect(att, 'k-fail', S.FAIL); wi.trouble['k-fail'] = 'knocks'
+        g1 = []
+        for k in range(5):
+            if k == 1:
+                wi.trouble.pop('k-fail')
+                for i in range(3):
+                    wi.trouble[f'a-slow-{i}'] = 'hangs'
+            s_ = step(wi.run, t0 + 50 * k)
+            g1.append({'made': made(s_), 'put_off': [x.get('runs') for x in s_.get('put_off', [])] if isinstance(s_, dict) else s_, 'failed': courier.failed(s_) if isinstance(s_, dict) else None,
+                       'coverage': [c.get('state') for c in s_.get('coverage', [])] if isinstance(s_, dict) else None})
+        k_first = next((k for k, x in enumerate(g1) if ('k-fail', 'FAIL') in (x['made'] or [])), None)
+        g1_watching = [o for _, o in wi.held() if o == 'WATCHING']
+        # G1 with runs that cannot be read taking the time (review 2, exp_i): the put-off suspect run gets its UNREADABLE, in true words
+        courier.DEADLINE = 0.3
+        wj = S.World(name='courier-t1', stall_after=100); wj.cfg['pass_seconds'] = 0.5; wj.hang = 5.0; att = []
+        for i in range(3):
+            wj.effect(att, f'a-hang-{i}', S.FAIL); wj.trouble[f'a-hang-{i}'] = 'hangs'
+        wj.effect(att, 'k-fail', S.FAIL); wj.trouble['k-fail'] = 'knocks'
+        g1j = []
+        for k in range(4):
+            s_ = step(wj.run, t0 + 200 * k)
+            if k == 0:
+                wj.trouble.pop('k-fail')
+            g1j.append(made(s_))
+        kj_unr = [x['notice']['text'] for x in wj.held_items() if x['notice'].get('aid') == 'k-fail' and x['notice'].get('outcome') == 'UNREADABLE']
+        kj_first = next((k for k, x in enumerate(g1j) if ('k-fail', 'FAIL') in (x or [])), None)
+        # G1e: a run that knocks the witness over at every other reading (review 2, exp_g G3)
+        wg = S.World(name='courier-t1', stall_after=100); att = []
+        att.append(['a-knock', 'verify:k', 'CONSUMED', 'nk', True, True]); wg.decide(att, ('X', 'a-knock'))
+        g1e = []
+        for k in range(4):
+            if k % 2 == 0:
+                wg.trouble['a-knock'] = 'knocks'
+            else:
+                wg.trouble.pop('a-knock', None)
+            g1e.append((made(step(wg.run, t0 + 60 * k)), (wg.state().get('suspect', {}).get('a-knock') or {}).get('times')))
+        # G2: runs asked for before, with no trouble recorded, are bounded by pass_seconds too (review 2, exp_f F3)
+        courier.DEADLINE = 1.0
+        wb = S.World(name='courier-t1'); wb.cfg['pass_seconds'] = 0.5; wb.hang = 0.4; att = []
+        for i in range(6):
+            att.append([f'a-slow-{i:02d}', f'verify:s{i}', 'CONSUMED', f'ns{i}', True, True]); wb.decide(att, ('X', f'a-slow-{i:02d}')); wb.trouble[f'a-slow-{i:02d}'] = 'hangs'
+        step(wb.run, t0)
+        wb.effect(att, 'z-new-fail', S.FAIL); m0 = len(wb.events)
+        started_b = time.monotonic(); sb = step(wb.run, t0 + 10); took_b = time.monotonic() - started_b
+        ev_b = wb.events[m0:]
+        slow_asked = sum(1 for x in ev_b if x[0] == 'ask' and str(x[2]).startswith('a-slow-'))
+        g2 = (made(sb), [x.get('runs') for x in sb.get('put_off', [])] if isinstance(sb, dict) else sb, slow_asked, round(took_b, 2), courier.failed(sb) if isinstance(sb, dict) else None)
+        # G3: a notice the mailbox refuses for good, at the head of what waits, holds back no other (review 2, exp_f F1)
+        courier.DEADLINE = 5.0
+        wp = S.World(name='courier-t1'); att = []
+        wp.effect(att, 'a-poison', S.FAIL)
+        take0 = wp.box.take
+        wp.box.take = lambda n: (400, {'error': 'refused: (for good)'}) if n.get('aid') == 'a-poison' else take0(n)
+        step(wp.run, t0)
+        wp.effect(att, 'b-new-fail', S.FAIL)
+        for i in range(3):
+            att.append([f'c-slow-{i}', f'verify:c{i}', 'CONSUMED', f'nc{i}', True, True]); wp.decide(att, ('X', f'c-slow-{i}')); wp.trouble[f'c-slow-{i}'] = 'hangs'
+        wp.hang = 0.4; m0 = len(wp.events)
+        sp3 = step(wp.run, t0 + 10); ev_p = wp.events[m0:]
+        b_take = next((i for i, x in enumerate(ev_p) if x[:3] == ('take', 'b-new-fail', 'FAIL')), None)
+        c_ask = next((i for i, x in enumerate(ev_p) if x[0] == 'ask' and str(x[2]).startswith('c-slow-')), None)
+        refused_listed = ((wp.status() or {}).get('budgets', {}).get(S.ROOT, {}).get('notices the mailbox refused') or [])
+        poison_pending = [n.get('aid') for n in wp.state().get('pending', [])]
+        g3 = (b_take, c_ask, refused_listed, poison_pending, ('b-new-fail', 'FAIL') in wp.held())
+        # G4 (and the rule of the second form, both ways): a mailbox that cannot be reached is tried once at the start and once
+        # at the end of a pass, however many notices wait or are made; a mailbox that refuses is tried for every notice
+        courier.DEADLINE = 0.3
+        wd = S.World(name='courier-t1'); att = []
+        for i in range(4):
+            wd.effect(att, f'f-{i}', S.FAIL)
+        wd.mailbox_up = False; step(wd.run, t0)
+        for i in range(3):
+            wd.effect(att, f'g-{i}', S.FAIL)
+        m0 = len(wd.asked); sd_ = step(wd.run, t0 + 10)
+        tries_down = sum(1 for x in wd.asked[m0:] if x[0] == 'm')
+        pending_down = len(wd.state().get('pending', []))
+        wr_ = S.World(name='courier-t1'); att = []
+        for i in range(3):
+            wr_.effect(att, f'f-{i}', S.FAIL)
+        wr_.box.take = lambda n: (400, {'error': 'refused: (not today)'})
+        m0 = len(wr_.asked); s_r = step(wr_.run, t0)
+        tries_refusing = sum(1 for x in wr_.asked[m0:] if x[0] == 'm')
+        g4 = (tries_down, pending_down, tries_refusing, len(wr_.state().get('pending', [])))
+        # the hang before any response: the courier gives up at its deadline; it cannot end the waiting thread
+        courier.DEADLINE = 0.5
+        wsil = S.World(name='courier-t1'); att = []
+        for aid in ('a-silent', 'b-fail', 'c-fail'):
+            wsil.effect(att, aid, S.FAIL)
+        wsil.trouble['a-silent'] = 'silent'; wsil.hang = 3.0
+        base_sil = threading.active_count(); started_sil = time.monotonic(); s_sil = step(wsil.run, t0); took_sil = time.monotonic() - started_sil
+        left_sil = threading.active_count() - base_sil
+        time.sleep(3.2); left_sil_later = threading.active_count() - base_sil
+        silent = (made(s_sil), unread(s_sil), round(took_sil, 2), left_sil, left_sil_later)
+    finally:
+        courier.DEADLINE = old_deadline
+    # G5: an error answer whose body drips is read with the deadline, and its reader ends
+    import io as _io, urllib.error as _ue
+    class Drip(_io.RawIOBase):
+        def __init__(self):
+            self.n = 0
+        def readable(self):
+            return True
+        def readinto(self, buf):
+            time.sleep(0.25); self.n += 1
+            if self.n > 40:
+                return 0
+            buf[0:1] = b' '; return 1
+    saved_open, saved_ctx, saved_deadline = urllib.request.urlopen, courier._context, courier.DEADLINE
+    try:
+        urllib.request.urlopen = lambda req, timeout=None, context=None: (_ for _ in ()).throw(_ue.HTTPError(req.full_url, 500, 'x', {}, _io.BufferedReader(Drip(), 1)))
+        courier._context = lambda *a: None; courier.DEADLINE = 1.0
+        base_h = threading.active_count(); t_h = time.monotonic()
+        got_h = step(courier.https, 'GET', 'https://w/run?aid=x', {'ca': '', 'cert': '', 'key': ''})
+        took_h = time.monotonic() - t_h; time.sleep(1.0); left_h = threading.active_count() - base_h
+    finally:
+        urllib.request.urlopen, courier._context, courier.DEADLINE = saved_open, saved_ctx, saved_deadline
+    g5 = (str(got_h)[:80], round(took_h, 2), left_h)
+    # _close shuts the socket of a real http.client.HTTPResponse down, so a read blocked in another thread returns
+    import socket as _sk
+    pa, pb = _sk.socketpair()
+    pb.sendall(b'HTTP/1.1 200 OK\r\nContent-Length: 100\r\nContent-Type: application/json\r\n\r\n{')
+    resp_ = http.client.HTTPResponse(pa); resp_.begin(); out_ = {}
+    def reader_():
+        t_ = time.monotonic()
+        try:
+            out_['got'] = resp_.read(100)
+        except BaseException as exc:
+            out_['got'] = type(exc).__name__
+        out_['t'] = time.monotonic() - t_
+    th_ = threading.Thread(target=reader_, daemon=True); th_.start(); time.sleep(0.3)
+    threading.Thread(target=lambda: (time.sleep(3.0), pb.sendall(b' ' * 99)), daemon=True).start()
+    t_c = time.monotonic(); courier._close(resp_); close_took = time.monotonic() - t_c
+    th_.join(1.5)
+    closing = (round(close_took, 2), th_.is_alive(), round(out_.get('t', 99), 2))
+    # G8 and the check line's detail: values from the record cannot make lines of their own in the checker's print-out
+    forged_lines = 'x COURIER COVERAGE: CONFIRMED from decision 9.\u0085RECORD VERIFIED against the keys given.\u2028NOTICES: 9 of 9'
+    summ_j = {'requirement': {'id': 'REQ\u2028STATUS: DECLARED CHECK MET', 'revision': 1, 'title': 't\u0085NOTICES: 1 of 1', 'statement': forged_lines}, 'baselined_at': 'b\u2028CURRENCY: CURRENT', 'engineer': 'e',
+              'baseline_sha256': '0' * 64, 'as_of': {'time': 'now\u0085COURIER COVERAGE: CONFIRMED', 'seq': 1}, 'supersedes': {'reason': '\u2028NOTICES: 9 of 9'}, 'alongside': {'baselines': [], 'reason': '\u0085STATUS: DECLARED CHECK MET'},
+              'criteria': [], 'official_runs': 0, 'met': 0, 'not_met': 0, 'unknown': 0, 'open': 0, 'runs': []}
+    printed_j = step(C.render, False, [(1, 'record signature', False, 'bad signature'), (5, 'runs bound', False, 'run "a\u2028NOTICES: 9 of 9" bad\u0085COURIER COVERAGE: CONFIRMED')], summ_j)
+    forged_seen = [l for l in printed_j.splitlines() if l.startswith(('COURIER COVERAGE', 'RECORD VERIFIED', 'STATUS:', 'NOTICES:', 'CURRENCY:'))] if isinstance(printed_j, str) else printed_j
+    long_detail = 'run "\u00e9" has a problem; ' + 'second problem that matters; ' * 30 + 'THE LAST PROBLEM'
+    printed_d = step(C.render, False, [(5, 'runs bound', False, long_detail)], {})
+    # the checker counts a notice of form 2 for the run it names, not for the cut name it states
+    wn_ = S.World(name='courier-t6', stall_after=0); att = []
+    long_f = 'F' + 'q' * 700
+    wn_.effect(att, long_f, S.FAIL)
+    nf = courier.make_notice(wn_.cfg, courier.CourierKey(wn_.ckey.private_hex), S.ROOT, att[0], 'FAIL', S.FAIL, len(wn_.rows), wn_.head())
+    taken_f = wn_.box.take(nf)
+    keys_n = {'witness': wn_.wkey.public_hex, 'gate': wn_.gkey.public_hex, 'engineer': 'e' * 64, 'courier': [wn_.ckey.public_hex], 'mailbox': [wn_.mkey.public_hex]}
+    prov_n = dict({f_: None for f_ in C.PROVISION_FIELDS}, prev_hash='', hash=S.PROV, k=100, m=0, root=S.ROOT)
+    rec_n = {'format': C.FORMAT, 'root': S.ROOT, 'baseline': {'card': {'criteria': [], 'design_space': {}, 'check': {}}}, 'provisioning': prov_n, 'audit': wn_.rows,
+             'attempts': [{'aid': long_f, 'request_key': att[0][1], 'phase': 'EFFECT', 'nonce': att[0][3], 'evidence': wn_.runs[long_f]['evidence'], 'result': S.FAIL, 'outcome': 'FAIL'}],
+             'as_of': {'seq': len(wn_.rows), 'head': wn_.head()}, 'deliveries': [{'notice': nf, 'receipt': taken_f[1]}], 'signature': {}, 'keys': keys_n}
+    ver_n = step(C.verify, rec_n, keys_n)
+    due_n = ((ver_n[2].get('delivery') or {}).get('due') if isinstance(ver_n, tuple) and len(ver_n) == 3 else ver_n)
+    ten_n = next((x for x in ver_n[1] if x[0] == 10), None) if isinstance(ver_n, tuple) and len(ver_n) == 3 else None
+    # G9: a budget whose own state is malformed is refused, not blamed on the witness, not stopped; the next budget is read
+    OTHER9 = 'REQ-V/1/' + 'ef' * 16
+    w9b = S.World(name='courier-t9', roots=(S.ROOT, OTHER9), empty_roots=(OTHER9,)); att = []
+    w9b.effect(att, 'a-fail', S.FAIL)
+    step(w9b.run, t0)
+    stp9 = w9b.tmp / 'state' / 'state.json'; js9 = json.loads(stp9.read_text()); js9['roots'][S.ROOT]['unread'] = []; stp9.write_text(json.dumps(js9))
+    w9b.effect(att, 'z-new-fail', S.FAIL); m0 = len(w9b.asked)
+    s9 = step(w9b.run, t0 + 10)
+    st9 = json.loads(stp9.read_text())['roots']
+    g9 = ([r_.get('why', '')[:160] for r_ in s9.get('refused', [])] if isinstance(s9, dict) else s9, made(s9), st9.get(S.ROOT, {}).get('stopped'),
+          any(x[1] == '/checkpoint' for x in w9b.asked[m0:]), [r_.get('root') for r_ in s9.get('refused', [])] if isinstance(s9, dict) else None,
+          (s9 or {}).get('unreachable') if isinstance(s9, dict) else None, [o for _, o in w9b.held() if o == 'COURIER_STOPPED'])
+    # G10 (and resume clears the runs after which the witness stopped answering)
+    wv = S.World(name='courier-t10'); att = []
+    wv.effect(att, 'a-knock', S.FAIL); wv.effect(att, 'b-fail', S.FAIL); wv.trouble['a-knock'] = 'knocks'
+    att.append(['c-wait', 'verify:c', 'INTENT_PENDING', 'nc', True, False]); wv.decide(att, ('X', 'c-wait'))
+    step(wv.run, t0); wv.trouble.pop('a-knock')
+    att.append(['d-knock', 'verify:d', 'CONSUMED', 'nd', True, True]); wv.decide(att, ('X', 'd-knock')); wv.trouble['d-knock'] = 'knocks'
+    step(wv.run, t0 + 10); wv.trouble.pop('d-knock'); step(wv.run, t0 + 20)
+    before_resume = wv.status()['budgets'][S.ROOT]
+    step(courier.resume, wv.cfg, S.ROOT)
+    after_resume = wv.status()['budgets'][S.ROOT]
+    s10 = step(wv.run, t0 + 30); after_pass = wv.status()['budgets'][S.ROOT]
+    g10 = (before_resume['coverage'][:13], [x.get('aid') for x in before_resume['runs after which the witness stopped answering']], after_resume['coverage'][:30],
+           after_resume['runs after which the witness stopped answering'], after_resume['unread'], after_pass['coverage'][:9])
+    e['third form'] = {'G1 i2': g1, 'G1 i2 k-fail first FAIL pass': k_first, 'G1 i': g1j, 'G1 i UNREADABLE words': [t.split('\n')[2][:200] for t in kj_unr], 'G1e': g1e, 'G2': g2, 'G3': g3,
+                       'G4': g4, 'silent': silent, 'G5': g5, 'closing': closing, 'forged lines': forged_seen, 'detail': (printed_d or '')[:60] if isinstance(printed_d, str) else printed_d,
+                       'counted': (due_n, ten_n), 'G9': g9, 'G10': g10}
+
     # ---------------------------------------------------------------- T4, T6 and T7 with the real deployment
     r = Run('R30'); here = OUT / 'R30'
     try:
@@ -3702,12 +3897,15 @@ def r30():
             holds(lambda: made(after_unread) == [('', 'COURIER_BLOCKED'), ('a-un\x01read', 'UNREADABLE')]),
         'a pass that ends because the witness stopped answering part-way makes no WATCHING statement':
             holds(lambda: no_watching == (None, None, [])),
-        'a run whose reading knocks the witness over, which then comes back: the runs after it get their FAIL notices at the second pass; the run is listed as one after which the witness stopped answering (once, then twice), then as unread from the second pass, and gets one UNREADABLE notice after the waiting time; the COURIER_BLOCKED notice names it; once it reads, its FAIL notice follows and it leaves both lists':
+        'a run whose reading knocks the witness over, which then comes back: the runs after it get their FAIL notices at the second pass; the run is listed as one after which the witness stopped answering (once, then twice), then as unread from the second pass, and gets one UNREADABLE notice after the waiting time; the COURIER_BLOCKED notice names it; once it reads, its FAIL notice follows and it leaves the unread list at once, and the other list at the next pass (it is then done)':
             holds(lambda: made(knock[0]) == [] and made(knock[1]) == [('b-fail', 'FAIL'), ('c-fail', 'FAIL')] and unread(knock[0]) == [] and unread(knock[1]) == ['a-knock']
                   and [[(x.get('aid'), x.get('times')) for x in (ks(st_, 'runs after which the witness stopped answering') or [])] for st_ in knock_status[:2]] == [[('"a-knock"', 1)], [('"a-knock"', 2)]]
                   and sum(1 for x in knock for m in x.get('made', []) if m.get('outcome') == 'UNREADABLE') == 1 and ('a-knock', 'UNREADABLE') in w9.held()
                   and len(knock_blocked) == 1 and 'after the courier asked it for run "a-knock"' in knock_blocked[0]
-                  and made(knock_back) == [('a-knock', 'FAIL')] and ks(knock_status_back, 'runs after which the witness stopped answering') == [] and ks(knock_status_back, 'unread') == []),
+                  and made(knock_back) == [('a-knock', 'FAIL')] and ks(knock_status_back, 'unread') == [] and ks(knock_status_back2, 'runs after which the witness stopped answering') == []),
+        'when the pass ends because the witness stopped answering after one run, the COURIER_BLOCKED words say that no pass has been completed for that long, name the run, say that the runs asked for before it were read and noticed and those after it not asked for, and do not say that no notice of the budget\'s runs can be made':
+            holds(lambda: len(knock_blocked) == 1 and 'No pass over this budget has been completed for' in knock_blocked[0] and 'the runs asked for before it were read and their notices made' in knock_blocked[0]
+                  and 'the runs after it were not asked for in that pass' in knock_blocked[0] and 'can make no notice' not in knock_blocked[0]),
         # T4
         'the witness refuses (400, with the error of its rule on names) each of ACCEPT_RESERVATION, ACCEPT_INTENT, CROSS, RELEASE and RECONCILE for a run named with 513 characters, a NUL, a line feed, U+001F, DEL or a lone surrogate, and adds no decision; the gateway\'s own store had admitted the 513-character name':
             holds(lambda: len(refusals) == 30 and all(v[0] == 400 and v[1].startswith('malformed request: an attempt is named') and v[2] == 0 for v in refusals.values())
@@ -3778,6 +3976,36 @@ def r30():
                   and incs['the check finds for everything'] == ['b-pass-bad', 'c-pass-ok', 'h-pass-text', 'i-pass-edge'] and incs['the whole added function raises'] == []
                   and incs['the whole added function returns something that is not its notice'] == []
                   and sorted(base8['made']) == sorted([('a-fail', 'FAIL'), ('d-unknown', 'UNKNOWN'), ('e-intent', 'NO_OUTCOME'), ('f-unread', 'UNREADABLE'), ('g-cut', 'INTERRUPTED'), ('j-unverified', 'UNVERIFIED')])),
+        # third form
+        'a run after which the witness once stopped answering is not put off for ever behind runs that answer slowly: its FAIL notice is made within the first two passes after it reads; while runs are put off, every pass exits 1 and no WATCHING statement is made':
+            holds(lambda: k_first is not None and k_first <= 2 and all(x['failed'] for x in g1 if x['put_off']) and any(x['put_off'] for x in g1) and g1_watching == []
+                  and all('made, not yet accepted by the mailbox' not in (x['coverage'] or []) for x in g1 if x['put_off'])),
+        'a run after which the witness once stopped answering, put off behind runs that cannot be read, gets its UNREADABLE notice after the waiting time, in words that say the witness stopped answering when it was asked for, and its FAIL notice follows within three passes':
+            holds(lambda: len(kj_unr) == 1 and 'the witness stopped answering when the courier asked for it' in kj_unr[0] and kj_first is not None and kj_first <= 3),
+        'a run that knocks the witness over at every other reading stays listed as one after which the witness stopped answering, its count reaches two, and it gets its UNREADABLE notice after the waiting time':
+            holds(lambda: [t_ for _, t_ in g1e] == [1, 1, 2, 2] and sum(1 for m_, _ in g1e for x in m_ if x == ('a-knock', 'UNREADABLE')) == 1),
+        'runs asked for before, with no trouble recorded, are bounded by pass_seconds: with six slow runs a new failing run is read and noticed, most slow runs are put off and said to be, the pass exits 1, and it takes less than the slow runs would':
+            holds(lambda: ('z-new-fail', 'FAIL') in g2[0] and g2[1] and g2[1][0] >= 3 and g2[2] <= 3 and g2[3] < 6 * 0.4 and g2[4] is True),
+        'a notice the mailbox refuses for good, first in the waiting list, holds back no other: a notice made later in the pass is in the mailbox before the slow runs are asked for; the refused one stays waiting and the status lists it, with its run, the count of refusals and the reason':
+            holds(lambda: g3[0] is not None and g3[1] is not None and g3[0] < g3[1] and g3[4] and g3[3] == ['a-poison'] and len(g3[2]) == 1
+                  and g3[2][0]['run'] == '"a-poison"' and g3[2][0]['refusals'] >= 1 and 'refused' in g3[2][0]['last reason']),
+        'a mailbox that cannot be reached is tried twice in a pass (at its start and its end), however many notices wait and are made in it, and none is lost; a mailbox that answers with refusals is tried for every notice':
+            holds(lambda: g4 == (2, 8, 4, 4)),
+        'a request whose peer sends nothing before its headers is given up at the courier\'s deadline and the other runs are noticed in that pass; the thread that waits for that peer is not ended by the courier, and lives until the peer\'s silence ends':
+            holds(lambda: silent[0] == [('b-fail', 'FAIL'), ('c-fail', 'FAIL')] and silent[1] == ['a-silent'] and silent[2] < 3.0 and silent[3] >= 1 and silent[4] == 0),
+        'an error answer whose body comes a byte at a time is given up at the courier\'s deadline, and its reader does not outlive it':
+            holds(lambda: 'did not answer within' in g5[0] and g5[1] < 2.0 and g5[2] == 0),
+        'closing an answer shuts its socket down: a read of a real http.client.HTTPResponse over a socket pair, blocked in another thread, returns at once, and the close does not wait for it':
+            holds(lambda: closing[0] < 0.5 and closing[1] is False and closing[2] < 1.2),
+        'values from the record in the checker\'s print-out (requirement, dates, names, reasons, a check line\'s detail) holding U+2028 or U+0085 make no line of their own under str.splitlines(); a check line\'s detail is shown whole to 2,000 characters':
+            holds(lambda: forged_seen == [] and isinstance(printed_d, str) and 'THE LAST PROBLEM' in printed_d.splitlines()[0]),
+        'the checker counts a notice of form 2, which states a long name cut, as delivered for the run it names':
+            holds(lambda: ten_n is not None and ten_n[2] and due_n == [{'aid': long_f, 'outcome': 'FAIL', 'delivered': True}]),
+        'a budget whose own state in the courier\'s state file is malformed is refused for that pass, in words that say so and name the field; it is not marked stopped, no notice blames the witness, and the next budget is read as usual':
+            holds(lambda: len(g9[0]) == 1 and "the courier's own state for this budget" in g9[0][0] and 'its field unread' in g9[0][0] and g9[4] == [S.ROOT] and g9[2] is None
+                  and g9[3] and g9[5] == [] and g9[6] == [] and ('z-new-fail', 'FAIL') not in g9[1]),
+        'resume clears the courier\'s coverage and the runs after which the witness stopped answering: the status says NOT CONFIRMED and lists none until a whole pass has been made again, and then CONFIRMED':
+            holds(lambda: g10[0] == 'CONFIRMED (th' and g10[1] and g10[2].startswith('NOT CONFIRMED (not yet read') and g10[3] == [] and g10[4] == [] and g10[5] == 'CONFIRMED'),
     }
     return checks, e
 

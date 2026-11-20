@@ -15,6 +15,9 @@ A run can be made unreadable in several ways (World.trouble[aid]):
   'hangs'     the answer comes a byte at a time and would take `hang` seconds (it stops when the courier closes it)
   'blocks'    one read waits for `hang` seconds, and returns only when the courier closes the answer
   'deaf'      as 'hangs', but closing the answer does not stop it: only the reader's own deadline does
+  'silent'    no answer at all for `hang` seconds: urlopen itself waits (as a peer that sends nothing before its headers);
+              nothing the courier does can end that wait sooner
+World(empty_roots=(R, ...)) also serves those budgets, each with an empty chain.
   'dies'      the connection is dropped and, from then on, the witness answers nothing at all
   'knocks'    the connection is dropped and the witness answers nothing for the next `down_for` requests, then comes back
               (a run whose reading knocks the witness over, which restarts)
@@ -99,7 +102,8 @@ class Answer:
 
 
 class World:
-    def __init__(self, stall_after: float = 900, name: str = 'courier-t', roots=(ROOT,)):
+    def __init__(self, stall_after: float = 900, name: str = 'courier-t', roots=(ROOT,), empty_roots=()):
+        self.empty_roots = tuple(empty_roots)
         self.wkey, self.gkey, self.ckey, self.mkey = M.MailboxKey(), M.MailboxKey(), M.MailboxKey(), M.MailboxKey()
         self.rows, self.runs, self.trouble = [], {}, {}
         self.down, self.mailbox_up, self.hang = False, True, 3.0
@@ -140,6 +144,11 @@ class World:
 
     # ---------------------------------------------------------------- the witness's and the mailbox's answers
     def _witness(self, path, q):
+        if path == '/checkpoint' and q.get('root') in self.empty_roots:
+            at = int(q['at']) if 'at' in q else None
+            cp = {'statement': 'CHECKPOINT', 'root': q['root'], 'seq': 0, 'head': PROV, 'business': 'OPEN', 'witness': 'ACTIVE', 'time': courier.now(),
+                  'nonce': q.get('nonce'), 'at': at, 'head_at': None if at is None else PROV}
+            return 200, dict(cp, signer=self.wkey.public_hex, signature=self.wkey.sign(C.canonical({k: cp[k] for k in C.CHECKPOINT_FIELDS}).encode()))
         if path == '/checkpoint':
             if q.get('root') not in [w['root'] for w in self.cfg['watches']] or q.get('root') != ROOT:
                 return 404, {'error': 'unknown root'}
@@ -184,6 +193,8 @@ class World:
                 self.down = True
             if mode == 'knocks':
                 self.refuse_next = self.down_for
+            if mode == 'silent':
+                time.sleep(self.hang); self.events.append(('end', q.get('aid'), 'silence ended')); mode = None
             if mode in ('hangs', 'blocks', 'deaf'):
                 status, ans = self._witness(u.path, q)
                 return Answer(200, json.dumps(ans).encode(), world=self, mode=mode, aid=q.get('aid'))

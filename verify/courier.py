@@ -637,12 +637,13 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, d
 def watch_pass(cfg, key, watch, st: dict, clock: float, summary: dict, save) -> None:
     root = watch['root']
     started = time.monotonic()
-    held_back = {'failed': False}                                    # once a delivery fails in this pass, none is tried again before its end (F2)
+    held_back = {'failed': False}                                    # once the mailbox cannot be reached in this pass, nothing is tried again before its end (F2, G4)
+    refused_now = set()                                              # notices the mailbox refused in this pass: not tried again in it (G3)
     def deliver_now():
         if not held_back['failed'] and st.get('pending'):
-            held_back['failed'] = _deliver_pending(cfg, watch, st, summary, save, quiet=True, stop_at_first=True)
+            held_back['failed'] = _deliver_pending(cfg, watch, st, summary, save, quiet=True, refused_now=refused_now)
     if st.get('pending'):
-        held_back['failed'] = _deliver_pending(cfg, watch, st, summary, save, quiet=True, stop_at_first=True)   # what is waiting goes out before the witness is asked
+        held_back['failed'] = _deliver_pending(cfg, watch, st, summary, save, quiet=True, refused_now=refused_now)   # what is waiting goes out before the witness is asked
     if st.get('stopped'):
         summary['refused'].append({'root': root, 'why': 'stopped since ' + st['stopped'] + ': see refused.jsonl, then courier.py resume'})
     else:
@@ -661,7 +662,7 @@ def watch_pass(cfg, key, watch, st: dict, clock: float, summary: dict, save) -> 
                 _append(pathlib.Path(cfg['state_dir']) / 'refused.jsonl', {'time': now(), 'root': root, 'why': why, 'evidence': None})
                 summary['refused'].append({'root': root, 'why': why})
                 alarm(cfg, key, watch, st, 'COURIER_STOPPED', STOPPED_WORDS.format(C.shown(why, 600)), summary)
-                save(); return _deliver_pending(cfg, watch, st, summary, save)
+                save(); return _deliver_pending(cfg, watch, st, summary, save, refused_now=refused_now)
             since = st.setdefault('blocked_since', clock)            # only the checkpoint, the chain, or a run's failure with the witness then not answering
             summary['unreachable'].append({'root': root, 'why': str(exc)})
             summary['blocked'].append({'root': root, 'since': since, 'state': BLOCKED})
@@ -673,7 +674,7 @@ def watch_pass(cfg, key, watch, st: dict, clock: float, summary: dict, save) -> 
                     words = BLOCKED_WORDS.format(int(clock - since), C.shown(str(exc), 600))
                 alarm(cfg, key, watch, st, 'COURIER_BLOCKED', words, summary)
         save()
-    _deliver_pending(cfg, watch, st, summary, save)
+    _deliver_pending(cfg, watch, st, summary, save, refused_now=refused_now)
 
 
 STOPPED_WORDS = ('The courier refused what the witness said: {}.  It makes no notice of this budget\'s runs until this has been looked into '
@@ -696,11 +697,13 @@ SUMMARY_WORDS = {'made': 'notices made in this pass; each is ' + MADE + ' until 
                  'put_off': 'runs already in trouble that were not asked for in this pass, for want of time (pass_seconds); still listed, and asked for first in their turn'}
 
 
-def _deliver_pending(cfg, watch, st, summary, save, quiet: bool = False, stop_at_first: bool = True) -> bool:
+def _deliver_pending(cfg, watch, st, summary, save, quiet: bool = False, stop_at_first: bool = True, refused_now=None) -> bool:
     """Send what is waiting, in order; True if the mailbox could not be reached.  A notice the mailbox refuses (it answers,
     but not with a receipt) is kept waiting, its refusals counted in the state, and the next is tried (G3).  Once the mailbox
     cannot be reached, no other notice is tried in this call: they wait for the next (G4: one deadline, not one for each
-    notice).  stop_at_first is kept for its callers and is always so."""
+    notice).  A notice refused once in a pass (refused_now, the pass's own set) is not tried again in it.  stop_at_first is
+    kept for its callers and is always so."""
+    refused_now = set() if refused_now is None else refused_now
     root = watch['root']
     done = delivered_digests(pathlib.Path(cfg['state_dir']))
     refusals = st.setdefault('refusals', {})
@@ -708,6 +711,12 @@ def _deliver_pending(cfg, watch, st, summary, save, quiet: bool = False, stop_at
     for notice in st.get('pending', []):
         coverage = isinstance(notice, dict) and notice.get('outcome') == C.WATCHING
         entry = {'root': root, 'aid': notice.get('aid') if isinstance(notice, dict) else None, 'outcome': notice.get('outcome') if isinstance(notice, dict) else None}
+        if isinstance(notice, dict) and C.notice_digest(notice) in refused_now:
+            waiting.append(notice)
+            if not quiet:
+                e = dict(entry, why=str((refusals.get(C.notice_digest(notice)) or {}).get('why')), refused=True)
+                (summary['coverage'] if coverage else summary['waiting']).append(dict(e, state=MADE) if coverage else e)
+            continue
         if unreachable is not None:
             waiting.append(notice)
             if not quiet:
@@ -717,7 +726,7 @@ def _deliver_pending(cfg, watch, st, summary, save, quiet: bool = False, stop_at
         try:
             receipt = deliver(cfg, watch, notice)
         except Answered as exc:                                     # refused: this notice waits, the next is tried
-            waiting.append(notice)
+            waiting.append(notice); refused_now.add(C.notice_digest(notice))
             r = refusals.setdefault(C.notice_digest(notice), {'count': 0})
             r.update(count=int(_number(r.get('count'), 0)) + 1, why=str(exc), outcome=entry['outcome'], aid=entry['aid'], last=now())
             if not quiet:
