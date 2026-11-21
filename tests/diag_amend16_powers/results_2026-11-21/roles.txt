@@ -1,0 +1,120 @@
+# Database role grants as installed by Store.init_schema() and init_authority() of e25a297 on a fresh database (plea18)
+# read from the catalogue as the superuser postgres, 2026-11-21T09:57:15Z; PostgreSQL 16.15
+== 1. roles (cluster-wide)
+rolname | super | createdb | createrole | inherit | login | connlimit | bypassrls
+plea | f | f | f | t | t | -1 | f
+plea_control | f | f | f | t | t | -1 | f
+plea_local | f | f | f | t | t | -1 | f
+plea_witness | f | f | f | t | t | -1 | f
+postgres | t | t | t | t | t | -1 | t
+(5 rows)
+== 2. role memberships
+role | member
+(0 rows)
+== 3. server settings
+name | setting
+idle_in_transaction_session_timeout | 0
+lock_timeout | 0
+max_connections | 100
+password_encryption | scram-sha-256
+statement_timeout | 0
+superuser_reserved_connections | 3
+(6 rows)
+== 4. database and schema privileges (plea18, schema public)
+rolname | db_connect | db_create | db_temp | schema_usage | schema_create
+plea | t | t | t | t | t
+plea_control | t | f | t | t | f
+plea_local | t | f | t | t | f
+plea_witness | t | f | t | t | f
+(4 rows)
+== 5. tables: owner, and the privileges of each role
+table | owner | role | privileges
+attempts | plea | plea_control | SELECT
+attempts | plea | plea_local | SELECT
+attempts | plea | plea_witness | SELECT
+decisions | plea | plea_control | SELECT
+decisions | plea | plea_local | SELECT
+decisions | plea | plea_witness | SELECT
+evidence | plea | plea_control | SELECT
+evidence | plea | plea_local | SELECT
+evidence | plea | plea_witness | SELECT
+provisions | plea | plea_control | SELECT
+provisions | plea | plea_local | SELECT
+provisions | plea | plea_witness | SELECT
+receipts | plea | plea_control | SELECT
+receipts | plea | plea_local | SELECT,INSERT
+receipts | plea | plea_witness | SELECT,INSERT
+results | plea | plea_control | SELECT
+results | plea | plea_local | SELECT
+results | plea | plea_witness | SELECT
+roots | plea | plea_control | SELECT
+roots | plea | plea_local | SELECT
+roots | plea | plea_witness | SELECT
+(21 rows)
+== 6. functions in public: owner, security definer, and who may execute
+function | owner | security_definer | plea_local | plea_witness | plea_control | public
+plea_canonical | plea | f | f | f | f | f
+plea_decision_hash | plea | f | f | f | f | f
+plea_jstr | plea | f | f | f | f | f
+plea_new_root | plea | t | f | f | t | f
+plea_obs_of | plea | f | f | f | f | f
+plea_observe | plea | f | f | f | f | f
+plea_provisions_append_only | plea | f | t | t | t | t
+plea_put_result | plea | t | t | f | f | f
+plea_roots_immutable | plea | f | t | t | t | t
+plea_step | plea | f | f | f | f | f
+plea_witness_only_decisions | plea | f | t | t | t | t
+plea_witness_only_phases | plea | f | t | t | t | t
+plea_write | plea | t | t | t | t | f
+(13 rows)
+== 7. triggers on public tables
+table | trigger | function
+attempts | witness_only_phases | plea_witness_only_phases
+decisions | witness_only_decisions | plea_witness_only_decisions
+provisions | provisions_append_only | plea_provisions_append_only
+provisions | provisions_no_truncate | plea_provisions_append_only
+roots | roots_immutable | plea_roots_immutable
+(5 rows)
+== 8. row security
+relname | relrowsecurity | relforcerowsecurity
+attempts | f | f
+decisions | f | f
+evidence | f | f
+provisions | f | f
+receipts | f | f
+results | f | f
+roots | f | f
+(7 rows)
+== 9. pg_hba.conf (how a role proves who it is)
+local   all             postgres                                peer
+local   all             all                                     peer
+host    all             all             127.0.0.1/32            scram-sha-256
+host    all             all             ::1/128                 scram-sha-256
+local   replication     all                                     peer
+host    replication     all             127.0.0.1/32            scram-sha-256
+host    replication     all             ::1/128                 scram-sha-256
+== 10. the passwords the code and the README give (literal text in the repository at e25a297)
+GATE_B_LOG.md:17:`python -B -c "import sys; sys.path.insert(0,'$B'); from plea_gateway import Store; s = Store('postgresql://plea:plea@127.0.0.1:5432/
+GATE_B_LOG.md:28:`nohup python -B bundle/plea_gateway/witness_service.py --port 9787 --dsn postgresql://plea_witness:witness@127.0.0.1:5432/plea --gat
+README.md:138:    --dsn postgresql://plea_witness:witness@127.0.0.1:5432/plea --gate-key <gate public hex>
+README.md:145:local = Store('postgresql://plea_local:local@127.0.0.1:5432/plea')          # cannot apply an acceptance, nor change a mode
+README.md:213:    --witness-url http://127.0.0.1:8787 --gate-key <gate private hex> --admin-dsn postgresql://plea:plea@127.0.0.1:5432/plea \
+README.md:81:**Production shape (v1.2), stated plainly.** The agent-facing process (the governor, or `plea_mcp.py`) holds `plea_local` only. The budge
+README.md:95:s = Store('postgresql://plea:plea@127.0.0.1:5432/plea'); s.init_schema(); s.init_authority()"
+mcp/plea_ctl.py:32:    ap.add_argument('--control-dsn', default=os.environ.get('PLEA_CONTROL_DSN', 'postgresql://plea_control:control@127.0.0.1:5432/p
+mcp/plea_mcp.py:200:    ap.add_argument('--local-dsn', default=os.environ.get('PLEA_LOCAL_DSN', 'postgresql://plea_local:local@127.0.0.1:5432/plea'))
+plan/repro_counterexamples.py:23:A = f'postgresql://plea:plea@127.0.0.1:5432/{DB}'
+plan/repro_counterexamples.py:24:L = f'postgresql://plea_local:local@127.0.0.1:5432/{DB}'
+plan/repro_counterexamples.py:25:W = f'postgresql://plea_witness:witness@127.0.0.1:5432/{DB}'
+plea_gateway/witness_service.py:4:    witness_service.py --port 8787 --dsn postgresql://plea_witness:...@host/plea --gate-key HEX [--key HEX] [--chaos
+tests/common.py:40:ADMIN_DSN = os.environ.get('PLEA_ADMIN_DSN', 'postgresql://plea:plea@127.0.0.1:5432/plea')
+tests/common.py:41:LOCAL_DSN = os.environ.get('PLEA_LOCAL_DSN', 'postgresql://plea_local:local@127.0.0.1:5432/plea')
+tests/common.py:42:WITNESS_DSN = os.environ.get('PLEA_WITNESS_DSN', 'postgresql://plea_witness:witness@127.0.0.1:5432/plea')
+tests/common.py:43:CONTROL_DSN = os.environ.get('PLEA_CONTROL_DSN', 'postgresql://plea_control:control@127.0.0.1:5432/plea')  # v0.9 control plane
+tests/conform_store.py:21:DSN = os.environ.get('PLEA_ADMIN_DSN', 'postgresql://plea:plea@127.0.0.1:5432/plea')   # put_state needs the owner
+tests/verify_tests.py:2950:            w = Store(os.environ.get('PLEA_ADMIN_DSN', 'postgresql://plea:plea@127.0.0.1:5432/plea'))
+verify/deploy.py:34:WITNESS_DSN = os.environ.get('PLEA_WITNESS_DSN', 'postgresql://plea_witness:witness@127.0.0.1:5432/plea')
+verify/deploy.py:35:LOCAL_DSN = os.environ.get('PLEA_LOCAL_DSN', 'postgresql://plea_local:local@127.0.0.1:5432/plea')
+verify/front_door.py:973:    ap.add_argument('--local-dsn', default=os.environ.get('PLEA_LOCAL_DSN', 'postgresql://plea_local:local@127.0.0.1:5432/ple
+verify/verify_ctl.py:50:CONTROL_DSN = os.environ.get('PLEA_CONTROL_DSN', 'postgresql://plea_control:control@127.0.0.1:5432/plea')
+verify/verify_ctl.py:51:LOCAL_DSN = os.environ.get('PLEA_LOCAL_DSN', 'postgresql://plea_local:local@127.0.0.1:5432/plea')

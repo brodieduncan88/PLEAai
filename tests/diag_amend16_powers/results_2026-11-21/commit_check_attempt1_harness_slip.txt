@@ -1,0 +1,36 @@
+--- 0. two honest runs through the client and the gate host
+    bad: {"exit": 2, "first_line": "FAIL: REQUIREMENT NOT MET", "attempt": {"aid": "a-20c8907140064990", "phase": "EFFECT", "nonce": "n-9c3365e08be77b6863713c5c44a57049a76eda87"}}
+    good: {"exit": 0, "first_line": "DECLARED CHECK MET", "attempt": {"aid": "a-168fa98a44f53828", "phase": "EFFECT", "nonce": "n-04fa9b5c4028182d28b8a0054cb6794454123617"}}
+    stored_fail_keys: ["nonce", "outcome", "report", "value"]
+    stored_fail_outcome_field: "value"
+    fail_value_keys: ["baseline_sha256", "basis", "check", "criteria", "design", "design_sha256", "detail", "format", "notice", "reason_code", "requirement_id", "revision", "verdict"]
+    fail_value_bytes: 803
+    fail_as_courier_reads: {"status": 200, "seconds": 0.035, "reports": [{"seq": 8, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "68a593e2be87e665"}], "stored_outcome_field": "value", "stored_verdict": "FAIL", "stored_value_digest": "68a593e2be87e665", "check_record.run_outcome": "FAIL"}
+    rows: {"decisions": 16, "evidence": 2, "results": 2}
+    session_user_of_the_client: [["plea_local", "plea_local"]]
+--- 1. each change tried as plea_local, the role the client is configured with
+    direct: {"UPDATE results": {"ok": false, "error": "InsufficientPrivilege: permission denied for table results"}, "DELETE FROM results": {"ok": false, "error": "InsufficientPrivilege: permission denied for table results"}, "INSERT INTO results": {"ok": false, "error": "InsufficientPrivilege: permission denied for table results"}, "TRUNCATE results": {"ok": false, "error": "InsufficientPrivilege: permission denied for table results"}, "UPDATE evidence": {"ok": false, "error": "InsufficientPrivilege: permission denied for table evidence"}, "DELETE FROM evidence": {"ok": false, "error": "InsufficientPrivilege: permission denied for table evidence"}, "INSERT INTO evidence": {"ok": false, "error": "InsufficientPrivilege: permission denied for table evidence"}, "UPDATE decisions": {"ok": false, "error": "InsufficientPrivilege: permission denied for table decisions"}, "DELETE FROM decisions": {"ok": fal
+    through_the_store: {"Store.apply_ex of a RECONCILE with evidence, as plea_local (the witness role is not used)": {"ok": false, "error": "AuthorityError: operation RECONCILE is reserved to the witness (role plea_local)"}, "Store.apply_ex of a RECONCILE without evidence, as plea_local": {"ok": false, "error": "AuthorityError: operation RECONCILE is reserved to the witness (role plea_local)"}, "Store.put_evidence as plea_local": {"ok": false, "error": "InsufficientPrivilege: permission denied for table evidence"}}
+    rows_after: {"decisions": 16, "evidence": 2, "results": 2}
+    fail_as_courier_reads_after: {"status": 200, "seconds": 0.037, "reports": [{"seq": 8, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "68a593e2be87e665"}], "stored_outcome_field": "value", "stored_verdict": "FAIL", "stored_value_digest": "68a593e2be87e665", "check_record.run_outcome": "FAIL"}
+--- 2. the FAIL is stored as a value; the service has a second EFFECT report recorded (a PASS result's digest) and stores the PASS result
+    second_report: {"witness_status": 200, "witness_answer": {"kind": "DUPLICATE", "code": "VERDICT_RETRY", "seq": 17}, "decision_recorded": {"seq": 17, "op": ["RECONCILE", "a-20c8907140064990", "EFFECT", "AUTHORISED"], "kind": "DUPLICATE", "code": "VERDICT_RETRY"}, "rows_before": {"decisions": 16, "evidence": 2, "results": 2}, "rows_after": {"decisions": 17, "evidence": 3, "results": 2}}
+    put_result: "no error"
+    stored_result_unchanged: true
+    as_courier_reads: {"status": 200, "seconds": 0.038, "reports": [{"seq": 8, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "68a593e2be87e665"}, {"seq": 17, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "546fd611697f868b"}], "stored_outcome_field": "value", "stored_verdict": "FAIL", "stored_value_digest": "68a593e2be87e665", "check_record.run_outcome": "FAIL"}
+    courier_pass: {"exit": 0, "made": [["a-20c8907140064990", "FAIL"]], "delivered": [["a-20c8907140064990", "FAIL"]], "waiting": [], "error": null}
+    mailbox_holds_for_the_run: [["c-e1", "FAIL"]]
+--- 2b. a report with another verdict (NO_EFFECT) for the same run
+    second_report: {"witness_status": 200, "witness_answer": {"kind": "DENIED", "code": "VERDICT_IS_FINAL", "seq": 18}, "decision_recorded": {"seq": 18, "op": ["RECONCILE", "a-20c8907140064990", "NO_EFFECT", "AUTHORISED"], "kind": "DENIED", "code": "VERDICT_IS_FINAL"}, "rows_before": {"decisions": 17, "evidence": 3, "results": 2}, "rows_after": {"decisions": 18, "evidence": 4, "results": 2}}
+    as_courier_reads: {"status": 200, "seconds": 0.043, "reports": [{"seq": 8, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "68a593e2be87e665"}, {"seq": 17, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "546fd611697f868b"}, {"seq": 18, "derived": "AUTHORISED", "claim": "NO_EFFECT", "result_digest": "74234e98afe7498f"}], "stored_outcome_field": "value", "stored_verdict": "FAIL", "stored_value_digest": "68a593e2be87e665", "check_record.run_outcome": "FAIL"}
+Traceback (most recent call last):
+  File "SCRATCH/amend16/diag2/commit_check.py", line 193, in <module>
+    x, code_x, line_x, held_x = dishonest_submit(VT.BAD, None)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "SCRATCH/amend16/diag2/commit_check.py", line 191, in dishonest_submit
+    b = attempts(); code, out = client.submit(design); return newest(b), code, VT.head(out), held
+                                                              ^^^^^^^^^
+  File "SCRATCH/amend16/diag2/commit_check.py", line 75, in newest
+    assert len(new) == 1, new
+           ^^^^^^^^^^^^^
+AssertionError: []

@@ -1,0 +1,40 @@
+{
+ "mode": "chain",
+ "database": "plea20",
+ "when_started": "2026-11-21T10:27:25Z",
+ "the whole chain of one budget, read page by page (limit 200, as the courier asks)": {
+  "runs in the budget": 996,
+  "decisions": 7968,
+  "pages": 126,
+  "seconds in all": 37.19,
+  "bytes in all": 508180089,
+  "rows per page": {
+   "n": 126,
+   "min": 15,
+   "median": 46.5,
+   "p95": 198,
+   "max": 200,
+   "sum": 7968
+  },
+  "bytes per page": {
+   "n": 126,
+   "min": 426026,
+   "median": 4155617.5,
+   "p95": 4192285,
+   "max": 4194330,
+   "sum": 508180089
+  },
+  "seconds per page": {
+   "n": 126,
+   "min": 0.0465,
+   "median": 0.3093,
+   "p95": 0.4168,
+   "max": 0.4576,
+   "sum": 37.13
+  },
+  "bytes of one decision, first page": 3798,
+  "bytes of one decision, last page": 126949,
+  "pages cut short by the witness's limit on a page's bytes": 119
+ },
+ "when_ended": "2026-11-21T10:28:03Z"
+}

@@ -1,0 +1,80 @@
+WHY_2 has entries for: ['INCONSISTENT', 'INTERRUPTED', 'UNREADABLE']
+WHY (form 1) has entries for: ['INDETERMINATE', 'INTERRUPTED', 'NO_OUTCOME', 'REFUNDED', 'UNVERIFIED']
+HEADLINES_2 has entries for: ['COURIER_BLOCKED', 'COURIER_FAILED', 'COURIER_STOPPED', 'FAIL', 'INCONSISTENT', 'INDETERMINATE', 'INTERRUPTED', 'INVALID', 'NO_OUTCOME', 'REFUNDED', 'UNKNOWN', 'UNREADABLE', 'UNVERIFIED', 'WATCHING']
+outcomes with a form-2 headline and no form-2 explanation: ['COURIER_BLOCKED', 'COURIER_FAILED', 'COURIER_STOPPED', 'FAIL', 'INDETERMINATE', 'INVALID', 'NO_OUTCOME', 'REFUNDED', 'UNKNOWN', 'UNVERIFIED', 'WATCHING']
+
+== INDETERMINATE: 4 lines; third line is empty: True
+  1| THE RUN WAS MADE INDETERMINATE BY THE CONTROL PLANE: FROZEN AND COUNTED, WITH NO VERDICT RECORDED
+  2| Run "a-run", as the service named it, on budget REQ-T/1/abab.
+  3| 
+  4| This notice was made by the courier courier-1 from what the witness gave it, read to decision 7.  Words in quotation marks are shown as data:
+   |   they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification
+   |   service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has
+   |   read it.
+  (form 1 explanation, absent from the form-2 notice: The control plane re-registered the budget: the run is frozen and counted, and the witness
+   records no verdict for it.)
+
+== NO_OUTCOME: 4 lines; third line is empty: True
+  1| A RUN WAS ADMITTED AND HAS NO OUTCOME
+  2| Run "a-run", as the service named it, on budget REQ-T/1/abab.
+  3| 
+  4| This notice was made by the courier courier-1 from what the witness gave it, read to decision 7.  Words in quotation marks are shown as data:
+   |   they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification
+   |   service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has
+   |   read it.
+  (form 1 explanation, absent from the form-2 notice: It was started, or admitted and crossed, and the witness holds no outcome for it; the courier
+   has seen it so for longer than it waits.)
+
+== UNVERIFIED: 4 lines; third line is empty: True
+  1| THE STORED RESULT DOES NOT MATCH THE GATE'S SIGNATURE
+  2| Run "a-run", as the service named it, on budget REQ-T/1/abab.
+  3| 
+  4| This notice was made by the courier courier-1 from what the witness gave it, read to decision 7.  Words in quotation marks are shown as data:
+   |   they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification
+   |   service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has
+   |   read it.
+  (form 1 explanation, absent from the form-2 notice: The gate signed that the check ran, but for longer than it waits the courier has found no stored
+   result that hashes to the digest the gate signed.)
+
+== REFUNDED: 4 lines; third line is empty: True
+  1| THE RUN WAS REFUNDED, WHICH A VERIFICATION RUN MUST NEVER BE
+  2| Run "a-run", as the service named it, on budget REQ-T/1/abab.
+  3| 
+  4| This notice was made by the courier courier-1 from what the witness gave it, read to decision 7.  Words in quotation marks are shown as data:
+   |   they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification
+   |   service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has
+   |   read it.
+  (form 1 explanation, absent from the form-2 notice: The witness recorded the run as refunded.)
+
+== INTERRUPTED: 4 lines; third line is empty: False
+  1| THE RUN WAS INTERRUPTED: ADMITTED AND COUNTED, WITH NO VERDICT
+  2| Run "a-run", as the service named it, on budget REQ-T/1/abab.
+  3| The gate signed that it does not know the outcome, and the run is counted.  If the gate signs a verdict for it later that calls for a notice, the
+   |   courier makes that notice when it reads it.
+  4| This notice was made by the courier courier-1 from what the witness gave it, read to decision 7.  Words in quotation marks are shown as data:
+   |   they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification
+   |   service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has
+   |   read it.
+  (form 1 explanation, absent from the form-2 notice: The gate signed that it does not know the outcome: the run is counted and will not be run again.
+   If the gate learns the verdict later, another notice follows.)
+
+== FAIL: 4 lines; third line is empty: True
+  1| DECLARED CHECK NOT MET (FAIL)
+  2| Run "a-run", as the service named it, on budget REQ-T/1/abab.
+  3| 
+  4| This notice was made by the courier courier-1 from what the witness gave it, read to decision 7.  Words in quotation marks are shown as data:
+   |   they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification
+   |   service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has
+   |   read it.
+
+
+== From the deployment of commit_check.py (the mailbox's own files): the UNVERIFIED notice of run a-c34a75ff7b244b06
+   At the time it was made the run had NO stored result at all (commit_check step 3: stored_result null).
+   courier: c-now | outcome: UNVERIFIED | courier signature problems: [] | receipt problems: []
+  1| THE STORED RESULT DOES NOT MATCH THE GATE'S SIGNATURE
+  2| Run "a-c34a75ff7b244b06", as the service named it, on budget REQ-SELFTEST-001/A/581bf45d7a96afe289ee37b3f12ef13e.
+  3| 
+  4| This notice was made by the courier c-now from what the witness gave it, read to decision 26.  Words in quotation marks are shown as data: they
+   |   are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification
+   |   service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has
+   |   read it.

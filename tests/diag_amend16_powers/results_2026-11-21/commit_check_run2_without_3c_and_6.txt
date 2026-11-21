@@ -1,0 +1,64 @@
+--- 0. two honest runs through the client and the gate host
+    bad: {"exit": 2, "first_line": "FAIL: REQUIREMENT NOT MET", "attempt": {"aid": "a-ea6310dcfe3bab77", "phase": "EFFECT", "nonce": "n-84249fd1ac0ec6b1385836a3e4308032349bc9f0"}}
+    good: {"exit": 0, "first_line": "DECLARED CHECK MET", "attempt": {"aid": "a-05adf58d71419fea", "phase": "EFFECT", "nonce": "n-29257de648fdd375751fe6717370dc9f3c60620f"}}
+    stored_fail_keys: ["nonce", "outcome", "report", "value"]
+    stored_fail_outcome_field: "value"
+    fail_value_keys: ["baseline_sha256", "basis", "check", "criteria", "design", "design_sha256", "detail", "format", "notice", "reason_code", "requirement_id", "revision", "verdict"]
+    fail_value_bytes: 803
+    fail_as_courier_reads: {"status": 200, "seconds": 0.038, "reports": [{"seq": 8, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "ae561467d54a7596"}], "stored_outcome_field": "value", "stored_verdict": "FAIL", "stored_value_digest": "ae561467d54a7596", "check_record.run_outcome": "FAIL"}
+    rows: {"decisions": 16, "evidence": 2, "results": 2}
+    session_user_of_the_client: [["plea_local", "plea_local"]]
+--- 1. each change tried as plea_local, the role the client is configured with
+    direct: {"UPDATE results": {"ok": false, "error": "InsufficientPrivilege: permission denied for table results"}, "DELETE FROM results": {"ok": false, "error": "InsufficientPrivilege: permission denied for table results"}, "INSERT INTO results": {"ok": false, "error": "InsufficientPrivilege: permission denied for table results"}, "TRUNCATE results": {"ok": false, "error": "InsufficientPrivilege: permission denied for table results"}, "UPDATE evidence": {"ok": false, "error": "InsufficientPrivilege: permission denied for table evidence"}, "DELETE FROM evidence": {"ok": false, "error": "InsufficientPrivilege: permission denied for table evidence"}, "INSERT INTO evidence": {"ok": false, "error": "InsufficientPrivilege: permission denied for table evidence"}, "UPDATE decisions": {"ok": false, "error": "InsufficientPrivilege: permission denied for table decisions"}, "DELETE FROM decisions": {"ok": fal
+    through_the_store: {"Store.apply_ex of a RECONCILE with evidence, as plea_local (the witness role is not used)": {"ok": false, "error": "AuthorityError: operation RECONCILE is reserved to the witness (role plea_local)"}, "Store.apply_ex of a RECONCILE without evidence, as plea_local": {"ok": false, "error": "AuthorityError: operation RECONCILE is reserved to the witness (role plea_local)"}, "Store.put_evidence as plea_local": {"ok": false, "error": "InsufficientPrivilege: permission denied for table evidence"}}
+    rows_after: {"decisions": 16, "evidence": 2, "results": 2}
+    fail_as_courier_reads_after: {"status": 200, "seconds": 0.039, "reports": [{"seq": 8, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "ae561467d54a7596"}], "stored_outcome_field": "value", "stored_verdict": "FAIL", "stored_value_digest": "ae561467d54a7596", "check_record.run_outcome": "FAIL"}
+--- 2. the FAIL is stored as a value; the service has a second EFFECT report recorded (a PASS result's digest) and stores the PASS result
+    second_report: {"witness_status": 200, "witness_answer": {"kind": "DUPLICATE", "code": "VERDICT_RETRY", "seq": 17}, "decision_recorded": {"seq": 17, "op": ["RECONCILE", "a-ea6310dcfe3bab77", "EFFECT", "AUTHORISED"], "kind": "DUPLICATE", "code": "VERDICT_RETRY"}, "rows_before": {"decisions": 16, "evidence": 2, "results": 2}, "rows_after": {"decisions": 17, "evidence": 3, "results": 2}}
+    put_result: "no error"
+    stored_result_unchanged: true
+    as_courier_reads: {"status": 200, "seconds": 0.045, "reports": [{"seq": 8, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "ae561467d54a7596"}, {"seq": 17, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "a2bf3439cd259a7e"}], "stored_outcome_field": "value", "stored_verdict": "FAIL", "stored_value_digest": "ae561467d54a7596", "check_record.run_outcome": "FAIL"}
+    courier_pass: {"exit": 0, "made": [["a-ea6310dcfe3bab77", "FAIL"]], "delivered": [["a-ea6310dcfe3bab77", "FAIL"]], "waiting": [], "error": null}
+    mailbox_holds_for_the_run: [["c-e1", "FAIL"]]
+--- 2b. a report with another verdict (NO_EFFECT) for the same run
+    second_report: {"witness_status": 200, "witness_answer": {"kind": "DENIED", "code": "VERDICT_IS_FINAL", "seq": 18}, "decision_recorded": {"seq": 18, "op": ["RECONCILE", "a-ea6310dcfe3bab77", "NO_EFFECT", "AUTHORISED"], "kind": "DENIED", "code": "VERDICT_IS_FINAL"}, "rows_before": {"decisions": 17, "evidence": 3, "results": 2}, "rows_after": {"decisions": 18, "evidence": 4, "results": 2}}
+    as_courier_reads: {"status": 200, "seconds": 0.042, "reports": [{"seq": 8, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "ae561467d54a7596"}, {"seq": 17, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "a2bf3439cd259a7e"}, {"seq": 18, "derived": "AUTHORISED", "claim": "NO_EFFECT", "result_digest": "74234e98afe7498f"}], "stored_outcome_field": "value", "stored_verdict": "FAIL", "stored_value_digest": "ae561467d54a7596", "check_record.run_outcome": "FAIL"}
+--- 3. a FAIL signed by the gate host and recorded by the witness, the result not stored; then a second report and a PASS result
+    attempt: {"aid": "a-62801e9e6257d6e9", "phase": "EFFECT", "nonce": "n-66409238300ad9436a4a917e3c12c44d2ca9f9fd"}
+    client_exit: 2
+    client_first_line: "FAIL: REQUIREMENT NOT MET"
+    verdict_the_gate_host_signed_for: "FAIL"
+    stored_result: null
+    as_courier_reads_before: {"status": 200, "seconds": 0.044, "reports": [{"seq": 26, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "f0915d9832d7c7d2"}], "stored_outcome_field": null, "stored_verdict": null, "stored_value_digest": null, "check_record.run_outcome": "UNVERIFIED"}
+    courier_waiting_900s (c-wait), before: {"exit": 0, "made": [["a-ea6310dcfe3bab77", "FAIL"]], "delivered": [["a-ea6310dcfe3bab77", "FAIL"]], "waiting": [], "error": null}
+    courier_with_no_waiting_time (c-now), before: {"exit": 0, "made": [["a-ea6310dcfe3bab77", "FAIL"], ["a-62801e9e6257d6e9", "UNVERIFIED"]], "delivered": [["a-ea6310dcfe3bab77", "FAIL"], ["a-62801e9e6257d6e9", "UNVERIFIED"]], "waiting": [], "error": null}
+    second_report: {"witness_status": 200, "witness_answer": {"kind": "DUPLICATE", "code": "VERDICT_RETRY", "seq": 27}, "decision_recorded": {"seq": 27, "op": ["RECONCILE", "a-62801e9e6257d6e9", "EFFECT", "AUTHORISED"], "kind": "DUPLICATE", "code": "VERDICT_RETRY"}, "rows_before": {"decisions": 26, "evidence": 5, "results": 2}, "rows_after": {"decisions": 27, "evidence": 6, "results": 2}}
+    as_courier_reads_after: {"status": 200, "seconds": 0.04, "reports": [{"seq": 26, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "f0915d9832d7c7d2"}, {"seq": 27, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "a2bf3439cd259a7e"}], "stored_outcome_field": "value", "stored_verdict": "PASS", "stored_value_digest": "a2bf3439cd259a7e", "check_record.run_outcome": "PASS"}
+    courier_waiting_900s (c-wait), after: {"exit": 0, "made": [], "delivered": [], "waiting": [], "error": null}
+    a courier that starts now (c-late), no waiting time: {"exit": 0, "made": [["a-ea6310dcfe3bab77", "FAIL"]], "delivered": [["a-ea6310dcfe3bab77", "FAIL"]], "waiting": [], "error": null}
+    mailbox_holds_for_the_run: [["c-now", "UNVERIFIED"]]
+--- 3b. as 3, with a result marked 'unknown' stored first and then replaced
+    attempt: {"aid": "a-87c330738f578774", "phase": "EFFECT", "nonce": "n-f06d34bd0b17c955e0ec642c065b8f5d1791b0c8"}
+    client_exit: 2
+    client_first_line: "FAIL: REQUIREMENT NOT MET"
+    verdict_the_gate_host_signed_for: "FAIL"
+    stored_result_first: {"nonce": "n-f06d34bd0b17c955e0ec642c065b8f5d1791b0c8", "detail": "held back", "outcome": "unknown"}
+    as_courier_reads_before: {"status": 200, "seconds": 0.038, "reports": [{"seq": 35, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "6429de3ae06f4dd6"}], "stored_outcome_field": "unknown", "stored_verdict": null, "stored_value_digest": null, "check_record.run_outcome": "UNVERIFIED"}
+    second_report: {"witness_status": 200, "witness_answer": {"kind": "DUPLICATE", "code": "VERDICT_RETRY", "seq": 36}, "decision_recorded": {"seq": 36, "op": ["RECONCILE", "a-87c330738f578774", "EFFECT", "AUTHORISED"], "kind": "DUPLICATE", "code": "VERDICT_RETRY"}, "rows_before": {"decisions": 35, "evidence": 7, "results": 4}, "rows_after": {"decisions": 36, "evidence": 8, "results": 4}}
+    stored_outcome_field_after: "value"
+    as_courier_reads_after: {"status": 200, "seconds": 0.038, "reports": [{"seq": 35, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "6429de3ae06f4dd6"}, {"seq": 36, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "a2bf3439cd259a7e"}], "stored_outcome_field": "value", "stored_verdict": "PASS", "stored_value_digest": "a2bf3439cd259a7e", "check_record.run_outcome": "PASS"}
+    courier_waiting_900s (c-wait): {"exit": 0, "made": [], "delivered": [], "waiting": [], "error": null}
+    a courier that starts now (c-late2), no waiting time: {"exit": 0, "made": [["a-ea6310dcfe3bab77", "FAIL"]], "delivered": [["a-ea6310dcfe3bab77", "FAIL"]], "waiting": [], "error": null}
+    mailbox_holds_for_the_run: []
+--- 4. the record of this budget, built and checked as the tests do
+    record_verifies: false
+    checks_that_fail: ["6 gate reports and re-derived verdicts: a-62801e9e6257d6e9: the verdict is for another design than the one sent; a-87c330738f578774: the verdict is for another design than the one sent"]
+    status: "NOT VERIFIED"
+    runs: {"a-05adf58d71419fea": {"outcome": "PASS", "reason_code": "MET"}, "a-62801e9e6257d6e9": {"outcome": "PASS", "reason_code": "MET"}, "a-87c330738f578774": {"outcome": "PASS", "reason_code": "MET"}, "a-ea6310dcfe3bab77": {"outcome": "FAIL", "reason_code": "LIMIT_NOT_MET"}}
+    the_four: {"fail_stored_as_value": "a-ea6310dcfe3bab77", "good": "a-05adf58d71419fea", "replaced_before_storing": "a-62801e9e6257d6e9", "replaced_after_unknown": "a-87c330738f578774"}
+--- 5. all reports the witness holds for the four runs
+    fail: [{"seq": 8, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "ae561467d54a7596"}, {"seq": 17, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "a2bf3439cd259a7e"}, {"seq": 18, "derived": "AUTHORISED", "claim": "NO_EFFECT", "result_digest": "74234e98afe7498f"}]
+    good: [{"seq": 16, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "a2bf3439cd259a7e"}]
+    replaced_before_storing: [{"seq": 26, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "f0915d9832d7c7d2"}, {"seq": 27, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "a2bf3439cd259a7e"}]
+    replaced_after_unknown: [{"seq": 35, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "6429de3ae06f4dd6"}, {"seq": 36, "derived": "AUTHORISED", "claim": "EFFECT", "result_digest": "a2bf3439cd259a7e"}]
+    rows: {"decisions": 36, "evidence": 8, "results": 4}

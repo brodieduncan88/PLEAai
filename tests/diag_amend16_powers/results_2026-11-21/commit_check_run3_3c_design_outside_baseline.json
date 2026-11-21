@@ -1,0 +1,923 @@
+{
+ "when": "2026-11-21T09:53:12Z",
+ "database": "plea18",
+ "steps": [
+  {
+   "step": "0. two honest runs through the client and the gate host",
+   "bad": {
+    "exit": 2,
+    "first_line": "FAIL: REQUIREMENT NOT MET",
+    "attempt": {
+     "aid": "a-0137793be41ca5de",
+     "phase": "EFFECT",
+     "nonce": "n-8189fd8ff71590c420fabc5457dd6924bbc33233"
+    }
+   },
+   "good": {
+    "exit": 0,
+    "first_line": "DECLARED CHECK MET",
+    "attempt": {
+     "aid": "a-65265503a668057e",
+     "phase": "EFFECT",
+     "nonce": "n-6ea33129770d247f3766ff37a9e0187a3fa30e57"
+    }
+   },
+   "stored_fail_keys": [
+    "nonce",
+    "outcome",
+    "report",
+    "value"
+   ],
+   "stored_fail_outcome_field": "value",
+   "fail_value_keys": [
+    "baseline_sha256",
+    "basis",
+    "check",
+    "criteria",
+    "design",
+    "design_sha256",
+    "detail",
+    "format",
+    "notice",
+    "reason_code",
+    "requirement_id",
+    "revision",
+    "verdict"
+   ],
+   "fail_value_bytes": 803,
+   "fail_as_courier_reads": {
+    "status": 200,
+    "seconds": 0.04,
+    "reports": [
+     {
+      "seq": 8,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "8873432ac9488f8c"
+     }
+    ],
+    "stored_outcome_field": "value",
+    "stored_verdict": "FAIL",
+    "stored_value_digest": "8873432ac9488f8c",
+    "check_record.run_outcome": "FAIL"
+   },
+   "rows": {
+    "decisions": 16,
+    "evidence": 2,
+    "results": 2
+   },
+   "session_user_of_the_client": [
+    [
+     "plea_local",
+     "plea_local"
+    ]
+   ]
+  },
+  {
+   "step": "1. each change tried as plea_local, the role the client is configured with",
+   "direct": {
+    "UPDATE results": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table results"
+    },
+    "DELETE FROM results": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table results"
+    },
+    "INSERT INTO results": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table results"
+    },
+    "TRUNCATE results": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table results"
+    },
+    "UPDATE evidence": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table evidence"
+    },
+    "DELETE FROM evidence": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table evidence"
+    },
+    "INSERT INTO evidence": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table evidence"
+    },
+    "UPDATE decisions": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table decisions"
+    },
+    "DELETE FROM decisions": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table decisions"
+    },
+    "UPDATE attempts (phase)": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table attempts"
+    },
+    "DELETE FROM attempts": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table attempts"
+    },
+    "UPDATE roots": {
+     "ok": false,
+     "error": "UndefinedColumn: column \"head\" does not exist"
+    },
+    "SELECT ... FOR UPDATE on results": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table results"
+    },
+    "LOCK TABLE results IN ACCESS EXCLUSIVE MODE": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table results"
+    },
+    "LOCK TABLE decisions IN SHARE MODE": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table decisions"
+    },
+    "LOCK TABLE decisions IN ACCESS SHARE MODE": {
+     "ok": true,
+     "result": -1
+    },
+    "ALTER TABLE results": {
+     "ok": false,
+     "error": "InsufficientPrivilege: must be owner of table results"
+    },
+    "CREATE TABLE in public": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for schema public"
+    },
+    "CREATE TEMP TABLE": {
+     "ok": true,
+     "result": -1
+    },
+    "SET ROLE plea_witness": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied to set role \"plea_witness\""
+    },
+    "SET ROLE plea": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied to set role \"plea\""
+    },
+    "SET session_replication_role": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied to set parameter \"session_replication_role\""
+    },
+    "call plea_new_root": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for function plea_new_root"
+    },
+    "pg_terminate_backend of the witness role": {
+     "ok": true,
+     "result": []
+    },
+    "pg_advisory_lock": {
+     "ok": true,
+     "result": [
+      [
+       ""
+      ]
+     ]
+    },
+    "see other sessions (pg_stat_activity)": {
+     "ok": true,
+     "result": []
+    }
+   },
+   "through_the_store": {
+    "Store.apply_ex of a RECONCILE with evidence, as plea_local (the witness role is not used)": {
+     "ok": false,
+     "error": "AuthorityError: operation RECONCILE is reserved to the witness (role plea_local)"
+    },
+    "Store.apply_ex of a RECONCILE without evidence, as plea_local": {
+     "ok": false,
+     "error": "AuthorityError: operation RECONCILE is reserved to the witness (role plea_local)"
+    },
+    "Store.put_evidence as plea_local": {
+     "ok": false,
+     "error": "InsufficientPrivilege: permission denied for table evidence"
+    }
+   },
+   "rows_after": {
+    "decisions": 16,
+    "evidence": 2,
+    "results": 2
+   },
+   "fail_as_courier_reads_after": {
+    "status": 200,
+    "seconds": 0.036,
+    "reports": [
+     {
+      "seq": 8,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "8873432ac9488f8c"
+     }
+    ],
+    "stored_outcome_field": "value",
+    "stored_verdict": "FAIL",
+    "stored_value_digest": "8873432ac9488f8c",
+    "check_record.run_outcome": "FAIL"
+   }
+  },
+  {
+   "step": "2. the FAIL is stored as a value; the service has a second EFFECT report recorded (a PASS result's digest) and stores the PASS result",
+   "second_report": {
+    "witness_status": 200,
+    "witness_answer": {
+     "kind": "DUPLICATE",
+     "code": "VERDICT_RETRY",
+     "seq": 17
+    },
+    "decision_recorded": {
+     "seq": 17,
+     "op": [
+      "RECONCILE",
+      "a-0137793be41ca5de",
+      "EFFECT",
+      "AUTHORISED"
+     ],
+     "kind": "DUPLICATE",
+     "code": "VERDICT_RETRY"
+    },
+    "rows_before": {
+     "decisions": 16,
+     "evidence": 2,
+     "results": 2
+    },
+    "rows_after": {
+     "decisions": 17,
+     "evidence": 3,
+     "results": 2
+    }
+   },
+   "put_result": "no error",
+   "stored_result_unchanged": true,
+   "as_courier_reads": {
+    "status": 200,
+    "seconds": 0.036,
+    "reports": [
+     {
+      "seq": 8,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "8873432ac9488f8c"
+     },
+     {
+      "seq": 17,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "40d53d7c66991941"
+     }
+    ],
+    "stored_outcome_field": "value",
+    "stored_verdict": "FAIL",
+    "stored_value_digest": "8873432ac9488f8c",
+    "check_record.run_outcome": "FAIL"
+   },
+   "courier_pass": {
+    "exit": 0,
+    "made": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ]
+    ],
+    "delivered": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ]
+    ],
+    "waiting": [],
+    "error": null
+   },
+   "mailbox_holds_for_the_run": [
+    [
+     "c-e1",
+     "FAIL"
+    ]
+   ]
+  },
+  {
+   "step": "2b. a report with another verdict (NO_EFFECT) for the same run",
+   "second_report": {
+    "witness_status": 200,
+    "witness_answer": {
+     "kind": "DENIED",
+     "code": "VERDICT_IS_FINAL",
+     "seq": 18
+    },
+    "decision_recorded": {
+     "seq": 18,
+     "op": [
+      "RECONCILE",
+      "a-0137793be41ca5de",
+      "NO_EFFECT",
+      "AUTHORISED"
+     ],
+     "kind": "DENIED",
+     "code": "VERDICT_IS_FINAL"
+    },
+    "rows_before": {
+     "decisions": 17,
+     "evidence": 3,
+     "results": 2
+    },
+    "rows_after": {
+     "decisions": 18,
+     "evidence": 4,
+     "results": 2
+    }
+   },
+   "as_courier_reads": {
+    "status": 200,
+    "seconds": 0.036,
+    "reports": [
+     {
+      "seq": 8,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "8873432ac9488f8c"
+     },
+     {
+      "seq": 17,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "40d53d7c66991941"
+     },
+     {
+      "seq": 18,
+      "derived": "AUTHORISED",
+      "claim": "NO_EFFECT",
+      "result_digest": "74234e98afe7498f"
+     }
+    ],
+    "stored_outcome_field": "value",
+    "stored_verdict": "FAIL",
+    "stored_value_digest": "8873432ac9488f8c",
+    "check_record.run_outcome": "FAIL"
+   }
+  },
+  {
+   "step": "3. a FAIL signed by the gate host and recorded by the witness, the result not stored; then a second report and a PASS result",
+   "attempt": {
+    "aid": "a-db5db65875276c9e",
+    "phase": "EFFECT",
+    "nonce": "n-9c2873ab9d45db6a815b125d1fdbd309a481e688"
+   },
+   "client_exit": 2,
+   "client_first_line": "FAIL: REQUIREMENT NOT MET",
+   "verdict_the_gate_host_signed_for": "FAIL",
+   "stored_result": null,
+   "as_courier_reads_before": {
+    "status": 200,
+    "seconds": 0.035,
+    "reports": [
+     {
+      "seq": 26,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "b661c94790a56a45"
+     }
+    ],
+    "stored_outcome_field": null,
+    "stored_verdict": null,
+    "stored_value_digest": null,
+    "check_record.run_outcome": "UNVERIFIED"
+   },
+   "courier_waiting_900s (c-wait), before": {
+    "exit": 0,
+    "made": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ]
+    ],
+    "delivered": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ]
+    ],
+    "waiting": [],
+    "error": null
+   },
+   "courier_with_no_waiting_time (c-now), before": {
+    "exit": 0,
+    "made": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ],
+     [
+      "a-db5db65875276c9e",
+      "UNVERIFIED"
+     ]
+    ],
+    "delivered": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ],
+     [
+      "a-db5db65875276c9e",
+      "UNVERIFIED"
+     ]
+    ],
+    "waiting": [],
+    "error": null
+   },
+   "second_report": {
+    "witness_status": 200,
+    "witness_answer": {
+     "kind": "DUPLICATE",
+     "code": "VERDICT_RETRY",
+     "seq": 27
+    },
+    "decision_recorded": {
+     "seq": 27,
+     "op": [
+      "RECONCILE",
+      "a-db5db65875276c9e",
+      "EFFECT",
+      "AUTHORISED"
+     ],
+     "kind": "DUPLICATE",
+     "code": "VERDICT_RETRY"
+    },
+    "rows_before": {
+     "decisions": 26,
+     "evidence": 5,
+     "results": 2
+    },
+    "rows_after": {
+     "decisions": 27,
+     "evidence": 6,
+     "results": 2
+    }
+   },
+   "as_courier_reads_after": {
+    "status": 200,
+    "seconds": 0.034,
+    "reports": [
+     {
+      "seq": 26,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "b661c94790a56a45"
+     },
+     {
+      "seq": 27,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "40d53d7c66991941"
+     }
+    ],
+    "stored_outcome_field": "value",
+    "stored_verdict": "PASS",
+    "stored_value_digest": "40d53d7c66991941",
+    "check_record.run_outcome": "PASS"
+   },
+   "courier_waiting_900s (c-wait), after": {
+    "exit": 0,
+    "made": [],
+    "delivered": [],
+    "waiting": [],
+    "error": null
+   },
+   "a courier that starts now (c-late), no waiting time": {
+    "exit": 0,
+    "made": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ]
+    ],
+    "delivered": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ]
+    ],
+    "waiting": [],
+    "error": null
+   },
+   "mailbox_holds_for_the_run": [
+    [
+     "c-now",
+     "UNVERIFIED"
+    ]
+   ]
+  },
+  {
+   "step": "3b. as 3, with a result marked 'unknown' stored first and then replaced",
+   "attempt": {
+    "aid": "a-eefa39f9860ff869",
+    "phase": "EFFECT",
+    "nonce": "n-b83fe14316af8cd696ba37c1ef015fe000eff145"
+   },
+   "client_exit": 2,
+   "client_first_line": "FAIL: REQUIREMENT NOT MET",
+   "verdict_the_gate_host_signed_for": "FAIL",
+   "stored_result_first": {
+    "nonce": "n-b83fe14316af8cd696ba37c1ef015fe000eff145",
+    "detail": "held back",
+    "outcome": "unknown"
+   },
+   "as_courier_reads_before": {
+    "status": 200,
+    "seconds": 0.036,
+    "reports": [
+     {
+      "seq": 35,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "06411e1558792b88"
+     }
+    ],
+    "stored_outcome_field": "unknown",
+    "stored_verdict": null,
+    "stored_value_digest": null,
+    "check_record.run_outcome": "UNVERIFIED"
+   },
+   "second_report": {
+    "witness_status": 200,
+    "witness_answer": {
+     "kind": "DUPLICATE",
+     "code": "VERDICT_RETRY",
+     "seq": 36
+    },
+    "decision_recorded": {
+     "seq": 36,
+     "op": [
+      "RECONCILE",
+      "a-eefa39f9860ff869",
+      "EFFECT",
+      "AUTHORISED"
+     ],
+     "kind": "DUPLICATE",
+     "code": "VERDICT_RETRY"
+    },
+    "rows_before": {
+     "decisions": 35,
+     "evidence": 7,
+     "results": 4
+    },
+    "rows_after": {
+     "decisions": 36,
+     "evidence": 8,
+     "results": 4
+    }
+   },
+   "stored_outcome_field_after": "value",
+   "as_courier_reads_after": {
+    "status": 200,
+    "seconds": 0.043,
+    "reports": [
+     {
+      "seq": 35,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "06411e1558792b88"
+     },
+     {
+      "seq": 36,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "40d53d7c66991941"
+     }
+    ],
+    "stored_outcome_field": "value",
+    "stored_verdict": "PASS",
+    "stored_value_digest": "40d53d7c66991941",
+    "check_record.run_outcome": "PASS"
+   },
+   "courier_waiting_900s (c-wait)": {
+    "exit": 0,
+    "made": [],
+    "delivered": [],
+    "waiting": [],
+    "error": null
+   },
+   "a courier that starts now (c-late2), no waiting time": {
+    "exit": 0,
+    "made": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ]
+    ],
+    "delivered": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ]
+    ],
+    "waiting": [],
+    "error": null
+   },
+   "mailbox_holds_for_the_run": []
+  },
+  {
+   "step": "3c. as 3, the PASS result forged for the same design with numbers that meet the limit",
+   "attempt": {
+    "aid": "a-1aaebe3e90f473ea",
+    "phase": "EFFECT",
+    "nonce": "n-88c2ef4c44a0c83e6df4127c3234526f0289c3f5"
+   },
+   "client_first_line": "FAIL: DESIGN OUTSIDE THE BASELINE",
+   "verdict_the_gate_host_signed_for": "FAIL",
+   "achieved_the_gate_host_signed_for": [
+    null
+   ],
+   "as_courier_reads_before": {
+    "status": 200,
+    "seconds": 0.035,
+    "reports": [
+     {
+      "seq": 44,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "67bc6645121ff38f"
+     }
+    ],
+    "stored_outcome_field": null,
+    "stored_verdict": null,
+    "stored_value_digest": null,
+    "check_record.run_outcome": "UNVERIFIED"
+   },
+   "courier_waiting_900s (c-wait), before": {
+    "exit": 0,
+    "made": [],
+    "delivered": [],
+    "waiting": [],
+    "error": null
+   },
+   "second_report": {
+    "witness_status": 200,
+    "witness_answer": {
+     "kind": "DUPLICATE",
+     "code": "VERDICT_RETRY",
+     "seq": 45
+    },
+    "decision_recorded": {
+     "seq": 45,
+     "op": [
+      "RECONCILE",
+      "a-1aaebe3e90f473ea",
+      "EFFECT",
+      "AUTHORISED"
+     ],
+     "kind": "DUPLICATE",
+     "code": "VERDICT_RETRY"
+    },
+    "rows_before": {
+     "decisions": 44,
+     "evidence": 9,
+     "results": 4
+    },
+    "rows_after": {
+     "decisions": 45,
+     "evidence": 10,
+     "results": 4
+    }
+   },
+   "as_courier_reads_after": {
+    "status": 200,
+    "seconds": 0.042,
+    "reports": [
+     {
+      "seq": 44,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "67bc6645121ff38f"
+     },
+     {
+      "seq": 45,
+      "derived": "AUTHORISED",
+      "claim": "EFFECT",
+      "result_digest": "a7c37394b191a261"
+     }
+    ],
+    "stored_outcome_field": "value",
+    "stored_verdict": "PASS",
+    "stored_value_digest": "a7c37394b191a261",
+    "check_record.run_outcome": "PASS"
+   },
+   "courier_waiting_900s (c-wait), after": {
+    "exit": 0,
+    "made": [],
+    "delivered": [],
+    "waiting": [],
+    "error": null
+   },
+   "a courier that starts now (c-late3), no waiting time": {
+    "exit": 0,
+    "made": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ]
+    ],
+    "delivered": [
+     [
+      "a-0137793be41ca5de",
+      "FAIL"
+     ]
+    ],
+    "waiting": [],
+    "error": null
+   },
+   "mailbox_holds_for_the_run": []
+  },
+  {
+   "step": "4. the record of this budget, built and checked as the tests do",
+   "record_verifies": false,
+   "checks_that_fail": [
+    "6 gate reports and re-derived verdicts: a-1aaebe3e90f473ea: the design is outside the baselined design space, so it cannot have this verdict; a-db5db65875276c9e: the verdict is for another design than the one sent; a-eefa39f9860ff869: the verdict is for another design than the one sent"
+   ],
+   "status": "NOT VERIFIED",
+   "runs": {
+    "a-0137793be41ca5de": {
+     "outcome": "FAIL",
+     "reason_code": "LIMIT_NOT_MET"
+    },
+    "a-1aaebe3e90f473ea": {
+     "outcome": "PASS",
+     "reason_code": "MET"
+    },
+    "a-65265503a668057e": {
+     "outcome": "PASS",
+     "reason_code": "MET"
+    },
+    "a-db5db65875276c9e": {
+     "outcome": "PASS",
+     "reason_code": "MET"
+    },
+    "a-eefa39f9860ff869": {
+     "outcome": "PASS",
+     "reason_code": "MET"
+    }
+   },
+   "the_runs": {
+    "fail_stored_as_value": "a-0137793be41ca5de",
+    "good": "a-65265503a668057e",
+    "replaced_before_storing": "a-db5db65875276c9e",
+    "replaced_after_unknown": "a-eefa39f9860ff869",
+    "replaced_same_design": "a-1aaebe3e90f473ea"
+   }
+  },
+  {
+   "step": "5. all reports the witness holds for the four runs",
+   "fail": [
+    {
+     "seq": 8,
+     "derived": "AUTHORISED",
+     "claim": "EFFECT",
+     "result_digest": "8873432ac9488f8c"
+    },
+    {
+     "seq": 17,
+     "derived": "AUTHORISED",
+     "claim": "EFFECT",
+     "result_digest": "40d53d7c66991941"
+    },
+    {
+     "seq": 18,
+     "derived": "AUTHORISED",
+     "claim": "NO_EFFECT",
+     "result_digest": "74234e98afe7498f"
+    }
+   ],
+   "good": [
+    {
+     "seq": 16,
+     "derived": "AUTHORISED",
+     "claim": "EFFECT",
+     "result_digest": "40d53d7c66991941"
+    }
+   ],
+   "replaced_before_storing": [
+    {
+     "seq": 26,
+     "derived": "AUTHORISED",
+     "claim": "EFFECT",
+     "result_digest": "b661c94790a56a45"
+    },
+    {
+     "seq": 27,
+     "derived": "AUTHORISED",
+     "claim": "EFFECT",
+     "result_digest": "40d53d7c66991941"
+    }
+   ],
+   "replaced_after_unknown": [
+    {
+     "seq": 35,
+     "derived": "AUTHORISED",
+     "claim": "EFFECT",
+     "result_digest": "06411e1558792b88"
+    },
+    {
+     "seq": 36,
+     "derived": "AUTHORISED",
+     "claim": "EFFECT",
+     "result_digest": "40d53d7c66991941"
+    }
+   ],
+   "replaced_same_design": [
+    {
+     "seq": 44,
+     "derived": "AUTHORISED",
+     "claim": "EFFECT",
+     "result_digest": "67bc6645121ff38f"
+    },
+    {
+     "seq": 45,
+     "derived": "AUTHORISED",
+     "claim": "EFFECT",
+     "result_digest": "a7c37394b191a261"
+    }
+   ],
+   "rows": {
+    "decisions": 45,
+    "evidence": 10,
+    "results": 5
+   }
+  },
+  {
+   "step": "6a. plea_local holds every connection slot it can get, then releases them",
+   "connections_held": 97,
+   "stopped_by": "OperationalError: connection failed: connection to server at \"127.0.0.1\", port 5432 failed: FATAL:  remaining connection slots are reserved for roles with the SUPERUSER attribute",
+   "get_run_seconds_before": [
+    0.034,
+    0.033,
+    0.031,
+    0.036,
+    0.034
+   ],
+   "get_run_while_held": [
+    [
+     "RemoteDisconnected: Remote end closed connection without response",
+     0.019
+    ],
+    [
+     "RemoteDisconnected: Remote end closed connection without response",
+     0.016
+    ],
+    [
+     "RemoteDisconnected: Remote end closed connection without response",
+     0.015
+    ]
+   ],
+   "checkpoint_while_held": [
+    "RemoteDisconnected: Remote end closed connection without response",
+    0.015
+   ],
+   "courier_pass_while_held": {
+    "exit": 1,
+    "made": [
+     [
+      "",
+      "COURIER_BLOCKED"
+     ]
+    ],
+    "delivered": [
+     [
+      "",
+      "COURIER_BLOCKED"
+     ]
+    ],
+    "waiting": [],
+    "error": null
+   },
+   "get_run_after_release": [
+    [
+     200,
+     0.039
+    ],
+    [
+     200,
+     0.033
+    ],
+    [
+     200,
+     0.036
+    ]
+   ]
+  },
+  {
+   "step": "6b. the witness process stopped for 5 seconds and continued, by the same operating-system account (the demonstration runs everything under one)",
+   "get_run_while_stopped": [
+    200,
+    5.049
+   ],
+   "get_run_after": [
+    200,
+    0.04
+   ]
+  }
+ ]
+}

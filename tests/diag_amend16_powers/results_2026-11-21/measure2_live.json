@@ -1,0 +1,872 @@
+{
+ "mode": "live",
+ "database": "plea21",
+ "when_started": "2026-11-21T10:28:20Z",
+ "load": {
+  "minutes": 6.0,
+  "workers": 4,
+  "submissions": 531,
+  "per_minute": 88.5,
+  "exits": {
+   "0": 398,
+   "2": 133
+  },
+  "runs not in a final phase, sampled each second": {
+   "n": 362,
+   "min": 0,
+   "median": 2.0,
+   "p95": 4,
+   "max": 4,
+   "sum": 628
+  },
+  "attempts by phase at the end": [
+   [
+    "EFFECT",
+    531
+   ]
+  ]
+ },
+ "passes": [
+  {
+   "when": "load running, t=0 s",
+   "seconds": 0.27,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 0,
+   "runs done": 0,
+   "notices made": 0,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=10 s",
+   "seconds": 0.65,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    9,
+    9,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 68,
+   "runs done": 5,
+   "notices made": 2,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=21 s",
+   "seconds": 0.82,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    14,
+    14,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 148,
+   "runs done": 15,
+   "notices made": 2,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=32 s",
+   "seconds": 2.09,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    31,
+    31,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 365,
+   "runs done": 43,
+   "notices made": 7,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=44 s",
+   "seconds": 3.21,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    41,
+    41,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 672,
+   "runs done": 82,
+   "notices made": 10,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=57 s",
+   "seconds": 2.77,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    34,
+    34,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 926,
+   "runs done": 114,
+   "notices made": 8,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=70 s",
+   "seconds": 3.05,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    32,
+    32,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 1168,
+   "runs done": 144,
+   "notices made": 7,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=83 s",
+   "seconds": 2.92,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    33,
+    33,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 1415,
+   "runs done": 175,
+   "notices made": 8,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=96 s",
+   "seconds": 2.68,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    30,
+    30,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 1636,
+   "runs done": 202,
+   "notices made": 7,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=108 s",
+   "seconds": 2.49,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    28,
+    28,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 1842,
+   "runs done": 229,
+   "notices made": 7,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=121 s",
+   "seconds": 2.24,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    24,
+    24,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 2025,
+   "runs done": 253,
+   "notices made": 6,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=133 s",
+   "seconds": 2.11,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    22,
+    22,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 2197,
+   "runs done": 273,
+   "notices made": 5,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=145 s",
+   "seconds": 2.05,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    21,
+    21,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 2352,
+   "runs done": 292,
+   "notices made": 4,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=157 s",
+   "seconds": 2.49,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    22,
+    22,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 2512,
+   "runs done": 313,
+   "notices made": 6,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=170 s",
+   "seconds": 2.12,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    20,
+    20,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 2667,
+   "runs done": 332,
+   "notices made": 4,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=182 s",
+   "seconds": 2.19,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    19,
+    19,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 2807,
+   "runs done": 350,
+   "notices made": 5,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=194 s",
+   "seconds": 2.0,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    18,
+    18,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 2942,
+   "runs done": 367,
+   "notices made": 4,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=206 s",
+   "seconds": 2.01,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    16,
+    16,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 3065,
+   "runs done": 382,
+   "notices made": 4,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=218 s",
+   "seconds": 1.96,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    16,
+    16,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 3184,
+   "runs done": 398,
+   "notices made": 4,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=230 s",
+   "seconds": 1.71,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    14,
+    14,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 3299,
+   "runs done": 412,
+   "notices made": 3,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=242 s",
+   "seconds": 1.71,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    14,
+    14,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 3408,
+   "runs done": 426,
+   "notices made": 4,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=254 s",
+   "seconds": 1.74,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    13,
+    13,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 3509,
+   "runs done": 438,
+   "notices made": 3,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=265 s",
+   "seconds": 1.24,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    12,
+    12,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 3602,
+   "runs done": 448,
+   "notices made": 2,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=277 s",
+   "seconds": 1.5,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    12,
+    12,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 3684,
+   "runs done": 460,
+   "notices made": 3,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=288 s",
+   "seconds": 1.78,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    12,
+    12,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 3775,
+   "runs done": 471,
+   "notices made": 3,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=300 s",
+   "seconds": 1.21,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    11,
+    11,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 3855,
+   "runs done": 481,
+   "notices made": 3,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=311 s",
+   "seconds": 1.39,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    11,
+    11,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 3936,
+   "runs done": 490,
+   "notices made": 2,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=322 s",
+   "seconds": 1.5,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    12,
+    12,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 4013,
+   "runs done": 499,
+   "notices made": 2,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=334 s",
+   "seconds": 1.58,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    11,
+    11,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 4080,
+   "runs done": 510,
+   "notices made": 3,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=346 s",
+   "seconds": 1.45,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    9,
+    9,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 4151,
+   "runs done": 518,
+   "notices made": 2,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load running, t=357 s",
+   "seconds": 1.49,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    9,
+    9,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 4220,
+   "runs done": 527,
+   "notices made": 2,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load ended, pass 1",
+   "seconds": 0.5,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    4,
+    4,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 4248,
+   "runs done": 531,
+   "notices made": 1,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load ended, pass 2",
+   "seconds": 0.15,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 4248,
+   "runs done": 531,
+   "notices made": 0,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  },
+  {
+   "when": "load ended, pass 3",
+   "seconds": 0.17,
+   "exit": 0,
+   "ended": "read",
+   "why": "read whole",
+   "new [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "old [length, asked, put off]": [
+    0,
+    0,
+    0
+   ],
+   "read to decision": 4248,
+   "runs done": 531,
+   "notices made": 0,
+   "waiting": 0,
+   "unread": 0,
+   "watching": true,
+   "error": null
+  }
+ ],
+ "summary": {
+  "passes while the load ran": 31,
+  "of them ended read whole with nothing put off and nothing unread": 31,
+  "exit statuses": [
+   0
+  ],
+  "seconds of a pass while the load ran": {
+   "n": 31,
+   "min": 0.27,
+   "median": 1.96,
+   "p95": 3.05,
+   "max": 3.21,
+   "sum": 58.42
+  },
+  "runs asked for in a pass while the load ran (new + old)": {
+   "n": 31,
+   "min": 0,
+   "median": 16,
+   "p95": 34,
+   "max": 41,
+   "sum": 570
+  },
+  "runs put off in any pass": 0
+ },
+ "when_ended": "2026-11-21T10:34:35Z"
+}

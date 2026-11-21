@@ -1,0 +1,16 @@
+# Attempts by phase in the databases on this machine, 2026-11-21T10:34:59Z.  plea is the development database the test suites use (they make cut-off runs on purpose);
+# plea16 and plea17 held one gateway chain each; plea18 the commitment checks; plea19 the trial; plea20 and plea21 the honest-load measurements.
+== plea
+CONSUMED|1362 DISCARDED|921 EFFECT|49190 INDETERMINATE|2820 INTENT_PENDING|45 NO_EFFECT|68 RELEASED|28 RESERVED|4518 RESERVING|4757 TOKEN|68 
+== plea16
+CONSUMED|423 DISCARDED|919 EFFECT|106 INDETERMINATE|27 INTENT_PENDING|35 NO_EFFECT|36 RELEASED|21 RESERVED|952 RESERVING|1106 TOKEN|48 
+== plea17
+CONSUMED|423 DISCARDED|919 EFFECT|106 INDETERMINATE|27 INTENT_PENDING|35 NO_EFFECT|36 RELEASED|21 RESERVED|952 RESERVING|1078 TOKEN|48 
+== plea18
+EFFECT|16 
+== plea19
+EFFECT|20 
+== plea20
+EFFECT|1296 
+== plea21
+EFFECT|531 
