@@ -5,8 +5,9 @@ Nothing is implemented by it; no code of the courier, the mailbox, the witness, 
 configuration is changed; it is not a declaration and not an acceptance of anything. It is kept on the branch
 `diagnostic-amend16-alarm-2026-11-21` only.
 
-**Version: 3.** Version 1 (commit `1495320`) was reviewed by a separate agent and modelled by another; version 2
-(commit `2694b52`) corrected it and was reviewed again; version 3 corrects what that second review found. Every
+**Version: 4.** Version 1 (commit `1495320`) was reviewed by a separate agent and modelled by another; version 2
+(commit `2694b52`) corrected it and was reviewed again; version 3 corrected what the second review found and was
+reviewed a third time; version 4 corrects what the third review found. Every
 change is listed in section 14 against the finding that caused it.
 
 **What it is.** The owner accepted the NO-GO of the design gate (`verify/DESIGN_GATE_AMEND16_2026-11-21.md`, commit
@@ -362,7 +363,9 @@ evidence a finding rests on is INLINE in its notice or HELD by the mailbox (6.4)
   NOT COVERED. This is a loss of liveness. It MUST surface as NOT COVERED with an alarm (8.2), never as a statement
   that leaves the run out.
 - **O-L-3.** At most NOTICES_PER_RUN_MAX notices are made for one run in one chain epoch. A run that would need more
-  makes the reading not whole (RUN_NOTICE_LIMIT).
+  makes the reading not whole (RUN_NOTICE_LIMIT), and the alarm names it. An honest run needs about four. A service
+  with CAP-KEY can change a run's set of findings again and again and so reach the limit: the budget is then
+  NOT COVERED for as long as the chain epoch lasts. That is a loss of liveness, beside E-B-5.
 
 ## 5. Items, identities and chain epochs
 
@@ -473,8 +476,11 @@ carried observations, its position k and A(k), its outbox, and its continuity se
 
 ### 5.6 The courier's outbox, and answers it must act on
 
-- **I-O-1.** Every item the courier makes is written durably in its outbox before it is sent, and kept until it has a
-  receipt or a LINKED acknowledgement for it, or the chain epoch is closed.
+- **I-O-1.** Every item the courier makes is written durably in its outbox before it is sent. A notice about a run is
+  kept there until it has a receipt or a LINKED acknowledgement, or the chain epoch is closed. Every other item
+  (an alarm, an observation part, a statement, an EPOCH_OPEN) is kept only until the mailbox has answered it: if it
+  is refused, by 422 or for want of room, it is dropped, the reading it belongs to is not whole, and the next reading
+  makes its own.
 - **I-O-2. No answer.** The courier sends the same item again. The mailbox answers an item it already holds in the
   open chain epoch (the same digest) with its first answer (DL-2).
 - **I-O-3. 409 CHAIN_POSITION**, with the mailbox's signed head (chain epoch, k, A). If that head is a position of the
@@ -484,10 +490,10 @@ carried observations, its position k and A(k), its outbox, and its continuity se
   open chain epoch beyond the head the mailbox now signs for that epoch, the mailbox has lost state. Receipts of a
   closed chain epoch are not compared. The courier makes the reading not whole
   (MAILBOX_ROLLBACK), opens a new chain epoch and delivers everything again.
-- **I-O-5. 507.** The item took no position. It stays in the outbox and is sent again at every reading, signed for
-  the position then next; the courier goes on at once with its other items, each signed for the position then next,
-  so that a refused item never holds back a later one. The reading is not whole (NOTICE_REFUSED for a notice about a
-  run, MAILBOX_REFUSED otherwise).
+- **I-O-5. 507.** The item took no position. A notice about a run stays in the outbox and is sent again at every
+  reading, signed for the position then next; any other item is dropped (I-O-1). The courier goes on at once with its
+  other items, each signed for the position then next, so that a refused item never holds back a later one. The
+  reading is not whole (NOTICE_REFUSED for a notice about a run, MAILBOX_REFUSED otherwise).
 - **I-O-6. 409 EVIDENCE_MISSING.** The item took no position. The courier stores the evidence again from its own copy
   (E-B-6) and sends the item again, signed for the position then next. If the mailbox refuses the evidence, the
   notice is sent saying NOT_HELD with the reason; its identity is the same.
@@ -517,21 +523,28 @@ carried observations, its position k and A(k), its outbox, and its continuity se
   EVID_GLOBAL_QUOTA. An object is charged to each budget that stored it. The operator SHOULD set EVID_GLOBAL_QUOTA to
   at least the sum of the budgets' quotas; if it is less, one budget's evidence can use up another's room, and the
   other's status then says so (GLOBAL_QUOTA).
-- **E-Q-2. Items, in three rooms for each budget, none of which can use another's.** NOTICE_QUOTA for notices about
-  runs (I-ID-1). ALARM_RESERVE for OBSERVATION_INCOMPLETE and EPOCH_OPEN items. OBS_QUOTA for OBSERVATION_PART and
-  COVERAGE items and for the record of each accepted statement. Each item's index entry is charged to the item's own
-  room, so a full OBS_QUOTA never keeps a notice or an alarm from taking its position.
+- **E-Q-2. Items, in four rooms for each budget, none of which can use another's.** NOTICE_QUOTA for the bodies of
+  notices about runs (I-ID-1). ALARM_RESERVE for the bodies of OBSERVATION_INCOMPLETE items. OBS_QUOTA for the bodies
+  of OBSERVATION_PART and COVERAGE items and for the record of each accepted statement. INDEX_QUOTA for the index
+  entry of every position of every chain epoch, links included, and for EPOCH_OPEN items. The last INDEX_RESERVE
+  bytes of INDEX_QUOTA can be used only by notices about runs, alarms and EPOCH_OPEN items.
 - **E-Q-3.** A store that would exceed its room is refused (507, naming the room) and nothing is kept.
-- **E-Q-3a. Sizing, stated.** NOTICE_QUOTA MUST be at least the budget's provisioned runs × NOTICES_PER_RUN_MAX ×
-  ITEM_MAX, which is the most the notices of its runs can come to. Index entries and statement records are never
-  dropped, so OBS_QUOTA is used up at about 1 KiB for each reading (calculated): a mailbox has a finite life at a
-  given OBS_QUOTA, after which statements are refused (ITEMS_REFUSED) and its budgets are NOT COVERED until the
-  operator provides more. Notices and alarms are still taken then.
+- **E-Q-3a. Sizing, stated.** NOTICE_QUOTA MUST be at least (the runs the budget can come to have, those allowed back
+  after NO_EFFECT included, and one more for the budget's own notice) × NOTICES_PER_RUN_MAX × ITEM_MAX, which is the
+  most the bodies of its notices can come to. ALARM_RESERVE MUST be at least ALARMS_KEEP × ITEM_MAX. Index entries and
+  statement records are never dropped, so INDEX_QUOTA and OBS_QUOTA are used up as the mailbox works: about 0.2 KiB
+  of INDEX_QUOTA for every position (a reading takes at least one; a new chain epoch takes one for every notice it
+  links), and about 1 KiB of OBS_QUOTA for every accepted statement (calculated). **A mailbox therefore has a finite
+  life at given quotas.** When OBS_QUOTA is full, statements are refused and notices and alarms are still taken. When
+  INDEX_QUOTA is down to its reserve, only notices about runs, alarms and EPOCH_OPEN items are taken. When it is
+  full, nothing is taken, a courier that has lost its state cannot open an epoch, and nothing more can be held until
+  the operator provides more. In each case the item is refused (507, naming the room), the budget is NOT COVERED at
+  once (C-1.6) and the status says which room is full.
 - **E-Q-4. Retirement.** The bodies of OBSERVATION_PART and COVERAGE items that support no carried observation (those
   of statements older than the `oldest_carried` of the last accepted statement, and those of closed chain epochs) MAY
   be dropped and their room returned. Their index entries (k, identity, digest) and the record of each accepted
-  statement (its digest, N, head, token, tick) are kept. The body of an alarm MAY be dropped once ALARMS_KEEP later
-  alarms are held; its index entry is kept. A notice about a run, its receipt, and evidence a held notice binds are
+  statement (its digest, N, head, token, tick) are kept. The body of an alarm MUST be dropped, oldest first, when
+  keeping it would leave more than ALARMS_KEEP alarm bodies for the budget; its index entry is kept. A notice about a run, its receipt, and evidence a held notice binds are
   never dropped by the protocol.
 - **E-Q-5. Orphans.** An evidence object that no held notice binds (E-2) MAY be removed once it has been so for T_ORPHAN,
   counted by M-T-1 inside the current mailbox epoch from the later of its storing and the epoch's start.
@@ -584,8 +597,8 @@ carried observations, its position k and A(k), its outbox, and its continuity se
   without trace, or a status that says COVERED.
 - **E-X-4.** If NOTICE_QUOTA itself is spent, a notice about a run is refused (507 NOTICE_QUOTA). It stays in the
   courier's outbox (I-O-5), the reading is not whole, the alarm names the run, and the status says NOTICES_REFUSED
-  with the count of refusals. If ALARM_RESERVE is spent as well, the mailbox refuses the alarm, no statement can be
-  made, and the status says ITEMS_REFUSED. In both cases a failed run's notice
+  with the count of refusals. An alarm's body always has room (E-Q-3a, E-Q-4). If INDEX_QUOTA is spent, the mailbox
+  refuses the alarm too, no statement can be made, and the status says ITEMS_REFUSED. In both cases a failed run's notice
   is not held, the budget is NOT COVERED at once (C-1.6), and the status says that notices were refused: the operator MUST size NOTICE_QUOTA and ALARM_RESERVE
   for the budget's number of runs.
 - **E-X-5.** Strays, added fields and names that no attempt bears are not stored as evidence. They are counted and
@@ -755,7 +768,7 @@ finds no record of a budget answers NEVER). CLOCK_ANOMALY is shown beside any st
 | N-3 | not claimed | **Correctness of a verdict.** One consistent report is not evidence that it is correct. With CAP-KEY, a forgery made before the witness sees anything passes every rule here |
 | N-4 | not claimed | **Suspension and pause.** `CLOCK_BOOTTIME` is available and cannot be set; its behaviour across a real suspension is untested, and a pause from outside the machine may be invisible (M-T-7) |
 | N-5 | not claimed | **Acceptance.** Nothing here, and no test on a deployment where DP1 or DP2 fails, establishes the production contract (ACC-2) |
-| N-6 | not claimed | **That a failed run's notice is always held.** If the room for notices is spent the notice is refused and the status says so (E-X-4) |
+| N-6 | not claimed | **That a failed run's notice is always held.** If the room for notices, or for the index, is spent, the notice is refused and the status says so (E-Q-3a, E-X-4). A mailbox has a finite life at given quotas |
 
 ## 10. Limits that cannot be removed without changing the witness or the store
 
@@ -802,14 +815,14 @@ other name is refused (403).
 
 **Configuration, set by the operator at start and fixed for the mailbox epoch:** the writing and reading names; the
 courier key for each budget; the witness's public keys; L; R; TOKENS_MAX; ITEM_MAX (65,536); OBJ_MAX;
-EVID_BUDGET_QUOTA; EVID_GLOBAL_QUOTA; NOTICE_QUOTA; OBS_QUOTA; ALARM_RESERVE; ALARMS_KEEP; T_ORPHAN;
-CLOCK_TOLERANCE. RUN_ANSWER_MAX, INLINE_TOTAL_MAX and NOTICES_PER_RUN_MAX are the courier's; the first is named in
+EVID_BUDGET_QUOTA; EVID_GLOBAL_QUOTA; NOTICE_QUOTA; OBS_QUOTA; ALARM_RESERVE; ALARMS_KEEP; INDEX_QUOTA;
+INDEX_RESERVE; T_ORPHAN; CLOCK_TOLERANCE. RUN_ANSWER_MAX, INLINE_TOTAL_MAX and NOTICES_PER_RUN_MAX are the courier's; the first is named in
 each statement.
 
 **Proposed values, for the operator to set before any acceptance testing:** INLINE_TOTAL_MAX 32 KiB; OBJ_MAX 1 MiB;
-RUN_ANSWER_MAX 8 MiB; EVID_BUDGET_QUOTA 64 MiB; EVID_GLOBAL_QUOTA 1 GiB; NOTICE_QUOTA by E-Q-3a (for a budget of 1,000 runs with NOTICES_PER_RUN_MAX 8: 500 MiB);
-OBS_QUOTA 1 GiB (about a million readings); ALARM_RESERVE 4 MiB; ALARMS_KEEP 64; NOTICES_PER_RUN_MAX 8;
-TOKENS_MAX 8. L and R have no proposed value. One
+RUN_ANSWER_MAX 8 MiB; EVID_BUDGET_QUOTA 64 MiB; EVID_GLOBAL_QUOTA 1 GiB; NOTICES_PER_RUN_MAX 16; NOTICE_QUOTA by E-Q-3a (for a budget that can come to 1,000 runs: 1,001 × 16 × 65,536
+bytes, about 1 GiB); ALARMS_KEEP 64; ALARM_RESERVE 4 MiB; OBS_QUOTA 1 GiB (about a million accepted statements);
+INDEX_QUOTA 1 GiB (about five million positions); INDEX_RESERVE 16 MiB; TOKENS_MAX 8. L and R have no proposed value. One
 measurement bears on L: the courier of `e25a297`, which skips some phases, read a budget of 996 runs from nothing in
 98 s on the demonstration machine, and the chain alone of a 996-run budget took 37 s and 508 MB. An L below a reading
 from nothing means a courier that has lost its state can never bring a budget back. Acceptance tests MUST take L, R
@@ -905,3 +918,13 @@ F20 to F29 are the reviewer's findings on version 2 (Part 3 of the reports).
 | F27 | MEDIUM | twelve bound reports (I-K-1) |
 | F28 | MEDIUM | receipts are compared only within the open chain epoch (I-O-4) |
 | F29 | LOW | 1.2 corrected in two places; a new request nonce after no answer (M-K-1); clearing an anchor is outside the specification (O-3); CRASH (O-L-2); K-PHASE's title |
+
+### Changes from version 3 to version 4
+
+F30 to F32 are the reviewer's findings on version 3 (Part 4 of the reports).
+
+| Finding | Severity | What was changed |
+|---|---|---|
+| F30 | MEDIUM | a room of its own for index entries and EPOCH_OPEN items, with a reserve for notices, alarms and EPOCH_OPEN; alarm bodies bounded by ALARMS_KEEP; the finite life of a mailbox at given quotas stated, and what is refused in what order (E-Q-2, E-Q-3a, E-Q-4, E-X-4, N-6, 11) |
+| F31 | MEDIUM | only a notice about a run is kept to be sent again; any other item that is refused is dropped (I-O-1, I-O-5) |
+| F32 | LOW | the sizing formula counts the runs allowed back and the budget's own notice (E-Q-3a); reaching the limit of notices for a run stated as a loss of liveness (O-L-3); proposed values (11) |
