@@ -61,24 +61,26 @@ the witness, and a failure to send never ends the reading of a budget.
 Runs it cannot read (Amendment 16).  A run the courier cannot read ends nothing: every other run is still read in the same
 pass.  If the reading failed as a transport fails (a dropped connection, an answer too long or not readable), the courier
 asks the witness for a fresh checkpoint with a nonce of its own: if that verifies, the witness is up and the trouble is the
-run's; if it does not answer, the pass ends as "the witness cannot be read" (after `stall_after`, COURIER_BLOCKED, naming the
+run's; if it does not answer, the pass ends there, as "the witness stopped answering after one run" (after `stall_after`, COURIER_BLOCKED, naming the
 run after which the witness stopped answering).  Either way the run is marked unread, once, with since when and why; the
 mark is removed when the run is read, and once it has been unread for `stall_after` one signed notice of it is sent
 (UNREADABLE), which says the courier could not read it and does not know its outcome.  A run that cannot be read is never
 marked done.
 
-What a pass asks for (Amendment 16, fifth form, A).  Runs whose outcome needs no request to the witness are settled in every
-pass.  Every other run not done is in one of two lines: new (never asked for, or its entry in the chain is not what it was
-when last asked for), in the chain's order (by the decision at which the chain came to say what it now says of the run);
-old (all the others), the one asked for longest ago first, so a run after which
-the witness stopped answering stands last.  A budget's pass has `pass_seconds` (600 unless set) for asking: while both lines
-hold runs each has half, and a line that is empty gives its half to the other; whatever the time, at least `floor` runs of
-each line not empty are asked for, floor being what half of pass_seconds holds at two deadlines a run (a request and the
-checkpoint after a failed one), and never less than 1 (2 with the defaults).  A run of the old line is so asked for at least
-once in every ceil(old line / floor) passes; the status gives both lines' lengths, how many of each were asked for and put
-off at the last pass, and that bound.  A run not asked for, for want of time, is listed as put off, never as unread; if it
-bears the unread mark past `stall_after`, its UNREADABLE notice is made in words true of a run not asked for again.  A pass
-that put runs off exits 1 and makes no WATCHING statement.
+What a pass asks for (Amendment 16, fifth form, A; eighth form, M1).  The order of a pass, after the checkpoint and the chain:
+(1) the runs whose outcome needs no request; (2) `floor` runs of the old line (runs asked for before whose entry has not
+changed), the one asked for longest ago first; (3) the new line (never asked for, or the entry changed), in the order the
+chain came to say each, with its share of the time; (4) the rest of the old line, oldest first, with its share; (5) last of
+all, the runs after which the witness stopped answering when they were last asked for, the one asked for longest ago first
+(one of them in every pass), whatever their entry now says, until they have been read.  A budget's pass has `pass_seconds`
+(600 unless set) for asking: while both lines hold runs each has half; floor is what half of pass_seconds holds at two
+deadlines a run (a request and the checkpoint after a failed one), never less than 1 (2 with the defaults).  So every run of
+the old line is asked for at least once in every ceil(old line / floor) passes whose checkpoint and chain were read,
+whatever the new line holds and wherever the pass ends after step (2) (a pass ended in step (2) by a run that stops the
+witness for the first time asks for fewer, and that run then moves to step (5)); the status gives the lengths, what was
+asked for and put off at the last pass, and that bound.  The new line has no bound.  A run not asked for, for want of time,
+is listed as put off, never as unread; if it bears the unread mark past `stall_after`, its UNREADABLE notice is made in
+words true of a run not asked for in that pass.  A pass that put runs off exits 1 and makes no WATCHING statement.
 
 How a pass ends (Amendment 16, fifth form, C; sixth form).  The chain's entries of runs are made records of a fixed shape as
 they are read (six items, a name and a phase that are text), in every decision read; a chain that holds another is what the
@@ -99,7 +101,9 @@ the courier's clock is set back to the clock (summary: clock_set_back).  A fault
 shown in the status; so is a mailbox that has not answered, since when; a damaged log of deliveries is reported, not raised.
 
 Open.  If the service adds new runs faster than a pass can ask for them, the new line grows without end: that is shown (its
-length, runs put off, exit 1, no WATCHING statement), not repaired; the bound of the old line holds for passes that reach it.
+length, runs put off, exit 1, no WATCHING statement), not repaired.  The runs after which the witness stopped answering have
+no bound beyond one of them asked for in every pass.  A line of the log of deliveries made whole lines after it by an earlier
+form (a torn line followed by whole ones) is reported at each pass; only a torn last line is cut off.
 Budgets are read one after another, so a slow budget delays the next.  A request's DEADLINE bounds how long the courier
 waits; the reading thread ends at the deadline once an answer has begun (it is closed, and it looks at the deadline between
 reads), but before the answer's headers the socket's timeout (at most what is left of the deadline) applies to each
@@ -109,7 +113,8 @@ only its exit status and its status say so (a signed heartbeat is Amendment 17).
 made loses that notice: D49's check may only add a notice, so the PASS it qualifies is marked done as always.  Also open, and
 stated (seventh form): a receipt taken but not written to deliveries.jsonl (a fault of the disk) leaves the notice listed as
 waiting though the mailbox holds it; a state from an earlier form that was stopped without its alarm stays so; status()
-ends with the load error when the whole state file is damaged; a damaged head reads as a FORK; every property of A, B and C
+ends with the load error when the whole state file is damaged (a pass under --every says so and tries again); a damaged head
+reads as a FORK; every property of A, B and C
 except T4, T6, T7 and the pinning of receipts is tested against the stand-in witness and mailbox only.
 
 The seventh form (L1-L7).  A notice is built, then put in the outbox with its mark in memory, then the state saved once,
@@ -319,6 +324,11 @@ def q(**kw) -> str:
 
 
 # ---------------------------------------------------------------------------------------------------- reading the witness
+class Unhandled(Unreachable):
+    """An answer the courier could not handle (a RecursionError or MemoryError while its data was parsed, verified, hashed
+    or worked out): never words that the courier was told so (Amendment 16, eighth form, M2)."""
+
+
 def handled(f, *a):
     """f(*a), where f parses, verifies or hashes an answer's data.  A RecursionError or MemoryError there is an answer the
     courier could not handle (Amendment 16, seventh form, L4): Unreachable, in words that do not say whose it is.  An error
@@ -326,7 +336,7 @@ def handled(f, *a):
     try:
         return f(*a)
     except (RecursionError, MemoryError) as exc:
-        raise Unreachable(f'the courier could not handle the answer ({type(exc).__name__}); it cannot tell from this alone whether the '
+        raise Unhandled(f'the courier could not handle the answer ({type(exc).__name__}); it cannot tell from this alone whether the '
                           'answer\'s size or depth, or its own want of memory, brought it about') from None
 
 
@@ -450,16 +460,21 @@ def _write_whole(path: pathlib.Path, data: str) -> None:
     _sync_dir(path.parent)
 
 
-def _append(path: pathlib.Path, obj) -> None:
+def _append(path: pathlib.Path, obj) -> bool:
+    """Append one line; True if a line left unfinished at the end of the file (a kill while it was written: never a whole
+    record) was first cut off (Amendment 16, eighth form, M5)."""
     new = not path.exists()
     torn = False
     if not new and path.stat().st_size:
-        with open(path, 'rb') as f:
-            f.seek(-1, os.SEEK_END); torn = f.read(1) != b'\n'           # a line left unfinished (a crash): the new one begins on a line of its own
+        with open(path, 'rb+') as f:
+            data = f.read()
+            if not data.endswith(b'\n'):
+                torn = True; f.truncate(data.rfind(b'\n') + 1); f.flush(); os.fsync(f.fileno())
     with open(path, 'a', encoding='utf-8') as f:
-        f.write(('\n' if torn else '') + json.dumps(obj, sort_keys=True) + '\n'); f.flush(); os.fsync(f.fileno())
+        f.write(json.dumps(obj, sort_keys=True) + '\n'); f.flush(); os.fsync(f.fileno())
     if new:
         _sync_dir(path.parent)
+    return torn
 
 
 def delivered_digests(state_dir: pathlib.Path, problems=None) -> set:
@@ -539,14 +554,14 @@ def inconsistent_notice(cfg, key, root, attempt, result, cp, sent):
 def witness_up(cfg, root, cp) -> None:
     """Whether the witness itself answers (Amendment 16, P3), asked when one run's reading failed as a transport would fail (a
     dropped connection, an answer too long or not readable): a fresh checkpoint, with a nonce of the courier's own, that
-    verifies and agrees with this pass's.  Raises Unreachable if it does not answer (the witness cannot be read), Refused if
+    verifies and agrees with this pass's.  Raises Unreachable if it does not answer, Refused if
     what it answers cannot be believed; returns if the witness is up, so the trouble is that run's."""
     try:
         again = checkpoint(cfg, root, cp['seq'])
     except Refused:
         raise
     except Unreachable as exc:
-        raise Unreachable(f'the witness cannot be read: a run could not be read, and the witness then did not answer a checkpoint ({exc})')
+        raise Unreachable(f'a run could not be read, and the witness then did not answer a checkpoint ({exc})')   # M2: the checkpoint and chain of the pass were read
     if again['head_at'] != cp['head']:
         raise Refused(f"FORK: the witness says another head for decision {cp['seq']} than the one it gave earlier in this pass", again)
 
@@ -647,45 +662,59 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, p
     unmade = st.setdefault('unmade', {})                             # runs read whose notice the courier could not make: {aid: {since, why, outcome}}
     unmade_now = []
 
-    def make(attempt, outcome, result=None, why=None, notice=None, done=False):
-        """Build the notice (the one step that can fail on data); then put it in the outbox and set its marks, in memory;
-        then save once; only then send (Amendment 16, seventh form, L2).  The unread mark goes with the notice (L7)."""
+    def build(attempt, outcome, result=None, why=None):
+        """A run's notice, built: the one step that can fail on what the courier was given (L2, M7)."""
+        return make_notice(cfg, key, root, attempt, outcome, result, cp['seq'], cp['head'], why_alarm=why)
+
+    def clear(aid):
+        """The run was read: its unread mark goes, and with it the mark of its UNREADABLE notice, so that a later episode of
+        trouble gets a notice of its own (M6)."""
+        unread.pop(aid, None)
+        if f'{aid}|UNREADABLE' in sent:
+            sent.remove(f'{aid}|UNREADABLE')
+
+    def commit(attempt, outcome, n, done=False):
+        """Put the notice in the outbox and set its marks, in memory; then save once; only then send (L2).  A failure to save
+        here is the state not saved, never a notice that could not be made (M7)."""
         aid = attempt[0]
-        n = notice or make_notice(cfg, key, root, attempt, outcome, result, cp['seq'], cp['head'], why_alarm=why)
         post.put(n); sent.append(f'{aid}|{outcome}')
         if done:
             final.append(aid)
         if outcome != 'UNREADABLE':
-            unread.pop(aid, None)
+            clear(aid)
         unmade.pop(aid, None)
         summary['made'].append({'root': root, 'aid': aid, 'outcome': outcome})
         save(); post.send()
 
-    def guarded(attempt, outcome, *a, **k) -> bool:
-        """make(), for one run's notice: a fault while it is built keeps the run (not done, not marked sent), names it in the
-        summary and the state, and the pass goes on (L5).  After the waiting time, one COURIER_FAILED alarm for the run."""
+    def guarded(attempt, outcome, result=None, why=None, done=False) -> bool:
+        """One run's notice: a fault while it is built keeps the run (not done, not marked sent), names it in the summary
+        and the state, and the pass goes on (L5).  After the waiting time, one COURIER_FAILED alarm for the run."""
         aid = attempt[0]
         try:
-            make(attempt, outcome, *a, **k); return True
+            n = build(attempt, outcome, result, why)
         except Exception as exc:
-            why = f'{type(exc).__name__}: {exc}'
+            why_ = f'{type(exc).__name__}: {exc}'
             u = unmade.get(aid) if isinstance(unmade.get(aid), dict) else {}
-            unmade[aid] = dict(u, since=_number(u.get('since'), clock), why=why, outcome=outcome)
+            unmade[aid] = dict(u, since=_number(u.get('since'), clock), why=why_, outcome=outcome)
             unmade_now.append(aid)
-            summary['courier_failed'].append({'root': root, 'aid': aid, 'why': f'the courier read this run and could not make its {outcome} notice: {why}'})
+            summary['courier_failed'].append({'root': root, 'aid': aid, 'why': f'the courier could not make the {outcome} notice of this run: {why_}'})
             if clock - unmade[aid]['since'] >= stall and not unmade[aid].get('alarm_sent'):
                 try:
                     name = C.shown(aid, 200)
                 except Exception:
                     name = 'a run of this budget'
+                words = (UNMADE_UNREADABLE_WORDS if outcome == 'UNREADABLE' else UNMADE_WORDS).format(name, _when(unmade[aid]['since']), C.shown(why_, 300), outcome)
                 try:
-                    post.put(make_notice(cfg, key, root, None, 'COURIER_FAILED', None, cp['seq'], cp['head'], why_alarm=UNMADE_WORDS.format(name, _when(unmade[aid]['since']), C.shown(why, 300))))
-                    unmade[aid]['alarm_sent'] = True                # the mark with the alarm, one save
-                    summary['made'].append({'root': root, 'aid': '', 'outcome': 'COURIER_FAILED'})
+                    alarm_n = make_notice(cfg, key, root, None, 'COURIER_FAILED', None, cp['seq'], cp['head'], why_alarm=words)
                 except Exception:
-                    pass                                            # no alarm, no mark: tried again at the next pass
+                    alarm_n = None                                  # no alarm, no mark: tried again at the next pass
+                if alarm_n is not None:
+                    post.put(alarm_n); unmade[aid]['alarm_sent'] = True   # the mark with the alarm, one save
+                    summary['made'].append({'root': root, 'aid': '', 'outcome': 'COURIER_FAILED'})
             save()
             return False
+        commit(attempt, outcome, n, done)
+        return True
 
     def unreadable(attempt, words):
         u = unread.get(attempt[0])
@@ -695,49 +724,63 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, p
     def keep_waits(aid):
         seen.update({k: v for k, v in before.items() if k.startswith(f'{aid}|')})
 
+    def fell(a):
+        u = unread.get(a[0])
+        return isinstance(u, dict) and u.get('fell_at') is not None
+
     todo = [a for a in st.get('attempts', []) if a[0] not in final and a[2] in READ]
     for attempt in st.get('attempts', []):
         if attempt[0] in final or attempt[2] not in READ:
             unread.pop(attempt[0], None); asked.pop(attempt[0], None); said.pop(attempt[0], None); unmade.pop(attempt[0], None)
-    for attempt in todo:                                            # L1: the notice of a run after which the witness fell, due now that it answers
-        u = unread.get(attempt[0])
-        if isinstance(u, dict) and u.get('fell_at') is not None:
-            unreadable(attempt, f"When the courier last asked for this run, at {_when(u['fell_at'])} by its clock, the witness stopped answering; "
-                                f"the witness has answered the courier's checkpoint since.  The courier has not been able to read this run since {_when(u.get('since'))} by its clock.")
-    new, old = lines([a for a in todo if a[2] in ASKS], asked, said)
-    count = {'new': [len(new), 0, 0], 'old': [len(old), 0, 0]}       # length, asked, put off
+    asks = [a for a in todo if a[2] in ASKS]
+    fellers = sorted([a for a in asks if fell(a)], key=lambda a: asked_at(asked, a[0])[0])   # group 5: whatever their entry says, until read
+    new, old = lines([a for a in asks if not fell(a)], asked, said)
+    for attempt in fellers:                                         # L1, M3: the notice of a run after which the witness fell, still due a request
+        u = unread[attempt[0]]
+        unreadable(attempt, f"When the courier last asked for this run, at {_when(u['fell_at'])} by its clock, the witness stopped answering.  "
+                            f"The courier has not been able to read this run since {_when(u.get('since'))} by its clock.")
+    count = {'new': [len(new), 0, 0], 'old': [len(old), 0, 0], 'fell': [len(fellers), 0, 0]}   # length, asked, put off
     spent = {'new': 0.0, 'old': 0.0}
     put_off, unread_now = [], 0
-    order = [(a, None) for a in todo if a[2] not in ASKS] + [(a, 'new') for a in new] + [(a, 'old') for a in old]
-    whole, reached_old = False, not old
+    # M1, the order: (1) runs that need no request; (2) `floor` runs of the old line, the one asked longest ago first; (3) the new
+    # line, with its share; (4) the rest of the old line, with its share; (5) last, the runs after which the witness stopped
+    # answering when last asked for, the one asked longest ago first (one of them in every pass).
+    order = ([(a, None) for a in todo if a[2] not in ASKS] + [(a, 'old!') for a in old[:floor]] + [(a, 'new') for a in new]
+             + [(a, 'old') for a in old[floor:]] + [(a, 'fell!' if i == 0 else 'fell') for i, a in enumerate(fellers)])
+    whole, past_floor = False, not old[:floor]
     try:
-        for attempt, line in order:
+        for attempt, place in order:
             aid, phase = attempt[0], attempt[2]
-            reached_old = reached_old or line == 'old'
-            if line is not None:
+            line = {'old!': 'old', 'fell!': 'fell'}.get(place, place)
+            past_floor = past_floor or place not in (None, 'old!')
+            if place in ('new', 'old', 'fell'):
+                clock_line = 'old' if line == 'fell' else line
                 mine = share if not (new and old) else share / 2 if line == 'new' else share - min(spent['new'], share / 2)
-                if count[line][1] >= floor and spent[line] >= mine:   # out of time: it waits for its turn at a later pass
+                if (count[line][1] >= floor or line == 'fell') and spent[clock_line] >= mine:   # out of time: it waits for its turn at a later pass
                     count[line][2] += 1; keep_waits(aid)
                     u = unread.get(aid) if isinstance(unread.get(aid), dict) else None
                     put_off.append({'root': root, 'aid': aid, 'line': line, 'why': 'not asked for in this pass, for want of time' + (
                         '; when it was last asked for, the courier could not read it' if u else '')})
                     if u and u.get('fell_at') is None:
-                        unreadable(attempt, f"The courier has not been able to read this run since {_when(_number(u.get('since'), clock))} "
-                                            f"by its clock; when it last asked for it: {C.shown(u.get('why'), 600)}.  It has not asked for it again since, for want of time in its passes.")
+                        unreadable(attempt, f"When the courier last asked for this run, at {_when(asked_at(asked, aid)[0])} by its clock, it could not read it "
+                                            f"({UNREAD_LEAD.get(u.get('kind'), UNREAD_LEAD['answer'])} {C.shown(u.get('why'), 600)}).  It has not asked for it in this pass, "
+                                            f"for want of time.  It has not been able to read this run since {_when(_number(u.get('since'), clock))} by its clock.")
                     continue
+            if line is not None:
                 count[line][1] += 1
-                asked[aid] = {'at': clock, 'entry': entry_digest(attempt)}   # asked for now: it goes to the end of the old line
+                asked[aid] = {'at': clock, 'entry': entry_digest(attempt)}   # asked for now: it goes to the end of its line
             began = time.monotonic()
             def charge():                                           # the time of asking (a request, and the checkpoint after a failed one), not of sending
                 if line is not None:
-                    spent[line] += time.monotonic() - began
+                    spent['old' if line == 'fell' else line] += time.monotonic() - began
             try:                                                    # Amendment 16 (P1): no run the courier cannot read ends this loop
                 outcome, result = run_outcome(cfg, root, attempt, cp['seq'])
             except Refused:
                 raise
             except Exception as exc:
-                fell, own = None, not isinstance(exc, Unreachable)
-                if own:                                             # L3: an error of the courier's own while it read this run
+                down_ = None
+                kind = 'own' if not isinstance(exc, Unreachable) else 'unhandled' if isinstance(exc, Unhandled) else 'answer'
+                if kind == 'own':                                   # L3: an error of the courier's own while it read this run
                     why = f'the courier met an error it did not expect while reading this run ({type(exc).__name__}: {exc})'
                     summary['courier_failed'].append({'root': root, 'aid': aid, 'why': why})
                 else:
@@ -746,17 +789,16 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, p
                         try:
                             witness_up(cfg, root, cp)
                         except Unreachable as down:
-                            fell = down
+                            down_, kind = down, 'fell'
                             why = 'the witness stopped answering after the courier asked for this run'
                 charge()
                 u = unread.get(aid) if isinstance(unread.get(aid), dict) else {}
-                unread[aid] = {'since': _number(u.get('since'), clock), 'why': why, 'fell_at': clock if fell is not None else None}
+                unread[aid] = {'since': _number(u.get('since'), clock), 'why': why, 'kind': kind, 'fell_at': clock if down_ is not None else None}
                 summary['unread'].append({'root': root, 'aid': aid, 'since': unread[aid]['since'], 'why': why}); unread_now += 1
                 keep_waits(aid); save()
-                if fell is not None:                                # L1: no UNREADABLE in the pass in which the witness fell after this run
-                    raise WitnessFell(f'the witness cannot be read: it stopped answering after the courier asked for run {C.shown(aid, 200)} ({fell})', aid)
-                unreadable(attempt, (f'The courier met an error it did not expect while reading this run: {C.shown(f"{type(exc).__name__}: {exc}", 600)}.' if own else
-                                     f'What the courier was told: {C.shown(why, 600)}.') + f'  It has not been able to read this run for {int(clock - unread[aid]["since"])} seconds by its clock.')
+                if down_ is not None:                               # L1: no UNREADABLE in the pass after the witness fell in it
+                    raise WitnessFell(f'the witness stopped answering after the courier asked for run {C.shown(aid, 200)}: {down_}', aid)   # M2: not "cannot be read"
+                unreadable(attempt, f'{UNREAD_LEAD[kind]} {C.shown(f"{type(exc).__name__}: {exc}" if kind == "own" else why, 600)}.  It has not been able to read this run for {int(clock - unread[aid]["since"])} seconds by its clock.')
                 continue
             charge()
             done = phase in FINAL and outcome != 'UNVERIFIED'
@@ -767,17 +809,17 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, p
                 except Exception:
                     take = False
                 if take:
-                    make(attempt, 'INCONSISTENT', notice=extra, done=done)
+                    commit(attempt, 'INCONSISTENT', extra, done=done)   # built and checked above; a failure to save is the pass's (M7)
                 else:
                     if done:
                         final.append(aid)
-                    unread.pop(aid, None); save()
+                    clear(aid); save()
                 continue
             if outcome in WAIT:                                      # what may yet change: no outcome yet, or a result not yet stored
                 mark = f'{aid}|{outcome}|{phase}'
                 seen[mark] = before.get(mark, clock); waited = clock - seen[mark]
                 if waited < stall:
-                    unread.pop(aid, None); save()
+                    clear(aid); save()
                     continue
                 result = None                                      # the courier vouches for no result it could not match
             if f'{aid}|{outcome}' not in sent:
@@ -785,15 +827,16 @@ def read_witness(cfg, key, watch, st: dict, clock: float, summary: dict, save, p
             else:
                 if done:
                     final.append(aid)
-                unread.pop(aid, None); save()
+                clear(aid); save()
         whole = True
     finally:
         st['first_seen'] = seen if whole else dict(before, **seen)  # a wait is lost only by a run seen in another state
         bound = math.ceil(count['old'][0] / floor) if count['old'][0] else 0
-        st['lines'] = {'at': clock, 'new': count['new'], 'old': count['old'], 'floor': floor, 'bound': bound, 'put_off': put_off, 'reached_old': reached_old}
+        st['lines'] = {'at': clock, 'new': count['new'], 'old': count['old'], 'fell': count['fell'], 'floor': floor, 'bound': bound, 'put_off': put_off,
+                       'past_floor': past_floor}
     summary['put_off_runs'].extend(put_off)
     if put_off:
-        summary['put_off'].append({'root': root, 'runs': len(put_off), 'new': count['new'][2], 'old': count['old'][2],
+        summary['put_off'].append({'root': root, 'runs': len(put_off), 'new': count['new'][2], 'old': count['old'][2], 'fell': count['fell'][2],
                                    'why': f'the pass had used its {share:g} seconds; they are asked for in their turn at a later pass'})
     if not st.get('watching') and not put_off:                      # Amendment 16 (P6): the first whole pass over this budget, every run asked for
         n = make_notice(cfg, key, root, None, C.WATCHING, None, cp['seq'], cp['head'])
@@ -890,7 +933,9 @@ class Outbox:
                 r.update(last='not sent', why=str(exc) if isinstance(exc, Unreachable) else f'{type(exc).__name__}: {exc}')
             else:
                 if d not in done:
-                    _append(pathlib.Path(self.cfg['state_dir']) / 'deliveries.jsonl', {'notice': n, 'receipt': receipt}); done.add(d)
+                    if _append(pathlib.Path(self.cfg['state_dir']) / 'deliveries.jsonl', {'notice': n, 'receipt': receipt}):
+                        self.summary['log_mended'].append({'root': self.root, 'why': 'a line of deliveries.jsonl left unfinished (never a whole record) was cut off before the next was written'})
+                    done.add(d)
                 self.box.remove(r)
                 if n.get('outcome') == C.WATCHING:
                     self.summary['coverage'].append({'root': self.root, 'seq': n.get('seq'), 'state': ACCEPTED})
@@ -939,7 +984,7 @@ class Outbox:
 
 
 # ---------------------------------------------------------------------------------------------------- how a pass ends
-ENDINGS = {'read': 'read', 'blocked': 'the witness could not be reached', 'stopped': 'what the witness said cannot be believed',
+ENDINGS = {'read': 'read', 'blocked': 'the witness could not be reached', 'fell': 'the witness stopped answering after one run', 'stopped': 'what the witness said cannot be believed',
            'failed': 'the courier met an error it did not expect'}
 
 
@@ -1062,6 +1107,11 @@ FAILED_WORDS = ('No pass over this budget has been completed for {} seconds by i
                 'It cannot tell from this alone whether something it was given (an answer of the witness or of the mailbox, its own state or configuration) brought it about.  '
                 'No pass over this budget has been completed since {} by its clock, and runs of this budget may not have been read or their notices made since then.  '
                 'The courier tries again at each pass, and makes no other notice of this kind until it has completed a pass and met such an error again.')
+UNREAD_LEAD = {'answer': 'The reason the courier recorded:', 'unhandled': 'The courier could not handle the answer it was given for this run:',
+               'own': 'The courier met an error it did not expect while reading this run:', 'fell': 'The reason the courier recorded:'}   # M2
+UNMADE_UNREADABLE_WORDS = ('The courier has not been able to make the UNREADABLE notice of run {} of this budget since {} by its clock, because of an error it did not '
+                           'expect: {}.  It cannot tell from this alone whether something it was given brought it about.  It tries again at each pass, and makes '
+                           'no other notice of this kind for that run.')
 UNMADE_WORDS = ('The courier has read run {} of this budget and has not been able to make its notice since {} by its clock, because of an error it did not expect: {}.  '
                 'It cannot tell from this alone whether something it was given brought it about.  It tries again at each pass, and makes no other notice of this kind for that run.')
 MADE = 'made, not yet accepted by the mailbox'
@@ -1071,7 +1121,7 @@ FELL = 'the witness stopped answering after the courier asked it for run {}; the
 SUMMARY_WORDS = {'made': 'notices made in this pass; each is ' + MADE + ' until it is listed under delivered',
                  'delivered': 'notices ' + ACCEPTED, 'waiting': 'notices ' + MADE + ', with what came of the last try: tried again at the next pass',
                  'refused': 'budgets the courier has stopped reading: what the witness said cannot be believed',
-                 'unreachable': 'budgets whose witness could not be read in this pass', 'blocked': 'budgets whose witness could not be read in this pass, and how',
+                 'unreachable': 'budgets whose pass ended because the witness did not give the courier what it asked for: at the start, or after one run', 'blocked': 'those budgets, and how their pass ended',
                  'unread': 'runs the courier could not read from the witness in this pass; their outcome is not known, and they are not marked done',
                  'coverage': 'the courier\'s statement that it watches a budget: ' + MADE + ', or ' + ACCEPTED,
                  'put_off': 'runs not asked for in this pass, for want of time (pass_seconds), by line: they are asked for in their turn at a later pass',
@@ -1081,7 +1131,8 @@ SUMMARY_WORDS = {'made': 'notices made in this pass; each is ' + MADE + ' until 
                  'undelivered': 'tries in this pass that the mailbox did not take, by kind: refused by the mailbox; the mailbox gave no valid receipt; could not be sent',
                  'mailbox': 'budgets whose mailbox could not be reached in this pass (asked for its key): nothing more was sent to it in this pass',
                  'courier_failed': 'budgets whose pass ended, or whose sending stopped, or runs whose reading or notice failed, because the courier met an error it did not expect (it cannot tell from this alone whose fault it is)',
-                 'state_not_saved': 'budgets whose state the courier could not save in this pass: nothing it made and did not save was sent; it tries again at the next pass'}
+                 'state_not_saved': 'budgets whose state the courier could not save in this pass: nothing it made and did not save was sent; it tries again at the next pass',
+                 'log_mended': 'a line of the log of deliveries left unfinished (never a whole record) that was cut off before the next line was written'}
 
 
 # ---------------------------------------------------------------------------------------------------- the courier's own state
@@ -1159,7 +1210,7 @@ def state_problem(st) -> str | None:
     if 'head' in st and not isinstance(st['head'], str):
         return 'its field head is not text'
     ln = st.get('lines')
-    if ln is not None and not (all(isinstance(ln.get(k), list) and len(ln[k]) == 3 and all(type(x) is int for x in ln[k]) for k in ('new', 'old'))
+    if ln is not None and not (all(isinstance(ln.get(k), list) and len(ln[k]) == 3 and all(type(x) is int for x in ln[k]) for k in ('new', 'old') + (('fell',) if 'fell' in ln else ()))
                                and type(ln.get('floor')) is int and type(ln.get('bound')) is int and isinstance(ln.get('put_off', []), list)
                                and all(isinstance(x, dict) for x in ln.get('put_off', []))):
         return 'its field lines is not of the shape the courier writes'
@@ -1199,7 +1250,7 @@ def one_pass(cfg, clock: float | None = None) -> dict:
     sd = pathlib.Path(cfg['state_dir']); sd.mkdir(parents=True, exist_ok=True)
     key = CourierKey(pathlib.Path(cfg['key_file']).read_text().strip())
     summary = {'made': [], 'delivered': [], 'waiting': [], 'refused': [], 'unreachable': [], 'unread': [], 'coverage': [], 'blocked': [], 'put_off': [], 'put_off_runs': [],
-               'own_state': [], 'clock_set_back': [], 'undelivered': [], 'mailbox': [], 'courier_failed': [], 'state_upgraded': [], 'state_not_saved': [], 'words': SUMMARY_WORDS}
+               'own_state': [], 'clock_set_back': [], 'undelivered': [], 'mailbox': [], 'courier_failed': [], 'state_upgraded': [], 'state_not_saved': [], 'log_mended': [], 'words': SUMMARY_WORDS}
     with open(sd / 'lock', 'a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)                            # one pass at a time
         state = load_state(sd)
@@ -1324,7 +1375,9 @@ def budget_status(sd, w, st) -> dict:
         coverage = f"NOT CONFIRMED (statement made, not yet accepted by the mailbox: the courier's statement that it watches this budget from decision {watching.get('seq')})"
     else:
         coverage = f"CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision {watching.get('seq')})"
-        if last.get('ended') not in (None, 'read'):
+        if last.get('ended') == 'blocked' and last.get('run') is not None:     # M2: a pass that ended after one run read the runs before it
+            coverage += f", but the last pass ended after one run: {last.get('why')}"
+        elif last.get('ended') not in (None, 'read'):
             coverage += f", but the last pass did not read this budget: {last.get('why')}"
         else:
             if put:
@@ -1335,8 +1388,12 @@ def budget_status(sd, w, st) -> dict:
                 coverage += f", but in the last pass {plural(last['unmade'], 'notice')} could not be made"
     if fault:
         coverage += f", but the courier cannot send: {C.shown(fault.get('why'), 300)} (since {_when(fault.get('since'))} by its clock, in {plural(fault.get('passes'), 'pass')})".replace('passs', 'passes')
-    if down and box:
-        coverage += f", but {plural(len(box), 'notice')} {'is' if len(box) == 1 else 'are'} not accepted; the mailbox has not answered since {_when(down.get('since'))} by its clock"
+    waiting_ = [r for r in box if r['notice'].get('outcome') != C.WATCHING]
+    if waiting_:                                                    # M4: whenever a notice is not accepted, whatever the reason
+        kinds = sorted({LAST.get(r.get('last'), r.get('last')) for r in waiting_})
+        coverage += f", but {plural(len(waiting_), 'notice')} {'is' if len(waiting_) == 1 else 'are'} not accepted ({'; '.join(kinds)})"
+        if down:
+            coverage += f"; the mailbox has not answered since {_when(down.get('since'))} by its clock"
     ended = last.get('ended')
     courier_is = (f"stopped since {st['stopped']}" if st.get('stopped') else
                   f"{last.get('why')} ({since})" if ended == 'blocked' and last.get('run') is not None else
@@ -1347,14 +1404,17 @@ def budget_status(sd, w, st) -> dict:
     lines_of = None
     if ln:
         b_ = ln['bound']
-        lines_of = {'new': {'runs': ln['new'][0], 'asked at the last pass': ln['new'][1], 'put off': ln['new'][2]},
+        fl = ln.get('fell') or [0, 0, 0]
+        lines_of = {'order': ('runs that need no request; then the first runs of the old line (as many as the floor); then the new line; then the rest '
+                              'of the old line; last, the runs after which the witness stopped answering when last asked for'),
+                    'new': {'runs': ln['new'][0], 'asked at the last pass': ln['new'][1], 'put off': ln['new'][2]},
                     'old': {'runs': ln['old'][0], 'asked at the last pass': ln['old'][1], 'put off': ln['old'][2]},
+                    'after which the witness stopped answering': {'runs': fl[0], 'asked at the last pass': fl[1], 'put off': fl[2]},
                     'asked in every pass, at least, of each line not empty': ln['floor'],
-                    'a run of the old line is asked for at least once in every': f"{b_} pass{'' if b_ == 1 else 'es'} that reach the old line",
-                    'the last pass': 'reached the old line' if ln.get('reached_old', True) else 'ended before it reached the old line',
+                    'a run of the old line is asked for at least once in every': f"{b_} pass{'' if b_ == 1 else 'es'} whose checkpoint and chain were read",
                     'the new line': 'has no bound: its length is shown, and a service that adds new runs faster than a pass can ask for them makes it grow'}
     return {'coverage': coverage, 'courier': courier_is, 'read_to': st.get('seq', 0),
-            'last pass': ({'at': last.get('at'), 'ended': ENDINGS.get(ended, ended), 'how': last.get('why')} if last else None),
+            'last pass': ({'at': last.get('at'), 'ended': ENDINGS['fell'] if ended == 'blocked' and last.get('run') is not None else ENDINGS.get(ended, ended), 'how': last.get('why')} if last else None),
             'lines': lines_of,
             'runs put off at the last pass': [{'aid': C.shown(p.get('aid'), 200), 'line': p.get('line'), 'why': p.get('why')} for p in put],
             'unread': [{'aid': C.shown(aid, 200), 'since': u.get('since'), 'why': C.shown(u.get('why'), 300)} for aid, u in sorted((st.get('unread') or {}).items())],
@@ -1364,7 +1424,10 @@ def budget_status(sd, w, st) -> dict:
                                             'times': r.get('tries'), 'last tried': r.get('last_try') or 'never', 'last reason': C.shown(r['why'], 300) if r.get('why') is not None else 'none yet'},
                                            **({'not tried at': _when(r.get('unreached_at'))} if r.get('last') in ('unreached', 'unsent') else {})) for r in box],
             'mailbox': ({'not answered since': _when(down.get('since')), 'last asked': _when(down.get('at')), 'why': C.shown(down.get('why'), 300)} if down else
-                        f"answered when last asked, at {_when(st['mailbox_answered'])} by its clock" if _finite(st.get('mailbox_answered')) else 'not asked yet'),
+                        f"answered when last asked, at {_when(st['mailbox_answered'])} by its clock" if _finite(st.get('mailbox_answered')) else
+                        'it answered at an earlier pass (a delivery is logged); when it was last asked, the state does not say' if log else   # M8
+                        'it was asked at an earlier pass (a notice waiting has been tried); whether it answered, the state does not say' if any(_number(r.get('tries'), 0) for r in box) else
+                        'not asked yet'),
             'log of deliveries': ('damaged: ' + '; '.join(problems[:5])) if problems else 'read',
             'notices ' + MADE: sum(r['notice'].get('outcome') != C.WATCHING for r in box),
             'notices ' + ACCEPTED: sum(d['notice'].get('outcome') != C.WATCHING for d in log),
@@ -1397,6 +1460,10 @@ def main():
     while True:
         try:
             s = one_pass(cfg)
+        except SystemExit as exc:                                   # M7: the state file cannot be loaded
+            if a.every is None:
+                raise
+            s = {'courier_failed': [{'root': None, 'why': f'the pass could not be made: {exc}'}], 'waiting': [], 'refused': [], 'unreachable': []}
         except Exception as exc:                                    # L6: a pass that could not be made at all is said; under --every the courier keeps running
             s = {'courier_failed': [{'root': None, 'why': f'the pass could not be made: {type(exc).__name__}: {exc}'}], 'waiting': [], 'refused': [], 'unreachable': []}
         print(json.dumps(s), flush=True)

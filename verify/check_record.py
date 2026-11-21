@@ -351,7 +351,7 @@ def notice_text_2(outcome, aid, root, result, seq, courier, why=None) -> str:
     if why is not None:
         parts.append(why if _ascii_line(why) else shown(why, 2000))
     last = (f"This notice was made by the courier {token(courier)} from what the witness gave it, read to decision {seq if type(seq) is int else shown(seq)}.  "
-            "Words in quotation marks are shown as data: they are the service's, or what the courier was told, and not the courier's own words.  "
+            "Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  "
             "The verification service did not write this notice.  It does not say the check is correct.  "
             "A receipt for it says that the mailbox holds it, not that anyone has read it.")
     return '\n'.join((HEADLINES_2[outcome], subject, '  '.join(parts), last))
