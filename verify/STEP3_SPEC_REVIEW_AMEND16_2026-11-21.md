@@ -16,6 +16,9 @@ reports came back; none is edited afterwards.
 |---|---|---|---|
 | 1 | the reviewer | specification version 1 (commit `1495320`) | 20:44 |
 | 2 | the modeller | specification version 1 | 21:39 |
+| 3 | the reviewer | specification version 2 (commit `2694b52`) | 21:48 |
+| 4 | the reviewer | specification version 3 | 21:53 |
+| 5 | the reviewer | specification version 4, the final text | 21:56 |
 
 ---
 
@@ -660,3 +663,197 @@ ST-7 checks R only when the statement is counted. A COVERED status can rest on c
 - **Restricted, not general:** an old copy of the courier's state is taken only between readings. Adversary deliveries are unbounded, but the readings are bounded.
 - **Search limits:** the state key is a 64-bit hash, so a collision would prune a state and would not be detected.
 - **Nothing here is evidence about any implementation.**
+
+---
+
+# Part 3. The reviewer, on version 2, as returned
+
+[tier: opus]
+
+# Step 3 specification v2: internal review, round 2
+
+21 November 2026. This is an internal review by the same Opus-tier session, instructed by the author. It is not independent validation. I spawned no subagents and did not escalate. I give no GO or NO-GO. The report is returned as text only; my operating rules forbid writing report files.
+
+**Labels.** RUN means I ran it and saw the output. ARGUED means it comes from reading the code or the text.
+
+**The one new test (RUN, offline: no deployment and no database).**
+- Script: `…/gate/review2/rv2_absent_fields.py`. Output: `…/gate/review2/out/rv2_absent_fields_run1.txt`.
+- I took a genuine fence report and deleted its two null-valued keys, `nonce` and `result_digest`.
+- It still verifies, for the witness (label `BOUND_FENCE`) and for the record checker.
+- `H(object)` changes (`2df4…` → `6320…`). `H(projection)` stays the same only if absent keys are read as null.
+
+**Repository.** Untouched, on `verification-amendment-16` at `0da1a85`. No code was changed.
+
+**A correction to my own round-1 evidence.** In my Q3 output, the field `budget_charge_unchanged: true` was a constant written into my script, not a measurement. Version 2's table in 1.2 now cites "the budget is not charged" as shown by that test. It should be labelled ARGUED from `store.py`: a DENIED decision changes no state.
+
+## 1. My findings F1 to F19
+
+| # | Standing | What remains |
+|---|---|---|
+| F1 | **Partly fixed, and introduces a new defect** | The three rooms, retirement of parts, hashed names, O-P-2, the outbox and N-6 are right. But an item refused for room keeps its chain position and blocks every later item (F21). The proposed NOTICE_QUOTA breaks E-X-4's own sizing rule (F23). Index entries grow without limit (F24). |
+| F2 | Fixed | E-Q-6 and SAF-11. A related gap remains (F22). |
+| F3 | Fixed | DL-3 now comes before the link at DL-5, and I-3. |
+| F4 | Fixed | DL-2, I-O-1 to I-O-3, I-E-7, I-E-3. One small point remains (F29c). |
+| F5 | **Fixed, but introduces a new defect** | Gaps are now keyed by evidence id. But an object that closed a gap can then be removed as an orphan (F22), and nothing makes the courier upload it again (F25). |
+| F6 | Fixed, with one gap | The signed projection does not say how an absent key is read (F26). |
+| F7 | Fixed | The anchor (O-1 to O-4, ST-6, ST-8, SAF-10). The remainder is stated as L-10. |
+| F8 | **Fixed, but introduces a new defect** | K-N-3 now starts waiting times only at an accepted statement (F20). |
+| F9, F10, F11 | Fixed | — |
+| F12 | Fixed, with one gap | The cap of eight bound reports is below what I-K-1 itself selects (F27). |
+| F13, F14, F15, F16, F18, F19 | Fixed | For F16, see F29c. |
+| F17 | Partly fixed | Two citations in 1.2 over-read my evidence (F29a, F29b). |
+
+## 2. The model's findings M1 to M19
+
+| # | Standing | Note |
+|---|---|---|
+| M1 | Fixed | DL-3 before the link at DL-5 |
+| M2 | Fixed | I-E-3, DL-3 |
+| M3 | Fixed | I-ID-2 now carries the token |
+| M4 | Fixed, but introduces a new defect | F22, F25 |
+| M5 | Fixed | DL-2 |
+| M6 | Fixed | I-O-3 |
+| M7 | Fixed | C-1.5, C-1.6, 8.2 |
+| M8 | Fixed | C-1.7 |
+| M9, M10, M11 | Fixed | — |
+| M12 | Fixed | See F29c |
+| M13 | Fixed, but introduces a new defect | I-O-6's "made again" meets F21 |
+| M14 | Partly fixed | Answered NEVER. A lost anchor loses fork detection, which is stated as L-10 |
+| M15, M16, M17, M18 | Fixed | — |
+| M19 | Fixed | I-O-7 |
+
+## 3. New findings
+
+| # | Sev. | Rules | Defect and counterexample | Correction |
+|---|---|---|---|---|
+| **F20** | **HIGH** | K-N-3, O-W-1, O-7 | **A waiting time never starts while no statement is accepted, so a failed run can be hidden behind an alarm about another run.** With CAP-DB: (1) the service pads run Y with added fields beyond RUN_ANSWER_MAX (as in Q2), so every reading fails with RUN_OVERSIZE for Y; (2) it withholds the result of run X, whose gate host signed FAIL; (3) no statement is ever accepted, so X's UNVERIFIED (and NO_OUTCOME) notice is never called for. The engineer is told only about Y, for ever. Version 1 delivered X's UNVERIFIED under O-W-1. Decision 3 forbids exactly this. Also, K-N-3 does not say which clock counts the time. | Count a waiting time from the first reading that saw the run in that standing, whole or not, using that reading's token issue time as the challenge signs it. In a reading that is not whole, treat every waiting time as over. |
+| **F21** | **HIGH** | I-O-5, I-O-6, I-3, DL-3, E-X-3, E-X-4 | **An item refused for room keeps its signed position and blocks every later item.** (1) A notice for run X gets 507 at k=10 and stays in the outbox with k=10. (2) The alarm E-X-4 requires (k=11) gets 409, head 9. (3) I-O-3 says deliver from 10 in order; k=10 is refused again, so the alarm naming X can never be delivered. Likewise, once OBS_QUOTA is full (reachable honestly, see F24), an observation part refused at k is followed by later FAIL notices that are blocked although NOTICE_QUOTA has room. That breaks E-X-3's "notices of other runs are still taken" and loses a called-for notice. I-O-6's "made again" has the same problem. | An item refused at DL-4 (507 or 409 EVIDENCE_MISSING) takes no position. The courier signs it again at the next free position when it resends it; its identity is unchanged. |
+| **F22** | **HIGH** (false COVERED under the narrow reading of "names") | E-2, E-Q-5, E-B-3, C-2 (last bullet) | **"An item names an object" is undefined.** (1) An EQUIVOCATION notice says NOT_HELD for id e, and a gap is recorded. (2) The courier POSTs e and the gap closes. (3) No held item says HELD for e, and I-O-7 stops the notice being resent. (4) Read as "says HELD for", e is an orphan and is removed after T_ORPHAN. (5) The gap stays closed, the budget is COVERED, and the bound evidence is gone. This needs a finding: CAP-KEY, or an honest fault. | Define "names": an item names every evidence id it binds, whatever the holding it states. Reopen a gap if its object is ever absent. |
+| F23 | MEDIUM | E-X-4, N-6, §11 values | **The proposed NOTICE_QUOTA (64 MiB) breaks E-X-4's own "MUST size for the runs".** Under CAP-KEY, each of about 1,000 runs can carry about 8 EQUIVOCATION identities (one for each set of findings) of up to 64 KiB each, about 512 MiB in all. The service can then lose a genuine FAIL notice. N-6 discloses this, but the proposed value invites it. | Give the formula: NOTICE_QUOTA ≥ (k+m) × NOTICES_PER_RUN_MAX × ITEM_MAX, and propose a value from it. |
+| F24 | MEDIUM | E-Q-2, E-Q-4 | **Index entries and the records of accepted statements are never retired, and they share OBS_QUOTA.** That is about 0.9 KB per reading (ARGUED), so 256 MiB lasts about 300,000 readings: about 200 days at one reading a minute. After that: 507, ITEMS_REFUSED, NOT COVERED for ever with no adversary. With F21 it also blocks notices. | Give indexes and records their own room, sized and stated. Or allow compaction behind a signed checkpoint of the index. |
+| F25 | MEDIUM | E-B-3, I-O-6, I-O-7, E-B-6 | **No rule makes the courier upload again the evidence for an open gap.** After a transient NOT_HELD(UNAVAILABLE), the gap stays open for ever: NOT COVERED. | At every reading, the courier POSTs every gap id the status lists that it holds (E-B-6). |
+| F26 | MEDIUM | D-2, K-CLAIM, 3.6 | **The signed projection does not say how an absent key is read.** RUN offline: deleting `nonce` and `result_digest` from a genuine fence report leaves it verifying, with label BOUND_FENCE. Read literally ("a null nonce and digest"), this lets CAP-DB produce K-CLAIM at will, against 3.6; and one signature then has two evidence ids. | Say that an absent signed key is read as null, in the projection and in every check. |
+| F27 | MEDIUM | I-K-1, E-B-1 | **I-K-1 selects up to 10 distinct reports but caps the total at 8.** For a consumed run: K-CONFLICT 2, K-UNKNOWN-VERDICT 2, K-FENCE 2, K-EARLY, K-NONCE, K-DIGEST and K-CLAIM 1 each. Which to drop is unspecified, so some finding may be left without evidence. | Give an order of priority that keeps at least one report for each finding, or raise the cap to 10 (it fits ITEM_MAX). |
+| F28 | MEDIUM | I-O-4, I-E-4 | **The receipt comparison does not say "in the same chain epoch".** After an honest new epoch, the courier's kept receipts of the old epoch lie "beyond" the new head. That reads as MAILBOX_ROLLBACK, which opens another epoch, again and again: a livelock. | Compare positions only within the open chain epoch, and drop old receipts once their epoch is closed. |
+| F29 | LOW | various | (a) 1.2 "the budget is not charged, by test": not measured (my error, see above). (b) 1.2 "the reviewer found no CAP-DB path to any finding of 3.2": I never assessed K-EARLY, K-CLAIM or K-PHASE for names no attempt bears; see F26. (c) M-K-1: resending a request after a lost answer gets 409 REPLAY; say the courier uses a fresh request nonce. (d) O-3: the operator's act that clears an anchor is unspecified, so it cannot be tested. (e) CRASH is a budget-level decision and is not in the control-only list (`store.py` 764, ARGUED), so CAP-DB can force a REFRESH of every run at will (O-R-4); add this to O-L-2. (f) K-PHASE's title says "effect report", but its budget clause says "any report". | — |
+
+**Checked and found sound (ARGUED):**
+- K-EARLY against RECOVER, REREGISTER and WITNESS_HELD: there is only ever one APPLIED ACCEPT_INTENT.
+- K-PHASE for names no attempt bears: CAP-DB cannot produce it, because a fence needs an APPLIED or DUPLICATE ACCEPT_RESERVATION receipt.
+- The anchor across chain epochs and mailbox epochs.
+- DL-2 placed before DL-3.
+- 7.4's rule that a refused statement takes no position and uses nothing.
+- C-1's eight conditions against 8.2.
+- The M-K-1 epoch and replay checks.
+- E-X-2's bound of k+m runs under CAP-DB: HOLD and RECOVER are control-only, and RELEASED and DISCARDED runs call for no notice.
+
+## 4. The owner's decisions
+
+1. **Implemented.** K-5; the nine findings of 3.2; K-2, D-2, D-6; 1.2, K-CAP-1, 3.6. Missing: F26, and F29b (3.6's CAP-DB claim not yet reviewed for the new findings).
+2. **Implemented.** I-E-1 to I-E-9; 5.6; linking at DL-5; ST-5, ST-6; the anchor. Missing: F21, F28. L-10 stands as a stated limit.
+3. **Implemented in structure.** Section 6, E-Q-6, DL-4, E-X-1 to E-X-5. Not yet met: F20 (a failed run suppressed behind an alarm about another run), F21 (the alarm naming the run cannot be delivered), F22, F23, F24, F25.
+4. **Implemented.** ACC-1 to ACC-5 and N-5. The quotations were verified in round 1.
+5. **Implemented.** C-1 to C-4, C-1.7, O-C-1 to O-C-4, 4.3, L-1 to L-11. Not yet met: C-2's last bullet, under F22.
+
+## 5. Open findings
+
+- **CRITICAL:** none.
+- **HIGH: three remain open: F20, F21, F22.**
+- **MEDIUM remaining:** F23, F24, F25, F26, F27, F28. All are new; none of F1 to F19 or M1 to M19 remains open at MEDIUM.
+- **LOW:** F29, and F17 partly.
+
+Each HIGH has a short correction in the table above. On the owner's rule that the final text carry no unreviewed edits, the text is not ready to hand to the acceptance-test author until F20 to F22 are corrected and those edits are reviewed.
+
+---
+
+# Part 4. The reviewer, on version 3, as returned
+
+[tier: opus]
+
+# Step 3 specification v3: internal review, round 3
+
+21 November 2026. This is an internal review by the same Opus-tier session. It is not independent validation. I spawned no subagents and do not give a GO or NO-GO.
+
+**The diff is the whole difference (RUN).** The v3 file's SHA-256 begins `21fd2dd899b3a3cf`. My own `diff` of v2 against v3 (saved as `…/gate/review2/out/v2v3_mine.diff`) has the same changed lines as `v2_to_v3.diff`: 163 lines each. Nothing else was run this round; everything below is ARGUED from the text and the code read in earlier rounds.
+
+**No CRITICAL or HIGH finding remains open in version 3. Two MEDIUM findings remain (F30, F31).** Both are about the rooms and the outbox, so 6.2, I-O-1 and I-O-5 are not yet fit to hand to the acceptance-test author. Everything else is.
+
+## 1. F20 to F29
+
+| # | Standing | Note |
+|---|---|---|
+| F20 | **Fixed** | K-N-3 now counts on the courier's own BOOTTIME from the first reading, whole or not, that saw the standing. Every waiting time is over in any reading that is not whole, after a loss of state, or after a restart. O-7 now allows those moments to be written at any reading. A side effect is accepted: in a reading that is not whole, honest runs in flight get an early NO_OUTCOME or UNVERIFIED notice. That stays within NOTICES_PER_RUN_MAX, since an honest run needs at most about four. |
+| F21 | **Fixed** | I-3, I-O-5 and I-O-6: a refused item takes no position and is signed again for the next one. This agrees with DL-2 (an item refused for room is not held, so DL-2 does not apply), with DL-3, with I-O-3, and with the statement's `prev` (no statement is made in a reading that is not whole). The outbox has one new problem: F31. |
+| F22 | **Fixed** | "Binds" is defined (E-2). The gap is now a state (E-B-3), and E-Q-5 and DL-5 agree with it. Linked notices raise no conflict: the gap depends on whether the object is present, and the held first notice binds the same deterministic ids. C-1.3 is consistent. |
+| F23 | **Partly fixed** | The formula is given, but leaves out the m runs allowed back after NO_EFFECT, the budget's one notice, and the index entries of links (F30, F32). |
+| F24 | **Fixed, but introduces a new defect** | OBS_QUOTA's finite life is now stated. But index entries charged to "the item's own room" give ALARM_RESERVE and NOTICE_QUOTA a finite life that is not stated (F30). |
+| F25 | **Fixed** | O-1 and I-O-7. |
+| F26 | **Fixed** | D-2: an absent signed field is read as null. This matches the witness's `.get` reading. |
+| F27 | **Fixed** | Twelve bound reports, against at most 11 the rules can select. Twelve entries plus 32 KiB inline fit within ITEM_MAX (ARGUED). |
+| F28 | **Fixed** | I-O-4 now compares receipts only within the open chain epoch. |
+| F29 a to f | **All fixed** | (a) and (b): 1.2 corrected. (c): M-K-1, a new request nonce after no answer. (d): O-3, clearing an anchor stated as outside the specification. (e): O-L-2, CRASH. (f): K-PHASE's title. |
+
+## 2. New findings
+
+| # | Sev. | Rules | Defect and counterexample | Correction |
+|---|---|---|---|---|
+| **F30** | MEDIUM | E-Q-2, E-Q-3a, E-Q-4, E-X-3, E-X-4, I-E-1 | **Index entries charged to "the item's own room" are never dropped, so ALARM_RESERVE and NOTICE_QUOTA also run out, and nothing says so.**<br>1. With CAP-DB, the service pads run Y beyond RUN_ANSWER_MAX by adding fields (Q2). Every reading is then not whole, and each makes one alarm (I-ID-2).<br>2. Alarm bodies are dropped after 64. Their index entries, about 200 bytes each (ARGUED), stay in ALARM_RESERVE.<br>3. 4 MiB fills after about 20,000 readings, about 14 days at one reading a minute.<br>4. From then on, alarms are refused (ITEMS_REFUSED). So is any EPOCH_OPEN, which uses the same room. A courier that loses its state can never open an epoch, and the budget is NOT COVERED for ever. E-Q-3a's "Notices and alarms are still taken then" becomes false.<br>Likewise, every new chain epoch adds a link entry to NOTICE_QUOTA for each notice. The E-Q-3a formula does not count these, so repeated epochs (two processes on one key under I-4, or MAILBOX_ROLLBACK) can use the room up and get a FAIL notice refused. | Give index entries a room of their own, sized and stated, or let index entries of alarms and links go past the room's limit. Set aside room for EPOCH_OPEN. Add link entries per epoch to the formula, or state the limit. |
+| **F31** | MEDIUM | I-O-1, I-O-5, 7.4, C-1.5, DL-2 | **The outbox keeps and resends items that can never be taken.** I-O-1 keeps an item until it has a receipt or a link, and I-O-5 resends an item refused for room at every reading. Applied to a statement, this gives refusals that recur for ever.<br>1. OBS_QUOTA is full, so statement S1 gets 507.<br>2. The operator adds room.<br>3. At the next reading S1 is sent again, signed for a new position, so it has a new digest and DL-2 does not catch it. Its token has expired, so it gets 422, and C-1.5 (STATEMENT_REFUSED) holds.<br>4. S1 has no receipt, so it is resent at every later reading. Each refusal that comes after that reading's accepted statement makes the budget NOT COVERED, and the order is not specified.<br>Stale observation parts of old readings are resent in the same way and use OBS_QUOTA for nothing. | Any 422 removes the statement from the outbox. A COVERAGE item or an OBSERVATION_PART refused for room is dropped: that reading is simply not whole. Only notices and alarms are kept to be sent again. |
+| F32 | LOW | E-Q-3a, O-L-3 | (a) "Provisioned runs" should be k + m (runs allowed back after NO_EFFECT), plus one for the budget's own notice. (b) NOTICES_PER_RUN_MAX = 8 is below what CAP-KEY can make for one run: up to 8 sets of findings, one after another, plus earlier outcome notices. CAP-KEY can therefore reach RUN_NOTICE_LIMIT and keep the epoch not whole. The alarm names the run, so this fails closed, but it should be stated as a loss of liveness beside E-B-5. | — |
+
+**Checked and found consistent (ARGUED):**
+- K-N-3 against O-7, I-O-8 and NOTICES_PER_RUN_MAX.
+- I-3's re-signing against DL-2, I-O-3, I-O-8 and the statement's commitment `prev`.
+- E-2, E-Q-5 and E-B-3 against linking, DL-4 and C-1.3.
+- I-O-4 against I-O-8.
+- D-2 against K-CLAIM and the witness.
+- The cross-references: I-O-7 is now gaps and I-O-8 is now once per epoch, and they are cited correctly.
+
+## 3. What remains open
+
+- **CRITICAL:** none.
+- **HIGH:** none.
+- **MEDIUM:** F30 and F31.
+- **LOW:** F32.
+
+**Still unfit to hand to the acceptance-test author:**
+- 6.2: E-Q-2 and E-Q-3a, for the rooms of ALARM_RESERVE, of NOTICE_QUOTA and of EPOCH_OPEN.
+- 5.6: I-O-1 and I-O-5, for the retention of refused statements and observation parts.
+
+Every other rule I reviewed I consider fit to hand over.
+
+---
+
+# Part 5. The reviewer, on version 4 (the final text), as returned
+
+[tier: opus]
+
+# Step 3 specification v4: internal review, round 4
+
+21 November 2026. This is an internal review by the same Opus-tier session. It is not independent validation. I spawned no subagents and do not give a GO or NO-GO.
+
+**No CRITICAL, HIGH or MEDIUM finding remains open in version 4, and I consider no rule unfit to hand to the author of acceptance tests.** Two LOW findings remain: F33 (an unchanged rule) and F34 (a new rule).
+
+**The diff is the whole difference (RUN).** The v4 file's SHA-256 begins `f6d13812e03000f7`. My own `diff` of v3 against v4 (saved as `…/gate/review2/out/v3v4_mine.diff`) has the same changed lines as `v3_to_v4.diff`. Everything else below is ARGUED from the text.
+
+## 1. F30 to F32
+
+| # | Standing | Note |
+|---|---|---|
+| F30 | **Fixed** | Index entries and EPOCH_OPEN items now have a room of their own, INDEX_QUOTA. Its last INDEX_RESERVE bytes are kept for notices, alarms and EPOCH_OPEN items. Alarm bodies are capped at ALARMS_KEEP, and ALARM_RESERVE must be at least ALARMS_KEEP × ITEM_MAX (4 MiB proposed, exactly 64 × 64 KiB). Links no longer use NOTICE_QUOTA. The order in which things are refused, and the mailbox's finite life, are stated (E-Q-3a, N-6). Every case ends in 507 naming the room, then NOT COVERED by C-1.6, which is fail-closed and consistent. |
+| F31 | **Fixed** | Only a notice about a run is kept to be sent again. Any other item that is refused is dropped. This agrees with the other rules: <br>• **I-E-7:** a dropped statement used nothing, and the next one reveals s_j again. <br>• **I-O-2:** with no answer, the identical item is sent again and DL-2 answers as the first time; dropping happens only on an answer. <br>• **A dropped EPOCH_OPEN:** at the next reading the challenge shows the old epoch's head, so I-E-4 opens a new epoch with a fresh id (I-E-1). <br>• **I-O-3:** unaffected. |
+| F32 (a) | **Fixed** | E-Q-3a now counts k + m runs plus one for the budget's own notice. The arithmetic in section 11 checks: 1,001 × 16 × 65,536 bytes is about 1 GiB. |
+| F32 (b) | **Fixed** | O-L-3 now states this as a loss of liveness. One wording point: with NOTICES_PER_RUN_MAX raised to 16, CAP-KEY probably cannot reach the limit at all. The sets of findings only grow, giving at most 8 EQUIVOCATIONs plus about 4 outcome notices, which is fewer than 16. "Again and again" overstates this, but it is harmless. |
+
+## 2. New findings
+
+| # | Sev. | Rules | Defect | Correction |
+|---|---|---|---|---|
+| F33 | LOW | 7.4, I-E-7, I-E-8 (not changed in v4) | A statement refused at 7.4 is "kept beside the chain as evidence", and it carries `reveal = s_j`. That s_j stays the valid next reveal, because a refused statement uses nothing. If readers are served refused statements, a courier restored from backup could read s_j back. That contradicts I-E-8's "the secret cannot be read back". An honest courier is already forbidden to take anything from the mailbox (I-E-4), so safety does not change. | Keep refused statements without `reveal`, or never serve it to readers. |
+| F34 | LOW | E-Q-4, E-X-4 | "An alarm's body always has room" holds only if the oldest body is dropped *before* the new one is stored. ALARM_RESERVE is exactly ALARMS_KEEP × ITEM_MAX, so storing first and dropping second overflows by one body. | Say that the drop comes first, within the same handling under E-Q-6. |
+
+**Checked and found consistent:**
+- E-Q-4's MUST drop against C-1.4: "taken after S" is still decidable from the kept index entries.
+- E-Q-4 against 8.3's "the alarms held" (the last 64) and E-X-3.
+- When INDEX_QUOTA reaches its reserve, each later reading adds one alarm entry, so the reserve runs down to full. That is within the finite life stated.
+- I-O-5 and the proposed values in section 11.

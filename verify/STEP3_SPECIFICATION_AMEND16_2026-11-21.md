@@ -5,8 +5,9 @@ Nothing is implemented by it; no code of the courier, the mailbox, the witness, 
 configuration is changed; it is not a declaration and not an acceptance of anything. It is kept on the branch
 `diagnostic-amend16-alarm-2026-11-21` only.
 
-**Version: 2.** Version 1 (commit `1495320`) was reviewed by a separate agent and modelled by another. Version 2
-corrects it. Every change is listed in section 14 against the finding that caused it.
+**Version: 3.** Version 1 (commit `1495320`) was reviewed by a separate agent and modelled by another; version 2
+(commit `2694b52`) corrected it and was reviewed again; version 3 corrects what that second review found. Every
+change is listed in section 14 against the finding that caused it.
 
 **What it is.** The owner accepted the NO-GO of the design gate (`verify/DESIGN_GATE_AMEND16_2026-11-21.md`, commit
 `f1aa677`) and decided seven points on 21 November. This document restates the design as numbered rules that an
@@ -66,12 +67,14 @@ reviewer's probes Q1 to Q3):
 | The honest gate host asked to run a passing design under the failing run's name, nonce or receipts | CAP-DB | refused three ways |
 | A genuine report sent again with fields added that the gate did not sign (100 KB) | CAP-DB | accepted as a repeat (DUPLICATE, AUTHORISED); the witness keeps and serves the added fields; one pair, one signature |
 | The honest gate host asked to fence a run the chain holds as consumed and that the host never ran | CAP-DB | it signs FENCED_NO_START; sent with RELEASE: DENIED, label BOUND_FENCE, and kept |
-| Decisions naming a run that does not exist (a name of 6,146 bytes) | CAP-DB | recorded as DENIED; no attempt is made; the budget is not charged |
+| Decisions naming a run that does not exist (a name of 6,146 bytes) | CAP-DB | recorded as DENIED; no attempt is made. That the budget is not charged is argued from `plea_gateway/store.py` (a DENIED decision changes no state), not measured |
 | A report signed with the gate's key over a forged PASS result for the failing run itself; the forged result stored | **CAP-KEY** | **believed: the run reads PASS and the courier makes no notice** (S-5) |
 
 **So S-5, as demonstrated, needs CAP-KEY.** S-1 was likewise demonstrated only with reports signed by the gate's key
 (`tests/diag_amend16_powers/commit_check.py`); it was not repeated here. With CAP-DB alone no replay made a failing
-run read PASS, and the reviewer, reading the gate host's code, found no CAP-DB path to any finding of section 3.2.
+run read PASS. The reviewer, reading the gate host's code, found no CAP-DB path to K-CONFLICT, K-UNKNOWN-VERDICT,
+K-FENCE, K-NONCE, K-DIGEST or K-PHASE for a run, and argued the same for K-EARLY and for K-PHASE of names that no
+attempt bears. K-CLAIM is out of CAP-DB's reach only because an absent signed field is read as null (D-2).
 What CAP-DB can do: withhold a result, so that the engineer is told UNVERIFIED and not FAIL; make any answer large;
 and add decisions without limit. Not shown and not claimed: that no CAP-DB path exists. One path is argued from the
 code and not tested: an honest gate host that loses its state (CAP-OS) can run a check twice over inputs that changed
@@ -112,8 +115,9 @@ From `verify/DEFECT_REGISTER.md` (draft), Part C, at `f1aa677`:
   lower-case hexadecimal. `Hb(bytes)` is the SHA-256 of the bytes.
 - **D-2. Report, and its signed projection.** A report is an object the witness returns as evidence for a run. Its
   **signed projection** is the object holding exactly its `kind`, `root`, `aid`, `nonce`, `claim`, `result_digest`
-  (the six fields the gate's signature covers), `signer` and `signature`. Any other field was signed by nobody: it is
-  ignored everywhere and only counted. The report's **evidence id** is `H(signed projection)`, and the bytes kept for
+  (the six fields the gate's signature covers), `signer` and `signature`. A signed field that is absent is read as null, in the projection and in every
+  check (a genuine fence report with its two null fields deleted still verifies, by the reviewer's test). Any other
+  field was signed by nobody: it is ignored everywhere and only counted. The report's **evidence id** is `H(signed projection)`, and the bytes kept for
   it anywhere are `canonical(signed projection)`.
 - **D-3. Gate-signed for a run.** A report is gate-signed for run a of budget B when its kind is `EFFECT_REPORT` or
   `FENCE_REPORT`, its signer is one of the gate keys given, its signature verifies over its six signed fields, its
@@ -170,7 +174,7 @@ reported together.
 | K-CONFLICT | conflicting verdicts | V has two or more members, at any decisions, of any kind or operation, with or without a recorded verdict | the gate's key signed two different results, or two different verdicts, for one run |
 | K-UNKNOWN-VERDICT | a verdict beside UNKNOWN | U, and V is not empty, in any order | the gate's key signed UNKNOWN and a verdict for one run; no rule permits it |
 | K-FENCE | an effect report beside a fence | F, and any gate-signed effect report for the run exists (in scope or not, any claim) | the gate's key signed that it would never run this run, and a report of its effect |
-| K-PHASE | an effect report where none can be | any gate-signed effect report for a run whose phase is RELEASED or DISCARDED; or, for the budget, any report gate-signed for a name that no attempt bears (O-R-1) | the gate's key signed an effect for a run that was never consumed, or a report for a run that does not exist |
+| K-PHASE | a report where none can be | any gate-signed effect report for a run whose phase is RELEASED or DISCARDED; or, for the budget, any report gate-signed for a name that no attempt bears (O-R-1) | the gate's key signed an effect for a run that was never consumed, or a report for a run that does not exist |
 | K-EARLY | an effect report before the intent was accepted | an in-scope effect report at a decision whose number is lower than the run's intent acceptance (D-14), or the run has none | the gate's key signed an effect before the witness had accepted the run's intent |
 | K-NONCE | a foreign-nonce report | X | the gate's key signed an effect for this run under a nonce the chain does not record |
 | K-DIGEST | a malformed digest | a verdict report whose digest is not well-formed | the gate's key signed a digest no honest gate host signs |
@@ -222,9 +226,12 @@ reported together.
   courier remembers having sent.
 - **K-N-2.** An EQUIVOCATION notice says only what the "meaning" column says. It MUST NOT say which report is true,
   that the run failed or passed, that a verdict was changed, or who signed.
-- **K-N-3. Waiting times.** Where a notice is called for only after a waiting time, the time is counted from the first
-  accepted statement of the open chain epoch whose reading saw the run in that standing. In the first reading of a
-  chain epoch opened for COURIER_STATE_LOST every waiting time is taken as over.
+- **K-N-3. Waiting times.** Where a notice is called for only after a waiting time, the time is counted by the
+  courier's own `CLOCK_BOOTTIME` from the first reading of the open chain epoch, whole or not, that saw the run in
+  that standing; the courier writes that moment durably when it first sees it. Every waiting time is taken as over,
+  and the notice is called for at once: in any reading that is not whole; in the first reading of a chain epoch opened
+  for COURIER_STATE_LOST; and wherever the courier cannot count the time (its machine restarted since). So a run
+  whose result is withheld cannot be kept without a notice by making some other run unreadable.
 
 ### 3.5 The record's checker
 
@@ -260,14 +267,15 @@ notice.
   and checks it: the mailbox's signature, the budget, its own courier key, and that it answers the request just made.
   The challenge carries the budget's **anchor**: the N and head of the last statement the mailbox accepted for the
   budget in any chain epoch, or (0, none). It also carries the mailbox's head for the budget's open chain epoch
-  (chain epoch, k, A), by which the courier checks its own position before it reads (5.6).
+  (chain epoch, k, A), by which the courier checks its own position before it reads (5.6), and the budget's evidence
+  gaps (at most 64 ids and a count of the rest).
 - **O-2.** It asks the witness for a checkpoint with the token as nonce and the anchor's N as `at`
   (`GET /checkpoint?root=B&nonce=TOKEN&at=N*`). It MUST check the signed fields: the witness's key, `root` = B,
   `nonce` = the token, `at` = N*, and `head_at` = the anchor's head (for N* = 0, the budget's provisioning hash).
 - **O-3.** "at is beyond the chain" is a ROLLBACK. A different `head_at` is a FORK. Either ends the reading with an
   alarm (4.6) and no statement, in whatever chain epoch the courier is. Nothing in the protocol clears an anchor: a
-  budget whose witness no longer signs the anchor's head stays NOT COVERED until the operator decides otherwise,
-  outside this protocol.
+  budget whose witness no longer signs the anchor's head stays NOT COVERED until the operator decides otherwise.
+  That act is outside this specification and no test written from it covers it.
 - **O-4.** It reads the decisions it needs (from its cursor, which in an unbroken chain epoch is the anchor; from 0 in
   a FROM_ZERO reading) to the checkpoint's N and recomputes each hash from the one before. The last MUST equal the
   checkpoint's head, and in a FROM_ZERO reading the hash it computes at N* MUST equal the anchor's head. A decision
@@ -276,7 +284,8 @@ notice.
 - **O-6.** It delivers in this order: pieces of evidence; notices about runs; then, if the reading is whole, the
   observation parts and the statement; if it is not whole, the alarm.
 - **O-7.** The courier's cursor, its unsettled set and its carried observations change only when the mailbox has
-  accepted a statement. A reading that is not whole, or whose statement is refused, changes none of them.
+  accepted a statement. A reading that is not whole, or whose statement is refused, changes none of them. The moments
+  of K-N-3 and the outbox are written at any reading.
 
 ### 4.2 Which runs are read
 
@@ -348,7 +357,8 @@ evidence a finding rests on is INLINE in its notice or HELD by the mailbox (6.4)
 - **O-L-2.** The service chooses the size of every answer. With CAP-DB: by fields added to a genuine report (102,681
   bytes for one run, the reviewer's Q2), by names (6,146 bytes each, Q3), and by any number of decisions and strays.
   With CAP-KEY also: by nonces and digests under the gate's signature (70,448 and 200,435 bytes for one report;
-  5,002,287 bytes for one run; S-6). It can therefore make any reading slow or not whole, and keep a budget
+  5,002,287 bytes for one run; S-6). CAP-DB can also force every reading to be a REFRESH, by a budget-level decision
+  it is allowed to record (CRASH, by reading of `plea_gateway/store.py`; O-R-4). It can therefore make any reading slow or not whole, and keep a budget
   NOT COVERED. This is a loss of liveness. It MUST surface as NOT COVERED with an alarm (8.2), never as a statement
   that leaves the run out.
 - **O-L-3.** At most NOTICES_PER_RUN_MAX notices are made for one run in one chain epoch. A run that would need more
@@ -369,6 +379,8 @@ evidence a finding rests on is INLINE in its notice or HELD by the mailbox (6.4)
   it).
 - **I-3.** `A(0) = H(["PLEA-A16-CHAIN", root, chain_epoch])`. `A(k) = H(["PLEA-A16-ITEM", A(k−1), identity_k])`.
   An item's `prev` is A(k−1). Every item accepted or linked takes the next k of its chain epoch and moves the head.
+  An item that is refused takes no position: the courier signs an item for the position that is next when it sends
+  it, and signs it again, with its identity and body unchanged, if it must send it at another position.
 - **I-4.** One courier key per budget, and one courier process per budget. The mailbox refuses an item for a budget
   from a second courier key. Two processes with one key each close the other's chain epoch; the mailbox cannot tell
   them apart; the status shows the count of chain epochs rising.
@@ -405,7 +417,7 @@ evidence a finding rests on is INLINE in its notice or HELD by the mailbox (6.4)
 - **I-K-1. The bound reports of an EQUIVOCATION notice.** For K-CONFLICT: the recorded report if there is one,
   otherwise the earliest verdict report by decision; and the earliest verdict report whose pair differs from it. For
   every other finding: the earliest report by decision that makes it hold, and for K-UNKNOWN-VERDICT and K-FENCE the
-  earliest of each of the two kinds. At most eight reports in all; the same report is bound once.
+  earliest of each of the two kinds. At most twelve reports in all, which is every report these rules can select; the same report is bound once.
 
 ### 5.4 Chain epochs, and a courier that has lost its state
 
@@ -468,14 +480,20 @@ carried observations, its position k and A(k), its outbox, and its continuity se
 - **I-O-3. 409 CHAIN_POSITION**, with the mailbox's signed head (chain epoch, k, A). If that head is a position of the
   courier's own chain of this epoch, the courier delivers its items after that position, in order, and goes on. If
   it is not, the courier has lost its state (I-E-4).
-- **I-O-4. The mailbox behind its own receipts.** If the courier holds a receipt of this mailbox for a position beyond
-  the head the mailbox now signs, the mailbox has lost state. The courier makes the reading not whole
+- **I-O-4. The mailbox behind its own receipts.** If the courier holds a receipt of this mailbox for a position of the
+  open chain epoch beyond the head the mailbox now signs for that epoch, the mailbox has lost state. Receipts of a
+  closed chain epoch are not compared. The courier makes the reading not whole
   (MAILBOX_ROLLBACK), opens a new chain epoch and delivers everything again.
-- **I-O-5. 507.** The item stays in the outbox and is sent again at every reading; the reading is not whole
-  (NOTICE_REFUSED for a notice about a run, MAILBOX_REFUSED otherwise).
-- **I-O-6. 409 EVIDENCE_MISSING.** The courier stores the evidence again from its own copy (E-B-6) and sends the item
-  again. If the mailbox refuses the evidence, the notice is made again saying NOT_HELD with the reason.
-- **I-O-7. Once in a chain epoch.** Within one chain epoch the courier sends an item of I-ID-1 once: when a reading
+- **I-O-5. 507.** The item took no position. It stays in the outbox and is sent again at every reading, signed for
+  the position then next; the courier goes on at once with its other items, each signed for the position then next,
+  so that a refused item never holds back a later one. The reading is not whole (NOTICE_REFUSED for a notice about a
+  run, MAILBOX_REFUSED otherwise).
+- **I-O-6. 409 EVIDENCE_MISSING.** The item took no position. The courier stores the evidence again from its own copy
+  (E-B-6) and sends the item again, signed for the position then next. If the mailbox refuses the evidence, the
+  notice is sent saying NOT_HELD with the reason; its identity is the same.
+- **I-O-7. Gaps.** At every reading the courier stores again, from its own copy (E-B-6), every object for which the
+  challenge lists a gap.
+- **I-O-8. Once in a chain epoch.** Within one chain epoch the courier sends an item of I-ID-1 once: when a reading
   calls for a notice whose identity already has a receipt or a link in this chain epoch, nothing is sent again. This
   uses the courier's memory only for what the mailbox has already acknowledged in the epoch; what is called for is
   still decided by K-N-1. In a new chain epoch everything called for is sent.
@@ -487,7 +505,8 @@ carried observations, its position k and A(k), its outbox, and its continuity se
 - **E-1.** A piece of evidence is a sequence of bytes. Its **id** is `Hb(bytes)`. For a report the bytes are
   `canonical(signed projection)` in UTF-8, so its id is the report's evidence id (D-2).
 - **E-2. Immutable.** Stored under its id, written whole and synced before any answer, never overwritten, never
-  removed while any held item names it. Storing an id already held changes nothing and answers as before.
+  removed while any notice the mailbox holds **binds** it. A notice binds every evidence id of its bound reports
+  (I-K-1), whatever it says of where each is. Storing an id already held changes nothing and answers as before.
 - **E-3. Hard limit.** One object is at most OBJ_MAX bytes. A larger one is refused (413) and nothing is kept.
 - **E-4.** A report signed by an honest gate host has a signed projection of at most about 13 KB at the witness's
   longest names (calculated). A larger one needs CAP-KEY.
@@ -500,15 +519,21 @@ carried observations, its position k and A(k), its outbox, and its continuity se
   other's status then says so (GLOBAL_QUOTA).
 - **E-Q-2. Items, in three rooms for each budget, none of which can use another's.** NOTICE_QUOTA for notices about
   runs (I-ID-1). ALARM_RESERVE for OBSERVATION_INCOMPLETE and EPOCH_OPEN items. OBS_QUOTA for OBSERVATION_PART and
-  COVERAGE items and for the chains' indexes.
+  COVERAGE items and for the record of each accepted statement. Each item's index entry is charged to the item's own
+  room, so a full OBS_QUOTA never keeps a notice or an alarm from taking its position.
 - **E-Q-3.** A store that would exceed its room is refused (507, naming the room) and nothing is kept.
+- **E-Q-3a. Sizing, stated.** NOTICE_QUOTA MUST be at least the budget's provisioned runs × NOTICES_PER_RUN_MAX ×
+  ITEM_MAX, which is the most the notices of its runs can come to. Index entries and statement records are never
+  dropped, so OBS_QUOTA is used up at about 1 KiB for each reading (calculated): a mailbox has a finite life at a
+  given OBS_QUOTA, after which statements are refused (ITEMS_REFUSED) and its budgets are NOT COVERED until the
+  operator provides more. Notices and alarms are still taken then.
 - **E-Q-4. Retirement.** The bodies of OBSERVATION_PART and COVERAGE items that support no carried observation (those
   of statements older than the `oldest_carried` of the last accepted statement, and those of closed chain epochs) MAY
   be dropped and their room returned. Their index entries (k, identity, digest) and the record of each accepted
   statement (its digest, N, head, token, tick) are kept. The body of an alarm MAY be dropped once ALARMS_KEEP later
-  alarms are held; its index entry is kept. A notice about a run, its receipt, and evidence a held notice names are
+  alarms are held; its index entry is kept. A notice about a run, its receipt, and evidence a held notice binds are
   never dropped by the protocol.
-- **E-Q-5. Orphans.** An evidence object that no held item names MAY be removed once it has been so for T_ORPHAN,
+- **E-Q-5. Orphans.** An evidence object that no held notice binds (E-2) MAY be removed once it has been so for T_ORPHAN,
   counted by M-T-1 inside the current mailbox epoch from the later of its storing and the epoch's start.
 - **E-Q-6. One at a time.** The handling of one item (7.3), the storing of one evidence object, a retirement and an
   orphan removal are serialised for the whole mailbox: none begins while another is under way, and each is durable
@@ -532,10 +557,10 @@ carried observations, its position k and A(k), its outbox, and its continuity se
   only all together, and only if their sizes sum to at most INLINE_TOTAL_MAX; otherwise none is INLINE.
 - **E-B-2.** The mailbox refuses (409 EVIDENCE_MISSING) a notice that says HELD for an id it does not hold for that
   budget, and checks that every INLINE report's bytes give the id the notice states.
-- **E-B-3.** The mailbox takes a notice that says NOT_HELD for an id, and, unless it holds an object with that id for
-  the budget, records an **evidence gap** for (budget, evidence id). This is done whether the notice is stored or
-  linked. The gap is closed when, and only when,
-  the mailbox comes to hold an object with that id for that budget (a verified `POST /evidence`).
+- **E-B-3.** The mailbox takes a notice that says NOT_HELD for an id. A budget has an **evidence gap** for an id
+  whenever a notice the mailbox holds for the budget binds that id other than INLINE and the mailbox does not hold
+  an object with that id for the budget. A gap is a state, not an event: it ends when the object is stored (a
+  verified `POST /evidence`) and it begins again if the object is ever absent.
 - **E-B-4. Fail closed.** While a budget has an evidence gap it is NOT COVERED (EVIDENCE_GAP), whatever statements it
   holds, and its status names the ids. Missing, altered, oversized or unavailable evidence never turns a finding into
   no finding: a reader who cannot obtain a report matching its id treats the finding as standing and its evidence as
@@ -592,7 +617,8 @@ carried observations, its position k and A(k), its outbox, and its continuity se
 - **M-K-1. Issue.** `POST /challenge` with a request signed by the budget's courier key (11), naming the mailbox epoch
   the courier last saw. A request that names another mailbox epoch is refused (409 EPOCH, with the current epoch) and
   the courier asks again; a request whose digest the mailbox has already answered in this mailbox epoch is refused
-  (409 REPLAY). So a request replayed cannot issue a token or make one VOID. The mailbox makes 32
+  (409 REPLAY). So a request replayed cannot issue a token or make one VOID. A courier that had no answer asks again with a new
+  request nonce. The mailbox makes 32
   bytes from the operating system's source of randomness, written as 43 characters of URL-safe base64 without
   padding; writes durably the token, the mailbox epoch, a serial number, the budget, the courier's key, L, R, the
   budget's anchor and the tick; and only then returns the challenge, signed.
@@ -615,7 +641,7 @@ reached.
 | DL-2 | If an item with the same digest is already held in the budget's open chain epoch, or was refused there as a statement: answer as the first time (the first receipt, the first LINKED acknowledgement, or the first refusal) | — (nothing changes) |
 | DL-3 | It is an EPOCH_OPEN with a `chain_epoch` never seen, k = 1 and `prev` = A(0) of that epoch; or its `chain_epoch` is the budget's open epoch, its k is the head's k + 1 and its `prev` is the head's A | 409 EPOCH_KNOWN, or 409 CHAIN_POSITION with the mailbox's signed head; nothing kept; **no token is touched** |
 | DL-4 | Every evidence id it says is HELD is held for the budget and every INLINE report gives its id (E-B-2); its room has space (E-Q-2, E-Q-3) | 409 EVIDENCE_MISSING, or 507; nothing kept; **no token is touched** |
-| DL-5 | If it is not a COVERAGE item: if its identity is of I-ID-1 and is held for the budget, link it (I-E-6), else store it; for an EPOCH_OPEN, do I-E-2 now and not before; record any evidence gap (E-B-3); write the index entry and the new head; all durably; then answer | — |
+| DL-5 | If it is not a COVERAGE item: if its identity is of I-ID-1 and is held for the budget, link it (I-E-6), else store it; for an EPOCH_OPEN, do I-E-2 now and not before; write the index entry and the new head; all durably; then answer | — |
 | DL-6 | If it is a COVERAGE item: the statement checks of 7.4 | as 7.4 |
 
 - **M-D-1.** A statement that arrives before an item it commits to fails at DL-3 and is refused with the mailbox's
@@ -781,8 +807,9 @@ CLOCK_TOLERANCE. RUN_ANSWER_MAX, INLINE_TOTAL_MAX and NOTICES_PER_RUN_MAX are th
 each statement.
 
 **Proposed values, for the operator to set before any acceptance testing:** INLINE_TOTAL_MAX 32 KiB; OBJ_MAX 1 MiB;
-RUN_ANSWER_MAX 8 MiB; EVID_BUDGET_QUOTA 64 MiB; EVID_GLOBAL_QUOTA 1 GiB; NOTICE_QUOTA 64 MiB; OBS_QUOTA 256 MiB;
-ALARM_RESERVE 4 MiB; ALARMS_KEEP 64; NOTICES_PER_RUN_MAX 16; TOKENS_MAX 8. L and R have no proposed value. One
+RUN_ANSWER_MAX 8 MiB; EVID_BUDGET_QUOTA 64 MiB; EVID_GLOBAL_QUOTA 1 GiB; NOTICE_QUOTA by E-Q-3a (for a budget of 1,000 runs with NOTICES_PER_RUN_MAX 8: 500 MiB);
+OBS_QUOTA 1 GiB (about a million readings); ALARM_RESERVE 4 MiB; ALARMS_KEEP 64; NOTICES_PER_RUN_MAX 8;
+TOKENS_MAX 8. L and R have no proposed value. One
 measurement bears on L: the courier of `e25a297`, which skips some phases, read a budget of 996 runs from nothing in
 98 s on the demonstration machine, and the chain alone of a 996-run budget took 37 s and 508 MB. An L below a reading
 from nothing means a courier that has lost its state can never bring a budget back. Acceptance tests MUST take L, R
@@ -855,9 +882,26 @@ F-numbers are the reviewer's; M-numbers are the modeller's. Both reports are, un
 | M16 | LOW | ST-8 and ST-6 are over the budget (the anchor); ST-7 is for the budget |
 | M17 | LOW | a refusal at ST-5 is a loss of state (I-E-4) |
 | M18 | LOW | the courier checks the challenge (O-1) |
-| M19 | LOW | the courier sends an identity once in a chain epoch (I-O-7); O-S-1 |
+| M19 | LOW | the courier sends an identity once in a chain epoch (I-O-8); O-S-1 |
 
 **Not changed, and why.** F1's suggestion to reclaim room is taken for observation parts only; a notice about a run
 is never reclaimed. F7's suggestion of a second checkpoint is met by one checkpoint that names the anchor. The
 continuity secret is kept although the reviewer judged it redundant: the model's mutant without it lets a courier that
 resumes from the mailbox's head be counted (SAF-4 broken in 7 steps), which is what I-E-8 says it is for.
+
+### Changes from version 2 to version 3
+
+F20 to F29 are the reviewer's findings on version 2 (Part 3 of the reports).
+
+| Finding | Severity | What was changed |
+|---|---|---|
+| F20 | HIGH | waiting times are counted from the first reading that saw the run so, whole or not, and are taken as over in any reading that is not whole (K-N-3, O-7) |
+| F21 | HIGH | a refused item takes no position and is signed again for the next one; a refused item never holds back a later one (I-3, I-O-5, I-O-6) |
+| F22 | HIGH | "binds" defined; an evidence gap is a state that begins again if the object is absent; an object a held notice binds is never an orphan (E-2, E-Q-5, E-B-3, DL-5) |
+| F23 | MEDIUM | the sizing of NOTICE_QUOTA as a formula, and the proposed values from it (E-Q-3a, 11) |
+| F24 | MEDIUM | each index entry is charged to its item's own room; the finite life of OBS_QUOTA stated (E-Q-2, E-Q-3a) |
+| F25 | MEDIUM | the courier stores again the objects of the gaps the challenge lists (O-1, I-O-7) |
+| F26 | MEDIUM | an absent signed field is read as null (D-2) |
+| F27 | MEDIUM | twelve bound reports (I-K-1) |
+| F28 | MEDIUM | receipts are compared only within the open chain epoch (I-O-4) |
+| F29 | LOW | 1.2 corrected in two places; a new request nonce after no answer (M-K-1); clearing an anchor is outside the specification (O-3); CRASH (O-L-2); K-PHASE's title |

@@ -1,0 +1,2 @@
+as signed {"keys": ["aid", "claim", "kind", "nonce", "result_digest", "root", "signature", "signer"], "witness label": "BOUND_FENCE", "record checker signature ok": true, "H(object)": "2df4ea4199e564ba", "H(projection, absent read as null)": "2df4ea4199e564ba"}
+null keys deleted {"keys": ["aid", "claim", "kind", "root", "signature", "signer"], "witness label": "BOUND_FENCE", "record checker signature ok": true, "H(object)": "63200be90d62d55a", "H(projection, absent read as null)": "2df4ea4199e564ba"}
