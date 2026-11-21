@@ -1,0 +1,28 @@
+{
+ "config": "MU_EQ6_off",
+ "model": "model3",
+ "probes": {
+  "P_PENDING_ORPHAN": "reached"
+ },
+ "properties": {
+  "C1_VS_82": "holds",
+  "CENT_E": "violated",
+  "CENT_N": "holds",
+  "DL2_SAME": "holds",
+  "PMK1": "holds",
+  "REFUSED_NOPOS": "holds",
+  "R_AT_STATUS": "holds",
+  "SAF1": "holds",
+  "SAF10": "holds",
+  "SAF11": "violated",
+  "SAF2": "violated",
+  "SAF3": "holds",
+  "SAF3B_ACC": "holds",
+  "SAF4": "holds",
+  "SAF5": "holds",
+  "SAF6": "holds",
+  "SAF7": "holds",
+  "SAF8": "n/a"
+ },
+ "spec": "v2"
+}

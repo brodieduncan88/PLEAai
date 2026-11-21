@@ -1,0 +1,48 @@
+config MU_DL3_order: states=61481 transitions=222517 depth=19 complete=True secs=2.1
+  SAF1           declared=holds      observed=holds      
+  SAF2           declared=violated   observed=violated   depth 6
+  SAF4           declared=holds      observed=holds      
+  SAF6           declared=holds      observed=holds      
+  SAF10          declared=holds      observed=holds      
+  SAF11          declared=holds      observed=holds      
+  SAF3B_ACC      declared=holds      observed=holds      
+  PMK1           declared=holds      observed=holds      
+  DL2_SAME       declared=holds      observed=holds      
+  REFUSED_NOPOS  declared=holds      observed=holds      
+  SAF3           declared=holds      observed=holds      
+  SAF5           declared=holds      observed=holds      
+  SAF7           declared=holds      observed=holds      
+  SAF8           declared=n/a        observed=n/a        
+  CENT_N         declared=violated   observed=violated   depth 6
+  CENT_E         declared=holds      observed=holds      
+  R_AT_STATUS    declared=holds      observed=holds      
+  C1_VS_82       declared=holds      observed=holds      
+  P_COVERED                    declared=any          observed=reached      
+  P_COVERED_INC                declared=any          observed=reached      
+  P_COVERED_AFTER_LOST         declared=any          observed=reached      
+  P_LINK                       declared=any          observed=reached      
+  P_DL2_FIRST_RECEIPT_STMT     declared=any          observed=reached      
+  P_DL2_FIRST_REFUSAL          declared=any          observed=reached      
+  P_EPOCH_KNOWN                declared=any          observed=reached      
+  P_OPEN_LOST                  declared=any          observed=reached      
+  P_OPEN_CLOSES_LIVE           declared=any          observed=reached      
+  P_COURIER_LOST               declared=any          observed=reached      
+  P_EVICT                      declared=any          observed=reached      
+  P_NOTCOV_BY_REFUSED_STMT     declared=any          observed=reached      
+  P_NOTCOV_STALE_CARRY         declared=any          observed=reached      
+  P_ST7_FAIL                   declared=any          observed=reached      
+  shortest trace for SAF2:
+      1. courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,FIRST)#2
+      2. courier_delivers EPOCH_OPEN(ce1,FIRST)#2 -> receipt
+      3. courier_takes_challenge->token0
+      4. decision1(run0->u)
+      5. courier_reads(FROM_ZERO,N1)
+      6. adversary_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#22 -> receipt
+  shortest trace for CENT_N:
+      1. courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,FIRST)#2
+      2. courier_delivers EPOCH_OPEN(ce1,FIRST)#2 -> receipt
+      3. courier_takes_challenge->token0
+      4. decision1(run0->u)
+      5. courier_reads(FROM_ZERO,N1)
+      6. adversary_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#22 -> receipt
+  verdict agrees with declaration: True

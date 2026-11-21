@@ -18,7 +18,8 @@ reports came back; none is edited afterwards.
 | 2 | the modeller | specification version 1 | 21:39 |
 | 3 | the reviewer | specification version 2 (commit `2694b52`) | 21:48 |
 | 4 | the reviewer | specification version 3 | 21:53 |
-| 5 | the reviewer | specification version 4, the final text | 21:56 |
+| 5 | the reviewer | specification version 4 (commit `d958810`) | 21:56 |
+| 6 | the modeller | specification version 2 | 22:04 |
 
 ---
 
@@ -824,7 +825,7 @@ Every other rule I reviewed I consider fit to hand over.
 
 ---
 
-# Part 5. The reviewer, on version 4 (the final text), as returned
+# Part 5. The reviewer, on version 4, as returned
 
 [tier: opus]
 
@@ -857,3 +858,280 @@ Every other rule I reviewed I consider fit to hand over.
 - E-Q-4 against 8.3's "the alarms held" (the last 64) and E-X-3.
 - When INDEX_QUOTA reaches its reserve, each later reading adds one alarm entry, so the reserve runs down to full. That is within the finite life stated.
 - I-O-5 and the proposed values in section 11.
+
+---
+
+# Part 6. The modeller, on version 2, as returned
+
+[tier: opus]
+
+# Round 2: bounded model of Amendment 16, specification version 2
+
+This is internal, separately authored verification, not independent validation. The results are bounded and are not a proof for unbounded parameters. Agreement between this model and the text says nothing about any implementation. No subagents were used and nothing was escalated. Nothing under `G/model2/` was changed; all new work is under `G/model3/`.
+
+**Most important result:** at every bound I searched, the fixed design of version 2 holds every safety property except one. **SAF-10 is violated when the mailbox loses its record of the budget** (M20, HIGH; trace below). Every other configuration of the fixed design shows no violation.
+
+Run 1 numbers: 60 configurations, every search complete (no state cap hit), 10.1 million states, about 7 minutes of compute. 55 of the 60 agree with their declarations. The 5 mismatches are all prediction errors of mine and are kept as they are (section 3). `model.py` and `configs.py` are byte-identical to the hashes recorded at declaration, so no model code changed after declaring.
+
+## 1. What changed in the model
+
+The model is a fresh `G/model3/model.py`, organised by rule id. Declarations are in `G/model3/declared/` (with `SHA256SUMS`, `DECLARED_AT` and `CODE_AT_DECLARATION.sha256`). Results are in `G/model3/results/run1/` (one `.json` and one `.console.txt` per configuration, plus `SUMMARY.md`), the harness is `G/model3/run_all.sh`, and the state-count logs are in `G/model3/results/sizing_logs/` (they print counts, never verdicts).
+
+Every reading R1–R13 I needed for version 1 is now settled by the text, and I modelled the text with no alternative. The rules now in the model:
+
+**Strict order of taking an item (7.3)**
+- **DL-2:** an item whose digest is already held in the open epoch, or a statement already refused there at 7.4, is answered as the first time, before the position check.
+- **DL-3:**
+  - an EPOCH_OPEN is taken only for a chain epoch never seen, with k = 1 and prev = A(0);
+  - any other item must be at the head's k + 1 with prev equal to the head's A.
+- **DL-4:** evidence an item says is HELD must be held, and the item's room must have space.
+- **DL-5:** an item whose identity is already held is linked at the next position and moves the head; otherwise it is stored. I-E-2 (closing the earlier epoch) happens only here, when the item is written. Gaps and the index entry are recorded here.
+
+**Statements (7.4)**
+- A refused statement takes no position and leaves the head, the commit and the anchor unchanged. It spends only a token of its own budget.
+- The secret is kept until acceptance (I-E-7).
+- The budget's anchor is kept across chain epochs, and ST-6 and ST-8 check it on every statement.
+- ST-5 also checks `prev_statement`.
+
+**The witness.** It can now be cut back (rollback) and then grown differently (fork), as an adversary move. The courier applies O-2 and O-3 and raises ROLLBACK or FORK alarms. I checked a rollback below the anchor and a fork at the anchor.
+
+**Alarms.** OBSERVATION_INCOMPLETE has one identity per token (I-ID-2). C-1.4 counts any alarm taken.
+
+**Evidence**
+- Gaps are keyed by (budget, evidence id) and close only when the object comes to be held.
+- Orphan removal is serialised (E-Q-6).
+- E-Q-5 is abstracted as "at any time".
+
+**Rooms.** The three rooms of E-Q-2 are counted in items. Each item's index entry is charged to OBS_QUOTA (finding M23). C-1.5 to C-1.7 are applied at the time of the status.
+
+**Challenges (M-K-1).** A request is signed and names the mailbox epoch. A replayed request is refused (409 REPLAY), as is a request naming another epoch (409 EPOCH). The courier checks the challenge and its own position (O-1, section 5.6). Old challenges are therefore never used, and other-budget tokens never reach a statement.
+
+**The courier's outbox (I-O-1 to I-O-7)**
+- Resend on no answer (I-O-2).
+- 409 CHAIN_POSITION with a head that is a position of its own chain: deliver the rest (I-O-3).
+- A receipt beyond the mailbox's head: open a new epoch with a MAILBOX_ROLLBACK alarm (I-O-4).
+- 507: the item stays and is resent, and a pending statement is replaced by an alarm (I-O-5).
+- 409 EVIDENCE_MISSING: store the evidence again, or remake the notice as NOT_HELD (I-O-6).
+- An identity is sent once per epoch (I-O-7).
+- A head not of its own chain, or a refusal at ST-5, means lost state (I-E-4).
+
+**Other adversary moves.** Loss of the mailbox's record of the budget (WIPE). Mailbox reboot and restart, the wall clock moved, suspension. Courier state lost, copied at any time, and restored. Delay, reorder and replay of anything sent.
+
+**Abstractions kept from version 1**
+- Exact symbolic hashes; signatures cannot be forged.
+- Standings: `u` (unsettled, outcome notice), `p` (settled, no notice), `x` (settled, outcome notice), `f` (a finding; never settled).
+- `f` is now absorbing, and its identity is the run's set of findings, binding the earliest report.
+- Witness moves are offered only before a reading. This is a sound reduction, because only a reading reads the witness.
+- Acceptance order is kept as ranks.
+- States are keyed by a 64-bit hash, so a collision would prune a state without warning.
+
+## 2. Bounds
+
+Defaults: 1 run, 1 decision, standings u/x, TMAX 1, L 1, R 0, TOKENS_MAX 1, 1 chain epoch, 2 readings.
+
+| Family | Bounds beyond the defaults |
+|---|---|
+| CHAIN | 2 runs, 2 decisions, 2 epochs, 1 loss |
+| CHAIN_L | as CHAIN, plus standing p, TMAX 2, 3 readings |
+| RESTORE | 3 readings, 2 epochs, 1 loss, 1 copy, 1 restore |
+| RESTORE_L | as RESTORE, plus 2 decisions and standing p |
+| EPOCH | TMAX 2, 1 reboot, 1 restart, 1 wall-clock move |
+| EPOCH_L | as EPOCH with TMAX 3, L 2, R 1 |
+| SUSP | TMAX 3, 1 suspension, 1 wall-clock move, 3 readings |
+| REQ | 2 replayed requests |
+| REQ_L | 3 replayed requests, 3 readings, 1 restart |
+| ALARM | L-3 stored results, 3 readings, readings may fail |
+| ALARM_L | as ALARM with 4 readings, TMAX 2 |
+| EVID | standings u/f, 2 decisions, 3 readings, evidence refusals, orphan removal |
+| EVID_L | as EVID with 2 runs |
+| SKIPEV | 2 runs, standings x/f, refusals, orphan removal, 3 readings |
+| FORK | 3 decisions, 1 witness cut-back, 3 readings |
+| FORK_L | as FORK, plus 2 epochs and 1 loss |
+| QUOTA | 2 runs, rooms (1 notice, 3 alarm, 8 obs), readings may fail |
+| QUOTA_OBS | rooms (2, 3, 3) |
+| WIPE | 2 decisions, 2 epochs, 1 wipe, 3 readings |
+| WIPE_FORK | as WIPE, plus 3 decisions and 1 cut-back |
+| STATUS | TMAX 2, reader on |
+
+Not combined in one configuration: a reboot with a restore, a fork with evidence refusals, and two runs with mailbox restarts.
+
+## 3. Every configuration (run 1)
+
+Each property violated is followed by its shortest trace length; full traces are in the result files. All 60 searches are complete.
+
+| Config | Observed violated (trace length) | States | Agrees with declaration |
+|---|---|---|---|
+| FD_CHAIN | none | 27733 | yes |
+| FD_CHAIN_L | none | 745709 | yes |
+| FD_RESTORE | none | 315953 | yes |
+| FD_RESTORE_L | none | 2810211 | yes |
+| FD_EPOCH | none | 95087 | yes |
+| FD_EPOCH_L | none | 204096 | yes |
+| FD_SUSP | none | 78473 | yes |
+| FD_REQ | none | 1398 | yes |
+| FD_REQ_L | none | 32636 | yes |
+| FD_ALARM | none | 12472 | yes |
+| FD_ALARM_L | none | 226691 | yes |
+| FD_EVID | none | 5567 | yes |
+| FD_EVID_L | none | 104424 | yes |
+| FD_SKIPEV | none | 108470 | NO: probe P_LINK not reached (see below) |
+| FD_FORK | none | 45662 | yes |
+| FD_FORK_L | none | 680477 | yes |
+| FD_QUOTA | none | 62205 | yes |
+| FD_QUOTA_OBS | none | 2097 | yes |
+| FD_WIPE | **SAF10 (14)**, as declared | 45710 | yes |
+| FD_WIPE_FORK | **SAF10 (14)**, as declared | 1301374 | yes |
+| FD_STATUS | none | 45715 | yes |
+| CV_RESUME | none | 6807 | yes |
+| CV_OLDCURSOR | none | 6712 | yes |
+| CV_NOCHECK | none | 94526 | yes |
+| OA_CARRYBREAK | CENT_N (10); outside the A-CARRY assumption, as declared | 60726 | yes |
+| MU_DL2_off | SAF6 (12) | 27733 | yes |
+| MU_DL2_newreceipt | SAF6 (12) | 27733 | yes |
+| MU_DL3_order | CENT_N (6), SAF2 (6) | 61481 | yes |
+| MU_DL3_spend | SAF2 (6) | 82314 | yes |
+| MU_DL2_AFTER_DL3 | DL2_SAME (6) | 34959 | yes |
+| MU_REFUSED_POS | REFUSED_NOPOS (11) | 27733 | yes |
+| MU_OPEN_KNOWN | SAF5 (9) | 234047 | yes |
+| MU_ST7_R | SAF3B_ACC (11) | 27433 | yes |
+| MU_C15_off | C1_VS_82 (11), SAF7 (11) | 27733 | yes |
+| MU_C17_off | C1_VS_82 (11), R_AT_STATUS (11), SAF7 (11) | 27733 | yes |
+| MU_ST2 | SAF1 (8) | 300985 | NO: I declared that it survives |
+| MU_ST5 | none | 315953 | yes |
+| MU_ST5_RESUME | SAF4 (7) | 5825 | yes |
+| MU_ST7_FZ_OLDCURSOR | C1_VS_82 (14), SAF5 (14) | 6474 | NO: C1_VS_82 not declared |
+| MU_ANCHOR_off | none | 680477 | yes |
+| MU_ANCHOR_off_NOCHECK | CENT_N (12), SAF10 (11) | 72341 | NO: CENT_N not declared |
+| MU_ST1_epoch | none | 90301 | yes |
+| MU_MK5 | none | 95087 | yes |
+| MU_ST3 | none | 95087 | yes |
+| MU_C12_age | C1_VS_82 (7), SAF3 (7) | 95087 | yes |
+| MU_C1_epoch | none | 95087 | yes |
+| MU_MT5_wall | R_AT_STATUS (12), SAF1 (8), SAF3 (8), SAF3B_ACC (12), SAF7 (12) | 95105 | yes |
+| MU_MEPOCH | R_AT_STATUS (13), SAF1 (6), SAF3 (6), SAF3B_ACC (11), SAF7 (13) | 99588 | yes |
+| MU_TICK_CROSS | none | 101939 | yes |
+| MU_MT1_mono | R_AT_STATUS (12), SAF1 (8), SAF3 (8), SAF3B_ACC (12), SAF7 (12) | 78633 | yes |
+| MU_REQ_REPLAY | PMK1 (4) | 7791 | yes |
+| MU_C1_alarm | C1_VS_82 (8), SAF7 (8) | 12472 | yes |
+| MU_OR2 | CENT_N (11) | 13437 | yes |
+| MU_ALARM_NOTOKEN | none | 7042 | NO: I declared SAF7 violated |
+| MU_DL4_held | CENT_E (8), SAF2 (8) | 5244 | yes |
+| MU_C1_gap | C1_VS_82 (9), CENT_E (10), SAF7 (9) | 5567 | yes |
+| MU_EQ6_off | CENT_E (9), SAF11 (8), SAF2 (9) | 6401 | yes |
+| MU_GAP_BY_NOTICE | none | 6344 | yes |
+| MU_C16_off | C1_VS_82 (11), SAF7 (11) | 62205 | yes |
+| MU_CS2_nonce | SAF8 (4) | 62574 | yes |
+
+**The five mismatches**
+
+1. **FD_SKIPEV (probe P_LINK not reached).** This family has one epoch, and I-O-7 forbids sending an identity twice in an epoch, so a link cannot happen there. Links are reached in the CHAIN and RESTORE families.
+2. **MU_ST2 (SAF1 violated; I declared it survives).** It does break. A restored copy takes a new token, which voids token0 by M-K-2. The old token0 statement is then delivered and, with ST-2 removed, counted. So ST-2 is necessary at this bound.
+3. **MU_ST7_FZ_OLDCURSOR (C1_VS_82 also violated).** My own section 8.2 computation counts EPOCH_OPENED (no FROM_ZERO statement in the open epoch). That condition is exactly what the mutant removes, so this is correct and undeclared.
+4. **MU_ANCHOR_off_NOCHECK (CENT_N also violated).** With the witness cut back to below the anchor, the INCREMENTAL statement of a courier that does not check is counted while a notice it called for is not held. The anchor check therefore also protects central (i).
+5. **MU_ALARM_NOTOKEN (SAF7 holds; I declared it violated).** In the mutant the second alarm is never sent: the courier sends an identity once per epoch. SAF-7 talks only about items taken, so a failed reading that sends no item never touches it. This is a gap in how SAF-7 is phrased (M28).
+
+## 4. Mutants and probes
+
+**Mutants.** "Survives" means redundant at these bounds only, not dispensable.
+
+| Mutant | Result |
+|---|---|
+| Linking off; first receipt not kept | SAF-6 breaks |
+| Statement accepted before its items | SAF-2 and central (i) break |
+| Token spent at DL-3 | SAF-2's token clause breaks |
+| DL-2 placed after DL-3 for a re-sent statement | only DL-2's own rule breaks (an accepted statement resent gets a 409); no other safety property |
+| A refused statement takes a position | only REFUSED_NOPOS breaks; the courier detects the misplaced head and loses state (liveness) |
+| EPOCH_OPEN of a known epoch accepted | SAF-5 breaks |
+| C-1.5, C-1.6 or C-1.7 removed | SAF-7 breaks (with C1_VS_82, and R_AT_STATUS for C-1.7) |
+| ST-7's R check removed | SAF3B_ACC breaks |
+| Request replay accepted | PMK1 breaks (a replayed request issues a token) |
+| Gap closed by a later notice instead of by holding | survives (liveness only) |
+| EQ6_off: orphan removal allowed between DL-4 and the write | SAF-11 breaks (8 steps: the HELD notice is pending, its object is orphan-removed, the write completes), and SAF-2 and CENT_E break too |
+| DL4_held; C1_gap | break as in round 1 |
+| C1_alarm; OR2 | break as in round 1 |
+| Clocks: MT5_wall, MT1_mono, MEPOCH | break SAF-1, SAF-3, SAF3B and now also SAF-7, through C-1.7 |
+| C12_age | breaks SAF-3 |
+| Clocks: TICK_CROSS, ST1_epoch, MK5, C1_epoch, ST3 | survive (the epoch mechanisms are layered; ST-3 is subsumed by ST-2, as the text now says) |
+| Continuity check, honest courier with a restore | survives: stale copies are caught by the position check first |
+| Continuity check, with a courier that resumes from the mailbox's head | SAF-4 breaks (7 steps); this is the role I-E-8 claims |
+| Anchor check (ST-6/ST-8), honest courier | survives: the courier's own O-3 check catches the fork first |
+| Anchor check, courier that does not check | SAF-10 breaks (11 steps) and CENT_N breaks |
+| FROM_ZERO requirement, courier that keeps its old cursor | SAF-5 breaks |
+| Nonce check (reader) | SAF-8 breaks |
+
+**Probes.** Every declared probe agreed except FD_SKIPEV's P_LINK.
+- Reached:
+  - a statement refused before its items, with its token kept;
+  - DL-2's first receipt for a re-sent statement, and its first refusal;
+  - EPOCH_KNOWN; EPOCH_OPEN(LOST); COVERED after a loss, a reboot and a restart, and by a REFRESH in a new mailbox epoch;
+  - FORK and ROLLBACK alarms; a gap closed by holding the object; orphan removal; EVIDENCE_MISSING; a notice remade NOT_HELD;
+  - each room refused; a replayed request refused;
+  - NOT COVERED caused by an alarm, by a refused statement, and by a stale carried observation;
+  - MAILBOX_ROLLBACK detected; L-3 results read; a reader taking COVERED, and a stale status rejected.
+- Not reached, as declared:
+  - an honest courier's statement refused at ST-6 in FORK;
+  - **an alarm taken after a refusal for room** (FD_QUOTA, complete search): this is finding M22.
+
+## 5. My round-1 findings against version 2
+
+| Finding | Status in the model |
+|---|---|
+| M1 link-skip | **CLOSED IN THE MODEL.** SAF-2 and CENT_N hold in all FD configurations, including two runs with evidence (SKIPEV, EVID_L) and with loss (CHAIN_L, RESTORE_L) |
+| M2 replayed EPOCH_OPEN | **CLOSED for replays of a seen epoch** (P_EPOCH_KNOWN reached, SAF-5 holds). A residue remains: a delayed EPOCH_OPEN that was never taken still closes the live epoch (M21) |
+| M3 alarm linked | **CLOSED** (SAF-7 holds in ALARM and ALARM_L) |
+| M4 gap never closes | **CLOSED** (P_GAP_CLOSED reached) |
+| M5 M-S-1 unreachable | **CLOSED** (DL-2 first receipt reached) |
+| M6 M-D-1 against M-D-3 | **CLOSED** by I-O-3; only liveness remains, which is not checked |
+| M7 C-1 against 8.2 | **CLOSED** (C1_VS_82 holds in every FD configuration) |
+| M8 R at the status | **CLOSED** (R_AT_STATUS holds; C-1.7) |
+| M9, M10, M15, M16, M17, M18, M19 | **CLOSED IN THE MODEL**, as written |
+| M11 cross-budget spend | **NOT MODELLED** (vacuous): the courier now refuses other budgets' challenges (O-1), so no such statement exists |
+| M12 request replay | **CLOSED** (the mutant shows the mechanism is necessary) |
+| M13 EVIDENCE_MISSING | **CLOSED** |
+| M14 mailbox record loss | **STILL REACHABLE in a new form:** M20 |
+
+## 6. New findings
+
+**M20, HIGH: SAF-10 fails when the mailbox loses its record of the budget** (SAF-10, 8.2, I-O-4, L-10, I-E-3). Trace (FD_WIPE, 14 steps):
+1. FROM_ZERO statement at N1 accepted; the courier's answers were lost.
+2. The mailbox loses its record of the budget, including SEEN_CE.
+3. The replayed EPOCH_OPEN(E1) is taken as an epoch never seen.
+4. The replayed notice is stored.
+5. The courier's resent statement is refused (ST1, ST2).
+6. The courier holds no receipt beyond the head, so I-O-4 does not fire.
+7. Its new FROM_ZERO reading has at = 0 and is counted, so the head of the last statement accepted for the budget is never signed back.
+
+The same trace appears with a witness that can fork (FD_WIPE_FORK). L-10 admits the limit, but SAF-10 states no precondition. Either condition SAF-10 on the mailbox's durable state, or let the courier keep the anchor it last had accepted.
+
+**M21, MEDIUM: an abandoned EPOCH_OPEN closes the live epoch** (I-E-3, DL-3). Trace (FD_CHAIN, 8 steps): E1's EPOCH_OPEN is never delivered; the courier opens E2 and has a statement accepted; the adversary then delivers E1's EPOCH_OPEN. That epoch has never been seen, so it closes E2. I-E-3's "cannot close the open epoch" holds only for epochs already seen. This is liveness, fail-safe, and needs only CAP-DB delay.
+
+**M22, HIGH (cannot be done as written): no alarm can follow a notice refused for room** (E-X-3, E-X-4, I-O-5, DL-3). A notice refused for room keeps its chain position in the outbox, so DL-3 refuses every later item, the alarm "naming the run" included. P_ALARM_AFTER_ROOM_REFUSAL is unreachable at the FD_QUOTA bounds, by complete search. The design is safe (C-1.6 ends coverage), but the required alarm cannot exist.
+
+**M23, MEDIUM: alarms depend on OBS room** (E-Q-2, E-Q-4). The index entries are charged to OBS_QUOTA and never retired, so an alarm can be refused for OBS room while ALARM_RESERVE has room (FD_QUOTA_OBS, 8 steps). E-X-3's "alarm within ALARM_RESERVE" therefore depends on OBS room.
+
+**M24, LOW: I-E-8 overstates.** A copy taken after statement j was sent but before it was accepted holds s_{j+1}. After DL-2 returns j's first receipt, its statement j+1 is counted (FD_RESTORE, 11 steps; P_STALECOPY_COUNTED). SAF-4 holds; only the wording is wrong.
+
+**M25 to M29, LOW: readings and wording I had to resolve**
+- **M25:** DL-2's "refused there as a statement" is read as refused at 7.4 only. If refusals at DL-3 counted, a statement resent under M-D-1 would get its first 409 for ever.
+- **M26:** under I-E-4, a courier whose own EPOCH_OPEN has not yet been taken would see the old epoch's head and declare its state lost again. Modelled: the courier takes no challenge until its EPOCH_OPEN has a receipt.
+- **M27:** I-O-4 needs an epoch reason, but I-E-1 allows only FIRST or COURIER_STATE_LOST. It also does not say in which epoch the MAILBOX_ROLLBACK alarm goes. Modelled: LOST, with the alarm as the item after the EPOCH_OPEN.
+- **M28:** SAF-7 is phrased about items, so a failed reading that sends nothing is invisible to it (see the MU_ALARM_NOTOKEN mismatch).
+- **M29:** 4.6 requires every item to be accepted before a statement is made, yet M-D-1 and I-O-3 expect statements sent before their items. Modelled: pipelining allowed.
+
+## 7. What the model does not cover
+
+- **Search limits:** bounded results only, at small bounds (L ≤ 2, R ≤ 1, at most 4 readings, at most 2 runs, at most 3 decisions, at most 3 chain epochs).
+- **Combinations not explored together:** see the end of section 2.
+- **Not modelled:**
+  - section 3 and SAF-9;
+  - observation parts and their retirement (E-Q-4); INLINE evidence; byte sizes; the global quota; ALARMS_KEEP;
+  - waiting times (K-N-3); budget-level decisions (O-R-4); names that no attempt bears;
+  - a rollback of the mailbox to an older snapshot (only a loss of the whole record);
+  - two courier processes with one key (I-4); a hypervisor pause; a crash in the middle of a write;
+  - liveness.
+- **Not exercised:**
+  - ST-4 and ST-9 are always true for an honest courier with a witness that signs what it holds;
+  - ST-1's budget and key branches never trigger, because the courier refuses foreign challenges (O-1).
+- **Restricted:** a fork above the anchor is not claimed by the text and is not checked.
+- **Search key:** states are keyed by a 64-bit hash, so a collision would prune a state without warning.
+- **Nothing here is evidence about any implementation.**
