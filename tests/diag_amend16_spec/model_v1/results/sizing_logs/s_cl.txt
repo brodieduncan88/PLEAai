@@ -1,0 +1,1 @@
+FD_CLOCK {'RUNS': 1, 'VALUES': ['u', 'x'], 'NMAX': 1, 'L3': False, 'TMAX': 4, 'L': 2, 'R': 1, 'MAX_READS': 3, 'EMAX': 1, 'LOSSES': 0, 'SNAPS': 0, 'RESTORES': 0} states 3000000 complete False depth 10 secs 58.7

@@ -1,0 +1,26 @@
+{
+ "config": "AR_CHAIN_OPENFRESH_ONLY",
+ "declaration_version": 2,
+ "note": "written before the run; probes not listed are informational",
+ "probes": {
+  "P_COVERED": "reached",
+  "P_EPOCH_REOPEN": "not_reached",
+  "P_LINK_SKIP": "reached"
+ },
+ "properties": {
+  "C1_VS_82": "violated",
+  "CENT_E": "holds",
+  "CENT_N": "violated",
+  "PMD1": "holds",
+  "R_AT_STATUS": "violated",
+  "SAF1": "holds",
+  "SAF2": "violated",
+  "SAF3": "holds",
+  "SAF3B_ACC": "holds",
+  "SAF4": "holds",
+  "SAF5": "holds",
+  "SAF6": "holds",
+  "SAF7": "holds",
+  "SAF8": "n/a"
+ }
+}

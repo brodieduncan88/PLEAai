@@ -1,0 +1,1 @@
+AR_CHAIN {'LINK_MODE': 'checked', 'GAP_CLOSE': 'verified', 'LINK_COUNTS_ALARM': True, 'OPEN_FRESH': True, 'VALUES': ['u', 'x', 'p'], 'MAX_READS': 3, 'TMAX': 2} states 1362568 complete True depth 26 secs 57.7

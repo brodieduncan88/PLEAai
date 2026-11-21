@@ -1,0 +1,25 @@
+{
+ "config": "AR_ALARMCOUNTS_ONLY",
+ "note": "written before the run; probes not listed are informational",
+ "probes": {
+  "P_ALARM_LINKED": "reached",
+  "P_COVERED": "reached",
+  "P_NOTCOV_BY_ALARM": "reached"
+ },
+ "properties": {
+  "C1_VS_82": "violated",
+  "CENT_E": "violated",
+  "CENT_N": "violated",
+  "PMD1": "holds",
+  "R_AT_STATUS": "violated",
+  "SAF1": "holds",
+  "SAF2": "violated",
+  "SAF3": "holds",
+  "SAF3B_ACC": "holds",
+  "SAF4": "holds",
+  "SAF5": "violated",
+  "SAF6": "holds",
+  "SAF7": "holds",
+  "SAF8": "n/a"
+ }
+}

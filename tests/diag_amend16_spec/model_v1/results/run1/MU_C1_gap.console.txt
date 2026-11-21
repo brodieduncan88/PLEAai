@@ -1,0 +1,50 @@
+config MU_C1_gap: states=22948 transitions=144776 depth=20 complete=True secs=0.6
+  SAF1         declared=holds      observed=holds      
+  SAF2         declared=holds      observed=holds      
+  SAF4         declared=holds      observed=holds      
+  SAF6         declared=holds      observed=holds      
+  SAF3B_ACC    declared=holds      observed=holds      
+  PMD1         declared=holds      observed=holds      
+  SAF3         declared=holds      observed=holds      
+  SAF5         declared=holds      observed=holds      
+  SAF7         declared=violated   observed=violated   depth 9
+  SAF8         declared=n/a        observed=n/a        
+  CENT_N       declared=holds      observed=holds      
+  CENT_E       declared=holds      observed=violated   MISMATCH depth 12
+  R_AT_STATUS  declared=holds      observed=holds      
+  C1_VS_82     declared=holds      observed=holds      
+  P_COVERED                  declared=any          observed=reached      
+  P_NOTCOV_BY_ALARM          declared=any          observed=reached      
+  P_LINK                     declared=any          observed=reached      
+  P_DL3_STMT_TOKEN_KEPT      declared=any          observed=reached      
+  P_EVICT                    declared=any          observed=reached      
+  P_GAP                      declared=any          observed=reached      
+  P_GAP_CLOSED               declared=any          observed=reached      
+  P_EVMISSING                declared=any          observed=reached      
+  P_ORPHAN                   declared=any          observed=reached      
+  P_STMT_REDELIVER_409       declared=any          observed=reached      
+  P_ALARM_LINKED             declared=any          observed=reached      
+  shortest trace for SAF7:
+      1. courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2
+      2. adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt
+      3. courier_takes_challenge->token0
+      4. courier_reads(FROM_ZERO,N0)
+      5. courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#8 -> receipt
+      6. courier_takes_challenge->token1
+      7. decision1(run0->f)
+      8. courier_reads(REFRESH,N1,evidence_run0_REFUSED)
+      9. adversary_delivers NOTICE(ce1,k3,run0=f@d1,NOT_HELD)#104 -> receipt
+  shortest trace for CENT_E:
+      1. courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2
+      2. adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt
+      3. courier_takes_challenge->token0
+      4. decision1(run0->f)
+      5. courier_reads(FROM_ZERO,N1,evidence_run0_REFUSED)
+      6. courier_takes_challenge->token1
+      7. courier_reads(FROM_ZERO,N1,evidence_run0_stored)
+      8. evidence_orphan_removed(('ev', 0, 1))
+      9. adversary_delivers NOTICE(ce1,k2,run0=f@d1,NOT_HELD)#26 -> receipt
+     10. adversary_delivers OBS_INCOMPLETE(ce1,k3,EVIDENCE_NOT_HELD,run=0)#28 -> receipt
+     11. adversary_delivers NOTICE(ce1,k4,run0=f@d1,HELD)#52 -> receipt (first receipt, LINKED)
+     12. adversary_delivers STATEMENT(ce1,k5,j1,tok1,FROM_ZERO,at0,N1,carried0)#56 -> receipt
+  verdict agrees with declaration: False

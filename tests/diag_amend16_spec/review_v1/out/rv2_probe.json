@@ -1,0 +1,192 @@
+{
+ "when": "2026-11-21T20:37:59Z",
+ "database": "plea27",
+ "source": "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/diag2/src",
+ "steps": [
+  {
+   "step": "Q4. a result value round-tripped through jsonb (plea_local, SELECT of a literal only)",
+   "at": "20:37:59Z",
+   "rows": [
+    {
+     "python writes": "{\"x\": 1e+300}",
+     "jsonb gives back": "{\"x\": 1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000}",
+     "canonical equal": false,
+     "who": "plea_local"
+    },
+    {
+     "python writes": "{\"x\": 1.5e+17}",
+     "jsonb gives back": "{\"x\": 150000000000000000}",
+     "canonical equal": false,
+     "who": "plea_local"
+    },
+    {
+     "python writes": "{\"x\": 0.1}",
+     "jsonb gives back": "{\"x\": 0.1}",
+     "canonical equal": true,
+     "who": "plea_local"
+    },
+    {
+     "python writes": "{\"x\": 1e-07}",
+     "jsonb gives back": "{\"x\": 0.0000001}",
+     "canonical equal": true,
+     "who": "plea_local"
+    },
+    {
+     "python writes": "{\"x\": 123456789012345678901234567890}",
+     "jsonb gives back": "{\"x\": 123456789012345678901234567890}",
+     "canonical equal": true,
+     "who": "plea_local"
+    },
+    {
+     "python writes": "{\"x\": -0.0}",
+     "jsonb gives back": "{\"x\": 0.0}",
+     "canonical equal": false,
+     "who": "plea_local"
+    }
+   ]
+  },
+  {
+   "step": "Q1. CAP-DB: a fence report from the honest gate host for a run the chain holds CONSUMED and crossed",
+   "at": "20:38:01Z",
+   "steps": [
+    [
+     "RESERVE",
+     "APPLIED",
+     "RESERVATION_COMMITTED"
+    ],
+    [
+     "ACCEPT_RESERVATION",
+     "APPLIED",
+     "RESERVATION_ACCEPTED"
+    ],
+    [
+     "TOKEN",
+     "APPLIED",
+     "TOKEN_RELEASED"
+    ],
+    [
+     "START",
+     "APPLIED",
+     "INTENT_COMMITTED_LOCALLY"
+    ],
+    [
+     "ACCEPT_INTENT",
+     "APPLIED",
+     "INTENT_ACCEPTED"
+    ],
+    [
+     "CROSS",
+     200,
+     "DENIED",
+     "RECEIPT_NOT_DELIVERED"
+    ],
+    [
+     "ACCEPT_RESERVATION again",
+     200,
+     "DUPLICATE",
+     "RESERVATION_ALREADY_ACCEPTED"
+    ]
+   ],
+   "phase_now": "CONSUMED",
+   "fence": {
+    "answered": true,
+    "report": {
+     "kind": "FENCE_REPORT",
+     "root": "REQ-SELFTEST-001/A/a79b6f810812d714ab264b5ffe7d0487",
+     "aid": "rv2-fence",
+     "nonce": null,
+     "claim": "FENCED_NO_START",
+     "signer": "f4ab0f24a48f98a13096dfe5957eb8125e5f43f656c5226eaefa2a3dc982fef2",
+     "signature": "067c719beab6980dc365f92f0ab2d9b64edab941718fc6859be7807d31f416550048fad067c482251aa53b04ce2cc8ab4a4ec79cc3eba6b53071b009ff29720a",
+     "result_digest": null
+    },
+    "repeat": false
+   },
+   "release_with_it": [
+    200,
+    "DENIED",
+    "CONSUMPTION_IS_FINAL",
+    "BOUND_FENCE"
+   ],
+   "get_run": [
+    [
+     8,
+     "FENCE_REPORT",
+     "FENCED_NO_START",
+     "BOUND_FENCE"
+    ]
+   ]
+  },
+  {
+   "step": "Q2. CAP-DB: a genuine report re-sent with an extra unsigned field",
+   "at": "20:38:01Z",
+   "client_told": "FAIL: REQUIREMENT NOT MET",
+   "phase": "EFFECT",
+   "witness_answer": [
+    200,
+    "DUPLICATE",
+    "VERDICT_RETRY",
+    "AUTHORISED"
+   ],
+   "reports": [
+    {
+     "seq": 16,
+     "derived": "AUTHORISED",
+     "pair": [
+      "EFFECT",
+      "661354823985"
+     ],
+     "signature verifies": true,
+     "signature equal to the genuine": true,
+     "H(canonical(report))": "b2b113c150b79ee3",
+     "canonical bytes": 484,
+     "extra fields": []
+    },
+    {
+     "seq": 17,
+     "derived": "AUTHORISED",
+     "pair": [
+      "EFFECT",
+      "661354823985"
+     ],
+     "signature verifies": true,
+     "signature equal to the genuine": true,
+     "H(canonical(report))": "eb1da96b8f9fbc53",
+     "canonical bytes": 100538,
+     "extra fields": [
+      "note",
+      "pad"
+     ]
+    }
+   ],
+   "distinct_pairs": 1,
+   "distinct_evidence_ids": 2,
+   "run_answer_bytes": 102681
+  },
+  {
+   "step": "Q3. CAP-DB: decisions naming a run that does not exist, with a 512-code-point astral name",
+   "at": "20:38:02Z",
+   "name_code_points": 512,
+   "name_canonical_bytes": 6146,
+   "answers": [
+    [
+     200,
+     "DENIED",
+     "UNKNOWN_OR_DISCARDED_ATTEMPT"
+    ],
+    [
+     200,
+     "DENIED",
+     "UNKNOWN_ATTEMPT",
+     "NONE"
+    ]
+   ],
+   "decisions_added": 2,
+   "attempts_with_that_name": [],
+   "get_run_status": 200,
+   "get_run_rows": 1,
+   "budget_charge_unchanged": true
+  }
+ ],
+ "finished": "2026-11-21T20:38:02Z"
+}

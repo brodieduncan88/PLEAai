@@ -1,0 +1,1 @@
+AR_EPOCH_L {'MAX_STATES': 6000000} states 67656 complete True depth 16 secs 1.9

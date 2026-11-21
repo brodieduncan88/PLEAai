@@ -1,0 +1,1 @@
+AR_CHAIN_L {'MAX_STATES': 6000000} states 285144 complete True depth 21 secs 9.3

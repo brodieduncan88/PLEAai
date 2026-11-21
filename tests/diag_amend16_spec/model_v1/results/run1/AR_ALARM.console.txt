@@ -1,0 +1,50 @@
+config AR_ALARM: states=35048 transitions=199454 depth=17 complete=True secs=0.8
+  SAF1         declared=holds      observed=holds      
+  SAF2         declared=holds      observed=holds      
+  SAF4         declared=holds      observed=holds      
+  SAF6         declared=holds      observed=holds      
+  SAF3B_ACC    declared=holds      observed=holds      
+  PMD1         declared=holds      observed=holds      
+  SAF3         declared=holds      observed=holds      
+  SAF5         declared=holds      observed=holds      
+  SAF7         declared=holds      observed=holds      
+  SAF8         declared=n/a        observed=n/a        
+  CENT_N       declared=holds      observed=holds      
+  CENT_E       declared=holds      observed=holds      
+  R_AT_STATUS  declared=violated   observed=violated   depth 11
+  C1_VS_82     declared=violated   observed=violated   depth 11
+  P_COVERED                  declared=reached      observed=reached      
+  P_COVERED_INC              declared=reached      observed=reached      
+  P_NOTCOV_BY_ALARM          declared=reached      observed=reached      
+  P_LINK                     declared=any          observed=reached      
+  P_DL3_STMT_TOKEN_KEPT      declared=any          observed=reached      
+  P_EVICT                    declared=any          observed=reached      
+  P_STMT_REDELIVER_409       declared=any          observed=reached      
+  P_L3_READ                  declared=reached      observed=reached      
+  P_ST7_FAIL                 declared=any          observed=reached      
+  P_ALARM_LINKED             declared=reached      observed=reached      
+  shortest trace for R_AT_STATUS:
+      1. courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2
+      2. adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt
+      3. courier_takes_challenge->token0
+      4. decision1(run0->u)
+      5. stored_result_without_decision(run0->p)
+      6. courier_reads(FROM_ZERO,N1)
+      7. courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N1,carried0)#35 -> receipt
+      8. courier_takes_challenge->token1
+      9. courier_reads(INCREMENTAL,N1)
+     10. adversary_delivers STATEMENT(ce1,k3,j2,tok1,INCREMENTAL,at1,N1,carried1)#172 -> receipt
+     11. tick
+  shortest trace for C1_VS_82:
+      1. courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2
+      2. adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt
+      3. courier_takes_challenge->token0
+      4. tick
+      5. decision1(run0->u)
+      6. stored_result_without_decision(run0->p)
+      7. courier_reads(FROM_ZERO,N1)
+      8. courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N1,carried0)#35 -> receipt
+      9. courier_takes_challenge->token1
+     10. courier_reads(INCREMENTAL,N1)
+     11. adversary_delivers STATEMENT(ce1,k3,j2,tok1,INCREMENTAL,at1,N1,carried1)#172 -> 422 ST7
+  verdict agrees with declaration: True

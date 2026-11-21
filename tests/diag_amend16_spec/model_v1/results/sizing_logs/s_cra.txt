@@ -1,0 +1,1 @@
+FD_CLOCK {'RUNS': 1, 'VALUES': ['u', 'x'], 'NMAX': 1, 'L3': False, 'TMAX': 2, 'L': 1, 'R': 0, 'MAX_READS': 2, 'EMAX': 1, 'REBOOTS': 1, 'RESTARTS': 1, 'WALL_MOVES': 1, 'SUSPENDS': 0, 'CHAL_REPLAY': False, 'LINK_MODE': 'checked', 'OPEN_FRESH': True, 'GAP_CLOSE': 'verified', 'LINK_COUNTS_ALARM': True} states 4000000 complete False depth 13 secs 105.0

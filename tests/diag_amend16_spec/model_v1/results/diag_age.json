@@ -1,0 +1,58 @@
+{
+ "MU_MEPOCH": {
+  "states": 136452,
+  "complete": true,
+  "D_ACCEPT_TRUE_AGE_GT_L": [
+   "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+   "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+   "courier_takes_challenge->token0",
+   "tick",
+   "tick",
+   "wall_clock_back",
+   "mailbox_reboot",
+   "courier_reads(FROM_ZERO,N0)",
+   "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#8 -> receipt"
+  ],
+  "D_COVERED_TRUE_AGE_GT_L": [
+   "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+   "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+   "courier_takes_challenge->token0",
+   "tick",
+   "tick",
+   "wall_clock_back",
+   "mailbox_reboot",
+   "courier_reads(FROM_ZERO,N0)",
+   "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#8 -> receipt"
+  ]
+ },
+ "MU_TICK_CROSS": {
+  "states": 142363,
+  "complete": true,
+  "D_ACCEPT_TRUE_AGE_GT_L": "not reached",
+  "D_COVERED_TRUE_AGE_GT_L": "not reached"
+ },
+ "MU_MK5": {
+  "states": 142363,
+  "complete": true,
+  "D_ACCEPT_TRUE_AGE_GT_L": "not reached",
+  "D_COVERED_TRUE_AGE_GT_L": "not reached"
+ },
+ "MU_ST1_epoch": {
+  "states": 142363,
+  "complete": true,
+  "D_ACCEPT_TRUE_AGE_GT_L": "not reached",
+  "D_COVERED_TRUE_AGE_GT_L": "not reached"
+ },
+ "MU_C1_epoch": {
+  "states": 142363,
+  "complete": true,
+  "D_ACCEPT_TRUE_AGE_GT_L": "not reached",
+  "D_COVERED_TRUE_AGE_GT_L": "not reached"
+ },
+ "AR_EPOCH": {
+  "states": 142363,
+  "complete": true,
+  "D_ACCEPT_TRUE_AGE_GT_L": "not reached",
+  "D_COVERED_TRUE_AGE_GT_L": "not reached"
+ }
+}

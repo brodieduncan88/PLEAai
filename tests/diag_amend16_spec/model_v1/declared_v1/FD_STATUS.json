@@ -1,0 +1,25 @@
+{
+ "config": "FD_STATUS",
+ "note": "written before the run; probes not listed are informational",
+ "probes": {
+  "P_COVERED": "reached",
+  "P_READER_COVERED": "reached",
+  "P_STALE_STATUS_REJECTED": "reached"
+ },
+ "properties": {
+  "C1_VS_82": "violated",
+  "CENT_E": "holds",
+  "CENT_N": "holds",
+  "PMD1": "holds",
+  "R_AT_STATUS": "violated",
+  "SAF1": "holds",
+  "SAF2": "holds",
+  "SAF3": "holds",
+  "SAF3B_ACC": "holds",
+  "SAF4": "holds",
+  "SAF5": "violated",
+  "SAF6": "holds",
+  "SAF7": "holds",
+  "SAF8": "holds"
+ }
+}

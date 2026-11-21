@@ -1,0 +1,542 @@
+{
+ "config": "FD_CHAIN_L",
+ "bounds": {
+  "RUNS": 2,
+  "NMAX": 2,
+  "VALUES": [
+   "u",
+   "x",
+   "p"
+  ],
+  "TMAX": 2,
+  "L": 1,
+  "R": 0,
+  "TOKENS_MAX": 1,
+  "MAX_ISSUES": 0,
+  "EMAX": 2,
+  "MAX_READS": 2,
+  "ADV_DELIVERIES": null,
+  "REBOOTS": 0,
+  "RESTARTS": 0,
+  "WALL_MOVES": 0,
+  "SUSPENDS": 0,
+  "LOSSES": 1,
+  "SNAPS": 0,
+  "RESTORES": 0,
+  "B1_ISSUES": 0,
+  "SHARED_KEY": false,
+  "REQ_REPLAYS": 0,
+  "CHAL_REPLAY": false,
+  "CARRY_BREAKS": 0,
+  "ORPHAN": false,
+  "WIPES": 0,
+  "EV_FAIL": false,
+  "READ_FAIL": false,
+  "L3": false,
+  "INCREMENTAL": true,
+  "ITEM_QUOTA": null,
+  "ALARM_RESERVE": 0,
+  "READER": false,
+  "QMAX": 2,
+  "NSTAT_MAX": 3,
+  "LINK_MODE": "own_k",
+  "GAP_CLOSE": "never",
+  "LINK_COUNTS_ALARM": false,
+  "OPEN_FRESH": false,
+  "COURIER": "honest",
+  "MUTANTS": [],
+  "MAX_STATES": 6000000
+ },
+ "declared_file": "declared/FD_CHAIN_L.json",
+ "declared_sha256": "629b47e1cad9bb9f31edc08f8d7330d89ecf8d1d11e15735950caa7b38a2270f",
+ "states": 1334112,
+ "transitions": 10226486,
+ "max_depth": 23,
+ "complete": true,
+ "result": "COMPLETE",
+ "wall_seconds": 54.1,
+ "interned_values": 2377,
+ "key": "64-bit Python hash of the state tuple (collision would prune a state)",
+ "properties": {
+  "SAF1": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF2": {
+   "observed": "violated",
+   "depth": 12,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "decision1(run1->u)",
+    "courier_reads(FROM_ZERO,N1)",
+    "adversary_delivers NOTICE(ce1,k2,run1=u@d1)#31 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#34 -> receipt",
+    "courier_takes_challenge->token1",
+    "decision2(run0->u)",
+    "courier_reads(REFRESH,N2)",
+    "adversary_delivers NOTICE(ce1,k5,run1=u@d1)#600 -> receipt (first receipt, LINKED)",
+    "adversary_delivers STATEMENT(ce1,k6,j2,tok1,REFRESH,at1,N2,carried0)#602 -> receipt"
+   ],
+   "declared": "violated",
+   "agree": true
+  },
+  "SAF4": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF6": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF3B_ACC": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "PMD1": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF3": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF5": {
+   "observed": "violated",
+   "depth": 6,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> receipt",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt"
+   ],
+   "declared": "violated",
+   "agree": true
+  },
+  "SAF7": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF8": {
+   "observed": "n/a",
+   "declared": "n/a",
+   "agree": true
+  },
+  "CENT_N": {
+   "observed": "violated",
+   "depth": 12,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "decision1(run1->u)",
+    "courier_reads(FROM_ZERO,N1)",
+    "adversary_delivers NOTICE(ce1,k2,run1=u@d1)#31 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#34 -> receipt",
+    "courier_takes_challenge->token1",
+    "decision2(run0->u)",
+    "courier_reads(REFRESH,N2)",
+    "adversary_delivers NOTICE(ce1,k5,run1=u@d1)#600 -> receipt (first receipt, LINKED)",
+    "adversary_delivers STATEMENT(ce1,k6,j2,tok1,REFRESH,at1,N2,carried0)#602 -> receipt"
+   ],
+   "declared": "violated",
+   "agree": true
+  },
+  "CENT_E": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "R_AT_STATUS": {
+   "observed": "violated",
+   "depth": 10,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "decision1(run0->p)",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N1,carried0)#29 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "adversary_delivers STATEMENT(ce1,k3,j2,tok1,INCREMENTAL,at1,N1,carried1)#260 -> receipt",
+    "tick"
+   ],
+   "declared": "violated",
+   "agree": true
+  },
+  "C1_VS_82": {
+   "observed": "violated",
+   "depth": 10,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "tick",
+    "decision1(run0->p)",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N1,carried0)#29 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "adversary_delivers STATEMENT(ce1,k3,j2,tok1,INCREMENTAL,at1,N1,carried1)#260 -> 422 ST7"
+   ],
+   "declared": "violated",
+   "agree": true
+  }
+ },
+ "probes": {
+  "P_COVERED": {
+   "observed": "reached",
+   "depth": 5,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> receipt"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_COVERED_INC": {
+   "observed": "reached",
+   "depth": 9,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "decision1(run0->p)",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N1,carried0)#29 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "adversary_delivers STATEMENT(ce1,k3,j2,tok1,INCREMENTAL,at1,N1,carried1)#260 -> receipt"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_COVERED_AFTER_LOST": {
+   "observed": "reached",
+   "depth": 7,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "courier_loses_state",
+    "courier_opens_epoch(LOST) EPOCH_OPEN(ce2,k1,LOST)#7",
+    "adversary_delivers EPOCH_OPEN(ce2,k1,LOST)#7 -> receipt",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce2,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#47 -> receipt"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_COVERED_AFTER_REBOOT": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_AFTER_RESTART": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_REFRESH_NEWMEP": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_NOTCOV_BY_ALARM": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_LINK": {
+   "observed": "reached",
+   "depth": 7,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "decision1(run0->u)",
+    "courier_reads(FROM_ZERO,N1)",
+    "adversary_delivers NOTICE(ce1,k2,run0=u@d1)#16 -> receipt",
+    "adversary_delivers NOTICE(ce1,k2,run0=u@d1)#16 -> receipt (first receipt, LINKED)"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_LINK_SKIP": {
+   "observed": "reached",
+   "depth": 7,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "decision1(run0->u)",
+    "courier_reads(FROM_ZERO,N1)",
+    "adversary_delivers NOTICE(ce1,k2,run0=u@d1)#16 -> receipt",
+    "adversary_delivers NOTICE(ce1,k2,run0=u@d1)#16 -> receipt (first receipt, LINKED)"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_DL3_STMT_TOKEN_KEPT": {
+   "observed": "reached",
+   "depth": 4,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> 409 CHAIN_POSITION(head ceNone k0)"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_OPEN_LOST": {
+   "observed": "reached",
+   "depth": 4,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "courier_loses_state",
+    "courier_opens_epoch(LOST) EPOCH_OPEN(ce2,k1,LOST)#7",
+    "adversary_delivers EPOCH_OPEN(ce2,k1,LOST)#7 -> receipt"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_EPOCH_REOPEN": {
+   "observed": "reached",
+   "depth": 3,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_EVICT": {
+   "observed": "reached",
+   "depth": 5,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "courier_takes_challenge->token0",
+    "courier_loses_state",
+    "courier_opens_epoch(LOST) EPOCH_OPEN(ce2,k1,LOST)#7",
+    "courier_takes_challenge->token1"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_EXPIRED_STMT": {
+   "observed": "reached",
+   "depth": 7,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "tick",
+    "tick",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> 422 ST2,ST3"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_REPLAY_STMT_422": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_GAP": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_GAP_CLOSED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_XB_REFUSED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_XB_SPENT": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ANOMALY_AGE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_RESTORE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_EVMISSING": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ORPHAN": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_MS1": {
+   "observed": "reached",
+   "depth": 7,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> receipt",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> receipt"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_STMT_REDELIVER_409": {
+   "observed": "reached",
+   "depth": 6,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> receipt",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> 409 CHAIN_POSITION(head ce1 k2)"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_COURIER_LOST_REFUSAL": {
+   "observed": "reached",
+   "depth": 8,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "courier_loses_state",
+    "courier_opens_epoch(LOST) EPOCH_OPEN(ce2,k1,LOST)#7",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers EPOCH_OPEN(ce2,k1,LOST)#7 -> receipt",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_delivers STATEMENT(ce2,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#47 -> 409 CHAIN_POSITION(head ce1 k1)"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_ITEMS_REFUSED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_L3_READ": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ST5_FAIL": {
+   "observed": "reached",
+   "depth": 12,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "decision1(run0->u)",
+    "courier_reads(FROM_ZERO,N1)",
+    "adversary_delivers NOTICE(ce1,k2,run0=u@d1)#16 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#19 -> receipt",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(REFRESH,N1)",
+    "adversary_delivers NOTICE(ce1,k4,run0=u@d1)#339 -> receipt (first receipt, LINKED)",
+    "adversary_delivers STATEMENT(ce1,k5,j2,tok1,REFRESH,at1,N1,carried0)#341 -> 422 ST5"
+   ],
+   "declared": "reached",
+   "agree": true
+  },
+  "P_ST6_FAIL": {
+   "observed": "reached",
+   "depth": 12,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "tick",
+    "tick",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> 422 ST2,ST3",
+    "courier_takes_challenge->token1",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok1,FROM_ZERO,at0,N0,carried0)#333 -> receipt",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> 422 ST2,ST3,ST6"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_ST7_FAIL": {
+   "observed": "reached",
+   "depth": 10,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "tick",
+    "decision1(run0->p)",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N1,carried0)#29 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "adversary_delivers STATEMENT(ce1,k3,j2,tok1,INCREMENTAL,at1,N1,carried1)#260 -> 422 ST7"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_READER_COVERED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_STALE_STATUS_REJECTED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_WIPE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_CARRY_BREAK": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ALARM_LINKED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  }
+ },
+ "mismatches": [],
+ "verdict_agrees_with_declaration": true
+}

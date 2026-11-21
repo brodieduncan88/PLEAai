@@ -1,0 +1,1 @@
+AR_ALARM {'MAX_READS': 4, 'TMAX': 2} states 887596 complete True depth 22 secs 30.2

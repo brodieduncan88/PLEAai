@@ -1,0 +1,22 @@
+{
+ "config": "MU_GAP_unverified",
+ "declaration_version": 2,
+ "note": "written before the run; probes not listed are informational",
+ "probes": {},
+ "properties": {
+  "C1_VS_82": "holds",
+  "CENT_E": "holds",
+  "CENT_N": "holds",
+  "PMD1": "holds",
+  "R_AT_STATUS": "holds",
+  "SAF1": "holds",
+  "SAF2": "holds",
+  "SAF3": "holds",
+  "SAF3B_ACC": "holds",
+  "SAF4": "holds",
+  "SAF5": "holds",
+  "SAF6": "holds",
+  "SAF7": "holds",
+  "SAF8": "n/a"
+ }
+}

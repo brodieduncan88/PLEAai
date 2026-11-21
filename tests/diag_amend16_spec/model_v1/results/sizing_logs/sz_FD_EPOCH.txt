@@ -1,0 +1,1 @@
+FD_EPOCH {'MAX_STATES': 6000000} states 496012 complete True depth 18 secs 18.0

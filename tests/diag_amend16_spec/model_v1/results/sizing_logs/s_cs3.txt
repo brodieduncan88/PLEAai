@@ -1,0 +1,1 @@
+FD_CLOCK {'RUNS': 1, 'VALUES': ['u', 'x'], 'NMAX': 1, 'L3': False, 'TMAX': 2, 'L': 1, 'R': 0, 'MAX_READS': 2, 'EMAX': 1, 'REBOOTS': 0, 'RESTARTS': 0, 'WALL_MOVES': 1, 'SUSPENDS': 1, 'CHAL_REPLAY': False} states 2643880 complete True depth 18 secs 114.3

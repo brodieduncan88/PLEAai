@@ -1,0 +1,1 @@
+FD_CHAIN {'RUNS': 2, 'VALUES': ['u', 'x'], 'NMAX': 2, 'L3': False, 'TMAX': 1, 'L': 1, 'R': 0, 'MAX_READS': 2, 'EMAX': 2, 'LOSSES': 1, 'SNAPS': 0, 'RESTORES': 0, 'CHAL_REPLAY': False} states 340278 complete True depth 22 secs 13.1

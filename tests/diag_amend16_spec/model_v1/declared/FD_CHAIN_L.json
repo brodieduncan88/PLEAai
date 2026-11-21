@@ -1,0 +1,35 @@
+{
+ "config": "FD_CHAIN_L",
+ "declaration_version": 2,
+ "note": "written before the run; probes not listed are informational",
+ "probes": {
+  "P_COURIER_LOST_REFUSAL": "reached",
+  "P_COVERED": "reached",
+  "P_COVERED_AFTER_LOST": "reached",
+  "P_COVERED_INC": "reached",
+  "P_DL3_STMT_TOKEN_KEPT": "reached",
+  "P_EPOCH_REOPEN": "reached",
+  "P_LINK": "reached",
+  "P_LINK_SKIP": "reached",
+  "P_MS1": "reached",
+  "P_OPEN_LOST": "reached",
+  "P_ST5_FAIL": "reached",
+  "P_STMT_REDELIVER_409": "reached"
+ },
+ "properties": {
+  "C1_VS_82": "violated",
+  "CENT_E": "holds",
+  "CENT_N": "violated",
+  "PMD1": "holds",
+  "R_AT_STATUS": "violated",
+  "SAF1": "holds",
+  "SAF2": "violated",
+  "SAF3": "holds",
+  "SAF3B_ACC": "holds",
+  "SAF4": "holds",
+  "SAF5": "violated",
+  "SAF6": "holds",
+  "SAF7": "holds",
+  "SAF8": "n/a"
+ }
+}

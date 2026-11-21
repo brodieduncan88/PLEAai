@@ -1,0 +1,458 @@
+{
+ "config": "MU_OR2",
+ "bounds": {
+  "RUNS": 1,
+  "NMAX": 1,
+  "VALUES": [
+   "u",
+   "x"
+  ],
+  "TMAX": 1,
+  "L": 1,
+  "R": 0,
+  "TOKENS_MAX": 1,
+  "MAX_ISSUES": 0,
+  "EMAX": 1,
+  "MAX_READS": 3,
+  "ADV_DELIVERIES": null,
+  "REBOOTS": 0,
+  "RESTARTS": 0,
+  "WALL_MOVES": 0,
+  "SUSPENDS": 0,
+  "LOSSES": 0,
+  "SNAPS": 0,
+  "RESTORES": 0,
+  "B1_ISSUES": 0,
+  "SHARED_KEY": false,
+  "REQ_REPLAYS": 0,
+  "CHAL_REPLAY": false,
+  "CARRY_BREAKS": 0,
+  "ORPHAN": false,
+  "WIPES": 0,
+  "EV_FAIL": false,
+  "READ_FAIL": true,
+  "L3": true,
+  "INCREMENTAL": true,
+  "ITEM_QUOTA": null,
+  "ALARM_RESERVE": 0,
+  "READER": false,
+  "QMAX": 2,
+  "NSTAT_MAX": 3,
+  "LINK_MODE": "checked",
+  "GAP_CLOSE": "verified",
+  "LINK_COUNTS_ALARM": true,
+  "OPEN_FRESH": true,
+  "COURIER": "honest",
+  "MUTANTS": [
+   "OR2"
+  ],
+  "MAX_STATES": 6000000
+ },
+ "declared_file": "declared/MU_OR2.json",
+ "declared_sha256": "0f3ad2b5a720ff83ffa65dcefb8e61e78ffcd997bb53aa39d8e2b891860c5816",
+ "states": 36927,
+ "transitions": 208827,
+ "max_depth": 17,
+ "complete": true,
+ "result": "COMPLETE",
+ "wall_seconds": 0.9,
+ "interned_values": 764,
+ "key": "64-bit Python hash of the state tuple (collision would prune a state)",
+ "properties": {
+  "SAF1": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF2": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF4": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF6": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF3B_ACC": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "PMD1": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF3": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF5": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF7": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF8": {
+   "observed": "n/a",
+   "declared": "n/a",
+   "agree": true
+  },
+  "CENT_N": {
+   "observed": "violated",
+   "depth": 11,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "decision1(run0->u)",
+    "courier_reads(FROM_ZERO,N1)",
+    "adversary_delivers NOTICE(ce1,k2,run0=u@d1)#15 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#18 -> receipt",
+    "courier_takes_challenge->token1",
+    "stored_result_without_decision(run0->x)",
+    "courier_reads(INCREMENTAL,N1)",
+    "adversary_delivers STATEMENT(ce1,k4,j2,tok1,INCREMENTAL,at1,N1,carried1)#257 -> receipt"
+   ],
+   "declared": "violated",
+   "agree": true
+  },
+  "CENT_E": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "R_AT_STATUS": {
+   "observed": "violated",
+   "depth": 11,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "decision1(run0->u)",
+    "stored_result_without_decision(run0->p)",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N1,carried0)#35 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "adversary_delivers STATEMENT(ce1,k3,j2,tok1,INCREMENTAL,at1,N1,carried1)#172 -> receipt",
+    "tick"
+   ],
+   "declared": "violated",
+   "agree": true
+  },
+  "C1_VS_82": {
+   "observed": "violated",
+   "depth": 11,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "tick",
+    "decision1(run0->u)",
+    "stored_result_without_decision(run0->p)",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N1,carried0)#35 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "adversary_delivers STATEMENT(ce1,k3,j2,tok1,INCREMENTAL,at1,N1,carried1)#172 -> 422 ST7"
+   ],
+   "declared": "violated",
+   "agree": true
+  }
+ },
+ "probes": {
+  "P_COVERED": {
+   "observed": "reached",
+   "depth": 5,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#8 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_INC": {
+   "observed": "reached",
+   "depth": 10,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "decision1(run0->u)",
+    "stored_result_without_decision(run0->p)",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N1,carried0)#35 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "adversary_delivers STATEMENT(ce1,k3,j2,tok1,INCREMENTAL,at1,N1,carried1)#172 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_AFTER_LOST": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_AFTER_REBOOT": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_AFTER_RESTART": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_REFRESH_NEWMEP": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_NOTCOV_BY_ALARM": {
+   "observed": "reached",
+   "depth": 8,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#8 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(REFRESH,N0,DEADLINE)",
+    "adversary_delivers OBS_INCOMPLETE(ce1,k3,DEADLINE,run=None)#81 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_LINK": {
+   "observed": "reached",
+   "depth": 8,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0,DEADLINE)",
+    "adversary_delivers OBS_INCOMPLETE(ce1,k2,DEADLINE,run=None)#11 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(FROM_ZERO,N0,DEADLINE)",
+    "adversary_delivers OBS_INCOMPLETE(ce1,k3,DEADLINE,run=None)#40 -> receipt (first receipt, LINKED)"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_LINK_SKIP": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_DL3_STMT_TOKEN_KEPT": {
+   "observed": "reached",
+   "depth": 4,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#8 -> 409 CHAIN_POSITION(head ceNone k0)"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_OPEN_LOST": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_EPOCH_REOPEN": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_EVICT": {
+   "observed": "reached",
+   "depth": 4,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0,DEADLINE)",
+    "courier_takes_challenge->token1"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_EXPIRED_STMT": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_REPLAY_STMT_422": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_GAP": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_GAP_CLOSED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_XB_REFUSED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_XB_SPENT": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ANOMALY_AGE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_RESTORE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_EVMISSING": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ORPHAN": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_MS1": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_STMT_REDELIVER_409": {
+   "observed": "reached",
+   "depth": 6,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0)",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#8 -> receipt",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#8 -> 409 CHAIN_POSITION(head ce1 k2)"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_COURIER_LOST_REFUSAL": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ITEMS_REFUSED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_L3_READ": {
+   "observed": "reached",
+   "depth": 5,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "courier_takes_challenge->token0",
+    "decision1(run0->u)",
+    "stored_result_without_decision(run0->x)",
+    "courier_reads(FROM_ZERO,N1)"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_ST5_FAIL": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ST6_FAIL": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ST7_FAIL": {
+   "observed": "reached",
+   "depth": 11,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "tick",
+    "decision1(run0->u)",
+    "stored_result_without_decision(run0->p)",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N1,carried0)#35 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "adversary_delivers STATEMENT(ce1,k3,j2,tok1,INCREMENTAL,at1,N1,carried1)#172 -> 422 ST7"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_READER_COVERED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_STALE_STATUS_REJECTED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_WIPE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_CARRY_BREAK": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ALARM_LINKED": {
+   "observed": "reached",
+   "depth": 8,
+   "trace": [
+    "courier_opens_epoch(FIRST) EPOCH_OPEN(ce1,k1,FIRST)#2",
+    "adversary_delivers EPOCH_OPEN(ce1,k1,FIRST)#2 -> receipt",
+    "courier_takes_challenge->token0",
+    "courier_reads(FROM_ZERO,N0,DEADLINE)",
+    "adversary_delivers OBS_INCOMPLETE(ce1,k2,DEADLINE,run=None)#11 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(FROM_ZERO,N0,DEADLINE)",
+    "adversary_delivers OBS_INCOMPLETE(ce1,k3,DEADLINE,run=None)#40 -> receipt (first receipt, LINKED)"
+   ],
+   "declared": "any",
+   "agree": true
+  }
+ },
+ "mismatches": [],
+ "verdict_agrees_with_declaration": true
+}

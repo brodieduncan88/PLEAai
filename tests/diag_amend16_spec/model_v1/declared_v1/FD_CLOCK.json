@@ -1,0 +1,32 @@
+{
+ "config": "FD_CLOCK",
+ "note": "written before the run; probes not listed are informational",
+ "probes": {
+  "P_ANOMALY_AGE": "reached",
+  "P_COVERED": "reached",
+  "P_COVERED_AFTER_REBOOT": "reached",
+  "P_COVERED_AFTER_RESTART": "reached",
+  "P_COVERED_REFRESH_NEWMEP": "reached",
+  "P_EVICT": "reached",
+  "P_EXPIRED_STMT": "reached",
+  "P_REPLAY_STMT_422": "reached",
+  "P_XB_REFUSED": "reached",
+  "P_XB_SPENT": "not_reached"
+ },
+ "properties": {
+  "C1_VS_82": "violated",
+  "CENT_E": "holds",
+  "CENT_N": "holds",
+  "PMD1": "holds",
+  "R_AT_STATUS": "violated",
+  "SAF1": "holds",
+  "SAF2": "holds",
+  "SAF3": "holds",
+  "SAF3B_ACC": "holds",
+  "SAF4": "holds",
+  "SAF5": "violated",
+  "SAF6": "holds",
+  "SAF7": "holds",
+  "SAF8": "n/a"
+ }
+}

@@ -1,0 +1,1 @@
+FD_OBS {'RUNS': 2, 'VALUES': ['u', 'x', 'f'], 'NMAX': 2, 'L3': True, 'TMAX': 1, 'L': 1, 'R': 0, 'MAX_READS': 3, 'EMAX': 1, 'LOSSES': 0, 'SNAPS': 0, 'RESTORES': 0, 'CHAL_REPLAY': False} states 3000000 complete False depth 12 secs 65.1

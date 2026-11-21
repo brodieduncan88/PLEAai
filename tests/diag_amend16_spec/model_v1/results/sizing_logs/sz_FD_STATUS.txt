@@ -1,0 +1,1 @@
+FD_STATUS {'MAX_STATES': 6000000} states 243372 complete True depth 21 secs 6.0
