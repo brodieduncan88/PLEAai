@@ -10,6 +10,14 @@ amendment-16`, accepted by the owner as a threat-model design baseline and not a
 declaration. `e25a297`, the eighth form of the courier, is and stays INCOMPLETE, rejected at internal review and
 undeclared. Citations are to the tree at `e25a297`; the mailbox's file is the same at `0da1a85e`.
 
+**Second revision, 21 November 2026**, after the owner's review of the first (commit `2938fca`, which keeps the first
+as it was). Still documentation and verification design only; no Step 3 is begun. What changed: the freshness of
+COVERED is corrected by a dated erratum (section 12); two distinct signed verdict digests for one run are now a hard
+failure of record verification (sections 6 and 13); the two scaling questions are answered (sections 14 and 15); the
+exact minimum mailbox changes and the proposed Step 3 interfaces are set out (sections 16 and 17); the model's limits
+and the unresolved assumptions and proof obligations are stated (sections 18 and 19). Sections 1 to 4 and 8 are as
+they were. The model was not changed or run again.
+
 This note is for review before any coding begins. It returns: the mailbox inspection (section 1), the three guarantees
 kept apart (2), the assumptions (3), the model and its results (4), the counterexamples (5), the specification for
 detecting more than one signed digest (6), the proposed signed assertions against the evidence that exists (7), the
@@ -261,15 +269,15 @@ real and shortest among the states searched; nothing is claimed about an invaria
 run of all variants in one process was killed for want of memory after six of them; its output is kept beside the
 results, and the six agree with the run reported here.
 
-**A counterexample against the baseline's own wording.** The addendum's section 7 defines COVERED by a statement "which
-M receipted at a time r with t − r no more than the waiting limit". The variant `receipt_time` is that wording, and it
-breaks NOTICED: a statement made from a reading at t=0 can wait in the outbox and be receipted at t=2; the budget then
-reads COVERED at t=2 on an observation two ticks old, and a FAIL committed after that reading and long before t − L has
-no notice. The receipt shows when the statement arrived, not when the budget was observed (M14). **Proposed correction,
-for the owner's decision:** COVERED is judged by the age of a token the mailbox gave before the reading began and the
-witness signed back in the checkpoint, not by the receipt's time. This needs something from the mailbox that it does not
-give today (MA5) and no change to the gateway. The baseline at `0da1a85e` is not edited for this; the correction is put
-to the owner here.
+**A counterexample against the baseline's own wording.** The addendum's section 7 defines COVERED by a statement
+"which M receipted at a time r with t − r no more than the waiting limit". The variant `receipt_time` is that wording,
+and it breaks NOTICED: a statement made from a reading at t=0 can wait in the outbox and be receipted at t=2; the
+budget then reads COVERED at t=2 on an observation two ticks old, and a FAIL committed after that reading and long
+before t − L has no notice. The receipt shows when the statement arrived, not when the budget was observed (M14).
+**The correction, adopted by the owner on 21 November:** COVERED is judged by the age of a challenge token the mailbox
+issued before the reading began and the witness signed back in the checkpoint, never by the receipt's time. It is set
+out in the dated erratum `verify/AMEND16_ERRATUM_FRESHNESS_2026-11-21.md` and in section 12. It needs something from
+the mailbox that it does not give today (MA5) and no change to the gateway. The baseline at `0da1a85e` is not edited.
 
 **What a broken precondition does.** These two variants were stopped at 14,000,001 states and are not exhaustive, so
 they show what breaks and prove nothing about what holds. With the owner's powers and the proposed rules (`owner`),
@@ -300,8 +308,9 @@ decision's operands name; and every report must sit at such a decision. If not, 
 witness's answer lacks, or adds, a report against the chain it signed. The reading is then not whole. (Shown by test:
 with the owner's password a report was deleted, and the chain still held its decision.)
 
-**Step 3, the digests.** Let D be the set of distinct pairs (verdict claimed, result digest) among the authentic
-reports that claim EFFECT or NO_EFFECT. A report that claims UNKNOWN is left out: an unknown outcome followed by a
+**Step 3, the digests.** The *verdict scope* of a report is the budget, the run and the nonce it signs. Within one
+scope, let D be the set of distinct pairs (verdict claimed, result digest) among the authentic reports that claim a
+verdict, EFFECT or NO_EFFECT. A report that claims UNKNOWN is left out: an unknown outcome followed by a
 verdict is the honest course of an interrupted run.
 
 - D empty: no signed result yet.
@@ -322,8 +331,9 @@ only (section 7). It does not say which result is true, that a verdict was chang
 
 **For the record's checker.** The record already carries every report of a run with its decision number
 (`verify/verify_record.py` 146-159), and the sixth check already ties each report to a RECONCILE decision of the chain
-(check_record.py 858-859). The same steps 1 to 3 apply to a record. Whether a record in conflict fails the check or is
-marked is a decision for the owner; at `e25a297` it verifies.
+(check_record.py 858-859). The same steps 1 to 3 apply to a record. By the owner's decision of 21 November a record
+that holds a conflict **fails** verification, with both reports kept in it as evidence (section 13); at `e25a297` such
+a record verifies.
 
 **What the detection cannot do.** It cannot see a forgery made before the witness sees anything: one report, one
 decision, nothing to compare. It cannot say which of two results is true. It rests on reports not being removed (MA7);
@@ -444,25 +454,295 @@ gap is visible.
 | VT-20 | F5 | a kept set of notices made by each earlier form | each verifies, or is listed as not verifying |
 | VT-21 | P5 | every kind of signed sentence | its written condition holds against a recorder that is not the courier |
 | VT-22 | D-c | every outcome, every form | every line of its text is present and non-empty |
-| VT-23 | section 6 | a record of a budget with a run in conflict | the checker's answer is the one the owner decides (fails, or marked) |
+| VT-23 | sections 6, 13 | a record of a budget with a run in conflict | the record's verification fails, naming the run, both decisions and both digests; both reports are in the record |
 | VT-24 | the measured envelope | the honest load of 21 November, with the new rules | whole readings and their times as measured, within a stated margin |
 | VT-25 | DP1, DP2 | a deployment with separate accounts and no owner credential with the service | all of the above again. **Blocked** until B-1 and B-2 are resolved |
 
 Each trace in the model's results is a ready set-up for one of VT-1, VT-3, VT-7 to VT-13.
 
-## 11. What is unsupported or open
+## 11. What is unsupported or open (the first revision's list; section 19 is the fuller one)
 
 - The proposed guarantee is a proposal. It is not built, and nothing in this note is evidence about code.
 - The token, the mailbox's working out of COVERED, its signed status, its acceptance of the new notice kinds, and a
   guard on its clock do not exist (section 1). Every assertion that needs them is marked "no" in section 7.
-- The correction to the baseline's definition (freshness from a token, not from the receipt) is put to the owner and is
-  not made in the baseline.
+- The correction to the baseline's definition (freshness from a token, not from the receipt) is adopted by a dated
+  erratum and is not made in the baseline. It is not built and not proved (section 19).
 - The model is small: two runs, three decisions, three ticks. It does not cover a courier or a mailbox that loses its
   state, or time within a reading. Its clean result for the proposed rules is exhaustive only at those bounds.
 - The model's author also wrote the rules it checks. The variants show that its invariants can fail; they do not make
   it independent.
 - F1, F2, F4 and F5 are placed against the model and are still not re-confirmed by test.
 - The pair EFFECT with NO_EFFECT has no wording and no end-to-end test.
-- Whether a record in conflict fails the record's check is not decided.
+- A record in conflict is to fail the record's check (section 13). Nothing does that today.
 - B-1 to B-3 are unresolved, so no test here can run on a deployment that meets the contract.
 - Verdict correctness is outside everything here.
+
+## 12. Second revision: the freshness of COVERED
+
+The dated erratum `verify/AMEND16_ERRATUM_FRESHNESS_2026-11-21.md` corrects section 7 of the baseline without editing
+it. In short: the mailbox issues an unpredictable challenge before the reading; the witness signs its token back in
+the checkpoint; the courier signs the challenge, the checkpoint and its commitments together; the token is used once;
+its age is counted from its issue by the mailbox's trusted time, against a deadline the operator sets; a restart makes
+every budget NOT COVERED; a statement that arrives late is kept and never counts. A fresh receipt cannot make an old
+observation look fresh, because nothing is counted from a receipt.
+
+In the model the token is the mailbox's clock at the start of a reading and the rule is `t − token ≤ L` (variant
+`spec`). The model has no epochs, no restart, no replay, no second mailbox and no clock anomaly. Those parts of the
+erratum are specified and are checked nowhere.
+
+## 13. Second revision: two distinct signed verdict digests are a hard failure of record verification
+
+- **The rule.** Within one verdict scope (budget, run, nonce: the things a gate report signs beside its claim and
+  digest, check_record.py 157-158), if the authentic reports that claim a verdict name more than one distinct
+  (verdict, digest), the record's verification **fails**. It is not a warning and not a mark.
+- **Both reports are kept as evidence.** In the record, which already carries every report of a run with its decision
+  number. In the witness's reading, where both stay (no granted role can remove one, by test). And in the courier's
+  notice of the conflict, which carries both reports whole (983 bytes for two, calculated).
+- **A repeat is not a conflict.** The same (verdict, digest) recorded any number of times is one signed result (by
+  test: the gate host's own report sent twice).
+- **Two verdicts are a conflict.** An EFFECT report and a NO_EFFECT report in one scope fail the record, whatever
+  their digests.
+- **A report that claims UNKNOWN is not a verdict.** "Unknown now, a verdict later" is an existing course of an
+  interrupted run and is not a conflict. It is the one existing path in which a later report changes what is known of
+  a run, so its exclusion is stated here for the owner to confirm.
+- **A verdict report anywhere but at a reconcile decision.** By reading, the store keeps a report with a RELEASE
+  decision as well as with a RECONCILE (`plea_gateway/store.py` 771-779), and the courier's reading of a run does not
+  look at which decision a report sits at; the record's checker does (check_record.py 858-859). Under the count rule a
+  verdict report at any decision that is not a RECONCILE for that run makes the run not observed. Not tested.
+- **What the courier does.** The run's outcome as today, and one notice of the conflict. The conflict is an
+  observation: a reading can still be whole, and its statement of coverage commits to the notice. COVERED then means
+  the conflict is in the mailbox, not that the record is sound.
+- **Detecting equivocation is not proving correctness.** A failed record says that the gate's key signed two results
+  for one run. It does not say which is right, that the run failed, or who signed. A forgery made before the witness
+  sees anything still passes (UM6 a): one report, nothing to compare.
+- **No supersession.** No protocol exists by which one verdict lawfully replaces another, and none is assumed. If one
+  is ever wanted it needs its own property, its own validation and its own declaration. Until then every such pair
+  fails. The witness's name for the second report, VERDICT_RETRY, describes the honest case, an identical repeat, and
+  nothing more.
+
+## 14. Second revision, scaling question one: a conflict that arises after a run is final
+
+**The question.** A run is read and taken as final; later a second report with another digest is recorded for it. How
+is that seen without reading every old run again at every reading, and without reading the chain again from its start?
+
+**The mechanism: follow the chain from a cursor, and read only the runs it names.**
+
+1. The courier keeps a cursor: the last decision it verified and that decision's head. This is what `e25a297` keeps
+   already.
+2. At each reading it takes a checkpoint that names the cursor's decision and signs that decision's head back, and
+   reads the decisions after the cursor, page by page, recomputing each hash from the one before to the checkpoint's
+   head (courier.py, `checkpoint()` and `chain()` 379-397).
+3. From those decisions alone it takes the set of runs for which a RECONCILE or RELEASE decision appears. Every
+   decision carries its operation and the run it names, and the operation is under the hash (check_record.py 145-146).
+4. It asks for exactly those runs, and for the runs that are not final. A final run with no new decision is not asked
+   for.
+5. For each run asked for, the count rule and the digest rule of section 6.
+
+**Why it cannot silently miss a conflict.** Each link, with what it rests on:
+
+| Link | Rests on | How known |
+|---|---|---|
+| A report enters the witness's store only with a decision of the chain, a RELEASE or a RECONCILE, for the run it names, at that decision's number | `plea_gateway/store.py` 771-788: the store's function inserts a report only so, and only for the witness's role | code reading; and by test, every direct insert, change and removal of a report was refused for all three granted roles |
+| A second report for a final run is recorded as a decision (DUPLICATE or DENIED), not dropped | the witness's acceptance writes the decision whatever its kind | by test: recorded as DUPLICATE and as DENIED, each with its report (`commit_check.py` steps 2 and 2b), and read back through GET /chain (`visibility_check.py` V2) |
+| The courier sees every decision after its cursor, once | each decision's hash covers the one before; the checkpoint's head is signed by the witness; the cursor's own head is signed back | code reading of `e25a297`; exercised by the existing tests R25, R26, R30 in development runs |
+| A chain that was cut back or forked is refused, not followed | `checkpoint()` refuses a cursor beyond the chain (ROLLBACK); a different head for the cursor's decision is a FORK (courier.py 641-643) | code reading; existing tests in development runs |
+| A report present in the chain and absent from the answer is noticed | the count rule (section 6, step 2) | specified, not built; the absence was shown by test with the owner's password |
+| Two different digests in one answer are noticed | the digest rule (section 6, step 3) | specified, not built; the data shown by test |
+
+So a conflict can be missed only if the witness signs a chain that leaves a decision out (the baseline's stated limit:
+one consistent false chain is not caught), or the owner of the database rewrites the chain (out of scope; precondition
+DP1), or the courier's cursor is itself lost or wrong. A courier that loses its cursor starts from the beginning and
+reads everything once.
+
+**Does it work strictly over the existing, frozen read interface?** For finding every conflict, and for not reading
+old runs again: **yes**. It uses GET /checkpoint, GET /chain with `after`, and GET /run, as they are. For the size of
+the chain: **no, and it cannot**. Every decision the witness gives carries the state of every run of its budget, and
+the decision's hash is over that state, so a decision cannot be verified without it. Following the chain therefore
+costs, for each new decision, a transfer that grows with the budget (127 KB a decision at 996 runs, measured), and
+over a budget's life the total grows with the square of its runs whether it is read at once or a little at a time (508
+MB at 996 runs, measured). **Avoiding that needs a change to the witness and the store**: a reading in which a
+decision carries a digest of the state in place of the state, with the hash defined over that digest. That touches the
+frozen gateway. It is not proposed here and is not assumed. S-4 stays open.
+
+**Cost with the interface as it is.** Nothing beyond what a reading already does, plus one GET /run (0.04 to 0.06 s,
+measured) for each run that has a new RECONCILE or RELEASE decision. In honest operation those are the runs that have
+just finished.
+
+**In the model** this is the re-read rule. Without it the variant `no_reread` breaks the consistency invariant in 14
+steps.
+
+## 15. Second revision, scaling question two: does the evidence for 1,000 runs fit in 64 KiB?
+
+**No.** Calculated from the shapes the notices have today (a digest is 64 characters; sizes are of compact JSON):
+
+| What a statement of coverage would have to carry | Size | Fits in 65,536 bytes? |
+|---|---|---|
+| the digests of 1,000 notices, as a plain list | 67,001 bytes (67 each) | no, not even alone; at most about 930 beside the rest of the statement |
+| one observation record for each of 1,000 runs (run, decision observed at, outcome, digest) | 135,001 bytes (135 each) | no |
+| the challenge and the checkpoint, carried whole | 568 and 601 bytes | yes |
+| a statement with the challenge, the checkpoint, two commitments and 1,200 characters of words | 3,156 bytes | yes |
+
+A budget with a quarter of its runs failing fitted a plain list on 21 November (247 notices). A budget where every run
+fails, or where runs also carry notices of conflict or of not being read, does not.
+
+**The bounded commitment proposed.** One chain of items for each budget and each life of a courier's state:
+
+- **Items.** Everything the courier sends for a budget is an item: a notice of a run, a notice of a conflict, and the
+  observation records of a reading, sent as one or more parts of at most 64 KiB (478 records fit in a part; a reading
+  from nothing over 1,000 runs is 3 parts; a reading in steady state is one small part).
+- **The chain.** Item k carries its number k, the chain's identifier, and A(k) = H(A(k−1), digest of item k), where
+  A(0) is fixed by the budget, the courier's key and the chain's identifier. The courier signs these with the item.
+- **The statement.** It carries the chain's identifier, the number k of the last item before it, and A(k): 64
+  characters, whatever the budget's size. It also carries the count of runs, how many were observed in this reading
+  and how many were final already.
+- **Omissions are detected.** The mailbox holds what the statement commits to if and only if it holds items 1 to k of
+  that chain and recomputes A(k). A missing, altered or reordered item breaks the chain at its number. Then the budget
+  is NOT COVERED (erratum, F6).
+- **Anyone can reconstruct it.** A reader who has the items recomputes A(k) and checks each item's signature, with no
+  help from the courier or the mailbox. The observation record of a run that was final already is in the part of the
+  earlier reading that observed it, which is in the same chain.
+- **A courier that has lost its state** cannot continue a chain it does not remember. It begins a new chain with a new
+  identifier and sends everything again from a reading from nothing. A statement counts only for its own chain.
+
+This needs a new form of notice that carries the three chain fields, which `check_record` and the mailbox do not know
+today (M3). Notices of the earlier forms must keep verifying (F5). The hash chain is specified here and has been
+checked nowhere: not in the model, which names notices as a set, and not in any code.
+
+## 16. Second revision: the exact minimum changes to the mailbox for a Step 3 (none is made)
+
+Each is set against what the mailbox does today (section 1). The list is the least that the corrected definition
+needs; nothing in it is a convenience.
+
+| Id | Change | Why it is needed | Today |
+|---|---|---|---|
+| MB-1 | Issue a challenge: for a budget and a courier key, a 32-byte random token, with the epoch, a serial number, the waiting limit and the moment of issue, recorded durably and then returned signed | erratum F1, F5; without it freshness can only be counted from a receipt | no such request (M1) |
+| MB-2 | Take the new kinds: the item form with chain fields, a notice of a conflict, observation parts, a statement of coverage; refuse what it does not know | sections 13, 15; erratum F3 | refused as unreadable (M3) |
+| MB-3 | Check a statement when it arrives: the challenge is its own, of the current epoch, for this budget and key, unused; the checkpoint is signed by a witness key given, for this budget, and signs the token back; the courier's signature covers both | erratum F1 to F4. This needs the witness's public keys at the mailbox, which it does not hold today | checks a courier's signature only (M2) |
+| MB-4 | Trusted time: an epoch made at each start; elapsed time by a clock that cannot be set and counts suspension; the wall clock compared with it; a recorded anomaly when they disagree or the wall clock goes back; the larger age used | erratum T1 to T6 | the wall clock, once, unguarded (M4) |
+| MB-5 | Replay protection: a token counts once; a later statement on it is kept and not counted; tokens of earlier epochs, other budgets and other keys do not count | erratum F4 and the replay table | nothing to replay against; a notice delivered again returns its first receipt (M7) |
+| MB-6 | Fail closed: after a restart, or when its own record cannot be read, every budget it cannot answer for is NOT COVERED | erratum, restart | no state to lose, and no state to answer from (M1) |
+| MB-7 | Durable evidence: challenges, statements, items and late or refused statements written whole and synced before any answer, as notices are today; held items indexed by chain so that A(k) can be recomputed | erratum F6; section 15 | notices only, one file each (M6); a damaged copy is rewritten with a new time (M7) |
+| MB-8 | Payload limits: 64 KiB for each item stays; a statement is about 3 KB; observation records go in parts | section 15 | 64 KiB (M3) |
+| MB-9 | The deadline: set by the operator at start, carried in each challenge, changed only with a new epoch | erratum, the deadline | none (M1) |
+| MB-10 | A signed status: for a budget, COVERED to N or NOT COVERED, with the epoch and any clock anomaly | only the mailbox knows its trusted time; without this a reader uses their own clock | none; a listing is unsigned (M10) |
+
+Not in the minimum, and named so that their absence is a choice: protection of the mailbox's folder against its own
+account (M9; the baseline's A2 and DP2 must give it), a bound on connections, and any reading of the witness by the
+mailbox other than checking a checkpoint's signature.
+
+## 17. Second revision: proposed Step 3 interfaces (for approval; nothing is built)
+
+**The witness: no change.** The three readings as they are. The courier's checkpoint request carries the mailbox's
+token as its nonce and its cursor as `at`: `GET /checkpoint?root=B&nonce=TOKEN&at=K`, then `GET
+/chain?root=B&after=K&limit=200`, then `GET /run?root=B&aid=A` for the runs of section 14. No request is added, and
+the gateway is not touched.
+
+**The mailbox.**
+
+| Request | Gives | Signed by |
+|---|---|---|
+| `POST /challenge` {budget}, from an admitted courier | {CHALLENGE, mailbox, epoch, serial, budget, courier key, token, limit, issued} | the mailbox |
+| `POST /deliver` an item (as today, with the new kinds) | a receipt, meaning stored and no more | the mailbox |
+| `GET /status?root=B` | {STATUS, mailbox, epoch, budget, COVERED to N or NOT COVERED, chain, clock anomaly, wall-clock time} | the mailbox |
+| `GET /pubkey` | as today | — |
+
+**What the courier signs.**
+
+| Item | Fields beyond today's notice | True exactly when |
+|---|---|---|
+| every item (a new form) | chain identifier; number k; A(k) | A(k) = H(A(k−1), digest of this item) for this chain |
+| notice of a run's outcome | the decision at which the run's answer was received; which of the four provenance sentences applies | as section 7 |
+| notice of a conflict | the scope; both reports whole; the decisions they sit at | section 13's rule holds of the answer received |
+| observation part | for each run observed in this reading: run, decision observed at, outcome, digests; part i of n | each record is what the courier received and verified in this reading |
+| statement of coverage | the challenge and the checkpoint whole; chain identifier, k, A(k); runs, observed now, final already | erratum F1 to F6 and the baseline's O1 to O4 |
+
+**What the courier keeps.** The cursor (decision and head); for each final run, the decisions of its reports that it
+has seen; the chain's identifier, k and A(k); the challenge in hand.
+
+**The record's checker.** One added failing condition in its sixth check: more than one distinct (verdict, digest)
+among the authentic verdict reports of one scope. Nothing else in a record changes: it already carries the reports.
+
+## 18. Second revision: what the model is, and what it is not
+
+- **What was searched.** The proposed rules, variant `spec`: 4,137,699 states, searched to the end, no invariant
+  broken. Bounds: two runs (one may carry two reports of either digest, the other one honest report), three decisions,
+  the mailbox's clock at 0, 1 and 2, a waiting limit of one tick.
+- **Nine weakened variants.** Each removes or weakens one rule, and each breaks at least one invariant:
+  `no_detection`, `no_reread`, `asked_is_enough`, `no_lapse`, `receipt_time`, `carry_over`, `names_new_only`,
+  `no_count_rule`, `owner`. Their shortest traces are in the results.
+- **Searches that were cut off.** Three variants were stopped at 14,000,001 states: `carry_over`, `no_count_rule` and
+  `owner`. What they broke is real. Nothing may be said of what they did not break; in particular, that `owner` showed
+  no breach of the consistency invariant is not a finding.
+- **A first run that was killed.** A run of all variants in one process was killed for want of memory after six; its
+  output is kept. The six agree with the later run.
+- **Bounded evidence is not proof.** "No invariant broken" is true of every state of two runs, three decisions and
+  three ticks under these rules. It says nothing of three runs, of longer histories, or of anything the model leaves
+  out. A fault that needs more than the bounds would not be found.
+- **What it leaves out.** A courier that loses its state; a mailbox that restarts or loses what it holds; epochs,
+  replay, a clock anomaly, a second mailbox; the hash chain of items; time within a reading; more than one budget;
+  honest PASS runs; the order of asking. Every one of these is in the design and none is in the model.
+- **One author.** The rules, the invariants, the variants and the model were written by the same author. That the
+  invariants can fail is shown by the variants. That they are the right invariants, and that the model says what the
+  rules say, is not shown by anything independent. **This is not independent validation.**
+- **It is not the code.** A clean model says nothing about a courier or a mailbox that does not exist, and nothing in
+  this note claims that the mailbox as it is satisfies any invariant here. It does not: it has no challenge, no
+  deadline, no trusted time and no status.
+- **The 25 validation tests** of section 10 stand as they were, for an author who has not seen an implementation. Six
+  more follow from this revision, for the same author: VT-26, a token used twice, of an earlier epoch, of another
+  budget, and a statement offered to another mailbox; VT-27, the mailbox restarted, and its record made unreadable;
+  VT-28, the mailbox's wall clock set back and forward, and the machine suspended; VT-29, an item left out, changed or
+  reordered in the chain of section 15, and a budget of 1,000 failing runs; VT-30, a verdict report recorded with a
+  RELEASE decision, and an UNKNOWN followed by a verdict; VT-31, the courier's cursor against a chain cut back and a
+  chain forked, with a conflict recorded for a final run meanwhile.
+
+## 19. Second revision: unresolved assumptions and proof obligations
+
+Nothing below is settled. Each is something a Step 3 would have to show, or something the owner would have to accept
+as a limit.
+
+**Safety.**
+
+- PO-1. The token rule beyond the model's bounds, and every part of the erratum the model does not hold: single use,
+  epochs, restart, replay, the larger-age rule. Specified; checked nowhere.
+- PO-2. That a result stored as a value stays, and that a recorded report is not removed, in a deployment that meets
+  DP1 and DP3. Shown for the granted roles on the demonstration; the demonstration does not meet DP1.
+- PO-3. The second half of O3: a final run's earlier observation still stands. It rests on PO-2 and on the re-read
+  rule.
+- PO-4. The mailbox's own folder: that what it holds is not removed or changed by its account (M9). Nothing guards it.
+- PO-5. The mailbox's trusted time: that a clock exists on the mailbox's host that cannot be set and counts
+  suspension, and that the operator's tolerance is sound. Not examined on any host.
+- PO-6. That the witness's checkpoint binds the token as assumed, with a token from a mailbox. Read, not tested.
+
+**Consistency.**
+
+- PO-7. That no path records a verdict report except a RECONCILE decision, and that a report at a RELEASE decision is
+  caught by the count rule. From reading; not tested.
+- PO-8. The count rule against every kind of decision the witness records (applied, duplicate, denied, no-op) and
+  against a report whose derived label is not AUTHORISED. Specified for the cases seen; the others are not enumerated
+  by test.
+- PO-9. The exclusion of UNKNOWN from the conflict rule: that "unknown now, a verdict later" cannot be used to replace
+  a verdict. Not examined.
+- PO-10. The hash chain of items: that it detects every omission and that a new chain after a loss of state cannot be
+  used to drop an item unseen. Specified; not modelled.
+- PO-11. A forgery before the witness sees anything is not detected by anything here (UM6 a). This is a limit, not an
+  obligation that can be met in this path.
+
+**Liveness.**
+
+- PO-12. None is promised. The service can keep a budget NOT COVERED for as long as it likes (R1, R2; F1, F2).
+- PO-13. That a deadline exists which honest operation meets: the reading and its delivery inside L, including a
+  reading from nothing after a loss of state, whose chain transfer grows with the square of the budget (S-4). Measured
+  only at up to 996 runs on one machine.
+- PO-14. A mailbox restart makes every budget NOT COVERED until each courier reads again. How long that lasts in
+  operation is not measured.
+- PO-15. Runs that never reach a final phase are asked for at every reading for ever (D-h). Their rate in operation is
+  not known.
+
+**Deployment.**
+
+- PO-16. B-1 (database credentials in the repository), B-2 (one operating-system account), B-3 (custody of the gate's
+  key) are unresolved. No test can run on a deployment that meets the contract until B-1 and B-2 are.
+- PO-17. The mailbox must hold the witness's public keys (MB-3) and be run by someone other than the service (A2).
+  Neither is so in the demonstration.
+- PO-18. S-3 (connection exhaustion) and S-4 (quadratic growth) are open operational risks, carried and not prevented.
+- PO-19. F1, F2, F4 and F5 of the eighth review are placed against the model and are still not re-confirmed by test.

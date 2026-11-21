@@ -3,6 +3,11 @@
 21 November 2026. Private working material. Internal work under the owner's direction. It is not an independent
 validation and not a declaration. Nothing is repaired by it. The frozen gateway is unchanged.
 
+**Correction, 21 November 2026 (later the same day).** The paragraph below is wrong and is kept as written. The second edition
+of the review pack (20 November 2026), which holds D1 to D50, was in the session's working files; the search made for this
+file did not look in its folder. It has since been found and is the source of `verify/DEFECT_REGISTER.md`, a draft on this
+branch, which also carries the entries below.
+
 **Where the permanent register is.** It is not a file in this repository. The last issued register that can be found is
 the one in the review pack of 15 November 2026, which holds D1 to D33 and was built outside the repository. The property
 file of Amendment 16 speaks of D46 to D50 "in the defect register"; no register file holding D34 to D50 was found on any
