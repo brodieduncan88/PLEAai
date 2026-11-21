@@ -1,0 +1,426 @@
+{
+ "when": "2026-11-21T20:18:46Z",
+ "database": "plea26",
+ "source": "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/diag2/src",
+ "steps": [
+  {
+   "step": "S0. the genuine PASS reports an honest gate host signed (the service holds them; it holds no gate key in CAP-DB)",
+   "at": "20:18:50Z",
+   "same_budget_other_attempt": {
+    "run": "a-6f0862fed02c",
+    "client told": "DECLARED CHECK MET",
+    "stored verdict": "PASS"
+   },
+   "other_budget": {
+    "run": "a-894c7589034d",
+    "client told": "DECLARED CHECK MET",
+    "stored verdict": "PASS",
+    "budgets differ": true
+   }
+  },
+  {
+   "step": "S1. CAP-DB: a genuine PASS report replayed onto a run whose honest gate host signed FAIL, the FAIL result withheld, the other run's PASS result stored",
+   "at": "20:18:53Z",
+   "table": [
+    {
+     "replayed": "a genuine PASS report of another attempt of this budget, sent with RECONCILE",
+     "the failing run": "a-b9071bcf0ec8",
+     "client was told": "FAIL: REQUIREMENT NOT MET",
+     "witness answer [status, kind, code, label]": [
+      200,
+      "DENIED",
+      "VERDICT_IS_FINAL",
+      "WRONG_BINDING"
+     ],
+     "reports the reading now gives": [
+      [
+       16,
+       "EFFECT",
+       "f3929daa4c",
+       "AUTHORISED",
+       [
+        "this budget",
+        "this run",
+        "this nonce"
+       ],
+       "COUNTS for this run"
+      ],
+      [
+       17,
+       "EFFECT",
+       "9009a7a26f",
+       "WRONG_BINDING",
+       [
+        "this budget",
+        "ANOTHER run",
+        "ANOTHER nonce"
+       ],
+       "does not count"
+      ]
+     ],
+     "e25a297 outcome while the result is withheld": "UNVERIFIED",
+     "storing the PASS result of the other run": "accepted",
+     "e25a297 outcome with that PASS result stored": "UNVERIFIED",
+     "reads PASS": false,
+     "courier": {
+      "exit": 0,
+      "made": []
+     }
+    },
+    {
+     "replayed": "the same, sent with RELEASE",
+     "the failing run": "a-f8ad57cda55b",
+     "client was told": "FAIL: REQUIREMENT NOT MET",
+     "witness answer [status, kind, code, label]": [
+      200,
+      "DENIED",
+      "CONSUMPTION_IS_FINAL",
+      "NONE"
+     ],
+     "reports the reading now gives": [
+      [
+       25,
+       "EFFECT",
+       "cc758b9917",
+       "AUTHORISED",
+       [
+        "this budget",
+        "this run",
+        "this nonce"
+       ],
+       "COUNTS for this run"
+      ],
+      [
+       26,
+       "EFFECT",
+       "9009a7a26f",
+       "NONE",
+       [
+        "this budget",
+        "ANOTHER run",
+        "ANOTHER nonce"
+       ],
+       "does not count"
+      ]
+     ],
+     "e25a297 outcome while the result is withheld": "UNVERIFIED",
+     "storing the PASS result of the other run": "accepted",
+     "e25a297 outcome with that PASS result stored": "UNVERIFIED",
+     "reads PASS": false,
+     "courier": {
+      "exit": 0,
+      "made": []
+     }
+    },
+    {
+     "replayed": "a genuine PASS report of another budget, sent with RECONCILE",
+     "the failing run": "a-36b8358e4ceb",
+     "client was told": "FAIL: REQUIREMENT NOT MET",
+     "witness answer [status, kind, code, label]": [
+      200,
+      "DENIED",
+      "VERDICT_IS_FINAL",
+      "WRONG_BINDING"
+     ],
+     "reports the reading now gives": [
+      [
+       34,
+       "EFFECT",
+       "471771ef0d",
+       "AUTHORISED",
+       [
+        "this budget",
+        "this run",
+        "this nonce"
+       ],
+       "COUNTS for this run"
+      ],
+      [
+       35,
+       "EFFECT",
+       "d5da7bdfd3",
+       "WRONG_BINDING",
+       [
+        "ANOTHER budget",
+        "ANOTHER run",
+        "ANOTHER nonce"
+       ],
+       "does not count"
+      ]
+     ],
+     "e25a297 outcome while the result is withheld": "UNVERIFIED",
+     "storing the PASS result of the other run": "accepted",
+     "e25a297 outcome with that PASS result stored": "UNVERIFIED",
+     "reads PASS": false,
+     "courier": {
+      "exit": 0,
+      "made": []
+     }
+    },
+    {
+     "replayed": "the same, sent with RELEASE",
+     "the failing run": "a-942ac1d8f532",
+     "client was told": "FAIL: REQUIREMENT NOT MET",
+     "witness answer [status, kind, code, label]": [
+      200,
+      "DENIED",
+      "CONSUMPTION_IS_FINAL",
+      "NONE"
+     ],
+     "reports the reading now gives": [
+      [
+       43,
+       "EFFECT",
+       "a5992f63bf",
+       "AUTHORISED",
+       [
+        "this budget",
+        "this run",
+        "this nonce"
+       ],
+       "COUNTS for this run"
+      ],
+      [
+       44,
+       "EFFECT",
+       "d5da7bdfd3",
+       "NONE",
+       [
+        "ANOTHER budget",
+        "ANOTHER run",
+        "ANOTHER nonce"
+       ],
+       "does not count"
+      ]
+     ],
+     "e25a297 outcome while the result is withheld": "UNVERIFIED",
+     "storing the PASS result of the other run": "accepted",
+     "e25a297 outcome with that PASS result stored": "UNVERIFIED",
+     "reads PASS": false,
+     "courier": {
+      "exit": 0,
+      "made": []
+     }
+    }
+   ],
+   "any_reads_PASS": false
+  },
+  {
+   "step": "S2. CAP-DB: the same replay made before the failing run's START",
+   "at": "20:18:54Z",
+   "answers": {
+    "RELEASE": [
+     200,
+     "DENIED",
+     "NO_BOUND_FENCING_EVIDENCE",
+     "NONE"
+    ],
+    "RECONCILE": [
+     200,
+     "DENIED",
+     "NOT_CONSUMED",
+     "WRONG_BINDING"
+    ]
+   },
+   "client_was_told": "FAIL: REQUIREMENT NOT MET",
+   "reports": [
+    [
+     48,
+     "EFFECT",
+     "9009a7a26f",
+     "NONE",
+     [
+      "this budget",
+      "ANOTHER run",
+      "ANOTHER nonce"
+     ],
+     "does not count"
+    ],
+    [
+     49,
+     "EFFECT",
+     "9009a7a26f",
+     "WRONG_BINDING",
+     [
+      "this budget",
+      "ANOTHER run",
+      "ANOTHER nonce"
+     ],
+     "does not count"
+    ],
+    [
+     54,
+     "EFFECT",
+     "327d5c9610",
+     "AUTHORISED",
+     [
+      "this budget",
+      "this run",
+      "this nonce"
+     ],
+     "COUNTS for this run"
+    ]
+   ],
+   "e25a297_outcome_with_the_PASS_result_stored": "UNVERIFIED",
+   "courier": {
+    "exit": 0,
+    "made": []
+   }
+  },
+  {
+   "step": "S3. CAP-DB: an attempt made in the OTHER budget with the same run name and nonce as the genuine PASS report, and that report sent to it",
+   "at": "20:18:55Z",
+   "steps": [
+    [
+     "RESERVE",
+     "APPLIED",
+     "RESERVATION_COMMITTED"
+    ],
+    [
+     "ACCEPT_RESERVATION",
+     [
+      "APPLIED",
+      "RESERVATION_ACCEPTED"
+     ]
+    ],
+    [
+     "TOKEN",
+     "APPLIED",
+     "TOKEN_RELEASED"
+    ],
+    [
+     "START",
+     "APPLIED",
+     "INTENT_COMMITTED_LOCALLY"
+    ],
+    [
+     "ACCEPT_INTENT",
+     [
+      "APPLIED",
+      "INTENT_ACCEPTED"
+     ]
+    ]
+   ],
+   "witness_answer": [
+    200,
+    "DENIED",
+    "VERDICT_NOT_AUTHORISED",
+    "WRONG_BINDING"
+   ],
+   "phase": "CONSUMED",
+   "reports": [
+    [
+     14,
+     "EFFECT",
+     "WRONG_BINDING",
+     [
+      "ANOTHER budget",
+      "this run",
+      "this nonce"
+     ],
+     "does not count"
+    ]
+   ],
+   "e25a297_outcome_given_the_PASS_result": "NO_OUTCOME"
+  },
+  {
+   "step": "S4. CAP-DB: the honest gate host asked again for the failing run, and asked to run a passing design under the failing run's name",
+   "at": "20:18:55Z",
+   "client_was_told": "FAIL: REQUIREMENT NOT MET",
+   "asked_again": {
+    "repeat": true,
+    "the same report, byte for byte": true,
+    "claim": "EFFECT"
+   },
+   "the_same_report_sent_to_the_witness_again": [
+    200,
+    "DUPLICATE",
+    "VERDICT_RETRY",
+    "AUTHORISED"
+   ],
+   "a_passing_design_with_the_failing_run_s_nonce_and_receipts": {
+    "answered": false,
+    "refusal": "GateRefused: 403: {\"error\": \"the nonce does not bind this executor, tool and arguments\"}"
+   },
+   "a_passing_design_with_its_own_nonce_and_the_failing_run_s_receipts": {
+    "answered": false,
+    "refusal": "GateRefused: 403: {\"error\": \"receipt invalid: the witness did not accept this nonce for this attempt\"}"
+   },
+   "a_passing_design_with_its_own_nonce_and_its_own_run_s_receipts": {
+    "answered": false,
+    "refusal": "GateRefused: 403: {\"error\": \"receipt invalid: receipt is for another root or attempt\"}"
+   }
+  },
+  {
+   "step": "S5. CAP-KEY (control): a report signed with the gate's key over a forged PASS result for the failing run itself, sent with RELEASE; the forged result stored",
+   "at": "20:18:56Z",
+   "client_was_told": "FAIL: REQUIREMENT NOT MET",
+   "witness_answer": [
+    200,
+    "DENIED",
+    "CONSUMPTION_IS_FINAL",
+    "NONE"
+   ],
+   "reports": [
+    [
+     71,
+     "EFFECT",
+     "e21d431fef",
+     "AUTHORISED",
+     "COUNTS for this run"
+    ],
+    [
+     72,
+     "EFFECT",
+     "9e94c90ff7",
+     "NONE",
+     "COUNTS for this run"
+    ]
+   ],
+   "e25a297_outcome": "PASS",
+   "courier": {
+    "exit": 0,
+    "made": []
+   }
+  },
+  {
+   "step": "S6. a courier that waits no longer for a stored result (waiting time 0), over the whole budget: what it makes for each run",
+   "at": "20:18:57Z",
+   "made": [
+    [
+     "a-b9071bcf0e",
+     "UNVERIFIED",
+     "CAP-DB replay"
+    ],
+    [
+     "a-f8ad57cda5",
+     "UNVERIFIED",
+     "CAP-DB replay"
+    ],
+    [
+     "a-36b8358e4c",
+     "UNVERIFIED",
+     "CAP-DB replay"
+    ],
+    [
+     "a-942ac1d8f5",
+     "UNVERIFIED",
+     "CAP-DB replay"
+    ],
+    [
+     "a-7e5acd64b3",
+     "UNVERIFIED",
+     "another run of this test"
+    ],
+    [
+     "a-66f7f44d7d",
+     "UNVERIFIED",
+     "another run of this test"
+    ]
+   ],
+   "the_CAP_KEY_run_has_a_notice": false,
+   "every_CAP_DB_replay_run_has_a_notice": true
+  }
+ ],
+ "finished": "2026-11-21T20:18:57Z"
+}

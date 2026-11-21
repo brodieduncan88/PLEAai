@@ -1,0 +1,31 @@
+--- S0. the genuine PASS reports an honest gate host signed (the service holds them; it holds no gate key in CAP-DB)  [20:18:14Z]
+    same_budget_other_attempt: {"run": "a-906f5e35b458", "client told": "DECLARED CHECK MET", "stored verdict": "PASS"}
+    other_budget: {"run": "a-83a78bfca0a1", "client told": "DECLARED CHECK MET", "stored verdict": "PASS", "budgets differ": true}
+--- S1. CAP-DB: a genuine PASS report replayed onto a run whose honest gate host signed FAIL, the FAIL result withheld, the other run's PASS result stored  [20:18:18Z]
+    table: [{"replayed": "a genuine PASS report of another attempt of this budget, sent with RECONCILE", "the failing run": "a-2993b569f157", "client was told": "FAIL: REQUIREMENT NOT MET", "witness answer [status, kind, code, label]": [200, "DENIED", "VERDICT_IS_FINAL", "WRONG_BINDING"], "reports the reading now gives": [[16, "EFFECT", "e4e938fe42", "AUTHORISED", ["this budget", "this run", "this nonce"], "COUNTS for this run"], [17, "EFFECT", "c87feb4968", "WRONG_BINDING", ["this budget", "ANOTHER run", "ANOTHER nonce"], "does not count"]], "e25a297 outcome while the result is withheld": "UNVERIFIED", "storing the PASS result of the other run": "accepted", "e25a297 outcome with that PASS result stored": "UNVERIFIED", "reads PASS": false, "courier": {"exit": 0, "made": []}}, {"replayed": "the same, sent with RELEASE", "the failing run": "a-88543bd31568", "client was told": "FAIL: REQUIREMENT NOT MET", "witness answer [status, kind, code, label]": [200, "DENIED", "CONSUMPTION_IS_FINAL", "NONE"], "reports the reading now gives": [[25, "EFFECT", "254614091c", "AUTHORISED", ["this budget", "this run", "this nonce"], "COUNTS for this run"], [26, "EFFECT", "c87feb4968", "NONE", ["this budget", "ANOTHER run", "ANOTHER nonce"], "does not count"]], "e25a297 outcome while the result is withheld": "UNVERIFIED", "storing the PASS result of the other run": "accepted", "e25a297 outcome with that PASS result stored": "UNVERIFIED", "reads PASS": false, "courier": {"exit": 0, "made": []}}, {"replayed":
+    any_reads_PASS: false
+--- S2. CAP-DB: the same replay made before the failing run's START  [20:18:19Z]
+    answers: {"RELEASE": [200, "DENIED", "NO_BOUND_FENCING_EVIDENCE", "NONE"], "RECONCILE": [200, "DENIED", "NOT_CONSUMED", "WRONG_BINDING"]}
+    client_was_told: "FAIL: REQUIREMENT NOT MET"
+    reports: [[48, "EFFECT", "c87feb4968", "NONE", ["this budget", "ANOTHER run", "ANOTHER nonce"], "does not count"], [49, "EFFECT", "c87feb4968", "WRONG_BINDING", ["this budget", "ANOTHER run", "ANOTHER nonce"], "does not count"], [54, "EFFECT", "2b5b6984e2", "AUTHORISED", ["this budget", "this run", "this nonce"], "COUNTS for this run"]]
+    e25a297_outcome_with_the_PASS_result_stored: "UNVERIFIED"
+    courier: {"exit": 0, "made": []}
+--- S3. CAP-DB: an attempt made in the OTHER budget with the same run name and nonce as the genuine PASS report, and that report sent to it  [20:18:20Z]
+    steps: [["RESERVE", "APPLIED", "RESERVATION_COMMITTED"], ["ACCEPT_RESERVATION", ["APPLIED", "RESERVATION_ACCEPTED"]], ["TOKEN", "APPLIED", "TOKEN_RELEASED"], ["START", "APPLIED", "INTENT_COMMITTED_LOCALLY"], ["ACCEPT_INTENT", ["APPLIED", "INTENT_ACCEPTED"]]]
+    witness_answer: [200, "DENIED", "VERDICT_NOT_AUTHORISED", "WRONG_BINDING"]
+    phase: "CONSUMED"
+    reports: [[14, "EFFECT", "WRONG_BINDING", ["ANOTHER budget", "this run", "this nonce"], "does not count"]]
+    e25a297_outcome_given_the_PASS_result: "NO_OUTCOME"
+--- S4. CAP-DB: the honest gate host asked again for the failing run, and asked to run a passing design under the failing run's name  [20:18:20Z]
+    client_was_told: "FAIL: REQUIREMENT NOT MET"
+    asked_again: {"repeat": true, "the same report, byte for byte": true, "claim": "EFFECT"}
+    the_same_report_sent_to_the_witness_again: [200, "DUPLICATE", "VERDICT_RETRY", "AUTHORISED"]
+    a_passing_design_with_the_failing_run_s_nonce_and_receipts: {"answered": false, "refusal": "GateRefused: 403: {\"error\": \"the nonce does not bind this executor, tool and arguments\"}"}
+    a_passing_design_with_its_own_nonce_and_the_failing_run_s_receipts: {"answered": false, "refusal": "GateRefused: 403: {\"error\": \"receipt invalid: the witness did not accept this nonce for this attempt\"}"}
+    a_passing_design_with_its_own_nonce_and_its_own_run_s_receipts: {"answered": false, "refusal": "GateRefused: 403: {\"error\": \"receipt invalid: receipt is for another root or attempt\"}"}
+--- S5. CAP-KEY (control): a report signed with the gate's key over a forged PASS result for the failing run itself, sent with RELEASE; the forged result stored  [20:18:22Z]
+    client_was_told: "FAIL: REQUIREMENT NOT MET"
+    witness_answer: [200, "DENIED", "CONSUMPTION_IS_FINAL", "NONE"]
+    reports: [[71, "EFFECT", "3264b93653", "AUTHORISED", "COUNTS for this run"], [72, "EFFECT", "dfbf3b8a45", "NONE", "COUNTS for this run"]]
+    e25a297_outcome: "PASS"
+    courier: {"exit": 0, "made": []}
