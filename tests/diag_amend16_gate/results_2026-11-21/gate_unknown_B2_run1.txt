@@ -1,0 +1,29 @@
+--- B2a. the first gate host is stalled (SIGSTOP) while the check is running  [18:24:10Z]
+    seconds_from_the_call_to_the_stall: 0.006
+    host_row: ["running", "e7c3d6e60779", 0]
+    state_owner: ["e7c3d6e60779", 1]
+    view: {"phase": "CONSUMED", "reports the reading gives": [], "e25a297 run_outcome": "NO_OUTCOME", "set D of distinct verdict pairs": [], "conflict": false, "an UNKNOWN report beside a verdict report": false}
+--- B2b. a second gate host, same key and same state file, is started on another port after the lease has run out  [18:24:11Z]
+    second_host_exit_status: null
+    host_row: ["interrupted", "e7c3d6e60779", 0]
+    state_owner: ["e6000038aed9", 2]
+    log_tail: "73da9a8afff130780ba8552ac91e968a35c1dbf\", \"tools\": [\"verify\"], \"witness_keys\": [\"28f4d156206d74cc4800cbcbb89ebcf64920557ad7c1c7b17912c71294c9a58e\"], \"tls\": true, \"tls_allow\": [\"governor\"], \"instance\": \"e6000038aed9\", \"previous_owner\": \"e7c3d6e60779\", \"interrupted\": 1, \"lease\": 1.0, \"generation\": 2}\n"
+--- B2c. the second host is asked for the run, as a governor that tries again would ask; its report is sent to the witness  [18:24:12Z]
+    second_host_answered: {"verdict": "UNKNOWN", "repeat": true, "result": {"error": "interrupted: the host stopped while this attempt was running; its effect is unknown"}, "report claim": "UNKNOWN", "report digest": "6493a0d1", "signed by the gate key for this run": true}
+    the_witness_answered: {"status": 200, "kind": "NOOP", "code": "VERDICT_UNKNOWN_STAYS_CHARGED", "seq": 8, "applied": ["RECONCILE", "a-d42f47e675f73ef7", "UNKNOWN", "AUTHORISED"], "error": null}
+    view: {"phase": "CONSUMED", "reports the reading gives": [[8, "UNKNOWN", "6493a0d1", "authentic", ["UNKNOWN", "AUTHORISED", "NOOP", "VERDICT_UNKNOWN_STAYS_CHARGED"]]], "e25a297 run_outcome": "INTERRUPTED", "set D of distinct verdict pairs": [], "conflict": false, "an UNKNOWN report beside a verdict report": false}
+    stored_result: null
+    courier: {"exit": 0, "made": [["a-d42f47e675", "INTERRUPTED"]]}
+--- B2d. the first host is let go on (SIGCONT), 2.2 s after it was stalled  [18:24:12Z]
+    first_client_thread_ended: true
+    first_client_was_told: "FAIL: REQUIREMENT NOT MET"
+    host_row: {"status": "ran", "report claim": "EFFECT", "report digest": "8ff33af3", "prior report claim": "UNKNOWN", "prior report digest": "6493a0d1"}
+    view: {"phase": "EFFECT", "reports the reading gives": [[8, "UNKNOWN", "6493a0d1", "authentic", ["UNKNOWN", "AUTHORISED", "NOOP", "VERDICT_UNKNOWN_STAYS_CHARGED"]], [9, "EFFECT", "8ff33af3", "authentic", ["EFFECT", "AUTHORISED", "APPLIED", "VERDICT_RECORDED"]]], "e25a297 run_outcome": "FAIL", "set D of distinct verdict pairs": [["EFFECT", "8ff33af396c4bab1"]], "conflict": false, "an UNKNOWN report beside a verdict report": true}
+    stored_result: {"nonce": "n-5091f0b31c88b000d34d8467885dcc7da136491b", "value": {"verdict": "FAIL"}, "outcome": "value"}
+--- B2e. the second host asked again for the run  [18:24:12Z]
+    answered: {"verdict": "EFFECT", "repeat": true, "report claim": "EFFECT", "report digest": "8ff33af3", "prior report claim": "UNKNOWN"}
+--- B2f. the UNKNOWN report arrives at the witness once more, after the verdict (a late copy)  [18:24:12Z]
+    the_witness_answered: {"status": 200, "kind": "DENIED", "code": "VERDICT_IS_FINAL", "seq": 10, "applied": ["RECONCILE", "a-d42f47e675f73ef7", "UNKNOWN", "AUTHORISED"], "error": null}
+    view: {"phase": "EFFECT", "reports the reading gives": [[8, "UNKNOWN", "6493a0d1", "authentic", ["UNKNOWN", "AUTHORISED", "NOOP", "VERDICT_UNKNOWN_STAYS_CHARGED"]], [9, "EFFECT", "8ff33af3", "authentic", ["EFFECT", "AUTHORISED", "APPLIED", "VERDICT_RECORDED"]], [10, "UNKNOWN", "6493a0d1", "authentic", ["UNKNOWN", "AUTHORISED", "DENIED", "VERDICT_IS_FINAL"]]], "e25a297 run_outcome": "FAIL", "set D of distinct verdict pairs": [["EFFECT", "8ff33af396c4bab1"]], "conflict": false, "an UNKNOWN report beside a verdict report": true}
+    courier: {"exit": 0, "made": [["a-d42f47e675", "FAIL"]]}
+    record: {"record verifies at e25a297": true, "checks that fail": [], "outcome the record gives the run": "FAIL", "reports the record carries for the run": [[8, "UNKNOWN", "6493a0d1"], [9, "EFFECT", "8ff33af3"], [10, "UNKNOWN", "6493a0d1"]]}

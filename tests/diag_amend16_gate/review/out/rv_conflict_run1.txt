@@ -1,0 +1,27 @@
+--- R1. a FAIL committed (stored as a value) and noticed; then four more gate-signed reports for the run, and a late UNKNOWN  [18:43:05Z]
+    first_courier_pass: {"exit": 0, "made": [["a-53904a87a80d", "FAIL"]]}
+    courier_state_after_first: {"seq": null, "final": null, "sent": null}
+    re_signed_signature_verifies: true
+    re_signed_differs_in_bytes: true
+    sends: [["forged PASS EFFECT via RECONCILE", [200, "DUPLICATE", "VERDICT_RETRY", "AUTHORISED"]], ["another forged EFFECT via RELEASE", [200, "DENIED", "CONSUMPTION_IS_FINAL", "NONE"]], ["NO_EFFECT via RECONCILE", [200, "DENIED", "VERDICT_IS_FINAL", "AUTHORISED"]], ["the honest FAIL report re-signed with another r (same claim, same digest, other signature bytes)", [200, "DUPLICATE", "VERDICT_RETRY", "AUTHORISED"]], ["UNKNOWN via RECONCILE after the verdict", [200, "DENIED", "VERDICT_IS_FINAL", "AUTHORISED"]]]
+    reading_after: [[8, "EFFECT", "ca0bf26cb75e", "1bb66b096695", "AUTHORISED"], [9, "EFFECT", "3670055b7bff", "fcb0d1600624", "AUTHORISED"], [10, "EFFECT", "a019bd817747", "59ae8cc2987a", "NONE"], [11, "NO_EFFECT", "74234e98afe7", "f7b108e5f576", "AUTHORISED"], [12, "EFFECT", "ca0bf26cb75e", "a09a3a8964d7", "AUTHORISED"], [13, "UNKNOWN", "3f32c1dcd716", "1cca98c392e8", "AUTHORISED"]]
+    chain_rows_after_courier_cursor_naming_run: [[9, "RECONCILE", "EFFECT", "AUTHORISED", "DUPLICATE", "VERDICT_RETRY"], [10, "RELEASE", "NONE", "DENIED", "CONSUMPTION_IS_FINAL"], [11, "RECONCILE", "NO_EFFECT", "AUTHORISED", "DENIED", "VERDICT_IS_FINAL"], [12, "RECONCILE", "EFFECT", "AUTHORISED", "DUPLICATE", "VERDICT_RETRY"], [13, "RECONCILE", "UNKNOWN", "AUTHORISED", "DENIED", "VERDICT_IS_FINAL"]]
+    chain_observation_entry_changed_after_cursor: false
+    second_courier_pass: {"exit": 0, "made": []}
+    courier_state_after_second: {"seq": null, "final": null, "sent": null}
+    e25a297_run_outcome_now: "FAIL"
+    REVIEWER_pairs: [["EFFECT", "3670055b7bff17a90dfcd23e78572c0cdbcc5031aa1f28452c899bfcb28eba2f"], ["EFFECT", "a019bd8177476ffa67187a74deb791b7bfa38fad0cebb8c61bbb75bbdc799c9a"], ["EFFECT", "ca0bf26cb75ee3a93b71add86e383207ec200ad844dd7c92d2c2ad7fbe3136f9"], ["NO_EFFECT", "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"]]
+    REVIEWER_bytes_count: 5
+    record_verifies_e25a297: false
+    record_failures: ["6 gate reports and re-derived verdicts: a-53904a87a80dfd75 gate report at 10: not recorded with a reconcile decision for this attempt"]
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/gate/review/rv_conflict.py", line 138, in <module>
+    y, line_y, held_y = withheld_submit(BADD)
+                        ^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/gate/review/rv_conflict.py", line 105, in withheld_submit
+    before = b.attempts(); code, out = client.submit(design); return b.newest(before), VT.head(out), held[0]
+                                                                     ^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/gate/review/rv_common.py", line 68, in newest
+    new = [a for a in self.attempts() if a['aid'] not in {b['aid'] for b in before}]; assert len(new) == 1, new; return new[0]
+                                                                                             ^^^^^^^^^^^^^
+AssertionError: []

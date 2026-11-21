@@ -1,0 +1,15 @@
+--- B3. every sequence of 1 to 4 gate-signed reports for one run, from two UNKNOWN reports (Ua, Ub), two EFFECT reports (E1 a FAIL result, E2 a PASS result) and a NO_EFFECT report (N)  [18:31:48Z]
+    sequences: 780
+    seconds: 365.8
+    decisions_in_the_chain: 6830
+    sequences_where_a_report_was_lost_reordered_or_the_phase_was_not_the_first_verdict: 0
+    those: []
+    sequences_with_more_than_one_distinct_verdict_pair_sent: 480
+    of_which_the_rule_finds_a_conflict: 480
+    sequences_with_at_most_one_verdict_pair_sent: 300
+    of_which_the_rule_finds_a_conflict_falsely: 0
+    sequences_with_UNKNOWN_beside_exactly_one_verdict_pair: 258
+    sequences_with_UNKNOWN_beside_a_conflict: 372
+    transitions_seen: {"UNKNOWN only + UNKNOWN": [["NOOP", "VERDICT_UNKNOWN_STAYS_CHARGED"]], "UNKNOWN only + the first verdict": [["APPLIED", "VERDICT_RECORDED"]], "a verdict recorded + UNKNOWN": [["DENIED", "VERDICT_IS_FINAL"]], "a verdict recorded + another verdict": [["DENIED", "VERDICT_IS_FINAL"], ["DUPLICATE", "VERDICT_RETRY"]], "a verdict recorded + the recorded verdict again": [["DUPLICATE", "VERDICT_RETRY"]], "no report yet + UNKNOWN": [["NOOP", "VERDICT_UNKNOWN_STAYS_CHARGED"]], "no report yet + the first verdict": [["APPLIED", "VERDICT_RECORDED"]]}
+    recorded_FAIL_first_yet_e25a297_reads_PASS_when_the_PASS_result_is_stored: 95
+    examples: ["E1 E2", "Ua E1 E2", "Ub E1 E2", "E1 Ua E2", "E1 Ub E2", "E1 E1 E2", "E1 E2 Ua", "E1 E2 Ub"]

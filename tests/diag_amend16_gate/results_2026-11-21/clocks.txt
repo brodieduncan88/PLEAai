@@ -1,0 +1,19 @@
+kernel 6.18.44-fc-v726 | python 3.11.17
+CLOCK_REALTIME: id 0; now 1795284676.121 s; resolution 0.000000001 s
+CLOCK_MONOTONIC: id 1; now 618.840 s; resolution 0.000000001 s
+CLOCK_MONOTONIC_RAW: id 4; now 618.552 s; resolution 0.000000001 s
+CLOCK_BOOTTIME: id 7; now 618.840 s; resolution 0.000000001 s
+CLOCK_TAI: id 11; now 1795284676.121 s; resolution 0.000000001 s
+CLOCK_BOOTTIME minus CLOCK_MONOTONIC now: 0.000000 s (time this machine has spent suspended since boot, as the kernel counts it)
+time.monotonic() uses: namespace(implementation='clock_gettime(CLOCK_MONOTONIC)', monotonic=True, adjustable=False, resolution=1e-09)
+uptime from /proc/uptime: 618.83 s
+setting CLOCK_BOOTTIME is refused: OSError [Errno 22] Invalid argument
+setting CLOCK_MONOTONIC is refused: OSError [Errno 22] Invalid argument
+running as uid 0 (root can set CLOCK_REALTIME; that was not tried, so as not to disturb the machine)
+virtualisation: unknown | 9:name=systemd:/
+8:pids:/
+7:blkio:/
+6:freezer:/
+5:devices:/
+4:memory:/
+3:cpuset:

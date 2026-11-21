@@ -1,0 +1,21 @@
+[
+ {
+  "rule": "as_written",
+  "states": 598,
+  "SOUND broken": true,
+  "shortest trace": [
+   "courier: reading, makes ['INTERRUPTED_A']",
+   "witness: run A gets its verdict",
+   "courier: delivers (0, 1, 'INTERRUPTED_A')",
+   "courier: loses its state; new chain",
+   "courier: reading, makes []",
+   "courier: statement for chain 1 at k=0"
+  ]
+ },
+ {
+  "rule": "from_witness",
+  "states": 1443,
+  "SOUND broken": false,
+  "shortest trace": []
+ }
+]

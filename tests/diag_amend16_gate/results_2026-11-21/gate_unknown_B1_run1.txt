@@ -1,0 +1,25 @@
+--- B1a. a run is cut off: the gate host process ends while the check is running  [18:23:46Z]
+    client_was_told: "The verification service could not be reached (RemoteDisconnected).  NOT VERIFIED.  The run may be pending; ask again."
+    gate_host_exit_status: 137
+    view: {"phase": "CONSUMED", "reports the reading gives": [], "e25a297 run_outcome": "NO_OUTCOME", "set D of distinct verdict pairs": [], "conflict": false, "an UNKNOWN report beside a verdict report": false}
+    stored_result: null
+    courier: {"exit": 0, "made": []}
+--- B1b. the gate host is started again and the same design is sent again  [18:23:48Z]
+    client_was_told: "UNKNOWN: THE RUN WAS INTERRUPTED"
+    view: {"phase": "CONSUMED", "reports the reading gives": [[15, "UNKNOWN", "6493a0d1", "authentic", ["UNKNOWN", "AUTHORISED", "NOOP", "VERDICT_UNKNOWN_STAYS_CHARGED"]]], "e25a297 run_outcome": "INTERRUPTED", "set D of distinct verdict pairs": [], "conflict": false, "an UNKNOWN report beside a verdict report": false}
+    stored_result: {"nonce": "n-20a45b503b596b17b765a008d89e115695c37315", "detail": "tool outcome unknown at the gate host: {'error': 'interrupted: the host stopped while this attempt was running; its effect is unknown'}", "outcome": "unknown"}
+    courier: {"exit": 0, "made": [["a-0d7dde2187", "INTERRUPTED"]]}
+--- B1c. the same design a third time  [18:23:49Z]
+    client_was_told: "UNKNOWN: THE RUN WAS INTERRUPTED"
+    view: {"phase": "CONSUMED", "reports the reading gives": [[15, "UNKNOWN", "6493a0d1", "authentic", ["UNKNOWN", "AUTHORISED", "NOOP", "VERDICT_UNKNOWN_STAYS_CHARGED"]], [16, "UNKNOWN", "6493a0d1", "authentic", ["UNKNOWN", "AUTHORISED", "NOOP", "VERDICT_UNKNOWN_STAYS_CHARGED"]]], "e25a297 run_outcome": "INTERRUPTED", "set D of distinct verdict pairs": [], "conflict": false, "an UNKNOWN report beside a verdict report": false}
+    stored_result: {"nonce": "n-20a45b503b596b17b765a008d89e115695c37315", "detail": "tool outcome unknown at the gate host: {'error': 'interrupted: the host stopped while this attempt was running; its effect is unknown'}", "outcome": "unknown"}
+    courier: {"exit": 0, "made": []}
+    record: {"record verifies at e25a297": true, "checks that fail": [], "outcome the record gives the run": "INTERRUPTED", "reports the record carries for the run": [[15, "UNKNOWN", "6493a0d1"], [16, "UNKNOWN", "6493a0d1"]]}
+--- B1d. the gate host's own row for the run  [18:23:49Z]
+    status: "interrupted"
+    has_a_report: true
+    has_a_prior_report: false
+--- B1e. a check that fails by itself (mode crash) while the gate host stays up  [18:23:50Z]
+    client_was_told: "UNKNOWN: THE CHECK DID NOT RUN TO A RESULT"
+    view: {"phase": "EFFECT", "reports the reading gives": [[24, "EFFECT", "1ecc9fe6", "authentic", ["EFFECT", "AUTHORISED", "APPLIED", "VERDICT_RECORDED"]]], "e25a297 run_outcome": "UNVERIFIED", "set D of distinct verdict pairs": [["EFFECT", "1ecc9fe6642306d5"]], "conflict": false, "an UNKNOWN report beside a verdict report": false}
+    stored_result: {"nonce": "n-ba97ada2768e51c9d4f30cf860a1c3d657e75005", "value": {"verdict": "UNKNOWN"}, "outcome": "value"}

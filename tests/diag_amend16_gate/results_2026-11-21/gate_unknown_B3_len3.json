@@ -1,0 +1,4404 @@
+{
+ "when": "2026-11-21T18:24:34Z",
+ "database": "plea24",
+ "source": "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/diag2/src",
+ "steps": [
+  {
+   "step": "B3. every sequence of 1 to 3 gate-signed reports for one run, from two UNKNOWN reports (Ua, Ub), two EFFECT reports (E1 a FAIL result, E2 a PASS result) and a NO_EFFECT report (N)",
+   "at": "18:25:12Z",
+   "sequences": 155,
+   "seconds": 36.1,
+   "decisions_in_the_chain": 1205,
+   "sequences_where_a_report_was_lost_reordered_or_the_phase_was_not_the_first_verdict": 0,
+   "those": [],
+   "sequences_with_more_than_one_distinct_verdict_pair_sent": 66,
+   "of_which_the_rule_finds_a_conflict": 66,
+   "sequences_with_at_most_one_verdict_pair_sent": 89,
+   "of_which_the_rule_finds_a_conflict_falsely": 0,
+   "sequences_with_UNKNOWN_beside_exactly_one_verdict_pair": 66,
+   "sequences_with_UNKNOWN_beside_a_conflict": 36,
+   "transitions_seen": {
+    "UNKNOWN only + UNKNOWN": [
+     [
+      "NOOP",
+      "VERDICT_UNKNOWN_STAYS_CHARGED"
+     ]
+    ],
+    "UNKNOWN only + the first verdict": [
+     [
+      "APPLIED",
+      "VERDICT_RECORDED"
+     ]
+    ],
+    "a verdict recorded + UNKNOWN": [
+     [
+      "DENIED",
+      "VERDICT_IS_FINAL"
+     ]
+    ],
+    "a verdict recorded + another verdict": [
+     [
+      "DENIED",
+      "VERDICT_IS_FINAL"
+     ],
+     [
+      "DUPLICATE",
+      "VERDICT_RETRY"
+     ]
+    ],
+    "a verdict recorded + the recorded verdict again": [
+     [
+      "DUPLICATE",
+      "VERDICT_RETRY"
+     ]
+    ],
+    "no report yet + UNKNOWN": [
+     [
+      "NOOP",
+      "VERDICT_UNKNOWN_STAYS_CHARGED"
+     ]
+    ],
+    "no report yet + the first verdict": [
+     [
+      "APPLIED",
+      "VERDICT_RECORDED"
+     ]
+    ]
+   },
+   "recorded_FAIL_first_yet_e25a297_reads_PASS_when_the_PASS_result_is_stored": 12,
+   "examples": [
+    "E1 E2",
+    "Ua E1 E2",
+    "Ub E1 E2",
+    "E1 Ua E2",
+    "E1 Ub E2",
+    "E1 E1 E2",
+    "E1 E2 Ua",
+    "E1 E2 Ub"
+   ]
+  }
+ ],
+ "all_sequences": [
+  {
+   "sequence": "Ua",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ub",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "E1",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E2",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "N",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ua Ua",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ua Ub",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ua E1",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ua E2",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ua N",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ub Ua",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ub Ub",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ub E1",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ub E2",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ub N",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "E1 Ua",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 Ub",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 E1",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 E2",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E1 N",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E2 Ua",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 Ub",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E1",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E2",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 N",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "N Ua",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N Ub",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E1",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E2",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N N",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ua Ua Ua",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ua Ua Ub",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ua Ua E1",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ua Ua E2",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ua Ua N",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ua Ub Ua",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ua Ub Ub",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ua Ub E1",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ua Ub E2",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ua Ub N",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ua E1 Ua",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ua E1 Ub",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ua E1 E1",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ua E1 E2",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ua E1 N",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ua E2 Ua",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ua E2 Ub",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ua E2 E1",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ua E2 E2",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ua E2 N",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ua N Ua",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ua N Ub",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ua N E1",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ua N E2",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ua N N",
+   "answers": [
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ub Ua Ua",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ub Ua Ub",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ub Ua E1",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ub Ua E2",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ub Ua N",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ub Ub Ua",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ua",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ub Ub Ub",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "every report kept, in order, authentic": true,
+   "D as sent": 0,
+   "D as read": 0,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "INTERRUPTED",
+   "e25a297 with the PASS result": "INTERRUPTED"
+  },
+  {
+   "sequence": "Ub Ub E1",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ub Ub E2",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ub Ub N",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ub E1 Ua",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ub E1 Ub",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ub E1 E1",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ub E1 E2",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ub E1 N",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "Ub E2 Ua",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ub E2 Ub",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ub E2 E1",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ub E2 E2",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ub E2 N",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "Ub N Ua",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ub N Ub",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ub N E1",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ub N E2",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "Ub N N",
+   "answers": [
+    [
+     "Ub",
+     "NOOP",
+     "VERDICT_UNKNOWN_STAYS_CHARGED"
+    ],
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "E1 Ua Ua",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 Ua Ub",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 Ua E1",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 Ua E2",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E1 Ua N",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 Ub Ua",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 Ub Ub",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 Ub E1",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 Ub E2",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E1 Ub N",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 E1 Ua",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 E1 Ub",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 E1 E1",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 E1 E2",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E1 E1 N",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 E2 Ua",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E1 E2 Ub",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E1 E2 E1",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E1 E2 E2",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E1 E2 N",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 3,
+   "D as read": 3,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E1 N Ua",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 N Ub",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 N E1",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E1 N E2",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 3,
+   "D as read": 3,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E1 N N",
+   "answers": [
+    [
+     "E1",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "UNVERIFIED"
+  },
+  {
+   "sequence": "E2 Ua Ua",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 Ua Ub",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 Ua E1",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 Ua E2",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 Ua N",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 Ub Ua",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 Ub Ub",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 Ub E1",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 Ub E2",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 Ub N",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E1 Ua",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E1 Ub",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E1 E1",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E1 E2",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E1 N",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 3,
+   "D as read": 3,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E2 Ua",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E2 Ub",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E2 E1",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E2 E2",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 E2 N",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 N Ua",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 N Ub",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 N E1",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E1",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 3,
+   "D as read": 3,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "FAIL",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 N E2",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E2",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "E2 N N",
+   "answers": [
+    [
+     "E2",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "N",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "UNVERIFIED",
+   "e25a297 with the PASS result": "PASS"
+  },
+  {
+   "sequence": "N Ua Ua",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N Ua Ub",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N Ua E1",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N Ua E2",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N Ua N",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N Ub Ua",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N Ub Ub",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N Ub E1",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N Ub E2",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N Ub N",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E1 Ua",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E1 Ub",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E1 E1",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E1 E2",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 3,
+   "D as read": 3,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E1 N",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E2 Ua",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E2 Ub",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E2 E1",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 3,
+   "D as read": 3,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E2 E2",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N E2 N",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N N Ua",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "Ua",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N N Ub",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "Ub",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": true,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N N E1",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "E1",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N N E2",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "E2",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 2,
+   "D as read": 2,
+   "conflict": true,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  },
+  {
+   "sequence": "N N N",
+   "answers": [
+    [
+     "N",
+     "APPLIED",
+     "VERDICT_RECORDED"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     "N",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ]
+   ],
+   "phase": "NO_EFFECT",
+   "every report kept, in order, authentic": true,
+   "D as sent": 1,
+   "D as read": 1,
+   "conflict": false,
+   "UNKNOWN beside a verdict": false,
+   "phase is the first verdict sent": true,
+   "e25a297 with the FAIL result": "REFUNDED",
+   "e25a297 with the PASS result": "REFUNDED"
+  }
+ ],
+ "finished": "2026-11-21T18:25:12Z"
+}

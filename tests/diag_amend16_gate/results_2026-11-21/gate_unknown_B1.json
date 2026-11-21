@@ -1,0 +1,176 @@
+{
+ "when": "2026-11-21T18:24:27Z",
+ "database": "plea24",
+ "source": "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/diag2/src",
+ "steps": [
+  {
+   "step": "B1a. a run is cut off: the gate host process ends while the check is running",
+   "at": "18:24:29Z",
+   "client_was_told": "The verification service could not be reached (RemoteDisconnected).  NOT VERIFIED.  The run may be pending; ask again.",
+   "gate_host_exit_status": 137,
+   "view": {
+    "phase": "CONSUMED",
+    "reports the reading gives": [],
+    "e25a297 run_outcome": "NO_OUTCOME",
+    "set D of distinct verdict pairs": [],
+    "conflict": false,
+    "an UNKNOWN report beside a verdict report": false
+   },
+   "stored_result": null,
+   "courier": {
+    "exit": 0,
+    "made": []
+   }
+  },
+  {
+   "step": "B1b. the gate host is started again and the same design is sent again",
+   "at": "18:24:32Z",
+   "client_was_told": "UNKNOWN: THE RUN WAS INTERRUPTED",
+   "view": {
+    "phase": "CONSUMED",
+    "reports the reading gives": [
+     [
+      15,
+      "UNKNOWN",
+      "6493a0d1",
+      "authentic",
+      [
+       "UNKNOWN",
+       "AUTHORISED",
+       "NOOP",
+       "VERDICT_UNKNOWN_STAYS_CHARGED"
+      ]
+     ]
+    ],
+    "e25a297 run_outcome": "INTERRUPTED",
+    "set D of distinct verdict pairs": [],
+    "conflict": false,
+    "an UNKNOWN report beside a verdict report": false
+   },
+   "stored_result": {
+    "nonce": "n-477f967177902ebb27fad5d2ffb818b4632dae1c",
+    "detail": "tool outcome unknown at the gate host: {'error': 'interrupted: the host stopped while this attempt was running; its effect is unknown'}",
+    "outcome": "unknown"
+   },
+   "courier": {
+    "exit": 0,
+    "made": [
+     [
+      "a-f9b9949498",
+      "INTERRUPTED"
+     ]
+    ]
+   }
+  },
+  {
+   "step": "B1c. the same design a third time",
+   "at": "18:24:32Z",
+   "client_was_told": "UNKNOWN: THE RUN WAS INTERRUPTED",
+   "view": {
+    "phase": "CONSUMED",
+    "reports the reading gives": [
+     [
+      15,
+      "UNKNOWN",
+      "6493a0d1",
+      "authentic",
+      [
+       "UNKNOWN",
+       "AUTHORISED",
+       "NOOP",
+       "VERDICT_UNKNOWN_STAYS_CHARGED"
+      ]
+     ],
+     [
+      16,
+      "UNKNOWN",
+      "6493a0d1",
+      "authentic",
+      [
+       "UNKNOWN",
+       "AUTHORISED",
+       "NOOP",
+       "VERDICT_UNKNOWN_STAYS_CHARGED"
+      ]
+     ]
+    ],
+    "e25a297 run_outcome": "INTERRUPTED",
+    "set D of distinct verdict pairs": [],
+    "conflict": false,
+    "an UNKNOWN report beside a verdict report": false
+   },
+   "stored_result": {
+    "nonce": "n-477f967177902ebb27fad5d2ffb818b4632dae1c",
+    "detail": "tool outcome unknown at the gate host: {'error': 'interrupted: the host stopped while this attempt was running; its effect is unknown'}",
+    "outcome": "unknown"
+   },
+   "courier": {
+    "exit": 0,
+    "made": []
+   },
+   "record": {
+    "record verifies at e25a297": true,
+    "checks that fail": [],
+    "outcome the record gives the run": "INTERRUPTED",
+    "reports the record carries for the run": [
+     [
+      15,
+      "UNKNOWN",
+      "6493a0d1"
+     ],
+     [
+      16,
+      "UNKNOWN",
+      "6493a0d1"
+     ]
+    ]
+   }
+  },
+  {
+   "step": "B1d. the gate host's own row for the run",
+   "at": "18:24:32Z",
+   "status": "interrupted",
+   "has_a_report": true,
+   "has_a_prior_report": false
+  },
+  {
+   "step": "B1e. a check that fails by itself (mode crash) while the gate host stays up",
+   "at": "18:24:33Z",
+   "client_was_told": "UNKNOWN: THE CHECK DID NOT RUN TO A RESULT",
+   "view": {
+    "phase": "EFFECT",
+    "reports the reading gives": [
+     [
+      24,
+      "EFFECT",
+      "426b16fe",
+      "authentic",
+      [
+       "EFFECT",
+       "AUTHORISED",
+       "APPLIED",
+       "VERDICT_RECORDED"
+      ]
+     ]
+    ],
+    "e25a297 run_outcome": "UNKNOWN",
+    "set D of distinct verdict pairs": [
+     [
+      "EFFECT",
+      "426b16feb60534d5"
+     ]
+    ],
+    "conflict": false,
+    "an UNKNOWN report beside a verdict report": false
+   },
+   "stored_result": {
+    "nonce": "n-57b4f88e69a789461c1e2f4b7aaa13e588ba23f8",
+    "value": {
+     "verdict": "UNKNOWN"
+    },
+    "outcome": "value"
+   }
+  }
+ ],
+ "finished": "2026-11-21T18:24:33Z"
+}

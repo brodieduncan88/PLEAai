@@ -1,0 +1,4 @@
+canonical 1000 digests 67001
+max digests in 64KiB with 1500B overhead 955
+model total 520.222752 MB
+marginal per run at n=1000 1019.184 KB

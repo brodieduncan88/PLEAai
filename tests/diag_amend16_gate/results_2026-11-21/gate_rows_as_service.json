@@ -1,0 +1,111 @@
+{
+ "when": "2026-11-21T18:49:45Z",
+ "role": "plea_local",
+ "databases": {
+  "plea23": {
+   "read as": "plea_local",
+   "budgets": 10,
+   "decisions": 258,
+   "report rows": 87,
+   "rows NOT at a RELEASE or RECONCILE decision naming their run, with the row's label": 0,
+   "those": [],
+   "report rows by operation, label and kind of decision": [
+    [
+     "RECONCILE",
+     "AUTHORISED",
+     "APPLIED",
+     19
+    ],
+    [
+     "RECONCILE",
+     "AUTHORISED",
+     "DENIED",
+     4
+    ],
+    [
+     "RECONCILE",
+     "AUTHORISED",
+     "DUPLICATE",
+     2
+    ],
+    [
+     "RECONCILE",
+     "AUTHORISED",
+     "NOOP",
+     2
+    ],
+    [
+     "RECONCILE",
+     "NONE",
+     "DENIED",
+     10
+    ],
+    [
+     "RECONCILE",
+     "WRONG_BINDING",
+     "DENIED",
+     12
+    ],
+    [
+     "RELEASE",
+     "BOUND_FENCE",
+     "DENIED",
+     2
+    ],
+    [
+     "RELEASE",
+     "NONE",
+     "DENIED",
+     36
+    ]
+   ],
+   "RELEASE or RECONCILE decisions with no report row, by operation and label": [
+    [
+     "RECONCILE",
+     "NONE",
+     2
+    ],
+    [
+     "RELEASE",
+     "NONE",
+     2
+    ]
+   ]
+  },
+  "plea24": {
+   "read as": "plea_local",
+   "budgets": 5,
+   "decisions": 8093,
+   "report rows": 3369,
+   "rows NOT at a RELEASE or RECONCILE decision naming their run, with the row's label": 0,
+   "those": [],
+   "report rows by operation, label and kind of decision": [
+    [
+     "RECONCILE",
+     "AUTHORISED",
+     "APPLIED",
+     894
+    ],
+    [
+     "RECONCILE",
+     "AUTHORISED",
+     "DENIED",
+     1251
+    ],
+    [
+     "RECONCILE",
+     "AUTHORISED",
+     "DUPLICATE",
+     625
+    ],
+    [
+     "RECONCILE",
+     "AUTHORISED",
+     "NOOP",
+     599
+    ]
+   ],
+   "RELEASE or RECONCILE decisions with no report row, by operation and label": []
+  }
+ }
+}

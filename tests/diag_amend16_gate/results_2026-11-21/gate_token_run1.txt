@@ -1,0 +1,88 @@
+--- A1. 32 random bytes, four ways of writing them  [18:19:00Z]
+    token_bytes: 32
+    forms: {"url-safe base64, no padding": {"characters": 43, "has + / or =": false, "status": 200, "nonce signed back, exactly as sent": true, "checkpoint verifies for this budget (check_record.checkpoint_problems)": [], "bytes of the checkpoint as JSON": 557, "error": null}, "lower-case hexadecimal": {"characters": 64, "has + / or =": false, "status": 200, "nonce signed back, exactly as sent": true, "checkpoint verifies for this budget (check_record.checkpoint_problems)": [], "bytes of the checkpoint as JSON": 578, "error": null}, "url-safe base64 with its padding": {"characters": 44, "has + / or =": true, "status": 400, "nonce signed back, exactly as sent": null, "checkpoint verifies for this budget (check_record.checkpoint_problems)": null, "bytes of the checkpoint as JSON": null, "error": "malformed request"}, "standard base64 with its padding": {"characters": 44, "has + / or =": true, "status": 400, "nonce signed back, exactly as sent": null, "checkpoint verifies for this budget (check_record.checkpoint_problems)": null, "bytes of the checkpoint as JSON": null, "error": "malformed request"}}
+--- A2. the limit on length and the letters allowed  [18:19:00Z]
+    statuses: {"1 characters": 200, "43 characters": 200, "63 characters": 200, "64 characters": 200, "65 characters": 400, "128 characters": 400}
+    empty_nonce: 400
+    no_nonce: {"status": 200, "nonce in the checkpoint": null}
+    other_characters: {"a space inside": 400, "a dot": 400, "a tilde": 400, "a NUL": 400, "non-ASCII letter": 400, "a newline": 400}
+--- A3. what the witness signs, and what a change to it does  [18:19:00Z]
+    checkpoint: {"statement": "CHECKPOINT", "root": "REQ-SELFTEST-001/A/01ae48cd302840327642b07e63cabe7f", "seq": 8, "head": "95630c1c9e783afdb5fa304068e55c939c946e2ee4421b3eda2cdd7a5671be69", "business": "OPEN", "witness": "ACTIVE", "time": "2026-11-21T18:19:00Z", "nonce": "4xV_Tr-mC_xFRW4ZfIlhuPxrt9ts9YNTZGP9cNTkSDc", "at": null, "head_at": null, "signer": "a265f9c8cdaeb63ade88a3cbd0bfcb361771775fc82f631be8466a49fdaab67c", "signature": "b7cd43372375b89e4f2d6a4de31619fed5777f234839e6ebcea05ee9ee5608a1c47269c995b1871e058f9b7e5b8278de893bc8c6974fa1b8afcebcca663ec901"}
+    fields_under_the_signature: ["statement", "root", "seq", "head", "business", "witness", "time", "nonce", "at", "head_at"]
+    unchanged: []
+    nonce_changed: ["it is not signed by a witness key given"]
+    budget_changed: ["it is not signed by a witness key given", "it is for another budget"]
+    number_changed: ["it is not signed by a witness key given"]
+    time_changed: ["it is not signed by a witness key given"]
+    checked_against_another_budget: ["it is for another budget"]
+--- A4. one token asked for two budgets at one witness  [18:19:01Z]
+    budgets_differ: true
+    statuses: [200, 200]
+    both_sign_the_same_token: [true, true]
+    each_names_its_own_budget: [true, true]
+    first_checked_for_first: []
+    first_checked_for_second: ["it is for another budget"]
+    second_checked_for_first: ["it is for another budget"]
+    second_checked_for_second: []
+    second_relabelled_as_first: ["it is not signed by a witness key given"]
+    the_witness_refused_the_second_use: false
+--- A5. the same token asked twice for one budget  [18:19:02Z]
+    statuses: [200, 200]
+    identical_answers: false
+    both_verify: [[], []]
+    times: ["2026-11-21T18:19:01Z", "2026-11-21T18:19:02Z"]
+    meaning: "the witness keeps no memory of a nonce: single use is not enforced by it"
+--- A6. the nonce given twice in one request  [18:19:02Z]
+    first: [200, "4xV_Tr-mC_xFRW4ZfIlhuPxrt9ts9YNTZGP9cNTkSDc"]
+    second: [200, "SECONDTOKEN"]
+    meaning: "the last one is signed; a reader must compare the signed field, never the request"
+--- A7. the checkpoint naming a decision  [18:19:02Z]
+    at_head: {"status": 200, "at": 8, "head_at equals head": true, "problems": []}
+    at_one: {"status": 200, "at": 1, "head_at differs from head": true, "problems": []}
+    beyond: {"status": 400, "error": "at is beyond the chain"}
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/gate/gate_token.py", line 79, in <module>
+    who[name] = cp(tok, cert=cert)[0]
+                ^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/gate/gate_token.py", line 19, in cp
+    return b.call(path, cert or b.cour)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/gate/gate_common.py", line 50, in call
+    with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 216, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 519, in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 536, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 496, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 1404, in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/urllib/request.py", line 1365, in do_open
+    r = h.getresponse()
+        ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/http/client.py", line 1443, in getresponse
+    response.begin()
+  File "/usr/lib/python3.11/http/client.py", line 337, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/http/client.py", line 298, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/socket.py", line 718, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/ssl.py", line 1327, in recv_into
+    return self.read(nbytes, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/ssl.py", line 1179, in read
+    return self._sslobj.read(len, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ssl.SSLError: [SSL: SSLV3_ALERT_UNSUPPORTED_CERTIFICATE] sslv3 alert unsupported certificate (_ssl.c:2590)

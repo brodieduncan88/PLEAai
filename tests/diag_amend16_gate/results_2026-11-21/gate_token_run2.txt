@@ -1,0 +1,49 @@
+--- A1. 32 random bytes, four ways of writing them  [18:19:13Z]
+    token_bytes: 32
+    forms: {"url-safe base64, no padding": {"characters": 43, "has + / or =": false, "status": 200, "nonce signed back, exactly as sent": true, "checkpoint verifies for this budget (check_record.checkpoint_problems)": [], "bytes of the checkpoint as JSON": 557, "error": null}, "lower-case hexadecimal": {"characters": 64, "has + / or =": false, "status": 200, "nonce signed back, exactly as sent": true, "checkpoint verifies for this budget (check_record.checkpoint_problems)": [], "bytes of the checkpoint as JSON": 578, "error": null}, "url-safe base64 with its padding": {"characters": 44, "has + / or =": true, "status": 400, "nonce signed back, exactly as sent": null, "checkpoint verifies for this budget (check_record.checkpoint_problems)": null, "bytes of the checkpoint as JSON": null, "error": "malformed request"}, "standard base64 with its padding": {"characters": 44, "has + / or =": true, "status": 400, "nonce signed back, exactly as sent": null, "checkpoint verifies for this budget (check_record.checkpoint_problems)": null, "bytes of the checkpoint as JSON": null, "error": "malformed request"}}
+--- A2. the limit on length and the letters allowed  [18:19:13Z]
+    statuses: {"1 characters": 200, "43 characters": 200, "63 characters": 200, "64 characters": 200, "65 characters": 400, "128 characters": 400}
+    empty_nonce: 400
+    no_nonce: {"status": 200, "nonce in the checkpoint": null}
+    other_characters: {"a space inside": 400, "a dot": 400, "a tilde": 400, "a NUL": 400, "non-ASCII letter": 400, "a newline": 400}
+--- A3. what the witness signs, and what a change to it does  [18:19:13Z]
+    checkpoint: {"statement": "CHECKPOINT", "root": "REQ-SELFTEST-001/A/565fbae6f6973742b1fc7cf7a946d46a", "seq": 8, "head": "4e89b3f9128a94a01222e8f882234d8691e18b71b090cdefc77a18fa8014b522", "business": "OPEN", "witness": "ACTIVE", "time": "2026-11-21T18:19:13Z", "nonce": "cG5EwzNjvFCx831ANuYQEJd88nImrq8KDeX9OQFVbQY", "at": null, "head_at": null, "signer": "e1abaee6a4ebb4c8ebf6f46953ca44eb671833c94b031782d2f9f2b3355a7546", "signature": "3d9f26b6a2ae76646e0ef00c25f70fc873091c594b603f5b6d5aa97083d4ea9882556cc6d6d8cc6692558e5bb92ac0c5456da2b0d56713e4fd3c25a07579c009"}
+    fields_under_the_signature: ["statement", "root", "seq", "head", "business", "witness", "time", "nonce", "at", "head_at"]
+    unchanged: []
+    nonce_changed: ["it is not signed by a witness key given"]
+    budget_changed: ["it is not signed by a witness key given", "it is for another budget"]
+    number_changed: ["it is not signed by a witness key given"]
+    time_changed: ["it is not signed by a witness key given"]
+    checked_against_another_budget: ["it is for another budget"]
+--- A4. one token asked for two budgets at one witness  [18:19:13Z]
+    budgets_differ: true
+    statuses: [200, 200]
+    both_sign_the_same_token: [true, true]
+    each_names_its_own_budget: [true, true]
+    first_checked_for_first: []
+    first_checked_for_second: ["it is for another budget"]
+    second_checked_for_first: ["it is for another budget"]
+    second_checked_for_second: []
+    second_relabelled_as_first: ["it is not signed by a witness key given"]
+    the_witness_refused_the_second_use: false
+--- A5. the same token asked twice for one budget  [18:19:14Z]
+    statuses: [200, 200]
+    identical_answers: false
+    both_verify: [[], []]
+    times: ["2026-11-21T18:19:13Z", "2026-11-21T18:19:14Z"]
+    meaning: "the witness keeps no memory of a nonce: single use is not enforced by it"
+--- A6. the nonce given twice in one request  [18:19:14Z]
+    first: [200, "cG5EwzNjvFCx831ANuYQEJd88nImrq8KDeX9OQFVbQY"]
+    second: [200, "SECONDTOKEN"]
+    meaning: "the last one is signed; a reader must compare the signed field, never the request"
+--- A7. the checkpoint naming a decision  [18:19:15Z]
+    at_head: {"status": 200, "at": 8, "head_at equals head": true, "problems": []}
+    at_one: {"status": 200, "at": 1, "head_at differs from head": true, "problems": []}
+    beyond: {"status": 400, "error": "at is beyond the chain"}
+--- A8. who is given a checkpoint  [18:19:15Z]
+    statuses_by_client_certificate: {"courier": 200, "keeper": 200, "governor": 200, "mailbox": "no answer: SSLError: [SSL: SSLV3_ALERT_UNSUPPORTED_CERTIFICATE] sslv3 alert unsupported certificate (", "host": "no answer: SSLError: [SSL: SSLV3_ALERT_UNSUPPORTED_CERTIFICATE] sslv3 alert unsupported certificate ("}
+--- A9. sizes  [18:19:15Z]
+    checkpoint_with_this_token: 557
+    checkpoint_at_the_largest_names: 1109
+    a_challenge_of_the_proposed_shape: 523
+    a_challenge_with_a_512_character_budget_name: 984

@@ -1,0 +1,440 @@
+{
+ "when": "2026-11-21T18:43:23Z",
+ "database": "plea25",
+ "source": "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/diag2/src",
+ "steps": [
+  {
+   "step": "R1. a FAIL committed (stored as a value) and noticed; then four more gate-signed reports for the run, and a late UNKNOWN",
+   "at": "18:43:25Z",
+   "first_courier_pass": {
+    "exit": 0,
+    "made": [
+     [
+      "a-a707bb3c071a",
+      "FAIL"
+     ]
+    ]
+   },
+   "courier_state_after_first": {
+    "seq": 8,
+    "final": [
+     "a-a707bb3c071ae35a"
+    ],
+    "sent": [
+     "a-a707bb3c071ae35a|FAIL"
+    ]
+   },
+   "re_signed_signature_verifies": true,
+   "re_signed_differs_in_bytes": true,
+   "sends": [
+    [
+     "forged PASS EFFECT via RECONCILE",
+     [
+      200,
+      "DUPLICATE",
+      "VERDICT_RETRY",
+      "AUTHORISED"
+     ]
+    ],
+    [
+     "another forged EFFECT via RELEASE",
+     [
+      200,
+      "DENIED",
+      "CONSUMPTION_IS_FINAL",
+      "NONE"
+     ]
+    ],
+    [
+     "NO_EFFECT via RECONCILE",
+     [
+      200,
+      "DENIED",
+      "VERDICT_IS_FINAL",
+      "AUTHORISED"
+     ]
+    ],
+    [
+     "the honest FAIL report re-signed with another r (same claim, same digest, other signature bytes)",
+     [
+      200,
+      "DUPLICATE",
+      "VERDICT_RETRY",
+      "AUTHORISED"
+     ]
+    ],
+    [
+     "UNKNOWN via RECONCILE after the verdict",
+     [
+      200,
+      "DENIED",
+      "VERDICT_IS_FINAL",
+      "AUTHORISED"
+     ]
+    ]
+   ],
+   "reading_after": [
+    [
+     8,
+     "EFFECT",
+     "9743ddc7aeb7",
+     "efe322d3974c",
+     "AUTHORISED"
+    ],
+    [
+     9,
+     "EFFECT",
+     "7433809ca93c",
+     "b7b70bc1e181",
+     "AUTHORISED"
+    ],
+    [
+     10,
+     "EFFECT",
+     "fc24fdb8f292",
+     "79af23df5e4d",
+     "NONE"
+    ],
+    [
+     11,
+     "NO_EFFECT",
+     "74234e98afe7",
+     "985d5ebe7fad",
+     "AUTHORISED"
+    ],
+    [
+     12,
+     "EFFECT",
+     "9743ddc7aeb7",
+     "cc8bf8e092cd",
+     "AUTHORISED"
+    ],
+    [
+     13,
+     "UNKNOWN",
+     "3f32c1dcd716",
+     "72e90a25d89d",
+     "AUTHORISED"
+    ]
+   ],
+   "chain_rows_after_courier_cursor_naming_run": [
+    [
+     9,
+     "RECONCILE",
+     "EFFECT",
+     "AUTHORISED",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     10,
+     "RELEASE",
+     "NONE",
+     "DENIED",
+     "CONSUMPTION_IS_FINAL"
+    ],
+    [
+     11,
+     "RECONCILE",
+     "NO_EFFECT",
+     "AUTHORISED",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ],
+    [
+     12,
+     "RECONCILE",
+     "EFFECT",
+     "AUTHORISED",
+     "DUPLICATE",
+     "VERDICT_RETRY"
+    ],
+    [
+     13,
+     "RECONCILE",
+     "UNKNOWN",
+     "AUTHORISED",
+     "DENIED",
+     "VERDICT_IS_FINAL"
+    ]
+   ],
+   "chain_observation_entry_changed_after_cursor": false,
+   "second_courier_pass": {
+    "exit": 0,
+    "made": []
+   },
+   "courier_state_after_second": {
+    "seq": 13,
+    "final": [
+     "a-a707bb3c071ae35a"
+    ],
+    "sent": [
+     "a-a707bb3c071ae35a|FAIL"
+    ]
+   },
+   "e25a297_run_outcome_now": "FAIL",
+   "REVIEWER_pairs": [
+    [
+     "EFFECT",
+     "7433809ca93c62d20b1abe326d2bb277774cfa23dfc96bbe2b282930fe29b367"
+    ],
+    [
+     "EFFECT",
+     "9743ddc7aeb7bc5d95c036c2bf58865cf144e0519bcab392b76f834937fc645a"
+    ],
+    [
+     "EFFECT",
+     "fc24fdb8f29207c70b050e00a2cf6d43acf725af4534347939d63f53b3aeafa7"
+    ],
+    [
+     "NO_EFFECT",
+     "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+    ]
+   ],
+   "REVIEWER_bytes_count": 5,
+   "record_verifies_e25a297": false,
+   "record_failures": [
+    "6 gate reports and re-derived verdicts: a-a707bb3c071ae35a gate report at 10: not recorded with a reconcile decision for this attempt"
+   ]
+  },
+  {
+   "step": "R2. S-1 replacement; the record as assembled, and the record with the honest FAIL report left out",
+   "at": "18:43:26Z",
+   "client_was_told": "FAIL: REQUIREMENT NOT MET",
+   "forged_report_answer": [
+    "DUPLICATE",
+    "VERDICT_RETRY"
+   ],
+   "courier": {
+    "exit": 0,
+    "made": []
+   },
+   "full_record": {
+    "verifies_e25a297": false,
+    "failures_for_this_run": [],
+    "outcome": "PASS",
+    "reports": [
+     [
+      21,
+      "EFFECT",
+      "3e48b28e2531",
+      "68e2dee9b25f",
+      null
+     ],
+     [
+      22,
+      "EFFECT",
+      "2fe8dc8e641e",
+      "08904bc62e59",
+      null
+     ]
+    ],
+    "REVIEWER_pairs": [
+     [
+      "EFFECT",
+      "2fe8dc8e641ebfdf968fe2ca1ffc4d353a40ad7d658a3510e386d2e2e333576f"
+     ],
+     [
+      "EFFECT",
+      "3e48b28e2531a0882c59e4f37bcbc0de86fef7ebe2c443b6ce98afc48abdfd31"
+     ]
+    ]
+   },
+   "record_with_honest_report_omitted": {
+    "verifies_e25a297": false,
+    "failures_for_this_run": [],
+    "outcome": "PASS",
+    "reports": [
+     [
+      22,
+      "EFFECT",
+      "2fe8dc8e641e",
+      "08904bc62e59",
+      null
+     ]
+    ],
+    "REVIEWER_pairs": [
+     [
+      "EFFECT",
+      "2fe8dc8e641ebfdf968fe2ca1ffc4d353a40ad7d658a3510e386d2e2e333576f"
+     ]
+    ],
+    "REVIEWER_authorised_rows_without_their_report": [
+     21
+    ]
+   },
+   "record_top_level_keys": [
+    "acknowledgements",
+    "as_of",
+    "attempts",
+    "audit",
+    "baseline",
+    "baseline_sha256",
+    "checkpoint",
+    "format",
+    "keys",
+    "provisioning",
+    "root",
+    "signature"
+   ]
+  },
+  {
+   "step": "R3. a report planted with RECONCILE before START (nonce not yet in the chain), the run then honest (FAIL), the planted PASS stored",
+   "at": "18:43:27Z",
+   "planted_answer": [
+    "DENIED",
+    "NOT_CONSUMED",
+    [
+     "RECONCILE",
+     "a-a4ff1b6bc7d9e254",
+     "EFFECT",
+     "WRONG_BINDING"
+    ]
+   ],
+   "client_was_told": "FAIL: REQUIREMENT NOT MET",
+   "reading": [
+    [
+     26,
+     "EFFECT",
+     "2c78f34a0272",
+     "773b357f3759",
+     "WRONG_BINDING"
+    ],
+    [
+     31,
+     "EFFECT",
+     "5590d827eadd",
+     "4e8faf4173b3",
+     "AUTHORISED"
+    ]
+   ],
+   "e25a297_run_outcome_with_stored": "PASS",
+   "courier": {
+    "exit": 0,
+    "made": []
+   },
+   "REVIEWER_pairs": [
+    [
+     "EFFECT",
+     "2c78f34a02727575c9c8613e2d84390e3f09e9af1656fc00165ba0c3b5ce2ff7"
+    ],
+    [
+     "EFFECT",
+     "5590d827eaddf8fb384bddcd880d399dee4618ba8a4603f354dadfae03e9acff"
+    ]
+   ],
+   "full_record": {
+    "verifies_e25a297": false,
+    "failures_for_this_run": [
+     "6 gate reports and re-derived verdicts: a-a4ff1b6bc7d9e254: the verdict is for another baseline; a-a4ff1b6bc7d9e254: the verdict is for another design than the one sent; a-a4ff1b6bc7d9e254: the verdict names another requirement or revision "
+    ],
+    "outcome": "PASS"
+   },
+   "record_with_honest_omitted": {
+    "verifies_e25a297": false,
+    "failures_for_this_run": [
+     "6 gate reports and re-derived verdicts: a-a4ff1b6bc7d9e254: the verdict is for another baseline; a-a4ff1b6bc7d9e254: the verdict is for another design than the one sent; a-a4ff1b6bc7d9e254: the verdict names another requirement or revision "
+    ],
+    "outcome": "PASS",
+    "REVIEWER_authorised_rows_without_their_report": [
+     31
+    ]
+   },
+   "failures_from_other_runs_in_full_record": []
+  },
+  {
+   "step": "R4. a 32-byte token through GET /checkpoint",
+   "at": "18:43:27Z",
+   "forms": {
+    "b64url43": {
+     "len": 43,
+     "status": 200,
+     "signed_back": true,
+     "problems": [],
+     "fields": [
+      "at",
+      "business",
+      "head",
+      "head_at",
+      "nonce",
+      "root",
+      "seq",
+      "signature",
+      "signer",
+      "statement",
+      "time",
+      "witness"
+     ]
+    },
+    "hex64": {
+     "len": 64,
+     "status": 200,
+     "signed_back": true,
+     "problems": [],
+     "fields": [
+      "at",
+      "business",
+      "head",
+      "head_at",
+      "nonce",
+      "root",
+      "seq",
+      "signature",
+      "signer",
+      "statement",
+      "time",
+      "witness"
+     ]
+    },
+    "hex64+1": {
+     "len": 65,
+     "status": 400,
+     "signed_back": null,
+     "problems": "malformed request",
+     "fields": null
+    },
+    "b64pad44": {
+     "len": 44,
+     "status": 400,
+     "signed_back": null,
+     "problems": "malformed request",
+     "fields": null
+    }
+   },
+   "same_token_twice_both_valid": [
+    [],
+    []
+   ],
+   "witness_time_field": [
+    "2026-11-21T18:43:27Z",
+    "2026-11-21T18:43:27Z"
+   ]
+  },
+  {
+   "step": "R5. a WATCHING statement signed with a time 3 h old (an honest courier's notice delivered late, as its outbox would), then after a mailbox restart, then after the mailbox lost its folder",
+   "at": "18:43:30Z",
+   "notice_time": "2026-11-21T15:43:27Z",
+   "problems_in_notice": [],
+   "first": [
+    200,
+    "2026-11-21T18:43:27Z",
+    null
+   ],
+   "after_restart": [
+    200,
+    "2026-11-21T18:43:27Z",
+    "same receipt"
+   ],
+   "after_lost_folder": [
+    200,
+    "2026-11-21T18:43:30Z",
+    "different receipt"
+   ],
+   "mailbox_paths": [
+    "POST /deliver",
+    "GET /pubkey"
+   ]
+  }
+ ],
+ "finished": "2026-11-21T18:43:30Z"
+}

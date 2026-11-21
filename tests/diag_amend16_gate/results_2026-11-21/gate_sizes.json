@@ -1,0 +1,178 @@
+{
+ "when": "2026-11-21T18:32:21Z",
+ "database": "plea23",
+ "source": "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/diag2/src",
+ "steps": [
+  {
+   "step": "D1. how large one gate-signed report can be made by whoever holds the service's database role and the gate's key",
+   "at": "18:33:11Z",
+   "sizes": {
+    "a real report of this deployment": {
+     "bytes as JSON": 499,
+     "nonce characters": 42,
+     "run name characters": 18,
+     "budget name characters": 51
+    },
+    "a run name of 512 non-ASCII letters": {
+     "RESERVE": [
+      "APPLIED",
+      "RESERVATION_COMMITTED"
+     ],
+     "ACCEPT_RESERVATION": [
+      200,
+      "APPLIED",
+      "RESERVATION_ACCEPTED"
+     ],
+     "TOKEN": [
+      "APPLIED",
+      "TOKEN_RELEASED"
+     ],
+     "START": [
+      "APPLIED",
+      "INTENT_COMMITTED_LOCALLY"
+     ],
+     "ACCEPT_INTENT": [
+      200,
+      "APPLIED",
+      "INTENT_ACCEPTED"
+     ],
+     "bytes of the gate-signed report as JSON": 3522,
+     "RECONCILE": [
+      200,
+      "APPLIED",
+      "VERDICT_RECORDED"
+     ],
+     "GET /run": 200,
+     "reports given, authentic": [
+      true
+     ],
+     "bytes of the witness's answer for the run": 6750,
+     "two such reports whole": 7044
+    },
+    "a nonce of 70,000 characters": {
+     "RESERVE": [
+      "APPLIED",
+      "RESERVATION_COMMITTED"
+     ],
+     "ACCEPT_RESERVATION": [
+      200,
+      "APPLIED",
+      "RESERVATION_ACCEPTED"
+     ],
+     "TOKEN": [
+      "APPLIED",
+      "TOKEN_RELEASED"
+     ],
+     "START": [
+      "APPLIED",
+      "INTENT_COMMITTED_LOCALLY"
+     ],
+     "ACCEPT_INTENT": [
+      200,
+      "APPLIED",
+      "INTENT_ACCEPTED"
+     ],
+     "bytes of the gate-signed report as JSON": 70448,
+     "RECONCILE": [
+      200,
+      "APPLIED",
+      "VERDICT_RECORDED"
+     ],
+     "GET /run": 200,
+     "reports given, authentic": [
+      true
+     ],
+     "bytes of the witness's answer for the run": 70613,
+     "two such reports whole": 140896
+    },
+    "a nonce of 1,000,000 characters": {
+     "RESERVE": [
+      "APPLIED",
+      "RESERVATION_COMMITTED"
+     ],
+     "ACCEPT_RESERVATION": [
+      200,
+      "APPLIED",
+      "RESERVATION_ACCEPTED"
+     ],
+     "TOKEN": [
+      "APPLIED",
+      "TOKEN_RELEASED"
+     ],
+     "stopped at": "ProgramLimitExceeded: index row requires 11520 bytes, maximum size is 8191"
+    }
+   },
+   "mailbox_limit": 65536
+  },
+  {
+   "step": "D2. what the mailbox as it stands takes and refuses",
+   "at": "18:33:11Z",
+   "deliveries": {
+    "an existing outcome of the courier's own (INCONSISTENT) whose words carry two whole reports": [
+     200,
+     1675,
+     "receipt"
+    ],
+    "an outcome the mailbox does not know (CONFLICT)": [
+     400,
+     1671,
+     "refused: its outcome, decision, head, names or time are not readable"
+    ],
+    "a statement of coverage as an outcome (WATCHING)": [
+     200,
+     588,
+     "receipt"
+    ],
+    "a known outcome with one more field (evidence)": [
+     400,
+     1125,
+     "refused: it is not a notice, or has fields a notice does not have"
+    ],
+    "a notice of exactly 65,536 bytes": [
+     200,
+     65536,
+     "receipt"
+    ],
+    "a notice of 65,537 bytes": [
+     400,
+     65537,
+     "a notice is 1 byte to 64 KiB of JSON"
+    ],
+    "bytes that are not a notice, 100 of them": [
+     400,
+     100,
+     "refused: it is not a notice, or has fields a notice does not have; it is not signed by a courier key given; its outcome, decision, head, names or time are not r"
+    ]
+   },
+   "notices_now_held": 3,
+   "the_mailbox_checks_a_notice_s_words": false,
+   "paths_the_mailbox_serves": [
+    "POST /deliver",
+    "GET /pubkey"
+   ]
+  },
+  {
+   "step": "D3. a real notice and receipt of this deployment",
+   "at": "18:33:11Z",
+   "courier_exit": 0,
+   "a_FAIL_notice_bytes": [
+    1440
+   ],
+   "its_receipt_bytes": [
+    501
+   ],
+   "two_real_reports_whole_bytes": 1002,
+   "receipt_fields": [
+    "statement",
+    "notice",
+    "root",
+    "aid",
+    "outcome",
+    "mailbox",
+    "time"
+   ],
+   "receipt_time_resolution": "one second, the mailbox's wall clock (time.gmtime)"
+  }
+ ],
+ "finished": "2026-11-21T18:33:11Z"
+}

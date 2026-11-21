@@ -1,0 +1,192 @@
+{
+ "when": "2026-11-21T18:53:41Z",
+ "database": "plea25",
+ "source": "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/diag2/src",
+ "steps": [
+  {
+   "step": "P1. fresh budget, one honest FAIL run; then a forged PASS EFFECT report sent with RELEASE; the record as assembled, and with that report left out",
+   "at": "18:53:44Z",
+   "record_before": [
+    true,
+    []
+   ],
+   "release_answer": [
+    "DENIED",
+    "CONSUMPTION_IS_FINAL",
+    "NONE",
+    9
+   ],
+   "witness_reading_AUTHOR_RULE": {
+    "T": "T5 conflict",
+    "pairs": 2,
+    "count_rule_missing_rows": [],
+    "verdict_recorded_at": [
+     8
+    ]
+   },
+   "record_full": [
+    false,
+    [
+     "6 gate reports and re-derived verdicts: a-1a2556c5329a5a52 gate report at 9: not recorded with a reconcile decision for this attempt"
+    ]
+   ],
+   "record_full_AUTHOR_RULE": {
+    "T": "T5 conflict",
+    "pairs": 2,
+    "count_rule_missing_rows": [],
+    "verdict_recorded_at": [
+     8
+    ]
+   },
+   "record_omitted": [
+    false,
+    [
+     "1 record signature: bad signature: the record was changed after it was signed"
+    ]
+   ],
+   "record_omitted_AUTHOR_RULE": {
+    "T": "T3/T4 one pair",
+    "pairs": 1,
+    "count_rule_missing_rows": [],
+    "verdict_recorded_at": [
+     8
+    ]
+   },
+   "record_omitted_outcome": "FAIL",
+   "courier": {
+    "exit": 0,
+    "made": [
+     [
+      "a-1a2556c5329a",
+      "FAIL"
+     ]
+    ]
+   }
+  },
+  {
+   "step": "P2. a gate-signed EFFECT report whose signed result_digest is 200,000 characters, sent with RECONCILE to a committed FAIL run",
+   "at": "18:53:45Z",
+   "answer": [
+    200,
+    "DUPLICATE",
+    "VERDICT_RETRY"
+   ],
+   "report_bytes": 200435,
+   "GET_run": [
+    200,
+    202558,
+    0.033
+   ],
+   "authentic_for_scope": [
+    true,
+    true
+   ],
+   "AUTHOR_RULE": {
+    "T": "T5 conflict",
+    "pairs": 2,
+    "count_rule_missing_rows": [],
+    "verdict_recorded_at": [
+     17
+    ]
+   },
+   "mailbox_limit": 65536
+  },
+  {
+   "step": "P3. one run kept unsettled (CONSUMED, UNKNOWN reports only) with five reports of 1,000,000-character digests: the cost of re-reading it at every pass",
+   "at": "18:53:45Z",
+   "answers": [
+    "VERDICT_UNKNOWN_STAYS_CHARGED",
+    "VERDICT_UNKNOWN_STAYS_CHARGED",
+    "VERDICT_UNKNOWN_STAYS_CHARGED",
+    "VERDICT_UNKNOWN_STAYS_CHARGED",
+    "VERDICT_UNKNOWN_STAYS_CHARGED"
+   ],
+   "phase": "CONSUMED",
+   "GET_run": [
+    200,
+    5002287,
+    0.086
+   ],
+   "honest_GET_run_measured": "about 2 KB, 0.03 to 0.10 s (measure.txt)"
+  },
+  {
+   "step": "P4. two different EFFECT reports recorded while the run is INTENT_PENDING; the intent then accepted",
+   "at": "18:53:46Z",
+   "answers": [
+    [
+     "DENIED",
+     "NOT_CONSUMED",
+     "AUTHORISED"
+    ],
+    [
+     "DENIED",
+     "NOT_CONSUMED",
+     "AUTHORISED"
+    ],
+    [
+     "APPLIED",
+     "INTENT_ACCEPTED",
+     "nov"
+    ]
+   ],
+   "phase": "CONSUMED",
+   "AUTHOR_RULE": {
+    "T": "T5 conflict",
+    "pairs": 2,
+    "count_rule_missing_rows": [],
+    "verdict_recorded_at": []
+   },
+   "e25a297_run_outcome": "NO_OUTCOME"
+  },
+  {
+   "step": "P5. a run reserved (no nonce yet): an EFFECT report with a null nonce sent with RECONCILE, then the run released with a fence report",
+   "at": "18:53:46Z",
+   "answers": [
+    [
+     "DENIED",
+     "NOT_CONSUMED",
+     "WRONG_BINDING"
+    ],
+    [
+     "APPLIED",
+     "RESERVATION_RELEASED",
+     "BOUND_FENCE"
+    ]
+   ],
+   "phase": "RELEASED",
+   "chain_nonce": null,
+   "reports": [
+    [
+     38,
+     "EFFECT_REPORT",
+     "EFFECT"
+    ],
+    [
+     39,
+     "FENCE_REPORT",
+     "FENCED_NO_START"
+    ]
+   ],
+   "effect_report_authentic_for_scope_null_nonce": [
+    true,
+    false
+   ],
+   "e25a297_run_outcome_on_effect_items": "PASS",
+   "record_failures_for_this_run": [
+    "6 gate reports and re-derived verdicts: a-1a2556c5329a5a52 gate report at 9: not recorded with a reconcile decision for this attempt; rel gate report at 39: not an effect report"
+   ],
+   "record_outcome": "RELEASED",
+   "record_carries": [
+    [
+     38,
+     "EFFECT"
+    ],
+    [
+     39,
+     "FENCED_NO_START"
+    ]
+   ]
+  }
+ ],
+ "finished": "2026-11-21T18:53:46Z"
+}

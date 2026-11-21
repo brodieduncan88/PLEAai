@@ -1,0 +1,29 @@
+--- a final run whose result is stored as a value
+    run : "a-a5dffcd650d2"
+    before : {"outcome": "value", "verdict": "UNKNOWN", "marker": null}
+    decisions before : 24
+    store a different value (marker 1) : "accepted"
+    after 1 : {"outcome": "value", "verdict": "UNKNOWN", "marker": null}
+    store another value (marker 2) : "accepted"
+    after 2 : {"outcome": "value", "verdict": "UNKNOWN", "marker": null}
+    store "unknown" over it (marker 3) : "accepted"
+    after 3 : {"outcome": "value", "verdict": "UNKNOWN", "marker": null}
+    DELETE the row, as the service role : "REFUSED: InsufficientPrivilege: permission denied for table results"
+    UPDATE the row, as the service role : "REFUSED: InsufficientPrivilege: permission denied for table results"
+    decisions after : 24
+    storing a result added a decision to the chain : false
+--- a run whose stored outcome is "unknown"
+    run : "a-f9b994949882"
+    before : {"outcome": "unknown", "verdict": null, "marker": null}
+    decisions before : 24
+    store a different value (marker 1) : "accepted"
+    after 1 : {"outcome": "value", "verdict": "PASS", "marker": 1}
+    store another value (marker 2) : "accepted"
+    after 2 : {"outcome": "value", "verdict": "PASS", "marker": 1}
+    store "unknown" over it (marker 3) : "accepted"
+    after 3 : {"outcome": "value", "verdict": "PASS", "marker": 1}
+    DELETE the row, as the service role : "REFUSED: InsufficientPrivilege: permission denied for table results"
+    UPDATE the row, as the service role : "REFUSED: InsufficientPrivilege: permission denied for table results"
+    decisions after : 24
+    storing a result added a decision to the chain : false
+--- a final run with no stored result : no such run in this database
