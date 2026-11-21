@@ -1,0 +1,14 @@
+ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation.
+Specification: Amendment 16, version 5, spec/SPEC_v5_as_sent_to_review.md (961 lines), SHA-256 e9f7f4b87af52e0a296262a399a6628cdbe05bb7e1ad65e946e2620b816b74b6
+Adapter: default   started 2026-11-21T22:31:08Z
+
+PASS             SELF-ACC2-01                       cap=NONE      dec=4,5,6 rules=ACC-2,N-5
+PASS             SELF-CHAIN-01                      cap=NONE      dec=1     rules=D-3,D-11
+PASS             SELF-NI-01                         cap=NONE      dec=1     rules=K-CAP-1
+PASS             SELF-FIX-01                        cap=NONE      dec=2     rules=I-1,I-3,I-ID-1,I-ID-3,I-E-1,I-S-2
+PASS             SELF-GATE-01                       cap=NONE      dec=1     rules=K-CAP-1
+PASS             SELF-LIMITS-01                     cap=NONE      dec=4,5   rules=11-LIMITS,ACC-5
+PASS             SELF-CAP-01                        cap=NONE      dec=1,4   rules=K-CAP-1,ACC-5
+
+Totals: PASS 7 (of 7)
+ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation.

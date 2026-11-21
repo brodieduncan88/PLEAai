@@ -397,3 +397,22 @@ gateway is unchanged. S-1 to S-4, B-1 to B-3 and Part D stand as they are.
 - The baseline's receipt-counted freshness was broken on the real mailbox: a statement of coverage signed three hours
   earlier was receipted with the current time (the reviewer's R5). This is the fault the erratum of 21 November
   already corrects in the design; the mailbox itself is unchanged.
+
+## Part F. The specification round of 21 November 2026 (added; Parts A to E are unchanged)
+
+No code was changed and no defect of Parts A to E is closed by this round. The round produced a specification for a
+Step 3 (`verify/STEP3_SPECIFICATION_AMEND16_2026-11-21.md`, version 6), eleven reports by three separate agents
+(`verify/STEP3_SPEC_REVIEW_AMEND16_2026-11-21.md`, internal review and separately authored verification, not
+independent validation), four bounded models and 200 prewritten acceptance tests (`tests/diag_amend16_spec/`). The
+summary and the NO-GO recommendation are in `verify/STEP3_SPEC_ROUND_AMEND16_2026-11-21.md`.
+
+- **About the code at `e25a297`.** S-5 and S-1, as demonstrated, need the gate's signing key (CAP-KEY). With the
+  database role alone, no replay of a genuine PASS report made a failing run read PASS in the tests made; that no
+  such path exists is not shown. The acceptance tests run against the unchanged `e25a297` give 124 FAIL, 52 NOT
+  IMPLEMENTED and 24 PASS: a diagnostic result on one machine, not an official run.
+- **Defects of the specification.** 94 findings were made against its six versions; 70 were corrected in the text; 24
+  are open against version 6: one HIGH (T1, no wire format is fixed), eleven MEDIUM (M37, T2 to T11) and twelve LOW.
+- **Failures of proposed repairs.** Version 2's anchor rule failed when the mailbox lost its record (M20). Version
+  5's repair of it was broken by the model in 16 steps (M30). Version 6's repair holds in the model, and its wording
+  claims too much for a courier restored from an older copy (M37).
+- **Blockers.** B-1, B-2 and B-3 are unchanged and open.

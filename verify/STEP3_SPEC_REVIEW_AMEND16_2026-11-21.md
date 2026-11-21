@@ -22,6 +22,9 @@ reports came back; none is edited afterwards.
 | 6 | the modeller | specification version 2 | 22:04 |
 | 7 | the reviewer | specification version 5 (commit `466dd2f`) | 22:08 |
 | 8 | the modeller | specification version 5 | 22:29 |
+| 9 | the reviewer | specification version 6 (commit `e57ea2a`) | 22:33 |
+| 10 | the test author | specification version 6: the prewritten acceptance tests | 22:36 |
+| 11 | the modeller | specification version 6 | 22:44 |
 
 ---
 
@@ -1469,5 +1472,425 @@ The courier's state was never lost, yet the head of the last accepted statement 
   - a mailbox rolled back to an older snapshot (only the total loss of the budget's record is modelled);
   - a hypervisor pause; liveness.
 - **Not exercised:** ST-4 and ST-9 are always true here; ST-1's budget and key branches never trigger.
+- **Search key:** states are keyed by a 64-bit hash, so a collision would prune a state without warning.
+- **Nothing here is evidence about any implementation.**
+
+---
+
+# Part 9. The reviewer, on version 6, as returned
+
+[tier: opus]
+
+# Step 3 specification v6: internal review, round 6
+
+21 November 2026. This is an internal review by the same Opus-tier session. It is not independent validation. I spawned no subagents and do not give a GO or NO-GO.
+
+**By my argument, no CRITICAL, HIGH or MEDIUM finding is open in version 6, and no rule is unfit to hand to the author of acceptance tests.** One LOW finding is open: F38. Given round 5, that conclusion needs the model's run on version 6 behind it (section 4).
+
+**The diff is the whole difference (RUN).** The v6 file's SHA-256 begins `8eb8fe4b7ecb8696`. My own `diff` of v5 against v6 (saved as `…/gate/review2/out/v5v6_mine.diff`) has the same changed lines as `v5_to_v6.diff`. Everything else below is ARGUED; I ran no model and no deployment.
+
+## 1. M30, against version 6
+
+**Walking the 16 steps:**
+- **Steps 1–5:** the FROM_ZERO reading verifies a checkpoint at N1. By I-O-4, the courier's own anchor becomes (N1, head1) at that moment, before any statement is sent.
+- **Step 10:** S1 is sent again and gets 422. Under version 6 that does not move the own anchor ("never lowers it, whatever the mailbox answers").
+- **Steps 11–13:** the challenge's anchor is 0. The courier holds no receipt for S1, so I-O-4a does not fire. That is correct: an unanswered statement is not evidence that the mailbox lost state.
+- **Step 14:** the witness is cut back below N1.
+- **Step 15: the trace stops here.** The new checkpoint's chain is shorter than N1, so by I-O-4 it is a ROLLBACK. The reading ends with an alarm and no statement, and the statement of steps 15–16 is never made.
+
+Separately, once the record is wiped and the replayed items restore only a prefix of the chain, every receipted item beyond that prefix makes I-O-4a fire. So a notice the mailbox lost cannot be hidden by I-O-8's "send once per epoch".
+
+**Attempts to break the new rule:**
+
+| Case | Result |
+|---|---|
+| A checkpoint verified in a reading that then failed for another reason | The own anchor still rises. The witness's chain only grows, so later honest readings contain that point. No harm. |
+| A witness that honestly has a shorter chain than a checkpoint it once signed | Not possible for the witness role, which only appends. It is possible operationally, by a database restore or a failover to a replica that lagged behind. That is caught as ROLLBACK and stays NOT COVERED for ever: fail-closed, and needing the operator (F38). |
+| A forked witness that showed the courier the fork first | If the witness keeps to the fork, it is one consistent false chain: L-6, unchanged. If it goes back to the main chain, the result is FORK for ever: fail-closed. I found no false COVERED beyond L-6. A fork past the own anchor can be seen by no design: nobody observed those decisions, and every notice was made at or below the own anchor. |
+| A courier with no own anchor | Nothing to check. ST-6 and the mailbox's anchor apply. |
+| Own anchor above the mailbox's anchor | Normal after failed readings, or after the mailbox lost state. The courier enforces its own anchor; the mailbox enforces its own. Both must hold. |
+| Mailbox's anchor above the own anchor | A courier restored from backup. ST-6 enforces it. |
+| An INCREMENTAL reading whose cursor is below the own anchor | The decisions in (cursor, N] include the own anchor, and the courier compares the hash there. A cursor above the own anchor cannot happen, because every accepted statement's checkpoint was verified first. |
+| I-E-4, "if it can still read it" | M31 is resolved. If the own anchor is unreadable, that is L-10. |
+| Any honest sequence that ends NOT COVERED for ever | Only the operational witness rollback above, which is deliberate (F38). |
+
+## 2. The other findings
+
+| Finding | Standing |
+|---|---|
+| M31 | **Fixed** (I-O-4, I-E-4) |
+| F35 | **Fixed** (I-O-4a counts only receipted statements, and an unanswered one is sent again first) |
+| F36 | **Fixed** (a shorter chain is a ROLLBACK) |
+| F37 | **Fixed** (E-Q-4 drops alarm bodies only once the new alarm's room is checked) |
+| M27 remainder | **Fixed** (the alarm is the item after the EPOCH_OPEN) |
+| M32 | **Fixed** (I-O-2, one item at a time). M-D-1 is now a defence only. |
+| M34 | **Fixed** (E-Q-4) |
+| M33 | I agree no change is needed. EPOCH_KNOWN is redundant beside `closes` but harmless. |
+| M35 | I agree no change is needed. E-Q-3a sizes the rooms by ITEM_MAX, so measuring actual sizes is the implementer's job. |
+
+## 3. New finding
+
+**F38, LOW (O-3, I-O-4).** O-3's operator act, outside the specification, clears the mailbox's anchor only. The courier's own anchor is never lowered. So after a legitimate operator decision, for example accepting a restored witness database, the courier refuses every reading for ever unless the same out-of-band act also resets the courier's own anchor.
+
+**Counterexample:**
+1. The witness database is restored from backup, and readings get ROLLBACK.
+2. The operator resets the mailbox's anchor.
+3. The courier's own anchor still lies above the restored chain, so ROLLBACK goes on for ever.
+
+**Correction:** say that the out-of-band act must cover both anchors, and that no test written from this specification covers it.
+
+## 4. Weight of my "fixed"
+
+My judgements in this report are argued from the text and checked by no search. I argued in round 5 that the rule the model then broke was fixed, so this "fixed" should carry no more weight than that one. The model's run on version 6, especially its record-wipe and fork configurations, is the check that matters.
+
+## 5. Plain statement
+
+- **CRITICAL:** none open.
+- **HIGH:** none open.
+- **MEDIUM:** none open.
+- **LOW:** F38.
+- **Rules unfit to hand over:** none.
+
+---
+
+# Part 10. The test author, on version 6, as returned
+
+[tier: opus] I wrote the adversarial acceptance suite for the Amendment 16 specification, **version 6**. Everything is under `/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/gate/acctests/`. Three runs were made. Section 3 is checked against a test-side oracle with planted defects. The mailbox and courier tests have never run past their first call into the seam, so whether they can pass together is unverified. This is separately authored verification (internal), not independent validation.
+
+**Version 6, as cited:** `spec/SPEC_v6_as_sent_to_review.md`, 989 lines, SHA-256 8eb8fe4b7ecb869670bba85a359093ee2817cf02fc77a8a150a4667c2509f836. It is in `rules.py`, the head of every printed result, every results JSON and `trace.json`. The SELF-ACC2-01 self-test checks it. Every printed result, every console file and every JSON row carries the ACC-2 statement at head and foot.
+
+## 1. The suite
+
+**Files** (all under the directory above):
+- **Framework:** `acc.py` (labels, ACC-2 text, one budget per test, helpers), `sut.py` (the seam and the default adapter), `rules.py` (the rule catalogue), `run_acceptance.py` (the runner), `make_trace.py` (writes `trace.json`).
+- **Fixtures:** in `fixtures/`:
+  - `crypto.py`: D-1, D-2, D-6 and the evidence id.
+  - `honest_gate.py`: the honest gate host, in another process.
+  - `capkey.py`: the CAP-KEY signer.
+  - `chain.py`: a scripted witness chain. Labels are derived as the witness derives them.
+  - `clock.py`: the injectable clock.
+  - `form3.py`: items, identities, A(k), statements, and a driver that acts as a courier against the mailbox.
+  - `netfix.py`: a scripted witness over HTTP, and a mailbox proxy that logs every request and can drop or alter answers.
+- **Tests:** in `tests/`: `test_s3_findings.py`, `test_s3_count_belief.py`, `test_s4_s5_courier.py`, `test_s5_v6_anchor.py`, `test_s5_epochs_mailbox.py`, `test_s6_stores.py`, `test_s7_time_tokens.py`, `test_s7_order_statements.py`, `test_s8_s9_status.py`, `test_selftest.py`, with helpers `s3util.py` and `mbutil.py`.
+- **Planted capability violations:** `selftest_fixtures/` (not part of the suite).
+- **Adapters and oracle:** `sut_e25a297.py`, `sut_oracle_s3.py`, and `oracle_s3.py` (TEST ORACLE, not an implementation), with `run_mutants_s3.py` for the planted defects.
+- **Data:** `data/record_revA.json` and `data/keys.json`, copied from the pinned sample.
+
+**200 tests.**
+- **By section:**
+
+| Section | Tests |
+|---|---|
+| 3 (consistency rule, belief, record checker) | 54 |
+| Courier side of 4 and 5 | 41 (C4 18, C5 23) |
+| K-N waiting times and wording | 5 |
+| 6.5 exhaustion and E-B-1 | 4 |
+| 5 at the mailbox | 10 |
+| 6 | 16 |
+| 7 | 40 |
+| 8 | 10 |
+| 9 (SAF-1 to SAF-11, non-claims) | 12 |
+| 11 (earlier forms) | 1 |
+| Self-tests | 7 |
+
+- **By capability:** NONE 65, CAP-DB 43, CAP-KEY 43, CAP-OS 25, CAP-OWNER 24.
+- **By owner's decision** (a test may serve several): 1→68, 2→58, 3→47, 4→4, 5→124, 6→1.
+
+**How labels are enforced:**
+- Every test carries an id, its rule ids, exactly one capability, its decision numbers, and a one-line "catches" (the wrong implementation it would catch).
+- The honest gate host generates its key in a separate process and exposes only the public half. It signs:
+  - one verdict per (budget, run, nonce), and only after it is told the intent was accepted;
+  - a repeat byte for byte;
+  - a fence only for a run it never ran, and never both a fence and a verdict;
+  - 64-hex digests and the standard claims only.
+- The runner refuses (ERROR) any test not labelled CAP-KEY whose source or module names the CAP-KEY signer.
+- The signer refuses to exist or sign unless the current test is CAP-KEY, which catches use through a helper.
+- SELF-CAP-01 shows all four checks firing on planted tests, including an unlabelled test and a reused budget.
+- The check also fired for real on two of my own tests (C5-IO-06, C5-IO-07), which were mislabelled CAP-OS. That run is kept as `results/e25a297-round0-capability-errors.*`.
+
+## 2. The seam (`sut.py`)
+
+The adapter is chosen with `ACC_SUT=<module>`. The default raises `SutNotImplemented`, which the runner reports as NOT IMPLEMENTED, separate from PASS, FAIL and ERROR.
+
+| Method | Rules behind it |
+|---|---|
+| `judge_run(RunInput) → RunJudgement` (findings, outcome, believed, notice, after-wait, bound evidence ids, recorded pair id, whole). Input: decisions naming the run up to N, phase, chain nonce, the witness's evidence in any order (reports after N included, to be left out), the stored result, the gate keys. | 3.1–3.4, K-1…K-7, K-BEL-1…4, I-K-1, D-2…D-14 |
+| `judge_unborne_names(NamesInput)` | O-R-1, D-12, K-PHASE for the budget |
+| `record_judge_runs(RecordRunsInput)` | K-REC-1, K-REC-3, K-3 (same rule as the courier) |
+| `verify_record(record, keys)` | K-REC-2 |
+| `notice_problems` / `receipt_problems` | section 11, earlier forms |
+| `start_mailbox(MailboxConfig, clock, store_dir)` → handle with `request(method, path, body, client)`, `public_key`, `restart/stop/start` | 6–8, 11 (every limit a parameter) |
+| Optional handle methods: `snapshot/restore`, `corrupt_record`, `remove_evidence`, `run_maintenance`, `source_files` | L-10/I-O-4a, C-1.8, E-B-3, E-Q-4/5, M-T-1 |
+| `codec()` | field names the specification does not fix |
+| `start_courier(CourierConfig, witness_url, mailbox_url, clock, state_dir)` → handle with `read(root)`, `snapshot_state/restore_state`, `lose_state`, `restart`, `outbox`, `close` | 4, 5, K-N |
+
+**Testability requirements I had to assume** (each is a finding):
+- **TR-CLOCK:** all time comes from an injected clock with BOOTTIME, MONOTONIC, wall time and boot id, so a test can suspend, reboot and set the wall clock.
+- **TR-STORE:** all durable state lives under a directory the test chooses. S7-REFUSED-02 assumes that store is plaintext so it can be searched.
+- **TR-CLIENT:** a client name per request, with no TLS inside the seam. The courier speaks plain HTTP and sends `X-Acc-Client`.
+- **TR-MAINT:** retirement and orphan removal can be triggered on demand.
+- **TR-CODEC:** the names of bodies, challenge, receipt, LINKED, signed head, status and error fields. The mailbox's signed message is assumed to be canonical of every field except signer and signature.
+- **Optional state seams:** courier snapshot, restore, loss and outbox; mailbox snapshot, corruption and removal of one evidence object.
+
+## 3. Results of the runs
+
+| Run | Result | File |
+|---|---|---|
+| Default adapter | 193 NOT IMPLEMENTED, 7 PASS (the self-tests) | `results/v6-default.json` |
+| e25a297 adapter | 124 FAIL, 52 NOT IMPLEMENTED, 24 PASS (7 of them self-tests) | `results/v6-e25a297.json` |
+| Section 3 oracle | 61 PASS (all 54 section 3 tests and 7 self-tests), 139 NOT IMPLEMENTED | `results/v6-oracle_s3.json` |
+
+**The e25a297 run.**
+- Pinned source unchanged: no bytecode was written and nothing in it changed (checked with `find -newer`). `/home/user/PLEAai` shows a clean status.
+- **Why the mailbox tests fail:** the existing mailbox answers EPOCH_OPEN with 400 (75 tests) or `/challenge` with 404.
+- **Why the section 3 tests fail:** the existing code produces no findings, and it reads an envelope with no `outcome` field as `'value'`.
+- **Why the courier tests are NOT IMPLEMENTED:** `courier.py` has no challenge, no form-3 items and no chain epochs.
+- **Also NOT IMPLEMENTED:** `record_judge_runs`, because check 6 cannot be called on its own without changing the code.
+
+**The 17 non-self tests that pass against e25a297, and why:**
+- **The present code meets the rule:**
+  - S3-BEL-02 (an `'unknown'` envelope is not believed);
+  - S3-BEL-04 (UNVERIFIED on a digest mismatch);
+  - S3-BEL-06 (no recorded verdict gives no verdict);
+  - S3-BEL-07 (REFUNDED);
+  - S3-KEYS-01 (every key given is used);
+  - S3-NEG-REPEAT-01 (one pair signed twice is believed);
+  - S3-NEG-OTHERRUN-01 and S3-NEG-OTHERBUDGET-01 (replayed genuine reports read UNVERIFIED or NO_OUTCOME, as section 1.2 records);
+  - S3-REC2-01 (the record's signature);
+  - S11-FORMS-01 (forms 1 and 2).
+- **Negative tests that the present code passes trivially, because it has no findings at all:**
+  - S3-NEG-NULL-01, S3-NEG-FENCE-01, S3-NEG-STRAY-01, S3-NEG-NAMES-01, S3-NEG-NAMES-02, S3-NEG-UNKNOWN-01, S3-REC3-01.
+  - They are not weak: each one fails a planted over-eager defect (fence_alone_finding, absent_not_null, stray_is_finding, names_any_report, unknown_alone_finding, cnt1_on_none).
+- **One test was weak and is fixed:** S3-ORDER-01 passed only because no findings were computed. It now first asserts the expected findings.
+
+**Planted defects in the oracle** (`results/mutants/`):
+- 43 defects, each removing or changing one rule.
+- The first round had 5 survivors: null_nonce_in_scope, no_cnt1, believe_any_report, other_budget_counts, bound_no_recorded. I strengthened S3-NONCE-02, S3-BOUND-01 and S3-NEG-OTHERBUDGET-01, and added S3-CNT1-02.
+- In the final round 42 of 43 are caught.
+- The survivor, `believe_any_report` (K-BEL-2), I judge equivalent. Any other in-scope EFFECT digest that differs from the recorded one is already K-CONFLICT, which blocks belief. One that is the same gives the same belief.
+
+## 4. Traceability (`trace.json`)
+
+- **MUST rules with no test:**
+  - ACC-1: an organisational obligation;
+  - E-R-1: the specification names no reading component of the implementation, so the suite's own reader applies it instead.
+- **Normative rules with no test:**
+  - C-2: a statement of meaning; its clauses are tested through C-1.x and ST-x;
+  - I-E-9: by its own words there is nothing to check at the mailbox;
+  - K-REC-4: nothing to test beyond K-REC-1;
+  - I-O-3, the branch where the head is a position of the courier's own chain: producing a genuine one needs the mailbox's key or a crash-injection seam.
+- **Also listed as not testable:** E-Q-3a (operator sizing), P-KEYS (operator configuration), a real suspension (N-4), a pause from outside the machine (M-T-7/L-9), and E-X-2's bound by provisioning.
+- Every other MUST rule (K-CAP-1 through E-X-4, M-T-1, M-T-2, the section 11 rules on limits and earlier forms, SAF-1 to SAF-11) has at least one test.
+
+## 5. Tests changed for versions 5 and 6
+
+**Version 5:**
+- New tests:
+  - S5-EPOCH-STALE-01, S5-EPOCH-FIRST-01 (EPOCH_STALE);
+  - S5-REASON-MSL-01 (MAILBOX_STATE_LOST as a reason);
+  - C5-IE-03 (an unanswered EPOCH_OPEN is sent again first);
+  - C5-IE-04 (refused as stale: another EPOCH_OPEN from a new challenge);
+  - C5-IS-01 (no statement before its items are acknowledged);
+  - S7-DL2-03 (DL-2 answers again only items held or statements refused at 7.4);
+  - S7-REFUSED-02 (a refused statement is kept without its `reveal`; formerly F33);
+  - S6-RETIRE-ALARM-01 (alarm bodies dropped before the new one is stored; formerly F34);
+  - C5-IO-04B and C5-IO-04C (the courier's own anchor).
+- Changed: `form3.open_epoch` now carries `closes`, and S7-DL2-02 and C5-IE-01 were adjusted. F33 and F34 are no longer open findings for these tests.
+
+**Version 6:**
+- New in `tests/test_s5_v6_anchor.py`:
+  - C5-V6-ANCHOR-01 and -02: the trace that broke version 5 (answer lost, record lost, statement re-sent and refused, witness then rolled back or forked below that N). The courier must make no statement and must alarm ROLLBACK or FORK.
+  - C5-V6-ANCHOR-03: the converse, that a refusal alone raises no MAILBOX_ROLLBACK.
+  - C5-V6-ANCHOR-04: the own anchor checked in an INCREMENTAL reading, against a refusal that must not move it.
+  - C5-V6-ANCHOR-05: the own anchor kept through a COURIER_STATE_LOST epoch.
+  - C5-V6-ONE-01: one item at a time.
+- Also new: S6-RETIRE-ALARM-02 (bodies dropped only when the new alarm will be stored).
+- Changed:
+  - C5-IO-04 now checks that the alarm is the item after its EPOCH_OPEN;
+  - C5-IO-04B and C5-IO-04C cite I-O-4a and I-O-4 again;
+  - the proxy logs when each delivery begins;
+  - SELF-ACC2-01 checks version 6.
+- The E-Q-4 point about retiring statement bodies where the last statement carries nothing is a MAY, so it is not tested.
+- The runs made before the version 5 and 6 changes are kept as `results/v5suite-*`.
+
+## 6. Findings against the specification (none CRITICAL)
+
+**HIGH**
+- **T1 (5.3, 11, I-S-2).** No wire names are fixed for bodies, the challenge, the challenge request, receipts, LINKED, the signed head, the status or error codes, nor for the mailbox's signed message. The interface cannot be tested as written. I chose the names in the `codec()` seam.
+
+**MEDIUM**
+- **T2 (3.4).** No outcome is stated when K-MISSING alone holds. I chose: no outcome, no notice, not whole, not believed.
+- **T3 (K-N-2 against 5.3).** K-N-2 says the notice must not say who signed; 5.3 requires each bound report with its signer. I chose: signer keys appear as data only, and the notice's fixed words must not attribute.
+- **T4 (O-2, O-W-2).** A checkpoint that fails O-2 has no reason among O-W-2's. I test only that no statement is made and the budget is NOT COVERED.
+- **T5 (DL-1, DL-4).** "400 or 403" is not assigned to cases, and the answer to bad INLINE bytes is not stated. I chose 403 for a wrong key, 400 for size, form or kind, and 409 for bad INLINE bytes.
+- **T6 (M-T-1).** The rule can be tested only through an injected clock and a scan of the source; the specification does not require the clock to be injectable.
+- **T7 (7.4).** No interface serves refused statements, so "kept without its `reveal`" can be tested only by searching the store.
+- **T8 (E-Q-4, E-Q-5).** It is not said when retirement or orphan removal run, so E-Q-6 is tested through a trigger seam.
+- **T9 (C-S-1).** The status fields have no names. I test that their values are present anywhere in the status.
+- **T10 (K-N-3).** The waiting time is not among the configuration of section 11. I assumed a courier parameter.
+- **T11 (I-O-4, I-E-4, version 6).** "For as long as it can read it" does not say whether a courier whose state is absent keeps its anchor. I test that the anchor is kept only on the ST-5 refusal path. A restore from an old copy necessarily lowers it, which sits against "never lowers it".
+
+**LOW**
+- **T12 (K-CAP-1).** A test that needs two capabilities cannot carry exactly one label (C5-IO-06 and C5-IO-07 need CAP-KEY and CAP-OS). I labelled each by the key capability.
+- **T13 (I-ID-1).** H(name) for a null name is ambiguous. I chose H(null).
+- **T14 (M-K-1).** The mailbox epoch a courier names before it has seen one is not stated. I chose null, then retry after 409 EPOCH.
+- **T15 (O-1 against 11).** The challenge carries gaps and the request it answers by O-1, but not in section 11's list.
+- **T16 (I-K-1).** Ties for "earliest by decision" are not broken by the text. I break them canonically.
+- **T17 (3.2).** It is not said whether F counts a FENCE_REPORT by its kind alone. I chose kind alone.
+- **T18 (E-B-1).** It is not said that the mailbox enforces "INLINE all together". I test it at the courier only.
+- **T19 (I-E-1).** The encoding of the 16-byte chain epoch and of the secrets is unstated. I chose lower-case hex.
+
+## 7. What the suite does not cover
+
+- **No mailbox or courier implementation and no fake.** None of the 146 mailbox and courier tests has run against anything that could pass it. The fixture paths were exercised only against a stub (SELF-FIX-01). I can't say they can all pass together, and some may need adjustment once an implementation and its codec exist.
+- **Not exercised:**
+  - durability across a crash (there is no crash-injection seam);
+  - the I-O-3 branch where the head is the courier's own position;
+  - a courier state copy taken while a statement was on its way (I-E-8);
+  - a real suspension, or a pause from outside the machine;
+  - TLS client names;
+  - anything that holds only on a deployment where DP1 and DP2 hold (ACC-2).
+- **K-N-2 and the non-claim tests** are regex searches over the words, so they are heuristic.
+- **The O-R-1/O-C carrying test** is conditional: carrying is a MAY.
+- **The record checker** is covered only through its section 3 seam and the signature check on the pinned sample record, not with whole records built for each scenario.
+
+---
+
+# Part 11. The modeller, on version 6, as returned
+
+[tier: opus]
+
+# Round 4: bounded model of Amendment 16, specification version 6
+
+This is internal, separately authored verification, not independent validation. The results are bounded, are not a proof for unbounded parameters, and say nothing about any implementation. No subagents were used and nothing was escalated. Nothing under `G/model2/`, `G/model3/` or `G/model4/` was changed; all new work is under `G/model5/`.
+
+**The fixed design of version 6 violated no property the text claims, at every bound searched.** All 15 fixed-design configurations hold. The only SAF-10 failures are in the two configurations where the courier's state is lost as well, which is L-10 and not claimed. They were declared as expected and observed as declared. **M30 and M31 are closed in the model.**
+
+I had to fix my own SAF-10 rendering between run 1 and run 2 (section 3). The model's behaviour did not change, only how one property is judged. Both runs are kept.
+
+## 1. What changed in the model
+
+`G/model5/model.py` is `model4` with these changes.
+
+**The courier's own anchor (I-O-4)**
+- It is the highest pair (N, head) of a witness checkpoint the courier has verified.
+- It is updated in every reading that raised no ROLLBACK or FORK, whether or not a statement follows. It is never lowered, and nothing the mailbox answers moves it.
+- It is kept through a new chain epoch opened for any reason, I-E-4 included.
+- It is lost only by a real loss of the courier's state. A restore from an old copy brings back the copy's older value.
+- **It is checked in every reading** (FROM_ZERO, REFRESH and INCREMENTAL): a witness chain shorter than it is a ROLLBACK, and a different head at its N is a FORK. Either ends the reading with an alarm and no statement.
+
+**The mailbox's loss of state (I-O-4a)** is a separate rule. It is detected by either:
+- a receipt for a position of the open chain epoch beyond the mailbox's head; or
+- a receipt for a statement whose N is above the anchor in the challenge.
+
+Only receipted statements count; an unanswered statement is sent again first. On detection: a new chain epoch with reason MAILBOX_STATE_LOST, and the MAILBOX_ROLLBACK alarm is the item after its EPOCH_OPEN.
+
+**Already in model4 and unchanged:** items sent one at a time (I-O-2); alarm bodies dropped only when the new alarm will be stored (E-Q-4); retirement of every statement body except the last.
+
+**SAF-10, in three cases**, judged when a statement is counted, against a ghost record of the last statement truly accepted for the budget (GANCHOR):
+
+| Case | Condition | Requirement |
+|---|---|---|
+| (a) The mailbox's record is intact | the mailbox's anchor equals GANCHOR | the checkpoint signs GANCHOR back |
+| (b) The record is lost; the courier's state is intact | the courier's ghost own anchor (same rule as above, but immune to mutants and lost only by a real loss or a restore) has N ≥ GANCHOR's N **and its verified chain contains GANCHOR** | the witness chain read contains GANCHOR |
+| (c) Both lost | otherwise (including a restored old copy) | L-10, not claimed; checked separately as SAF10_L10 |
+
+## 2. Bounds
+
+Defaults: 1 run, standings u/x, TMAX 1, L 1, R 0, TOKENS_MAX 1.
+
+| Configuration | Bounds |
+|---|---|
+| WIPE | 2 decisions, 3 epochs, 1 wipe, 3 readings |
+| WIPE_L | as WIPE, plus standing p and 4 readings |
+| WIPE_FORK | 2 decisions, 1 witness cut-back, 3 readings |
+| WIPE_FORK_L | as WIPE_FORK with 3 decisions |
+| WIPE_FORK_INC | standings x/p (so readings can be INCREMENTAL), 3 decisions |
+| WIPE_BOTHLOST | as WIPE_FORK, plus a courier loss, 2 readings |
+| FORK | 3 decisions, 1 cut-back |
+| FORK_L | as FORK, plus 2 epochs and 1 loss |
+| RESTORE | 1 copy, 1 restore, 1 loss |
+| RESTORE_L | as RESTORE, plus standing p and 2 decisions |
+| RESTORE_FORK | 1 copy, 1 restore, 1 cut-back |
+| WIPE_RESTORE_FORK | 1 copy, 1 restore, 1 wipe, 1 cut-back, 2 readings |
+| CHAIN, EPOCH, QUOTA_NOTICE | as in round 3 |
+
+**Cut to fit:** WIPE_RESTORE_FORK at 3 readings hit a 3-million-state cap in sizing, so it was reduced to 2 readings before declaring. All searches in both runs are complete. Each run took about 8.5 minutes of compute and covered 12.1 million states.
+
+## 3. Every configuration
+
+Declarations were written and hashed before run 1 (`G/model5/declared/`, with `SHA256SUMS`, `DECLARED_AT` and `CODE_AT_DECLARATION.sha256`).
+
+**Why there are two runs.** In run 1, SAF10 was also reported violated in FD_WIPE_BOTHLOST (15 steps) and FD_WIPE_RESTORE_FORK (16 steps). The cause was my case-(b) test, which then only compared N. After the courier lost its state (or was restored from a copy), it verified a checkpoint of the forked chain at the same N, and my test took that as an intact own anchor. I added the requirement that the courier's verified chain contains GANCHOR. With that fix (code hash in `G/model5/results/CODE_AT_RUN2.sha256`) run 2 matches the declarations. Run 1 is kept in `G/model5/results/run1/`, run 2 in `G/model5/results/run2/`.
+
+**Run 2 results**
+
+| Config | Declared violated | Observed violated (trace length) | States | Complete | Agrees |
+|---|---|---|---|---|---|
+| FD_WIPE | none | none | 62598 | yes | yes |
+| FD_WIPE_L | none | none | 340883 | yes | yes |
+| FD_WIPE_FORK | none | none | 297112 | yes | yes |
+| FD_WIPE_FORK_L | none | none | 1439272 | yes | yes |
+| FD_WIPE_FORK_INC | none | none | 1201828 | yes | yes |
+| FD_WIPE_BOTHLOST | SAF10_L10 | SAF10_L10 (13), the L-10 case | 254006 | yes | yes |
+| FD_FORK | none | none | 48222 | yes | yes |
+| FD_FORK_L | none | none | 716183 | yes | yes |
+| FD_RESTORE | none | none | 288984 | yes | yes |
+| FD_RESTORE_L | none | none | 2660308 | yes | yes |
+| FD_RESTORE_FORK | none | none | 700828 | yes | yes |
+| FD_WIPE_RESTORE_FORK | SAF10_L10 | SAF10_L10 (14) | 1704972 | yes | yes |
+| FD_CHAIN | none | none | 23006 | yes | yes |
+| FD_EPOCH | none | none | 103338 | yes | yes |
+| FD_QUOTA_NOTICE | none | none | 37162 | yes | yes |
+| MU_OA_LOWER_ON_REFUSAL | SAF10 | SAF10 (13), plus SAF10_L10 (16) | 328849 | yes | NO (see below) |
+| MU_OA_NOT_INC | none | none | 1201828 | yes | yes |
+| MU_OA_DROP_IE4 | SAF10 | SAF10 (13), plus SAF10_L10 (16) | 334211 | yes | NO (see below) |
+| MU_IOA_UNANSWERED | none | none | 56266 | yes | yes |
+| MU_NO_OWN_ANCHOR | SAF10 | SAF10 (13), plus SAF10_L10 (16) | 328849 | yes | NO (see below) |
+
+**The three mutant mismatches.** In each, the SAF10_L10 hit is a consequence of the first violation. Once a forked statement has been counted, it becomes GANCHOR, and the courier's knowledge no longer contains it, so the next statement is classed as case (c).
+
+**The regression families** (CHAIN, EPOCH, QUOTA_NOTICE) show the same results and the same probes as round 3, including EPOCH_STALE and an alarm taken after a refusal for room.
+
+## 4. Mutants and probes
+
+| Mutant (base) | Mechanism removed | Result |
+|---|---|---|
+| OA_LOWER_ON_REFUSAL (WIPE_FORK) | the own anchor is version 5's statement-based one, lowered by a refusal or a loss of answer | **SAF-10 breaks (13 steps).** Trace: S1 is counted and its answer lost; the wipe; S1 sent again gets 409; the courier declares its state lost; the witness is cut back to 0; a FROM_ZERO statement at N0 is counted |
+| OA_DROP_IE4 (WIPE_FORK) | the own anchor dropped on I-E-4 | **SAF-10 breaks (13 steps)**, the same shape |
+| NO_OWN_ANCHOR (WIPE_FORK) | no own anchor at all | **SAF-10 breaks (13 steps)** |
+| OA_NOT_INC (WIPE_FORK_INC) | the own anchor not checked in INCREMENTAL readings | **survives.** After a loss of the mailbox's record, the courier always reaches a FROM_ZERO reading before a statement can be counted (I-O-4a detects the loss, or I-E-4 or ST-7 force a new epoch), so the INCREMENTAL check is redundant at these bounds |
+| IOA_UNANSWERED (WIPE) | I-O-4a counts an unanswered statement | **survives:** at worst a spurious MAILBOX_STATE_LOST, which costs liveness only |
+
+**Probes (all as declared)**
+- **The own anchor turns a rollback into a ROLLBACK alarm after the mailbox's loss** (P_OWN_ANCHOR_FORK, WIPE_FORK, 10 steps). Trace: the wipe; the courier's notice gets 409 and it declares its state lost, keeping its own anchor; the witness is cut back to 0; the next reading is refused as a ROLLBACK.
+- **The same after a restore** (RESTORE_FORK, 13 steps).
+- **MAILBOX_ROLLBACK detected, and COVERED after MAILBOX_STATE_LOST** (WIPE).
+- P_OWN_ANCHOR_FORK is not reached in FORK: with the mailbox's record intact, ST-6 and O-3 catch the fork first.
+
+## 5. M30 and M31
+
+**M30: CLOSED IN THE MODEL.** The 16-step round-3 trace no longer violates anything: the replayed EPOCH_OPEN, the 422 on the resent S1, then a rollback below the lost anchor. A 422 cannot lower the own anchor, so the courier's next reading sees a chain shorter than its own anchor (ROLLBACK). FD_WIPE_FORK, FD_WIPE_FORK_L and FD_WIPE_FORK_INC hold SAF-10.
+
+**M31: CLOSED IN THE MODEL.** The own anchor is kept through I-E-4. The mutant that drops it reproduces the round-3 failure (13 steps).
+
+## 6. New findings
+
+**M36, LOW (liveness).** The own anchor now rests on any checkpoint the courier verified, including one in a reading that never led to a counted statement. If the witness is then rolled back or forked below that checkpoint, every later reading ends with ROLLBACK or FORK, so the budget stays NOT COVERED with no end. The mailbox's anchor was never that high. Trace (FD_WIPE_FORK, 10 steps): the courier reads at N1; its notice gets 409 after the wipe; the witness is cut back to 0; the next reading is a ROLLBACK. This is safe and consistent with O-3 ("nothing clears an anchor"), but the text does not say that the alarm can come from the courier's own anchor rather than the mailbox's.
+
+**M37, MEDIUM (wording).** A courier restored from an old copy reads an older own anchor. "Never lowers it" (I-O-4) cannot hold through a restore, and SAF-10 and L-10 speak only of the courier's state being "lost".
+- Shown: with the mailbox's record intact, ST-6 still protects (FD_RESTORE_FORK holds).
+- Shown: with the record also lost, a fork below the lost anchor passes (FD_WIPE_RESTORE_FORK, SAF10_L10, 14 steps). Trace: copy taken; FROM_ZERO reading at N1; restore; S1 counted; wipe; new epoch; the witness is cut back and grown differently; a FROM_ZERO statement at N1 over the forked chain is counted.
+- Suggested correction: say that L-10 includes a courier restored from a copy older than its last verified checkpoint.
+
+## 7. What the model does not cover
+
+- **Search limits:** bounded results only, at the small bounds of section 2.
+- **Only the I-O-4 area was re-run this round.** The other round-3 families were not re-run, except the three regression families.
+- **The courier's loss is all or nothing:** a partial loss where the own anchor stays readable but the rest of the state is gone is not modelled.
+- **Also not modelled:**
+  - a mailbox rolled back to an older snapshot (only the total loss of the budget's record);
+  - section 3, K-N-3, observation parts, sizes, two courier processes;
+  - liveness, which is not checked; M36 is reported from its trace.
 - **Search key:** states are keyed by a 64-bit hash, so a collision would prune a state without warning.
 - **Nothing here is evidence about any implementation.**

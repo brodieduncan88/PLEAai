@@ -1,0 +1,780 @@
+{
+ "config": "MU_OA_LOWER_ON_REFUSAL",
+ "bounds": {
+  "RUNS": 1,
+  "NMAX": 2,
+  "VALUES": [
+   "u",
+   "x"
+  ],
+  "L3": false,
+  "TMAX": 1,
+  "L": 1,
+  "R": 0,
+  "TOKENS_MAX": 1,
+  "EMAX": 3,
+  "MAX_READS": 3,
+  "REBOOTS": 0,
+  "RESTARTS": 0,
+  "WALL_MOVES": 0,
+  "SUSPENDS": 0,
+  "LOSSES": 0,
+  "SNAPS": 0,
+  "RESTORES": 0,
+  "REQ_REPLAYS": 0,
+  "CARRY_BREAKS": 0,
+  "ORPHAN": false,
+  "WIPES": 1,
+  "EV_FAIL": false,
+  "READ_FAIL": false,
+  "INCREMENTAL": true,
+  "WTRUNC": 1,
+  "ROOMS": null,
+  "ALARMS_KEEP": 1,
+  "RETIRE": false,
+  "READER": false,
+  "QMAX": 2,
+  "NSTAT_MAX": 3,
+  "COURIER": "honest",
+  "KEEP_OWN_ANCHOR_ON_LOSS": true,
+  "MUTANTS": [
+   "OA_LOWER_ON_REFUSAL"
+  ],
+  "MAX_STATES": 6000000
+ },
+ "declared_file": "declared/MU_OA_LOWER_ON_REFUSAL.json",
+ "declared_sha256": "884105690b55d4b552f7833970e8017f91e3fc6f25f23266e5b08f1da2c5b358",
+ "states": 328849,
+ "transitions": 1197822,
+ "max_depth": 30,
+ "complete": true,
+ "result": "COMPLETE",
+ "wall_seconds": 16.1,
+ "key": "64-bit Python hash of the state tuple",
+ "properties": {
+  "SAF1": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF2": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF4": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF6": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF10": {
+   "observed": "violated",
+   "depth": 13,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "decision1(run0->u)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=u/1)#15 -> receipt",
+    "adversary_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#32 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#32 -> 409 CHAIN_POSITION(head ceNone k0)",
+    "courier_takes_challenge->token1 -> opens epoch(COURIER_STATE_LOST,closes=None)",
+    "witness_chain_cut_back_to_0",
+    "courier_delivers EPOCH_OPEN(ce2,COURIER_STATE_LOST,closes=None)#58 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce2,k2,j1,tok1,FROM_ZERO,at0,N0,carried0)#338 -> receipt"
+   ],
+   "declared": "violated",
+   "agree": true
+  },
+  "SAF10_L10": {
+   "observed": "violated",
+   "depth": 16,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "decision1(run0->u)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=u/1)#15 -> receipt",
+    "adversary_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#32 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#32 -> 409 CHAIN_POSITION(head ceNone k0)",
+    "courier_takes_challenge->token1 -> opens epoch(COURIER_STATE_LOST,closes=None)",
+    "witness_chain_cut_back_to_0",
+    "decision1(run0->x)",
+    "decision2(run0->u)",
+    "courier_delivers EPOCH_OPEN(ce2,COURIER_STATE_LOST,closes=None)#58 -> receipt",
+    "courier_reads(FROM_ZERO,N2)",
+    "courier_delivers NOTICE(ce2,k2,run0=u/2)#159 -> receipt",
+    "courier_delivers STATEMENT(ce2,k3,j1,tok1,FROM_ZERO,at0,N2,carried0)#955 -> receipt"
+   ],
+   "declared": "holds",
+   "agree": false
+  },
+  "SAF11": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF3B_ACC": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "PMK1": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "DL2_SAME": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "REFUSED_NOPOS": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "ALARM_ROOM": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "INDEX_RESERVE": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF3": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF5": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF7": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "SAF8": {
+   "observed": "n/a",
+   "declared": "n/a",
+   "agree": true
+  },
+  "CENT_N": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "CENT_E": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "R_AT_STATUS": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  },
+  "C1_VS_82": {
+   "observed": "holds",
+   "declared": "holds",
+   "agree": true
+  }
+ },
+ "probes": {
+  "P_COVERED": {
+   "observed": "reached",
+   "depth": 4,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_INC": {
+   "observed": "reached",
+   "depth": 9,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "decision1(run0->x)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=x/1)#19 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#37 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "courier_delivers STATEMENT(ce1,k4,j2,tok1,INCREMENTAL,at1,N1,carried1)#85 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_AFTER_LOST": {
+   "observed": "reached",
+   "depth": 9,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> 409 CHAIN_POSITION(head ceNone k0)",
+    "courier_takes_challenge->token1 -> opens epoch(COURIER_STATE_LOST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce2,COURIER_STATE_LOST,closes=None)#58 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce2,k2,j1,tok1,FROM_ZERO,at0,N0,carried0)#90 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_AFTER_MBLOST": {
+   "observed": "reached",
+   "depth": 14,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "adversary_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_takes_challenge->token1 -> mailbox behind the courier: MAILBOX_ROLLBACK",
+    "courier_takes_challenge->token2 -> opens epoch(MAILBOX_STATE_LOST,closes=1)",
+    "courier_delivers EPOCH_OPEN(ce2,MAILBOX_STATE_LOST,closes=1)#93 -> receipt",
+    "courier_delivers OBS_INCOMPLETE(ce2,k2,MAILBOX_ROLLBACK)#139 -> receipt",
+    "courier_reading_done",
+    "courier_takes_challenge->token3",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce2,k3,j1,tok3,FROM_ZERO,at0,N0,carried0)#558 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_AFTER_REBOOT": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_AFTER_RESTART": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_COVERED_REFRESH_NEWMEP": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_LINK": {
+   "observed": "reached",
+   "depth": 12,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "decision1(run0->u)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=u/1)#15 -> 409 CHAIN_POSITION(head ceNone k0)",
+    "adversary_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "adversary_delivers NOTICE(ce1,k2,run0=u/1)#15 -> receipt",
+    "courier_takes_challenge->token1 -> opens epoch(COURIER_STATE_LOST,closes=1)",
+    "courier_delivers EPOCH_OPEN(ce2,COURIER_STATE_LOST,closes=1)#69 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce2,k2,run0=u/1)#167 -> receipt + LINKED"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_DL2_FIRST_RECEIPT_STMT": {
+   "observed": "reached",
+   "depth": 5,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> receipt",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_DL2_FIRST_REFUSAL": {
+   "observed": "reached",
+   "depth": 6,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "mailbox_loses_record_of_budget",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> 422 ST1,ST2",
+    "adversary_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> 422 ST1,ST2"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_STMT_BEFORE_ITEMS": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_EPOCH_KNOWN": {
+   "observed": "reached",
+   "depth": 9,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> 409 CHAIN_POSITION(head ceNone k0)",
+    "adversary_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_takes_challenge->token1 -> opens epoch(COURIER_STATE_LOST,closes=1)",
+    "courier_delivers EPOCH_OPEN(ce2,COURIER_STATE_LOST,closes=1)#69 -> receipt",
+    "adversary_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> 409 EPOCH_KNOWN"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_EPOCH_STALE": {
+   "observed": "reached",
+   "depth": 8,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> 409 CHAIN_POSITION(head ceNone k0)",
+    "courier_takes_challenge->token1 -> opens epoch(COURIER_STATE_LOST,closes=None)",
+    "adversary_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_delivers EPOCH_OPEN(ce2,COURIER_STATE_LOST,closes=None)#58 -> 409 EPOCH_STALE"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_OPEN_LOST": {
+   "observed": "reached",
+   "depth": 7,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> 409 CHAIN_POSITION(head ceNone k0)",
+    "courier_takes_challenge->token1 -> opens epoch(COURIER_STATE_LOST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce2,COURIER_STATE_LOST,closes=None)#58 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_OPEN_MBLOST": {
+   "observed": "reached",
+   "depth": 9,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "adversary_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_takes_challenge->token1 -> mailbox behind the courier: MAILBOX_ROLLBACK",
+    "courier_takes_challenge->token2 -> opens epoch(MAILBOX_STATE_LOST,closes=1)",
+    "courier_delivers EPOCH_OPEN(ce2,MAILBOX_STATE_LOST,closes=1)#93 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_OPEN_CLOSES_LIVE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_COURIER_LOST": {
+   "observed": "reached",
+   "depth": 5,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> 409 CHAIN_POSITION(head ceNone k0)"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_LOST_ST5": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_MAILBOX_ROLLBACK": {
+   "observed": "reached",
+   "depth": 7,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "adversary_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_takes_challenge->token1 -> mailbox behind the courier: MAILBOX_ROLLBACK"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_ROLLBACK_BY_ANCHOR": {
+   "observed": "reached",
+   "depth": 8,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "decision1(run0->u)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=u/1)#15 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#32 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "courier_takes_challenge->token1 -> mailbox behind the courier: MAILBOX_ROLLBACK"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_ROLLBACK_BY_RECEIPT": {
+   "observed": "reached",
+   "depth": 7,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "adversary_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_takes_challenge->token1 -> mailbox behind the courier: MAILBOX_ROLLBACK"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_OWN_ANCHOR_FORK": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_RESTORE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_STALECOPY_COUNTED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_FORK_ALARM": {
+   "observed": "reached",
+   "depth": 10,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "decision1(run0->u)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=u/1)#15 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#32 -> receipt",
+    "courier_takes_challenge->token1",
+    "witness_chain_cut_back_to_0",
+    "decision1(run0->x)",
+    "courier_reads(REFRESH,N1)"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_ROLLBACK_ALARM": {
+   "observed": "reached",
+   "depth": 9,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "decision1(run0->u)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=u/1)#15 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#32 -> receipt",
+    "courier_takes_challenge->token1",
+    "witness_chain_cut_back_to_0",
+    "courier_reads(REFRESH,N0)"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_ST6_FAIL": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_EVICT": {
+   "observed": "reached",
+   "depth": 7,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> receipt",
+    "mailbox_loses_record_of_budget",
+    "courier_takes_challenge->token1 -> head not of its chain: state lost",
+    "courier_takes_challenge->token2 -> opens epoch(COURIER_STATE_LOST,closes=None)"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_EXPIRED_STMT": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ANOMALY_AGE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_REQ_REPLAY_REFUSED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_GAP": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_GAP_CLOSED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_GAP_REBEGIN": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ORPHAN": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_EVMISSING": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_NOTHELD_REMADE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_RESIGNED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ROOM_NOTICE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ROOM_ALARM": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ROOM_OBS": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ROOM_INDEX": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ALARM_AFTER_ROOM_REFUSAL": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_INDEX_RESERVE_USED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ALARM_BODY_DROPPED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_RETIRE": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_NOTCOV_BY_ALARM": {
+   "observed": "reached",
+   "depth": 10,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "decision1(run0->u)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=u/1)#15 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#32 -> receipt",
+    "courier_takes_challenge->token1",
+    "witness_chain_cut_back_to_0",
+    "courier_reads(REFRESH,N0)",
+    "courier_delivers OBS_INCOMPLETE(ce1,k4,ROLLBACK)#115 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_NOTCOV_BY_REFUSED_STMT": {
+   "observed": "reached",
+   "depth": 10,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "tick",
+    "decision1(run0->x)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=x/1)#19 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#37 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "courier_delivers STATEMENT(ce1,k4,j2,tok1,INCREMENTAL,at1,N1,carried1)#85 -> 422 ST7"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_NOTCOV_STALE_CARRY": {
+   "observed": "reached",
+   "depth": 10,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "decision1(run0->x)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=x/1)#19 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#37 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "courier_delivers STATEMENT(ce1,k4,j2,tok1,INCREMENTAL,at1,N1,carried1)#85 -> receipt",
+    "tick"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_L3_READ": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_ST7_FAIL": {
+   "observed": "reached",
+   "depth": 10,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "tick",
+    "decision1(run0->x)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N1)",
+    "courier_delivers NOTICE(ce1,k2,run0=x/1)#19 -> receipt",
+    "courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#37 -> receipt",
+    "courier_takes_challenge->token1",
+    "courier_reads(INCREMENTAL,N1)",
+    "courier_delivers STATEMENT(ce1,k4,j2,tok1,INCREMENTAL,at1,N1,carried1)#85 -> 422 ST7"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_READER_COVERED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_STALE_STATUS_REJECTED": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_WIPE": {
+   "observed": "reached",
+   "depth": 1,
+   "trace": [
+    "mailbox_loses_record_of_budget"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_CARRY_BREAK": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_PENDING_ORPHAN": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_WITNESS_TRUNC": {
+   "observed": "reached",
+   "depth": 3,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "decision1(run0->u)",
+    "witness_chain_cut_back_to_0"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_ALARM_TAKEN": {
+   "observed": "reached",
+   "depth": 6,
+   "trace": [
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "mailbox_loses_record_of_budget",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> 422 ST1,ST2",
+    "courier_delivers OBS_INCOMPLETE(ce1,k2,MAILBOX_REFUSED)#39 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  },
+  "P_ST5_FAIL": {
+   "observed": "not_reached",
+   "declared": "any",
+   "agree": true
+  },
+  "P_WIPE_THEN_COVERED": {
+   "observed": "reached",
+   "depth": 5,
+   "trace": [
+    "mailbox_loses_record_of_budget",
+    "courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)",
+    "courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt",
+    "courier_reads(FROM_ZERO,N0)",
+    "courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#11 -> receipt"
+   ],
+   "declared": "any",
+   "agree": true
+  }
+ },
+ "mismatches": [
+  "SAF10_L10"
+ ],
+ "verdict_agrees_with_declaration": false
+}

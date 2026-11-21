@@ -1,0 +1,347 @@
+{
+ "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation.",
+ "mutants": {
+  "no_conflict": {
+   "defect": "K-CONFLICT never reported",
+   "caught_by": [
+    "S3-MISSEQ-01",
+    "S3-REC1-01",
+    "S3-BOUND-01",
+    "S3-CONFLICT-01",
+    "S3-CONFLICT-03",
+    "S3-CONFLICT-04",
+    "S3-CONFLICT-02",
+    "S3-AFTERN-01"
+   ],
+   "errors": []
+  },
+  "no_unknown_verdict": {
+   "defect": "K-UNKNOWN-VERDICT never reported",
+   "caught_by": [
+    "S3-REC1-01",
+    "S3-BOUND-02",
+    "S3-UNKVERDICT-01",
+    "S3-UNKVERDICT-02"
+   ],
+   "errors": []
+  },
+  "unknown_verdict_one_order": {
+   "defect": "K-UNKNOWN-VERDICT only when the UNKNOWN report comes first",
+   "caught_by": [
+    "S3-UNKVERDICT-02"
+   ],
+   "errors": []
+  },
+  "no_fence": {
+   "defect": "K-FENCE never reported",
+   "caught_by": [
+    "S3-REC1-01",
+    "S3-BOUND-02",
+    "S3-FENCE-01",
+    "S3-FENCE-02",
+    "S3-PHASE-02"
+   ],
+   "errors": []
+  },
+  "fence_in_scope_only": {
+   "defect": "K-FENCE counts only in-scope effect reports",
+   "caught_by": [
+    "S3-FENCE-02"
+   ],
+   "errors": []
+  },
+  "no_phase": {
+   "defect": "K-PHASE (runs) never reported",
+   "caught_by": [
+    "S3-PHASE-01",
+    "S3-PHASE-02"
+   ],
+   "errors": []
+  },
+  "phase_discarded_only": {
+   "defect": "K-PHASE only for DISCARDED runs (RELEASED skipped: K-4)",
+   "caught_by": [
+    "S3-PHASE-02"
+   ],
+   "errors": []
+  },
+  "no_early": {
+   "defect": "K-EARLY never reported",
+   "caught_by": [
+    "S3-EARLY-01",
+    "S3-EARLY-02"
+   ],
+   "errors": []
+  },
+  "early_needs_intent": {
+   "defect": "K-EARLY not reported when the run has no intent acceptance",
+   "caught_by": [
+    "S3-EARLY-02"
+   ],
+   "errors": []
+  },
+  "no_nonce": {
+   "defect": "K-NONCE never reported (foreign-nonce reports dropped as strays)",
+   "caught_by": [
+    "S3-FENCE-02",
+    "S3-NONCE-01",
+    "S3-NONCE-02"
+   ],
+   "errors": []
+  },
+  "null_nonce_in_scope": {
+   "defect": "a report is in scope when the chain nonce is null",
+   "caught_by": [],
+   "errors": []
+  },
+  "no_digest": {
+   "defect": "K-DIGEST never reported",
+   "caught_by": [
+    "S3-DIGEST-01"
+   ],
+   "errors": []
+  },
+  "digest_case_insensitive": {
+   "defect": "upper-case hex accepted as a well-formed digest",
+   "caught_by": [
+    "S3-DIGEST-01"
+   ],
+   "errors": []
+  },
+  "no_claim": {
+   "defect": "K-CLAIM never reported",
+   "caught_by": [
+    "S3-CLAIM-01"
+   ],
+   "errors": []
+  },
+  "no_cnt1": {
+   "defect": "K-CNT-1 not checked",
+   "caught_by": [],
+   "errors": []
+  },
+  "no_cnt2": {
+   "defect": "K-CNT-2 not checked",
+   "caught_by": [
+    "S3-CNT2-01",
+    "S3-CNT2-02"
+   ],
+   "errors": []
+  },
+  "no_cnt3": {
+   "defect": "K-CNT-3 not checked",
+   "caught_by": [
+    "S3-CNT3-01",
+    "S3-CNT3-03",
+    "S3-CNT3-02"
+   ],
+   "errors": []
+  },
+  "no_cnt4": {
+   "defect": "K-CNT-4 not checked",
+   "caught_by": [
+    "S3-MISSEQ-01"
+   ],
+   "errors": []
+  },
+  "cnt1_on_none": {
+   "defect": "K-CNT-1 also demands a report at decisions labelled NONE",
+   "caught_by": [
+    "S3-REC3-01",
+    "S3-NEG-STRAY-01"
+   ],
+   "errors": []
+  },
+  "bytes_not_pairs": {
+   "defect": "K-2 broken: reports compared by bytes (signature), not pairs",
+   "caught_by": [
+    "S3-NEG-REPEAT-01"
+   ],
+   "errors": []
+  },
+  "first_key_only": {
+   "defect": "K-3 broken: only the first gate key given is used",
+   "caught_by": [
+    "S3-KEYS-01",
+    "S3-NEG-REPEAT-01",
+    "S3-CONFLICT-04"
+   ],
+   "errors": []
+  },
+  "latest_report": {
+   "defect": "K-1 broken: the latest verdict report is taken as the recorded one",
+   "caught_by": [
+    "S3-BOUND-01"
+   ],
+   "errors": []
+  },
+  "include_after_n": {
+   "defect": "reports recorded after N are not left out",
+   "caught_by": [
+    "S3-AFTERN-01"
+   ],
+   "errors": []
+  },
+  "believe_unknown_env": {
+   "defect": "K-BEL-4 broken: an 'unknown' envelope with a matching value is believed",
+   "caught_by": [
+    "S3-BEL-02"
+   ],
+   "errors": []
+  },
+  "believe_missing_outcome": {
+   "defect": "an envelope without 'outcome' is read as 'value'",
+   "caught_by": [
+    "S3-BEL-03"
+   ],
+   "errors": []
+  },
+  "believe_any_report": {
+   "defect": "K-BEL-2 broken: belief on any in-scope EFFECT digest",
+   "caught_by": [],
+   "errors": []
+  },
+  "believe_no_recorded": {
+   "defect": "K-BEL-3 broken: verdict reports without a recorded verdict give a verdict",
+   "caught_by": [
+    "S3-BEL-06"
+   ],
+   "errors": []
+  },
+  "fence_alone_finding": {
+   "defect": "K-7 broken: a fence report alone is a finding (K-FENCE)",
+   "caught_by": [
+    "S3-NEG-NULL-01",
+    "S3-NEG-FENCE-01"
+   ],
+   "errors": []
+  },
+  "absent_not_null": {
+   "defect": "D-2 broken: an absent signed field is not read as null (K-CLAIM)",
+   "caught_by": [
+    "S3-NEG-NULL-01",
+    "S3-NEG-NAMES-01",
+    "S3-NEG-STRAY-01"
+   ],
+   "errors": []
+  },
+  "missing_hides_equivocation": {
+   "defect": "3.4 broken: K-MISSING suppresses the EQUIVOCATION notice",
+   "caught_by": [
+    "S3-MISSEQ-01"
+   ],
+   "errors": []
+  },
+  "verdict_notice_with_finding": {
+   "defect": "3.4 broken: a verdict notice is still called for beside a finding",
+   "caught_by": [
+    "S3-MISSEQ-01",
+    "S3-CONFLICT-01",
+    "S3-CONFLICT-03",
+    "S3-CONFLICT-04",
+    "S3-EARLY-01",
+    "S3-FENCE-01",
+    "S3-NONCE-01",
+    "S3-DIGEST-01",
+    "S3-UNKVERDICT-01",
+    "S3-UNKVERDICT-02"
+   ],
+   "errors": []
+  },
+  "stray_is_finding": {
+   "defect": "D-3 broken: another run's genuine report counts as a foreign-nonce report",
+   "caught_by": [
+    "S3-NEG-OTHERRUN-01"
+   ],
+   "errors": []
+  },
+  "other_budget_counts": {
+   "defect": "D-3 broken: the root is not compared",
+   "caught_by": [],
+   "errors": []
+  },
+  "names_any_report": {
+   "defect": "O-R-1 broken: any report under an unborne name is K-PHASE",
+   "caught_by": [
+    "S3-NEG-NAMES-01",
+    "S3-NEG-NAMES-02"
+   ],
+   "errors": []
+  },
+  "names_latest": {
+   "defect": "O-R-1 broken: the budget notice binds the latest report",
+   "caught_by": [
+    "S3-PHASE-03",
+    "S3-PHASE-04"
+   ],
+   "errors": []
+  },
+  "no_names": {
+   "defect": "O-R-1 broken: names no attempt bears are not judged",
+   "caught_by": [
+    "S3-PHASE-03",
+    "S3-PHASE-04"
+   ],
+   "errors": []
+  },
+  "bound_latest": {
+   "defect": "I-K-1 broken: the latest reports are bound",
+   "caught_by": [
+    "S3-BOUND-01",
+    "S3-BOUND-02"
+   ],
+   "errors": []
+  },
+  "bound_no_recorded": {
+   "defect": "I-K-1 broken: the recorded report is not preferred for K-CONFLICT",
+   "caught_by": [],
+   "errors": []
+  },
+  "unknown_alone_finding": {
+   "defect": "K-5 broken: UNKNOWN reports alone are a finding",
+   "caught_by": [
+    "S3-NEG-UNKNOWN-01",
+    "S3-EARLY-02"
+   ],
+   "errors": []
+  },
+  "interrupted_as_no_outcome": {
+   "defect": "3.4 broken: CONSUMED with U only reads NO_OUTCOME",
+   "caught_by": [
+    "S3-NEG-UNKNOWN-01"
+   ],
+   "errors": []
+  },
+  "refunded_silent": {
+   "defect": "3.4 broken: NO_EFFECT calls no REFUNDED notice",
+   "caught_by": [
+    "S3-BEL-07"
+   ],
+   "errors": []
+  },
+  "unverified_no_wait": {
+   "defect": "K-N-3/3.4 broken: UNVERIFIED notice called for at once",
+   "caught_by": [
+    "S3-BEL-04",
+    "S3-BEL-02",
+    "S3-NEG-OTHERRUN-01"
+   ],
+   "errors": []
+  },
+  "record_lax": {
+   "defect": "K-REC-1 broken: the record checker reports no findings",
+   "caught_by": [
+    "S3-REC1-02",
+    "S3-REC1-01"
+   ],
+   "errors": []
+  }
+ },
+ "survivors": [
+  "null_nonce_in_scope",
+  "no_cnt1",
+  "believe_any_report",
+  "other_budget_counts",
+  "bound_no_recorded"
+ ]
+}

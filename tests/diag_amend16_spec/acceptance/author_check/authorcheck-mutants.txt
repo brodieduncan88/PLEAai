@@ -1,0 +1,46 @@
+ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation.
+CAUGHT  no_conflict                  by 9: S3-MISSEQ-01, S3-REC1-01, S3-BOUND-01, S3-CONFLICT-01, S3-CONFLICT-03, S3-CONFLICT-04 ...
+CAUGHT  no_unknown_verdict           by 5: S3-REC1-01, S3-BOUND-02, S3-ORDER-01, S3-UNKVERDICT-01, S3-UNKVERDICT-02
+CAUGHT  unknown_verdict_one_order    by 2: S3-ORDER-01, S3-UNKVERDICT-02
+CAUGHT  no_fence                     by 5: S3-REC1-01, S3-BOUND-02, S3-FENCE-01, S3-FENCE-02, S3-PHASE-02
+CAUGHT  fence_in_scope_only          by 1: S3-FENCE-02
+CAUGHT  no_phase                     by 2: S3-PHASE-01, S3-PHASE-02
+CAUGHT  phase_discarded_only         by 1: S3-PHASE-02
+CAUGHT  no_early                     by 2: S3-EARLY-01, S3-EARLY-02
+CAUGHT  early_needs_intent           by 1: S3-EARLY-02
+CAUGHT  no_nonce                     by 3: S3-FENCE-02, S3-NONCE-01, S3-NONCE-02
+CAUGHT  null_nonce_in_scope          by 1: S3-NONCE-02
+CAUGHT  no_digest                    by 1: S3-DIGEST-01
+CAUGHT  digest_case_insensitive      by 1: S3-DIGEST-01
+CAUGHT  no_claim                     by 1: S3-CLAIM-01
+CAUGHT  no_cnt1                      by 1: S3-CNT1-02
+CAUGHT  no_cnt2                      by 2: S3-CNT2-01, S3-CNT2-02
+CAUGHT  no_cnt3                      by 3: S3-CNT3-01, S3-CNT3-03, S3-CNT3-02
+CAUGHT  no_cnt4                      by 1: S3-MISSEQ-01
+CAUGHT  cnt1_on_none                 by 2: S3-REC3-01, S3-NEG-STRAY-01
+CAUGHT  bytes_not_pairs              by 1: S3-NEG-REPEAT-01
+CAUGHT  first_key_only               by 3: S3-KEYS-01, S3-NEG-REPEAT-01, S3-CONFLICT-04
+CAUGHT  latest_report                by 1: S3-BOUND-01
+CAUGHT  include_after_n              by 1: S3-AFTERN-01
+CAUGHT  believe_unknown_env          by 1: S3-BEL-02
+CAUGHT  believe_missing_outcome      by 1: S3-BEL-03
+SURVIVES believe_any_report           by 0: 
+CAUGHT  believe_no_recorded          by 1: S3-BEL-06
+CAUGHT  fence_alone_finding          by 3: S3-CNT1-02, S3-NEG-NULL-01, S3-NEG-FENCE-01
+CAUGHT  absent_not_null              by 3: S3-NEG-NULL-01, S3-NEG-NAMES-01, S3-NEG-STRAY-01
+CAUGHT  missing_hides_equivocation   by 1: S3-MISSEQ-01
+CAUGHT  verdict_notice_with_finding  by 10: S3-MISSEQ-01, S3-CONFLICT-01, S3-CONFLICT-03, S3-CONFLICT-04, S3-EARLY-01, S3-FENCE-01 ...
+CAUGHT  stray_is_finding             by 1: S3-NEG-OTHERRUN-01
+CAUGHT  other_budget_counts          by 1: S3-NEG-OTHERBUDGET-01
+CAUGHT  names_any_report             by 2: S3-NEG-NAMES-01, S3-NEG-NAMES-02
+CAUGHT  names_latest                 by 2: S3-PHASE-03, S3-PHASE-04
+CAUGHT  no_names                     by 2: S3-PHASE-03, S3-PHASE-04
+CAUGHT  bound_latest                 by 2: S3-BOUND-01, S3-BOUND-02
+CAUGHT  bound_no_recorded            by 1: S3-BOUND-01
+CAUGHT  unknown_alone_finding        by 3: S3-NEG-UNKNOWN-01, S3-EARLY-02, S3-ORDER-01
+CAUGHT  interrupted_as_no_outcome    by 1: S3-NEG-UNKNOWN-01
+CAUGHT  refunded_silent              by 1: S3-BEL-07
+CAUGHT  unverified_no_wait           by 3: S3-BEL-04, S3-BEL-02, S3-NEG-OTHERRUN-01
+CAUGHT  record_lax                   by 2: S3-REC1-02, S3-REC1-01
+survivors: ['believe_any_report']
+ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation.

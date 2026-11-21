@@ -1,0 +1,1059 @@
+{
+ "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation.",
+ "spec": {
+  "version": 5,
+  "file": "spec/SPEC_v5_as_sent_to_review.md",
+  "lines": 961,
+  "sha256": "e9f7f4b87af52e0a296262a399a6628cdbe05bb7e1ad65e946e2620b816b74b6"
+ },
+ "adapter": "oracle_s3-refunded_silent",
+ "counts": {
+  "PASS": 51,
+  "FAIL": 1,
+  "NOT IMPLEMENTED": 1
+ },
+ "when": "2026-11-21T22:15:06Z",
+ "results": [
+  {
+   "id": "S3-BEL-05",
+   "file": "test_s3_count_belief.py",
+   "method": "Belief.test_belief_only_recorded",
+   "rules": [
+    "K-BEL-2",
+    "K-CONFLICT"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that believes a stored result matching a report other than the recorded one",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.003,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-BEL-01",
+   "file": "test_s3_count_belief.py",
+   "method": "Belief.test_believed_pass_and_fail",
+   "rules": [
+    "K-BEL-1",
+    "3.4"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that does not believe an honest verdict (or calls a notice for a PASS)",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.044,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-BEL-03",
+   "file": "test_s3_count_belief.py",
+   "method": "Belief.test_envelope_outcome_exactly_value",
+   "rules": [
+    "K-BEL-1"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that reads an envelope without an outcome field as 'value' (e25a297 does)",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.003,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-BEL-04",
+   "file": "test_s3_count_belief.py",
+   "method": "Belief.test_mismatch_unverified",
+   "rules": [
+    "K-BEL-1",
+    "3.4",
+    "L-11"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that believes a result that does not hash to the recorded digest",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-BEL-06",
+   "file": "test_s3_count_belief.py",
+   "method": "Belief.test_no_recorded_verdict",
+   "rules": [
+    "K-BEL-3",
+    "K-CNT-3"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that gives a verdict from verdict reports with no recorded verdict",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-BEL-07",
+   "file": "test_s3_count_belief.py",
+   "method": "Belief.test_refunded",
+   "rules": [
+    "K-BEL-1",
+    "3.4"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that believes a NO_EFFECT run, or calls no REFUNDED notice for it",
+   "open_finding": null,
+   "outcome": "FAIL",
+   "detail": "None != 'REFUNDED'",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-BEL-02",
+   "file": "test_s3_count_belief.py",
+   "method": "Belief.test_unknown_envelope_with_matching_value",
+   "rules": [
+    "K-BEL-1",
+    "K-BEL-4",
+    "D-8",
+    "O-C-1"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1,
+    5
+   ],
+   "catches": "an implementation that believes an envelope whose outcome is 'unknown' because its value matches",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CNT1-01",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_cnt1_report_removed",
+   "rules": [
+    "K-CNT-1",
+    "K-CNT-5",
+    "K-MISSING"
+   ],
+   "capability": "CAP-OWNER",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that does not check that a labelled decision has its report",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CNT2-01",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_cnt2_misplaced",
+   "rules": [
+    "K-CNT-2",
+    "K-MISSING"
+   ],
+   "capability": "CAP-OWNER",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that accepts a report at a decision that is not a RELEASE or RECONCILE of the run",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CNT2-02",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_cnt2_other_runs_decision",
+   "rules": [
+    "K-CNT-2",
+    "K-MISSING"
+   ],
+   "capability": "CAP-OWNER",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that places a report by its aid, not by the decision at its number",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CNT3-01",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_cnt3_effect_without_verdict",
+   "rules": [
+    "K-CNT-3",
+    "K-MISSING"
+   ],
+   "capability": "CAP-OWNER",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that believes phase EFFECT without a recorded verdict",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.0,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CNT3-03",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_cnt3_operand_mismatch",
+   "rules": [
+    "K-CNT-3",
+    "K-MISSING"
+   ],
+   "capability": "CAP-OWNER",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that does not compare the recorded operand v with the phase and the report's claim",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CNT3-04",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_cnt3_recorded_out_of_scope",
+   "rules": [
+    "K-CNT-3",
+    "K-MISSING"
+   ],
+   "capability": "CAP-OWNER",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that does not require the recorded report to be in scope",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CNT3-02",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_cnt3_two_recorded",
+   "rules": [
+    "K-CNT-3",
+    "K-MISSING"
+   ],
+   "capability": "CAP-OWNER",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that allows two recorded verdicts when their pairs agree",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.002,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CNT4-01",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_cnt4_key_reader_lacks",
+   "rules": [
+    "K-CNT-4",
+    "K-3",
+    "K-MISSING"
+   ],
+   "capability": "NONE",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that does not see that the reader's gate keys are not the witness's",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-MISSEQ-01",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_equivocation_beside_missing",
+   "rules": [
+    "3.4",
+    "K-MISSING",
+    "K-CONFLICT",
+    "K-CNT-4"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that suppresses the EQUIVOCATION notice when K-MISSING also holds",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.002,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-KEYS-01",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_every_key",
+   "rules": [
+    "K-3",
+    "D-3"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that uses only the first gate key given",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-REC3-01",
+   "file": "test_s3_count_belief.py",
+   "method": "CountRule.test_none_label_may_lack_report",
+   "rules": [
+    "K-REC-3",
+    "L-1",
+    "K-CNT-1"
+   ],
+   "capability": "CAP-OWNER",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that demands a report at a decision labelled NONE (it would fail every honest record)",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NEG-NULL-01",
+   "file": "test_s3_count_belief.py",
+   "method": "Negatives.test_absent_field_is_null",
+   "rules": [
+    "D-2",
+    "K-CLAIM",
+    "K-7"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that reads a deleted null signed field as malformed (K-CLAIM at CAP-DB's will)",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NEG-FENCE-01",
+   "file": "test_s3_count_belief.py",
+   "method": "Negatives.test_fence_alone_consumed",
+   "rules": [
+    "K-7",
+    "3.6"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that makes a fence beside a consumed run a finding (CAP-DB could make notices at will)",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NEG-NAMES-01",
+   "file": "test_s3_count_belief.py",
+   "method": "Negatives.test_names_no_run",
+   "rules": [
+    "D-12",
+    "O-R-1",
+    "3.6"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1,
+    5
+   ],
+   "catches": "an implementation that makes a notice for names no attempt bears when they carry no gate-signed report",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NEG-NAMES-02",
+   "file": "test_s3_count_belief.py",
+   "method": "Negatives.test_names_with_replayed_genuine",
+   "rules": [
+    "D-3",
+    "D-12",
+    "O-R-1"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1,
+    5
+   ],
+   "catches": "an implementation that takes a genuine report of a REAL run, replayed under a ghost name, as K-PHASE",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NEG-OTHERBUDGET-01",
+   "file": "test_s3_count_belief.py",
+   "method": "Negatives.test_other_budget_replayed",
+   "rules": [
+    "D-3",
+    "3.6"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that counts a genuine report of another budget bearing the same run name and nonce",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NEG-OTHERRUN-01",
+   "file": "test_s3_count_belief.py",
+   "method": "Negatives.test_other_run_replayed",
+   "rules": [
+    "D-3",
+    "3.6",
+    "K-BEL-1",
+    "K-BEL-2"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that lets another run's genuine PASS report, and its result, make a FAIL run read PASS",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.002,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NEG-PADDED-01",
+   "file": "test_s3_count_belief.py",
+   "method": "Negatives.test_resent_with_fields",
+   "rules": [
+    "K-2",
+    "D-2",
+    "3.6"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that compares report bytes, not pairs (100 KB of unsigned fields made a \"conflict\")",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NEG-REPEAT-01",
+   "file": "test_s3_count_belief.py",
+   "method": "Negatives.test_same_pair_other_bytes",
+   "rules": [
+    "K-2",
+    "D-6"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that counts the same pair signed again with other bytes (another gate key) as two results",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NEG-STRAY-01",
+   "file": "test_s3_count_belief.py",
+   "method": "Negatives.test_strays",
+   "rules": [
+    "D-3",
+    "3.6",
+    "E-X-5"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1,
+    3
+   ],
+   "catches": "an implementation that treats strays (unsigned, other key, garbage) as findings or as K-MISSING",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NEG-UNKNOWN-01",
+   "file": "test_s3_count_belief.py",
+   "method": "Negatives.test_unknown_alone",
+   "rules": [
+    "K-5",
+    "3.4",
+    "D-8"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that treats UNKNOWN reports alone as K-UNKNOWN-VERDICT",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-REC1-02",
+   "file": "test_s3_count_belief.py",
+   "method": "RecordChecker.test_record_missing",
+   "rules": [
+    "K-REC-1",
+    "K-MISSING"
+   ],
+   "capability": "CAP-OWNER",
+   "decisions": [
+    1
+   ],
+   "catches": "a record checker that does not apply K-MISSING to the reports a record carries",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-REC1-01",
+   "file": "test_s3_count_belief.py",
+   "method": "RecordChecker.test_record_same_rule",
+   "rules": [
+    "K-REC-1",
+    "K-3",
+    "SAF-9"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1,
+    5
+   ],
+   "catches": "a record checker that passes a record carrying a run with a finding, or judges by another rule than the courier",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.006,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-REC2-01",
+   "file": "test_s3_count_belief.py",
+   "method": "RecordChecker.test_record_signature",
+   "rules": [
+    "K-REC-2",
+    "11-EARLIER-FORMS"
+   ],
+   "capability": "CAP-DB",
+   "decisions": [
+    1,
+    5
+   ],
+   "catches": "a record checker that does not fail a record from which a report was taken after signing",
+   "open_finding": null,
+   "outcome": "NOT IMPLEMENTED",
+   "detail": "oracle_s3-refunded_silent: verify_record is not bound",
+   "seconds": 0.002,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-BOUND-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_bound_conflict",
+   "rules": [
+    "I-K-1",
+    "K-CONFLICT"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1,
+    2
+   ],
+   "catches": "an implementation that binds the latest reports, or not the recorded one, to the EQUIVOCATION notice",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.002,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-BOUND-02",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_bound_two_kinds",
+   "rules": [
+    "I-K-1",
+    "K-UNKNOWN-VERDICT",
+    "K-FENCE"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1,
+    2
+   ],
+   "catches": "an implementation that binds one report per finding instead of the earliest of each kind",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.002,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CONFLICT-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_conflict_after_recorded",
+   "rules": [
+    "K-CONFLICT",
+    "K-6",
+    "3.4",
+    "K-BEL-1",
+    "SAF-9"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1,
+    5
+   ],
+   "catches": "an implementation that keeps the recorded verdict and ignores a second signed result of the same run",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CONFLICT-03",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_conflict_any_operation",
+   "rules": [
+    "K-CONFLICT"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that compares only reports carried by RECONCILE decisions",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CONFLICT-04",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_conflict_second_key",
+   "rules": [
+    "K-CONFLICT",
+    "K-3"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that checks reports under the first gate key only",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CONFLICT-02",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_conflict_without_recorded",
+   "rules": [
+    "K-CONFLICT",
+    "K-BEL-3"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that looks for a conflict only beside a recorded verdict",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-EARLY-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_early_before_acceptance",
+   "rules": [
+    "K-EARLY",
+    "D-14"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that does not compare report numbers with the intent acceptance",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-EARLY-02",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_early_no_acceptance",
+   "rules": [
+    "K-EARLY",
+    "K-4"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that skips K-EARLY when the run has no intent acceptance at all",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-FENCE-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_fence_beside_effect",
+   "rules": [
+    "K-FENCE"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that ignores a fence report once the run has a verdict",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-FENCE-02",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_fence_beside_foreign_nonce",
+   "rules": [
+    "K-FENCE",
+    "K-NONCE"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that counts only in-scope effect reports against a fence",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NONCE-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_foreign_nonce",
+   "rules": [
+    "K-NONCE",
+    "D-5"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that drops a gate-signed report of this run under another nonce as a stray",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-CLAIM-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_malformed_claims",
+   "rules": [
+    "K-CLAIM",
+    "D-3"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that drops a gate-signed report with an unknown claim as a stray",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.002,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-DIGEST-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_malformed_digest",
+   "rules": [
+    "K-DIGEST",
+    "D-7",
+    "K-BEL-1"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that accepts any string as a digest, or believes upper-case hex",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.003,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-NONCE-02",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_null_chain_nonce",
+   "rules": [
+    "K-NONCE",
+    "D-4",
+    "D-5"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that treats a report as in scope when the chain nonce is null",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-ORDER-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_order_independent",
+   "rules": [
+    "K-1"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that takes \"the latest report\" as anything, or depends on the order of the answer",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.015,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-PHASE-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_phase_discarded",
+   "rules": [
+    "K-PHASE",
+    "K-4"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that does not read the reports of a DISCARDED run (K-4)",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-PHASE-02",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_phase_released",
+   "rules": [
+    "K-PHASE",
+    "K-4"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that does not read the reports of a RELEASED run",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-PHASE-03",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_phase_unborne_names",
+   "rules": [
+    "K-PHASE",
+    "O-R-1",
+    "D-12",
+    "I-K-1"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1,
+    2,
+    5
+   ],
+   "catches": "an implementation that ignores names no attempt bears, or makes one notice per such name",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-PHASE-04",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_phase_unborne_one_notice",
+   "rules": [
+    "K-PHASE",
+    "O-R-1"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1,
+    5
+   ],
+   "catches": "an implementation that judges each unborne name alone and so reports many notices, or the latest",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-AFTERN-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_reports_after_n_left_out",
+   "rules": [
+    "K-CONFLICT",
+    "3.1"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that judges at N with reports recorded after N",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-UNKVERDICT-01",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_unknown_then_verdict",
+   "rules": [
+    "K-UNKNOWN-VERDICT",
+    "K-5"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that lets a verdict after an UNKNOWN report stand (the honest-sequence reading)",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "S3-UNKVERDICT-02",
+   "file": "test_s3_findings.py",
+   "method": "Findings.test_verdict_then_unknown",
+   "rules": [
+    "K-UNKNOWN-VERDICT",
+    "K-5",
+    "K-1"
+   ],
+   "capability": "CAP-KEY",
+   "decisions": [
+    1
+   ],
+   "catches": "an implementation that forbids only UNKNOWN-before-verdict, not verdict-before-UNKNOWN",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  }
+ ]
+}

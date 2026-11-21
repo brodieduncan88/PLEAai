@@ -1,0 +1,112 @@
+{
+ "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation.",
+ "spec": {
+  "version": 5,
+  "file": "spec/SPEC_v5_as_sent_to_review.md",
+  "lines": 961,
+  "sha256": "e9f7f4b87af52e0a296262a399a6628cdbe05bb7e1ad65e946e2620b816b74b6"
+ },
+ "adapter": "default",
+ "counts": {
+  "PASS": 5
+ },
+ "when": "2026-11-21T22:28:06Z",
+ "results": [
+  {
+   "id": "SELF-ACC2-01",
+   "file": "test_selftest.py",
+   "method": "SelfTest.test_acc2_printed",
+   "rules": [
+    "ACC-2",
+    "N-5"
+   ],
+   "capability": "NONE",
+   "decisions": [
+    4,
+    5,
+    6
+   ],
+   "catches": "a runner whose printed results or result files lack the ACC-2 statement or the specification's version and hash",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.071,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "SELF-CHAIN-01",
+   "file": "test_selftest.py",
+   "method": "SelfTest.test_chain_fixture",
+   "rules": [
+    "D-3",
+    "D-11"
+   ],
+   "capability": "NONE",
+   "decisions": [
+    1
+   ],
+   "catches": "a scripted chain whose hashes, checkpoints or derived labels are not the witness's",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.045,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "SELF-NI-01",
+   "file": "test_selftest.py",
+   "method": "SelfTest.test_default_adapter",
+   "rules": [
+    "K-CAP-1"
+   ],
+   "capability": "NONE",
+   "decisions": [
+    1
+   ],
+   "catches": "a default adapter that does anything but raise the NOT IMPLEMENTED signal",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.0,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "SELF-GATE-01",
+   "file": "test_selftest.py",
+   "method": "SelfTest.test_honest_gate",
+   "rules": [
+    "K-CAP-1"
+   ],
+   "capability": "NONE",
+   "decisions": [
+    1
+   ],
+   "catches": "an honest gate fixture that lives in this process, exposes its key, or signs what an honest host does not",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.001,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  },
+  {
+   "id": "SELF-CAP-01",
+   "file": "test_selftest.py",
+   "method": "SelfTest.test_runner_refuses",
+   "rules": [
+    "K-CAP-1",
+    "ACC-5"
+   ],
+   "capability": "NONE",
+   "decisions": [
+    1,
+    4
+   ],
+   "catches": "a runner that runs a CAP-DB (or NONE) test touching the CAP-KEY signer, statically or through a helper",
+   "open_finding": null,
+   "outcome": "PASS",
+   "detail": "",
+   "seconds": 0.004,
+   "acc2": "ACC-2: No test run on a single host, or on any deployment where DP1 or DP2 does not hold, establishes acceptance of the production contract. Every result of this suite is diagnostic evidence about the code's behaviour: separately authored verification (internal), not independent validation."
+  }
+ ]
+}

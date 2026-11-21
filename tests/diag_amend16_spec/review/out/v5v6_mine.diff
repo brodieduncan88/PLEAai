@@ -1,0 +1,85 @@
+10,11c10,12
+< corrected what the second and third reviews found; version 5 corrects what the model of version 2 found that
+< version 4 still had, and the two low findings left open on version 4. Every
+---
+> corrected what the second and third reviews found; version 5 (`466dd2f`) corrected what the model of version 2 found that
+> version 4 still had, and the two low findings left open on version 4; version 6 rewrites one rule, I-O-4, which the
+> model of version 5 showed to be wrong, and makes four small corrections beside it. Every
+448,449c449,450
+<   its cursor, its position, its settled runs or anything else from the mailbox or from an old copy. It MUST open a
+<   new chain epoch with reason COURIER_STATE_LOST and read from decision 0. A courier that has sent an EPOCH_OPEN and
+---
+>   its cursor, its position, its settled runs or anything else from the mailbox or from an old copy. It MUST open a new chain epoch with reason COURIER_STATE_LOST and read from decision 0. It keeps its own anchor (I-O-4) if it can
+>   still read it. A courier that has sent an EPOCH_OPEN and
+492c493,494
+< - **I-O-2. No answer.** The courier sends the same item again. The mailbox answers an item it already holds in the
+---
+> - **I-O-2. One at a time; no answer.** The courier sends one item at a time and sends the next only when the one before
+>   has an answer. With no answer it sends the same item again. The mailbox answers an item it already holds in the
+497,504c499,511
+< - **I-O-4. The mailbox behind what the courier knows.** The courier keeps durably the N and head of the last statement
+<   of its own that the mailbox accepted, or that it sent and has had no refusal of (its **own anchor**). The mailbox
+<   has lost state if the courier holds a receipt of this mailbox for a position of the open chain epoch beyond the
+<   head the mailbox now signs for that epoch (receipts of a closed chain epoch are not compared), or if the anchor in
+<   the mailbox's challenge is lower than the courier's own anchor. The courier then makes the reading not whole
+<   (MAILBOX_ROLLBACK), opens a new chain epoch with reason MAILBOX_STATE_LOST and delivers everything again; and in
+<   its reading from 0 the hash it computes at its own anchor's N MUST be its own anchor's head, or it is a FORK
+<   (O-3).
+---
+> - **I-O-4. The courier's own anchor.** For each budget the courier keeps durably the highest decision number at which
+>   it has verified a checkpoint signed by the witness, with that checkpoint's head (its **own anchor**). It never
+>   lowers it, whatever the mailbox answers, and it keeps it through a new chain epoch opened for any reason, for as
+>   long as it can read it. In every reading, the chain the courier reads MUST contain that decision with that head: if
+>   the witness's chain is shorter, it is a ROLLBACK; if the hash the courier computes at that decision differs, it is
+>   a FORK (O-3). Either ends the reading with an alarm and no statement. The own anchor rests on what the witness
+>   signed, not on what the mailbox accepted, so a lost answer or a refusal cannot move it.
+> - **I-O-4a. A mailbox that has lost state.** The mailbox has lost state if the courier holds a receipt of this mailbox
+>   for a position of the open chain epoch beyond the head the mailbox now signs for that epoch (receipts of a closed
+>   chain epoch are not compared), or a receipt for a statement whose N is higher than the anchor in the mailbox's
+>   challenge. A statement that has no answer is sent again first (I-O-2) and is not counted here. The courier then
+>   makes the reading not whole (MAILBOX_ROLLBACK), opens a new chain epoch with reason MAILBOX_STATE_LOST, sends the
+>   alarm as the item after its EPOCH_OPEN, and delivers everything again.
+556c563,564
+<   of statements older than the `oldest_carried` of the last accepted statement, and those of closed chain epochs) MAY
+---
+>   of statements older than the `oldest_carried` of the last accepted statement, or older than that statement itself
+>   where it carries nothing, and those of closed chain epochs) MAY
+558,560c566,568
+<   statement (its digest, N, head, token, tick) are kept. Before an alarm's body is stored, and within the same handling
+<   (E-Q-6), the oldest alarm bodies of the budget MUST be dropped until fewer than ALARMS_KEEP are held; their index
+<   entries are kept. A notice about a run, its receipt, and evidence a held notice binds are
+---
+>   statement (its digest, N, head, token, tick) are kept. When an alarm is to be stored and every other check has passed
+>   (its index entry has room), then, within the same handling (E-Q-6) and before its body is stored, the oldest alarm
+>   bodies of the budget MUST be dropped until fewer than ALARMS_KEEP are held; their index entries are kept. A notice about a run, its receipt, and evidence a held notice binds are
+777c785
+< | SAF-10 | safety | No statement is counted, in any chain epoch, whose checkpoint does not sign back the head of the last statement accepted for the budget that the mailbox's record holds. If the mailbox has lost that record, the courier's own anchor stands in for it (I-O-4); if both are lost, nothing does (L-10) |
+---
+> | SAF-10 | safety | No statement is counted, in any chain epoch, whose checkpoint does not sign back the head of the last statement accepted for the budget that the mailbox's record holds. If the mailbox has lost that record, the courier makes no statement over a chain that does not contain its own anchor (I-O-4), which is at or beyond every statement of its that was ever accepted; if the courier's state is lost as well, nothing stands in (L-10) |
+807,808c815,817
+<   courier sees it while it holds a later receipt or its own anchor (I-O-4); if both lose their state together,
+<   nothing here detects it, and a fork or rollback of the witness below the lost anchor passes.
+---
+>   courier sees the loss while it holds a later receipt (I-O-4a), and whether or not it sees it, it makes no statement
+>   over a chain that does not contain its own anchor (I-O-4); if both lose their state together, nothing here detects
+>   it, and a fork or rollback of the witness below the lost anchor passes.
+961a971,989
+> 
+> ### Changes from version 5 to version 6
+> 
+> M30 to M35 are the modeller's findings on version 5 (Part 8 of the reports); F35 to F37 are the reviewer's low
+> findings on version 5 (Part 7).
+> 
+> | Finding | Severity | What was changed |
+> |---|---|---|
+> | M30 | HIGH | I-O-4 rewritten: the courier's own anchor is the highest decision at which it has verified a witness-signed checkpoint; it never lowers it and checks every reading against it. The loss of the mailbox's state is a separate rule (I-O-4a). SAF-10 and L-10 follow |
+> | M31 | MEDIUM | the own anchor is kept through a new chain epoch of any reason (I-O-4, I-E-4) |
+> | F35 | LOW | only a receipted statement counts for the mailbox's loss of state; an unanswered one is sent again first (I-O-4a) |
+> | F36 | LOW | a witness chain shorter than the own anchor is a ROLLBACK (I-O-4) |
+> | M27 (remainder) | LOW | the MAILBOX_ROLLBACK alarm is the item after the new epoch's EPOCH_OPEN (I-O-4a) |
+> | M32 | LOW | items are sent one at a time (I-O-2) |
+> | F37 | LOW | alarm bodies are dropped only when the new alarm will be stored (E-Q-4) |
+> | M34 | LOW | retirement where the last statement carries nothing (E-Q-4) |
+> 
+> **Not changed:** M33 (EPOCH_KNOWN is redundant beside the `closes` check at the model's bounds; both are kept) and M35
+> (the sizes of items in each room are an implementer's to measure against the quotas).

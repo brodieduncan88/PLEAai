@@ -1,0 +1,42 @@
+22:41:07 done FD_WIPE: config FD_WIPE: states=62598 transitions=211437 depth=28 complete=True secs=2.6
+22:41:16 done FD_WIPE_FORK: config FD_WIPE_FORK: states=297112 transitions=993075 depth=30 complete=True secs=11.1
+22:41:25 done FD_WIPE_BOTHLOST: config FD_WIPE_BOTHLOST: states=254006 transitions=815318 depth=25 complete=True secs=8.4
+22:41:25 done FD_WIPE_L: config FD_WIPE_L: states=340883 transitions=1281257 depth=33 complete=True secs=19.6
+22:41:26 done FD_FORK: config FD_FORK: states=48222 transitions=159304 depth=22 complete=True secs=1.3
+22:41:37 done FD_RESTORE: config FD_RESTORE: states=288984 transitions=1028777 depth=26 complete=True secs=11.1
+22:41:56 done FD_FORK_L: config FD_FORK_L: states=716183 transitions=2513825 depth=25 complete=True secs=30.9
+22:41:58 done FD_WIPE_FORK_INC: config FD_WIPE_FORK_INC: states=1201828 transitions=4104390 depth=32 complete=True secs=49.8
+22:42:05 done FD_WIPE_FORK_L: config FD_WIPE_FORK_L: states=1439272 transitions=4846911 depth=32 complete=True secs=60.2
+22:42:06 done FD_CHAIN: config FD_CHAIN: states=23006 transitions=71275 depth=17 complete=True secs=0.8
+22:42:11 done FD_EPOCH: config FD_EPOCH: states=103338 transitions=376542 depth=18 complete=True secs=4.5
+22:42:12 done FD_QUOTA_NOTICE: config FD_QUOTA_NOTICE: states=37162 transitions=97623 depth=20 complete=True secs=1.1
+22:42:23 done FD_RESTORE_FORK: config FD_RESTORE_FORK: states=700828 transitions=2362801 depth=26 complete=True secs=27.3
+22:42:28 done MU_OA_LOWER_ON_REFUSAL: config MU_OA_LOWER_ON_REFUSAL: states=328849 transitions=1197822 depth=30 complete=True secs=16.1
+22:42:44 done MU_OA_DROP_IE4: config MU_OA_DROP_IE4: states=334211 transitions=1184964 depth=30 complete=True secs=15.2
+22:42:46 done MU_IOA_UNANSWERED: config MU_IOA_UNANSWERED: states=56266 transitions=185644 depth=28 complete=True secs=2.2
+22:42:59 done FD_WIPE_RESTORE_FORK: config FD_WIPE_RESTORE_FORK: states=1704972 transitions=5247947 depth=30 complete=True secs=61.1
+22:43:02 done MU_NO_OWN_ANCHOR: config MU_NO_OWN_ANCHOR: states=328849 transitions=1197822 depth=30 complete=True secs=15.2
+22:43:14 done MU_OA_NOT_INC: config MU_OA_NOT_INC: states=1201828 transitions=4104390 depth=32 complete=True secs=50.6
+22:43:38 done FD_RESTORE_L: config FD_RESTORE_L: states=2660308 transitions=9706708 depth=27 complete=True secs=120.0
+| config | declared violated | observed violated | states | search | shortest trace length | declared = observed | time |
+|---|---|---|---|---|---|---|---|
+| FD_WIPE | - | - | 62598 | complete | - | yes | 3s |
+| FD_WIPE_L | - | - | 340883 | complete | - | yes | 20s |
+| FD_WIPE_FORK | - | - | 297112 | complete | - | yes | 11s |
+| FD_WIPE_FORK_L | - | - | 1439272 | complete | - | yes | 60s |
+| FD_WIPE_FORK_INC | - | - | 1201828 | complete | - | yes | 50s |
+| FD_WIPE_BOTHLOST | SAF10_L10 | SAF10_L10 | 254006 | complete | SAF10_L10:13 | yes | 8s |
+| FD_FORK | - | - | 48222 | complete | - | yes | 1s |
+| FD_FORK_L | - | - | 716183 | complete | - | yes | 31s |
+| FD_RESTORE | - | - | 288984 | complete | - | yes | 11s |
+| FD_RESTORE_L | - | - | 2660308 | complete | - | yes | 120s |
+| FD_RESTORE_FORK | - | - | 700828 | complete | - | yes | 27s |
+| FD_WIPE_RESTORE_FORK | SAF10_L10 | SAF10_L10 | 1704972 | complete | SAF10_L10:14 | yes | 61s |
+| FD_CHAIN | - | - | 23006 | complete | - | yes | 1s |
+| FD_EPOCH | - | - | 103338 | complete | - | yes | 4s |
+| FD_QUOTA_NOTICE | - | - | 37162 | complete | - | yes | 1s |
+| MU_OA_LOWER_ON_REFUSAL | SAF10 | SAF10, SAF10_L10 | 328849 | complete | SAF10:13, SAF10_L10:16 | NO: SAF10_L10 | 16s |
+| MU_OA_NOT_INC | - | - | 1201828 | complete | - | yes | 51s |
+| MU_OA_DROP_IE4 | SAF10 | SAF10, SAF10_L10 | 334211 | complete | SAF10:13, SAF10_L10:16 | NO: SAF10_L10 | 15s |
+| MU_IOA_UNANSWERED | - | - | 56266 | complete | - | yes | 2s |
+| MU_NO_OWN_ANCHOR | SAF10 | SAF10, SAF10_L10 | 328849 | complete | SAF10:13, SAF10_L10:16 | NO: SAF10_L10 | 15s |
