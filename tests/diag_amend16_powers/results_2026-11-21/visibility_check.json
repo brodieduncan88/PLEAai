@@ -1,0 +1,366 @@
+{
+ "when": "2026-11-21T12:32:39Z",
+ "database": "plea22",
+ "steps": [
+  {
+   "step": "V1. the gate host signed FAIL, the witness recorded it, the result is withheld",
+   "attempt": {
+    "aid": "a-6cbb3b27eb5f9629",
+    "phase": "EFFECT",
+    "nonce": "n-dc3fd33c6d998b798930edb87d1727f5109f0e4d"
+   },
+   "client_was_told": "FAIL: REQUIREMENT NOT MET",
+   "gate_host_verdict": "FAIL",
+   "view": {
+    "GET /run status": 200,
+    "reports in the answer": [
+     {
+      "seq": 8,
+      "claim": "EFFECT",
+      "digest": "eeb67c76f91a4b74",
+      "signed by the gate key, for this budget, run and nonce": true
+     }
+    ],
+    "stored verdict": null,
+    "stored value digest": null,
+    "RECONCILE decisions for the run in the chain": [
+     {
+      "seq": 8,
+      "kind": "APPLIED",
+      "code": "VERDICT_RECORDED",
+      "verdict in the op": "EFFECT"
+     }
+    ],
+    "check_record.run_outcome (what the courier concludes)": "UNVERIFIED",
+    "PREDICATE two different digests among genuine EFFECT reports": false,
+    "PREDICATE fewer reports than RECONCILE decisions in the chain": false,
+    "each report sits at the seq of a RECONCILE decision for this run": true
+   },
+   "courier_900s": {
+    "exit": 0,
+    "made": []
+   }
+  },
+  {
+   "step": "V2. a second report over a forged PASS is recorded and the PASS stored",
+   "witness_answer": {
+    "status": 200,
+    "kind": "DUPLICATE",
+    "code": "VERDICT_RETRY",
+    "seq": 9
+   },
+   "view": {
+    "GET /run status": 200,
+    "reports in the answer": [
+     {
+      "seq": 8,
+      "claim": "EFFECT",
+      "digest": "eeb67c76f91a4b74",
+      "signed by the gate key, for this budget, run and nonce": true
+     },
+     {
+      "seq": 9,
+      "claim": "EFFECT",
+      "digest": "eecd1ce0f8d27011",
+      "signed by the gate key, for this budget, run and nonce": true
+     }
+    ],
+    "stored verdict": "PASS",
+    "stored value digest": "eecd1ce0f8d27011",
+    "RECONCILE decisions for the run in the chain": [
+     {
+      "seq": 8,
+      "kind": "APPLIED",
+      "code": "VERDICT_RECORDED",
+      "verdict in the op": "EFFECT"
+     },
+     {
+      "seq": 9,
+      "kind": "DUPLICATE",
+      "code": "VERDICT_RETRY",
+      "verdict in the op": "EFFECT"
+     }
+    ],
+    "check_record.run_outcome (what the courier concludes)": "PASS",
+    "PREDICATE two different digests among genuine EFFECT reports": true,
+    "PREDICATE fewer reports than RECONCILE decisions in the chain": false,
+    "each report sits at the seq of a RECONCILE decision for this run": true
+   },
+   "courier_900s": {
+    "exit": 0,
+    "made": []
+   },
+   "courier_started_now": {
+    "exit": 0,
+    "made": []
+   }
+  },
+  {
+   "step": "V3. the record of the budget, and what its checker says",
+   "record verifies": true,
+   "checks that fail": [],
+   "outcome the record gives the run": "PASS",
+   "reports the record carries for the run": [
+    {
+     "seq": 8,
+     "claim": "EFFECT",
+     "digest": "eeb67c76f91a4b74"
+    },
+    {
+     "seq": 9,
+     "claim": "EFFECT",
+     "digest": "eecd1ce0f8d27011"
+    }
+   ],
+   "PREDICATE two different digests among the record's EFFECT reports": true
+  },
+  {
+   "step": "V4. an honest FAIL, and the gate host's own report sent to the witness a second time (a retry)",
+   "attempt": {
+    "aid": "a-a7e27d2d2160f0c0",
+    "phase": "EFFECT",
+    "nonce": "n-d71e0646a8c35e2611c6729de326a83c32c0ca63"
+   },
+   "witness_answer": {
+    "status": 200,
+    "kind": "DUPLICATE",
+    "code": "VERDICT_RETRY"
+   },
+   "view": {
+    "GET /run status": 200,
+    "reports in the answer": [
+     {
+      "seq": 17,
+      "claim": "EFFECT",
+      "digest": "51a1ae923ae60c7e",
+      "signed by the gate key, for this budget, run and nonce": true
+     },
+     {
+      "seq": 18,
+      "claim": "EFFECT",
+      "digest": "51a1ae923ae60c7e",
+      "signed by the gate key, for this budget, run and nonce": true
+     }
+    ],
+    "stored verdict": "FAIL",
+    "stored value digest": "51a1ae923ae60c7e",
+    "RECONCILE decisions for the run in the chain": [
+     {
+      "seq": 17,
+      "kind": "APPLIED",
+      "code": "VERDICT_RECORDED",
+      "verdict in the op": "EFFECT"
+     },
+     {
+      "seq": 18,
+      "kind": "DUPLICATE",
+      "code": "VERDICT_RETRY",
+      "verdict in the op": "EFFECT"
+     }
+    ],
+    "check_record.run_outcome (what the courier concludes)": "FAIL",
+    "PREDICATE two different digests among genuine EFFECT reports": false,
+    "PREDICATE fewer reports than RECONCILE decisions in the chain": false,
+    "each report sits at the seq of a RECONCILE decision for this run": true
+   }
+  },
+  {
+   "step": "V5. the gate host signed FAIL; the service sent the witness only its own report over a forged PASS, and stored the PASS",
+   "attempt": {
+    "aid": "a-150f34bc3637e340",
+    "phase": "EFFECT",
+    "nonce": "n-a576de5d63ff44bc1af31133b5e8ba5f77e9cd5f"
+   },
+   "gate_host_verdict": "FAIL",
+   "client_was_told": "DECLARED CHECK MET",
+   "view": {
+    "GET /run status": 200,
+    "reports in the answer": [
+     {
+      "seq": 26,
+      "claim": "EFFECT",
+      "digest": "1d977ac7cf4c8b97",
+      "signed by the gate key, for this budget, run and nonce": true
+     }
+    ],
+    "stored verdict": "PASS",
+    "stored value digest": "1d977ac7cf4c8b97",
+    "RECONCILE decisions for the run in the chain": [
+     {
+      "seq": 26,
+      "kind": "APPLIED",
+      "code": "VERDICT_RECORDED",
+      "verdict in the op": "EFFECT"
+     }
+    ],
+    "check_record.run_outcome (what the courier concludes)": "PASS",
+    "PREDICATE two different digests among genuine EFFECT reports": false,
+    "PREDICATE fewer reports than RECONCILE decisions in the chain": false,
+    "each report sits at the seq of a RECONCILE decision for this run": true
+   },
+   "courier_900s": {
+    "exit": 0,
+    "made": [
+     [
+      "a-a7e27d2d2160f0c0",
+      "FAIL"
+     ]
+    ]
+   },
+   "courier_started_now": {
+    "exit": 0,
+    "made": [
+     [
+      "a-a7e27d2d2160f0c0",
+      "FAIL"
+     ]
+    ]
+   },
+   "record": {
+    "record verifies": true,
+    "checks that fail": [],
+    "outcome the record gives the run": "PASS",
+    "reports the record carries for the run": [
+     {
+      "seq": 26,
+      "claim": "EFFECT",
+      "digest": "1d977ac7cf4c8b97"
+     }
+    ],
+    "PREDICATE two different digests among the record's EFFECT reports": false
+   }
+  },
+  {
+   "step": "V6. removing or changing the first (FAIL) report of the replaced run, as each role the store grants",
+   "tries": {
+    "plea_local": {
+     "DELETE the first report": {
+      "ok": false,
+      "error": "InsufficientPrivilege: permission denied for table evidence"
+     },
+     "UPDATE the first report": {
+      "ok": false,
+      "error": "InsufficientPrivilege: permission denied for table evidence"
+     }
+    },
+    "plea_witness": {
+     "DELETE the first report": {
+      "ok": false,
+      "error": "InsufficientPrivilege: permission denied for table evidence"
+     },
+     "UPDATE the first report": {
+      "ok": false,
+      "error": "InsufficientPrivilege: permission denied for table evidence"
+     }
+    },
+    "plea_control": {
+     "DELETE the first report": {
+      "ok": false,
+      "error": "InsufficientPrivilege: permission denied for table evidence"
+     },
+     "UPDATE the first report": {
+      "ok": false,
+      "error": "InsufficientPrivilege: permission denied for table evidence"
+     }
+    }
+   },
+   "view_after": {
+    "GET /run status": 200,
+    "reports in the answer": [
+     {
+      "seq": 8,
+      "claim": "EFFECT",
+      "digest": "eeb67c76f91a4b74",
+      "signed by the gate key, for this budget, run and nonce": true
+     },
+     {
+      "seq": 9,
+      "claim": "EFFECT",
+      "digest": "eecd1ce0f8d27011",
+      "signed by the gate key, for this budget, run and nonce": true
+     }
+    ],
+    "stored verdict": "PASS",
+    "stored value digest": "eecd1ce0f8d27011",
+    "RECONCILE decisions for the run in the chain": [
+     {
+      "seq": 8,
+      "kind": "APPLIED",
+      "code": "VERDICT_RECORDED",
+      "verdict in the op": "EFFECT"
+     },
+     {
+      "seq": 9,
+      "kind": "DUPLICATE",
+      "code": "VERDICT_RETRY",
+      "verdict in the op": "EFFECT"
+     }
+    ],
+    "check_record.run_outcome (what the courier concludes)": "PASS",
+    "PREDICATE two different digests among genuine EFFECT reports": true,
+    "PREDICATE fewer reports than RECONCILE decisions in the chain": false,
+    "each report sits at the seq of a RECONCILE decision for this run": true
+   }
+  },
+  {
+   "step": "V7. the same removal with the owner's password, which the repository gives",
+   "owner_delete": {
+    "ok": true,
+    "result": 1
+   },
+   "view_after": {
+    "GET /run status": 200,
+    "reports in the answer": [
+     {
+      "seq": 9,
+      "claim": "EFFECT",
+      "digest": "eecd1ce0f8d27011",
+      "signed by the gate key, for this budget, run and nonce": true
+     }
+    ],
+    "stored verdict": "PASS",
+    "stored value digest": "eecd1ce0f8d27011",
+    "RECONCILE decisions for the run in the chain": [
+     {
+      "seq": 8,
+      "kind": "APPLIED",
+      "code": "VERDICT_RECORDED",
+      "verdict in the op": "EFFECT"
+     },
+     {
+      "seq": 9,
+      "kind": "DUPLICATE",
+      "code": "VERDICT_RETRY",
+      "verdict in the op": "EFFECT"
+     }
+    ],
+    "check_record.run_outcome (what the courier concludes)": "PASS",
+    "PREDICATE two different digests among genuine EFFECT reports": false,
+    "PREDICATE fewer reports than RECONCILE decisions in the chain": true,
+    "each report sits at the seq of a RECONCILE decision for this run": true
+   },
+   "courier_started_now": {
+    "exit": 0,
+    "made": [
+     [
+      "a-a7e27d2d2160f0c0",
+      "FAIL"
+     ]
+    ]
+   },
+   "record": {
+    "record verifies": true,
+    "checks that fail": [],
+    "outcome the record gives the run": "PASS",
+    "reports the record carries for the run": [
+     {
+      "seq": 9,
+      "claim": "EFFECT",
+      "digest": "eecd1ce0f8d27011"
+     }
+    ],
+    "PREDICATE two different digests among the record's EFFECT reports": false
+   }
+  }
+ ]
+}
