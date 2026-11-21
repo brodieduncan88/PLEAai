@@ -1,0 +1,392 @@
+{
+ "bounds": {
+  "runs": 2,
+  "reports per run": [
+   2,
+   1
+  ],
+  "decisions": 3,
+  "ticks of the mailbox clock": 2,
+  "waiting limit L": 1
+ },
+ "variants": {
+  "spec": {
+   "what": "the proposed rules",
+   "states": 4137699,
+   "explored to the end": true,
+   "invariants broken": {},
+   "witnesses": {
+    "COVERED while a truly failed run stands as PASS on one authentic report (the forgery before the witness): correctness is not guaranteed": [
+     "service: report for run 0 with digest 'p' recorded at decision 1",
+     "service: stores the value 'p' for run 0",
+     "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1",
+     "courier: asks for run 0; observes outcome P",
+     "courier: asks for run 1; observes outcome N",
+     "courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=0, naming []",
+     "courier: delivers ('COV', 0, 1, frozenset()); the mailbox receipts it at t=0"
+    ],
+    "NOT COVERED with no run failed: a statement has lapsed, and nothing says or implies a FAIL": [
+     "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 0",
+     "the mailbox's clock: 1",
+     "the mailbox's clock: 2",
+     "courier: asks for run 0; observes outcome N",
+     "courier: asks for run 1; observes outcome N",
+     "courier: ends the reading; WHOLE: coverage statement to decision 0 with token t=0, naming []",
+     "courier: delivers ('COV', 0, 0, frozenset()); the mailbox receipts it at t=2"
+    ],
+    "COVERED with a CONFLICT notice held for a run with two different digests: the conflict is said, which result is true is not": [
+     "service: report for run 0 with digest 'f' recorded at decision 1",
+     "service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)",
+     "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 2",
+     "courier: asks for run 0; observes outcome N and two different signed digests",
+     "courier: asks for run 1; observes outcome N",
+     "courier: ends the reading; makes [('CONFLICT', 0)]; WHOLE: coverage statement to decision 2 with token t=0, naming [('CONFLICT', 0)]",
+     "courier: delivers ('COV', 0, 2, frozenset({('CONFLICT', 0)})); the mailbox receipts it at t=0",
+     "courier: delivers ('CONFLICT', 0); the mailbox receipts it at t=0"
+    ],
+    "COVERED with a run that carries the same digest twice and no CONFLICT notice: a repeat is not a conflict": [
+     "service: report for run 0 with digest 'p' recorded at decision 1",
+     "service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)",
+     "service: stores the value 'p' for run 0",
+     "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 2",
+     "courier: asks for run 0; observes outcome P (the same digest twice)",
+     "courier: asks for run 1; observes outcome N",
+     "courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=0, naming []",
+     "courier: delivers ('COV', 0, 2, frozenset()); the mailbox receipts it at t=0"
+    ]
+   },
+   "liveness": {
+    "states": 20330,
+    "COVERED ever reached while no reading of a run is answered": false
+   }
+  },
+  "no_detection": {
+   "what": "the eighth form's reading of reports: any recorded digest is believed and two digests are not remarked on (S-1)",
+   "states": 2722925,
+   "explored to the end": true,
+   "invariants broken": {
+    "CONSISTENT": {
+     "what": "CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 2",
+      "courier: asks for run 0; observes outcome N and two different signed digests",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 2, frozenset()); the mailbox receipts it at t=2"
+     ]
+    }
+   },
+   "witnesses": {}
+  },
+  "no_reread": {
+   "what": "conflicts looked for only when a run is read for its outcome: a final run is never asked for again",
+   "states": 3892397,
+   "explored to the end": true,
+   "invariants broken": {
+    "CONSISTENT": {
+     "what": "CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it",
+     "shortest trace": [
+      "service: report for run 0 with digest 'p' recorded at decision 1",
+      "service: stores the value 'p' for run 0",
+      "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1",
+      "service: report for run 0 with digest 'f' recorded at decision 2 (a duplicate, kept with its report)",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: asks for run 0; observes outcome P",
+      "courier: asks for run 1; NO ANSWER",
+      "courier: ends the reading; not whole, no coverage statement",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 2",
+      "courier: run 0 is final already and the chain holds nothing new for it; not asked",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 2, frozenset()); the mailbox receipts it at t=2"
+     ]
+    }
+   },
+   "witnesses": {}
+  },
+  "asked_is_enough": {
+   "what": "a reading counts as whole when every run was asked for, answered or not (the eighth form, D-d)",
+   "states": 5684884,
+   "explored to the end": true,
+   "invariants broken": {
+    "CONSISTENT": {
+     "what": "CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 2",
+      "courier: asks for run 0; NO ANSWER",
+      "courier: asks for run 1; NO ANSWER",
+      "courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 2, frozenset()); the mailbox receipts it at t=2"
+     ]
+    },
+    "NOTICED": {
+     "what": "NOTICED: COVERED at t=2, yet the FAIL of run 0, committed at t=0, has no notice in the mailbox",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "service: stores the value 'f' for run 0",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 1",
+      "courier: asks for run 0; NO ANSWER",
+      "courier: asks for run 1; NO ANSWER",
+      "courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 1, frozenset()); the mailbox receipts it at t=2"
+     ]
+    },
+    "OBSERVED": {
+     "what": "OBSERVED: a coverage statement was made without the observations the definition requires",
+     "shortest trace": [
+      "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 0",
+      "courier: asks for run 0; NO ANSWER",
+      "courier: asks for run 1; NO ANSWER",
+      "courier: ends the reading; WHOLE: coverage statement to decision 0 with token t=0, naming []"
+     ]
+    }
+   },
+   "witnesses": {}
+  },
+  "no_lapse": {
+   "what": "a coverage statement never lapses (the eighth form's WATCHING)",
+   "states": 4137699,
+   "explored to the end": true,
+   "invariants broken": {
+    "CONSISTENT": {
+     "what": "CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1",
+      "service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: asks for run 0; observes outcome N",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=0, naming []",
+      "courier: delivers ('COV', 0, 1, frozenset()); the mailbox receipts it at t=2"
+     ]
+    },
+    "NOTICED": {
+     "what": "NOTICED: COVERED at t=2, yet the FAIL of run 0, committed at t=0, has no notice in the mailbox",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1",
+      "courier: asks for run 0; observes outcome N",
+      "service: stores the value 'f' for run 0",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=0, naming []",
+      "courier: delivers ('COV', 0, 1, frozenset()); the mailbox receipts it at t=2"
+     ]
+    }
+   },
+   "witnesses": {}
+  },
+  "receipt_time": {
+   "what": "freshness counted from the mailbox's receipt of the statement, as the addendum's section 7 words it, not from a token taken before the reading",
+   "states": 7478677,
+   "explored to the end": true,
+   "invariants broken": {
+    "CONSISTENT": {
+     "what": "CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1",
+      "service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: asks for run 0; observes outcome N",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=0, naming []",
+      "courier: delivers ('COV', 0, 1, frozenset()); the mailbox receipts it at t=2"
+     ]
+    },
+    "NOTICED": {
+     "what": "NOTICED: COVERED at t=2, yet the FAIL of run 0, committed at t=0, has no notice in the mailbox",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1",
+      "courier: asks for run 0; observes outcome N",
+      "service: stores the value 'f' for run 0",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=0, naming []",
+      "courier: delivers ('COV', 0, 1, frozenset()); the mailbox receipts it at t=2"
+     ]
+    }
+   },
+   "witnesses": {}
+  },
+  "carry_over": {
+   "what": "the outcome of a run that is not final is carried over from an earlier reading instead of being observed again",
+   "states": 14000001,
+   "explored to the end": false,
+   "invariants broken": {
+    "CONSISTENT": {
+     "what": "CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1",
+      "service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: asks for run 0; observes outcome N",
+      "courier: asks for run 1; NO ANSWER",
+      "courier: ends the reading; not whole, no coverage statement",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 2",
+      "courier: asks for run 0; NO ANSWER",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 2, frozenset()); the mailbox receipts it at t=2"
+     ]
+    },
+    "NOTICED": {
+     "what": "NOTICED: COVERED at t=2, yet the FAIL of run 0, committed at t=0, has no notice in the mailbox",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1",
+      "courier: asks for run 0; observes outcome N",
+      "service: stores the value 'f' for run 0",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: asks for run 1; NO ANSWER",
+      "courier: ends the reading; not whole, no coverage statement",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 1",
+      "courier: asks for run 0; NO ANSWER",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 1, frozenset()); the mailbox receipts it at t=2"
+     ]
+    },
+    "OBSERVED": {
+     "what": "OBSERVED: a coverage statement was made without the observations the definition requires",
+     "shortest trace": [
+      "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 0",
+      "courier: asks for run 0; NO ANSWER",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; not whole, no coverage statement",
+      "courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 0",
+      "courier: asks for run 0; observes outcome N",
+      "courier: asks for run 1; NO ANSWER",
+      "courier: ends the reading; WHOLE: coverage statement to decision 0 with token t=0, naming []"
+     ]
+    }
+   },
+   "witnesses": {}
+  },
+  "names_new_only": {
+   "what": "a coverage statement names only the notices of its own reading, not every notice made so far",
+   "states": 6073407,
+   "explored to the end": true,
+   "invariants broken": {
+    "CONSISTENT": {
+     "what": "CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 2",
+      "courier: asks for run 0; observes outcome N and two different signed digests",
+      "courier: asks for run 1; NO ANSWER",
+      "courier: ends the reading; makes [('CONFLICT', 0)]; not whole, no coverage statement",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 2",
+      "courier: asks for run 0; observes outcome N and two different signed digests",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 2, frozenset()); the mailbox receipts it at t=2"
+     ]
+    },
+    "NOTICED": {
+     "what": "NOTICED: COVERED at t=2, yet the FAIL of run 0, committed at t=0, has no notice in the mailbox",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "service: stores the value 'f' for run 0",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 1",
+      "courier: asks for run 0; observes outcome F",
+      "courier: asks for run 1; NO ANSWER",
+      "courier: ends the reading; makes [('FAIL', 0)]; not whole, no coverage statement",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 1",
+      "courier: run 0 is final already and the chain holds nothing new for it; not asked",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 1, frozenset()); the mailbox receipts it at t=2"
+     ]
+    }
+   },
+   "witnesses": {}
+  },
+  "no_count_rule": {
+   "what": "the proposed rules without the count rule, with the owner's powers (a precondition broken)",
+   "states": 14000001,
+   "explored to the end": false,
+   "invariants broken": {
+    "CONSISTENT": {
+     "what": "CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)",
+      "OWNER (outside the contract): deletes the report of run 0 at decision 1",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 2",
+      "courier: asks for run 0; observes outcome N",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 2, frozenset()); the mailbox receipts it at t=2"
+     ]
+    },
+    "NOTICED": {
+     "what": "NOTICED: COVERED at t=2, yet the FAIL of run 0, committed at t=0, has no notice in the mailbox",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "service: stores the value 'f' for run 0",
+      "OWNER (outside the contract): deletes the report of run 0 at decision 1",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 1",
+      "courier: asks for run 0; observes outcome N",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 1, frozenset()); the mailbox receipts it at t=2"
+     ]
+    }
+   },
+   "witnesses": {}
+  },
+  "owner": {
+   "what": "the proposed rules, with the owner's powers (precondition DP1 broken)",
+   "states": 14000001,
+   "explored to the end": false,
+   "invariants broken": {
+    "NOTICED": {
+     "what": "NOTICED: COVERED at t=2, yet the FAIL of run 0, committed at t=0, has no notice in the mailbox",
+     "shortest trace": [
+      "service: report for run 0 with digest 'f' recorded at decision 1",
+      "service: stores the value 'f' for run 0",
+      "OWNER (outside the contract): replaces the stored value of run 0 by 'p'",
+      "the mailbox's clock: 1",
+      "the mailbox's clock: 2",
+      "courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 1",
+      "courier: asks for run 0; observes outcome N",
+      "courier: asks for run 1; observes outcome N",
+      "courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=2, naming []",
+      "courier: delivers ('COV', 2, 1, frozenset()); the mailbox receipts it at t=2"
+     ]
+    }
+   },
+   "witnesses": {}
+  }
+ }
+}

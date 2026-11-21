@@ -1,0 +1,156 @@
+
+=== spec: the proposed rules
+    states 4137699; invariants broken: none
+  .. reachable, with every invariant holding: COVERED while a truly failed run stands as PASS on one authentic report (the forgery before the witness): correctness is not guaranteed
+     trace (7 steps):
+        1. service: report for run 0 with digest 'p' recorded at decision 1
+        2. service: stores the value 'p' for run 0
+        3. courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1
+        4. courier: asks for run 0; observes outcome P
+        5. courier: asks for run 1; observes outcome N
+        6. courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=0, naming []
+        7. courier: delivers ('COV', 0, 1, frozenset()); the mailbox receipts it at t=0
+  .. reachable, with every invariant holding: NOT COVERED with no run failed: a statement has lapsed, and nothing says or implies a FAIL
+     trace (7 steps):
+        1. courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 0
+        2. the mailbox's clock: 1
+        3. the mailbox's clock: 2
+        4. courier: asks for run 0; observes outcome N
+        5. courier: asks for run 1; observes outcome N
+        6. courier: ends the reading; WHOLE: coverage statement to decision 0 with token t=0, naming []
+        7. courier: delivers ('COV', 0, 0, frozenset()); the mailbox receipts it at t=2
+  .. reachable, with every invariant holding: COVERED with a CONFLICT notice held for a run with two different digests: the conflict is said, which result is true is not
+     trace (8 steps):
+        1. service: report for run 0 with digest 'f' recorded at decision 1
+        2. service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)
+        3. courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 2
+        4. courier: asks for run 0; observes outcome N and two different signed digests
+        5. courier: asks for run 1; observes outcome N
+        6. courier: ends the reading; makes [('CONFLICT', 0)]; WHOLE: coverage statement to decision 2 with token t=0, naming [('CONFLICT', 0)]
+        7. courier: delivers ('COV', 0, 2, frozenset({('CONFLICT', 0)})); the mailbox receipts it at t=0
+        8. courier: delivers ('CONFLICT', 0); the mailbox receipts it at t=0
+  .. reachable, with every invariant holding: COVERED with a run that carries the same digest twice and no CONFLICT notice: a repeat is not a conflict
+     trace (8 steps):
+        1. service: report for run 0 with digest 'p' recorded at decision 1
+        2. service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)
+        3. service: stores the value 'p' for run 0
+        4. courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 2
+        5. courier: asks for run 0; observes outcome P (the same digest twice)
+        6. courier: asks for run 1; observes outcome N
+        7. courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=0, naming []
+        8. courier: delivers ('COV', 0, 2, frozenset()); the mailbox receipts it at t=0
+  .. liveness: {'states': 20330, 'COVERED ever reached while no reading of a run is answered': False}
+
+=== no_detection: the eighth form's reading of reports: any recorded digest is believed and two digests are not remarked on (S-1)
+    states 2722925; invariants broken: ['CONSISTENT']
+  -- CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it
+     shortest trace (9 steps):
+        1. service: report for run 0 with digest 'f' recorded at decision 1
+        2. service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)
+        3. the mailbox's clock: 1
+        4. the mailbox's clock: 2
+        5. courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 2
+        6. courier: asks for run 0; observes outcome N and two different signed digests
+        7. courier: asks for run 1; observes outcome N
+        8. courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=2, naming []
+        9. courier: delivers ('COV', 2, 2, frozenset()); the mailbox receipts it at t=2
+
+=== no_reread: conflicts looked for only when a run is read for its outcome: a final run is never asked for again
+    states 3892397; invariants broken: ['CONSISTENT']
+  -- CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it
+     shortest trace (14 steps):
+        1. service: report for run 0 with digest 'p' recorded at decision 1
+        2. service: stores the value 'p' for run 0
+        3. courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1
+        4. service: report for run 0 with digest 'f' recorded at decision 2 (a duplicate, kept with its report)
+        5. the mailbox's clock: 1
+        6. the mailbox's clock: 2
+        7. courier: asks for run 0; observes outcome P
+        8. courier: asks for run 1; NO ANSWER
+        9. courier: ends the reading; not whole, no coverage statement
+       10. courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 2
+       11. courier: run 0 is final already and the chain holds nothing new for it; not asked
+       12. courier: asks for run 1; observes outcome N
+       13. courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=2, naming []
+       14. courier: delivers ('COV', 2, 2, frozenset()); the mailbox receipts it at t=2
+
+=== asked_is_enough: a reading counts as whole when every run was asked for, answered or not (the eighth form, D-d)
+    states 5684884; invariants broken: ['CONSISTENT', 'NOTICED', 'OBSERVED']
+  -- CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it
+     shortest trace (9 steps):
+        1. service: report for run 0 with digest 'f' recorded at decision 1
+        2. service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)
+        3. the mailbox's clock: 1
+        4. the mailbox's clock: 2
+        5. courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 2
+        6. courier: asks for run 0; NO ANSWER
+        7. courier: asks for run 1; NO ANSWER
+        8. courier: ends the reading; WHOLE: coverage statement to decision 2 with token t=2, naming []
+        9. courier: delivers ('COV', 2, 2, frozenset()); the mailbox receipts it at t=2
+  -- NOTICED: COVERED at t=2, yet the FAIL of run 0, committed at t=0, has no notice in the mailbox
+     shortest trace (9 steps):
+        1. service: report for run 0 with digest 'f' recorded at decision 1
+        2. service: stores the value 'f' for run 0
+        3. the mailbox's clock: 1
+        4. the mailbox's clock: 2
+        5. courier: begins a reading; token t=2 from the mailbox; checkpoint at decision 1
+        6. courier: asks for run 0; NO ANSWER
+        7. courier: asks for run 1; NO ANSWER
+        8. courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=2, naming []
+        9. courier: delivers ('COV', 2, 1, frozenset()); the mailbox receipts it at t=2
+  -- OBSERVED: a coverage statement was made without the observations the definition requires
+     shortest trace (4 steps):
+        1. courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 0
+        2. courier: asks for run 0; NO ANSWER
+        3. courier: asks for run 1; NO ANSWER
+        4. courier: ends the reading; WHOLE: coverage statement to decision 0 with token t=0, naming []
+
+=== no_lapse: a coverage statement never lapses (the eighth form's WATCHING)
+    states 4137699; invariants broken: ['CONSISTENT', 'NOTICED']
+  -- CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it
+     shortest trace (9 steps):
+        1. service: report for run 0 with digest 'f' recorded at decision 1
+        2. courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1
+        3. service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)
+        4. the mailbox's clock: 1
+        5. the mailbox's clock: 2
+        6. courier: asks for run 0; observes outcome N
+        7. courier: asks for run 1; observes outcome N
+        8. courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=0, naming []
+        9. courier: delivers ('COV', 0, 1, frozenset()); the mailbox receipts it at t=2
+  -- NOTICED: COVERED at t=2, yet the FAIL of run 0, committed at t=0, has no notice in the mailbox
+     shortest trace (9 steps):
+        1. service: report for run 0 with digest 'f' recorded at decision 1
+        2. courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1
+        3. courier: asks for run 0; observes outcome N
+        4. service: stores the value 'f' for run 0
+        5. the mailbox's clock: 1
+        6. the mailbox's clock: 2
+        7. courier: asks for run 1; observes outcome N
+        8. courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=0, naming []
+        9. courier: delivers ('COV', 0, 1, frozenset()); the mailbox receipts it at t=2
+
+=== receipt_time: freshness counted from the mailbox's receipt of the statement, as the addendum's section 7 words it, not from a token taken before the reading
+    states 7478677; invariants broken: ['CONSISTENT', 'NOTICED']
+  -- CONSISTENT: COVERED at t=2, yet run 0 has carried two different signed digests since t=0 and the mailbox holds no notice of it
+     shortest trace (9 steps):
+        1. service: report for run 0 with digest 'f' recorded at decision 1
+        2. courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1
+        3. service: report for run 0 with digest 'p' recorded at decision 2 (a duplicate, kept with its report)
+        4. the mailbox's clock: 1
+        5. the mailbox's clock: 2
+        6. courier: asks for run 0; observes outcome N
+        7. courier: asks for run 1; observes outcome N
+        8. courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=0, naming []
+        9. courier: delivers ('COV', 0, 1, frozenset()); the mailbox receipts it at t=2
+  -- NOTICED: COVERED at t=2, yet the FAIL of run 0, committed at t=0, has no notice in the mailbox
+     shortest trace (9 steps):
+        1. service: report for run 0 with digest 'f' recorded at decision 1
+        2. courier: begins a reading; token t=0 from the mailbox; checkpoint at decision 1
+        3. courier: asks for run 0; observes outcome N
+        4. service: stores the value 'f' for run 0
+        5. the mailbox's clock: 1
+        6. the mailbox's clock: 2
+        7. courier: asks for run 1; observes outcome N
+        8. courier: ends the reading; WHOLE: coverage statement to decision 1 with token t=0, naming []
+        9. courier: delivers ('COV', 0, 1, frozenset()); the mailbox receipts it at t=2

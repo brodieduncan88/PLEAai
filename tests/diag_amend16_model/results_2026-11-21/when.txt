@@ -1,0 +1,12 @@
+start 2026-11-21T13:25:33Z
+spec exit 0 13:27:05
+no_detection exit 0 13:28:09
+no_reread exit 0 13:29:50
+asked_is_enough exit 0 13:32:14
+no_lapse exit 0 13:34:00
+receipt_time exit 0 13:37:12
+carry_over exit 0 13:42:32
+names_new_only exit 0 13:45:16
+no_count_rule exit 0 13:49:26
+owner exit 0 13:53:26
+end 2026-11-21T13:53:26Z
