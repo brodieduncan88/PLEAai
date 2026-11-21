@@ -47,6 +47,10 @@ Corrections and cautions:
 
 ## The review, as returned
 
+Its text is unchanged, but for its own title line ("Design-only architectural review: Amendment 16 notification path"),
+which the heading above replaces. Its last heading, "Critical Files for Implementation", is the reviewer's form of words for
+the files any later work would touch; no implementation is begun or proposed by keeping it.
+
 Internal review under the owner's direction. Nothing was run, changed or committed; the tree at e25a297 was only read. This is not a validation, not a declaration and not a specification for a ninth form. G2, G5 and G6 stay "implemented and internally tested, with open obligations".
 
 ## 1. Summary
@@ -227,7 +231,7 @@ What should change before any implementation:
 - That any of this is validated, independently reviewed or production-ready, or that G2, G5 or G6 is closed.
 - That a receipt shows a person read anything, or that the mailbox is independent of the service in the demonstration.
 
-### Files the review names as the ones any later work would touch
+### Critical Files for Implementation
 
 - /home/user/PLEAai/verify/courier.py
 - /home/user/PLEAai/verify/check_record.py
