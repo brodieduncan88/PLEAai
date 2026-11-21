@@ -4327,6 +4327,14 @@ def r30():
         finally:
             C.run_outcome = saved_ro
         unr5 = [x['notice']['text'].split('\n')[2] for x in w_.held_items() if x['notice'].get('outcome') == 'UNREADABLE']
+        w_ = S.World(name='courier-k5', stall_after=0); att = []                                   # a run whose outcome the chain alone says (no request)
+        att.append(['n-intent', 'verify:n', 'INTENT_PENDING', 'nn', True, False]); w_.decide(att, ('X', 'n-intent')); w_.effect(att, 'run-b', S.FAIL)
+        try:
+            C.run_outcome = lambda phase, ev, res, gk, root_, aid_, nonce_: (_ for _ in ()).throw(MemoryError()) if aid_ == 'n-intent' else saved_ro(phase, ev, res, gk, root_, aid_, nonce_)
+            p5d = step(w_.run, t0)
+        finally:
+            C.run_outcome = saved_ro
+        no_req5 = ([x.get('why', '') for x in p5d.get('unread', [])] if isinstance(p5d, dict) else p5d, made(p5d))
         w_ = S.World(name='courier-k5', stall_after=0); att = []; w_.effect(att, 'a', S.PASS); step(w_.run, t0); w_.effect(att, 'b', S.FAIL)
         saved_lines = courier.lines
         try:
@@ -4336,7 +4344,7 @@ def r30():
             courier.lines = saved_lines
         k5 = (st5['last_pass']['ended'], st5['last_pass']['why'], made(p5), unread(p5b), made(p5b), p5b.get('courier_failed') if isinstance(p5b, dict) else p5b,
               [x.get('why', '') for x in p5.get('unreachable', [])] if isinstance(p5, dict) else p5, [x.get('why', '') for x in p5b.get('unread', [])] if isinstance(p5b, dict) else p5b,
-              st5c['last_pass']['ended'], unr5)
+              st5c['last_pass']['ended'], unr5, no_req5)
         # K6: a pass in which a run could not be read
         w_ = S.World(name='courier-k6'); att = []; w_.effect(att, 'a', S.PASS); step(w_.run, t0)
         w_.effect(att, 'b-unreadable', S.FAIL); w_.trouble['b-unreadable'] = 'dropped'; step(w_.run, t0 + 10); b6 = bud5(w_)
@@ -4893,10 +4901,11 @@ def r30():
             holds(lambda: ', but 1 notice is not accepted; the mailbox has not answered since ' + courier._when(t0 + 1000) + ' by its clock' in k4[0]
                   and [(x['kind'], x['times'], x.get('not tried at')) for x in k4[1]] == [('not tried: the mailbox could not be reached', 0, courier._when(t0 + 400000))]
                   and all('null' not in json.dumps(x) for x in k4[1]) and k4[2]['not answered since'] == courier._when(t0 + 1000)),
-        'K5, L4: a RecursionError while the checkpoint is verified ends the pass as the witness not readable, with COURIER_BLOCKED; a MemoryError while a run\'s answer is worked out leaves that run unread and the others read; both in words that the courier could not handle the answer and cannot tell whether its size or depth or its own memory brought it about, and the run\'s UNREADABLE notice does not say it was told so; a RecursionError in the courier\'s own code elsewhere is an error it did not expect':
+        'K5, L4: a RecursionError while the checkpoint is verified ends the pass as the witness not readable, with COURIER_BLOCKED; a MemoryError while a run\'s answer is worked out (one asked for, or one the chain alone settles) leaves that run unread and the others read; both in words that the courier could not handle the answer and cannot tell whether its size or depth or its own memory brought it about, and the run\'s UNREADABLE notice does not say it was told so; a RecursionError in the courier\'s own code elsewhere is an error it did not expect':
             holds(lambda: k5[0] == 'blocked' and k5[2] == [('', 'COURIER_BLOCKED')] and k5[3] == ['run-deep'] and ('run-b', 'FAIL') in k5[4] and k5[5] == []
                   and all('the courier could not handle the answer (' in w5 and 'cannot tell from this alone whether the answer\'s size or depth, or its own want of memory' in w5 for w5 in k5[6] + k5[7])
-                  and len(k5[6]) == 1 and len(k5[7]) == 1 and k5[8] == 'failed' and len(k5[9]) == 1 and 'could not handle the answer' in k5[9][0]),
+                  and len(k5[6]) == 1 and len(k5[7]) == 1 and k5[8] == 'failed' and len(k5[9]) == 1 and 'could not handle the answer' in k5[9][0]
+                  and len(k5[10][0]) == 1 and k5[10][0][0].startswith('the courier could not handle the answer (MemoryError)') and ('run-b', 'FAIL') in k5[10][1]),
         'K6: a pass in which a run could not be read is not "read whole": its ending says "read; 1 run could not be read", and coverage says so':
             holds(lambda: k6[0] == 'read; 1 run could not be read' and k6[1].startswith('CONFIRMED') and k6[1].endswith(', but in the last pass 1 run could not be read')),
         'K7: after a pass that ended before the old line the status says so, that the bound is for passes that reach the old line and that the new line has none; after a blocked pass then one with an error not expected, the COURIER_FAILED alarm counts from the first pass not completed; status() reports a budget it cannot build, and does not raise':
