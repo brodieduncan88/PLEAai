@@ -1,0 +1,29 @@
+{
+ "config": "MU_MT5_wall",
+ "model": "model4",
+ "probes": {},
+ "properties": {
+  "ALARM_ROOM": "holds",
+  "C1_VS_82": "holds",
+  "CENT_E": "holds",
+  "CENT_N": "holds",
+  "DL2_SAME": "holds",
+  "INDEX_RESERVE": "holds",
+  "PMK1": "holds",
+  "REFUSED_NOPOS": "holds",
+  "R_AT_STATUS": "violated",
+  "SAF1": "violated",
+  "SAF10": "holds",
+  "SAF10_L10": "holds",
+  "SAF11": "holds",
+  "SAF2": "holds",
+  "SAF3": "violated",
+  "SAF3B_ACC": "violated",
+  "SAF4": "holds",
+  "SAF5": "holds",
+  "SAF6": "holds",
+  "SAF7": "violated",
+  "SAF8": "n/a"
+ },
+ "spec": "v5"
+}

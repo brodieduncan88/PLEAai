@@ -1,0 +1,65 @@
+config MU_ST7_FZ_OLDCURSOR: states=6066 transitions=21355 depth=20 complete=True secs=0.2
+  SAF1           declared=holds      observed=holds      
+  SAF2           declared=holds      observed=holds      
+  SAF4           declared=holds      observed=holds      
+  SAF6           declared=holds      observed=holds      
+  SAF10          declared=holds      observed=holds      
+  SAF10_L10      declared=holds      observed=holds      
+  SAF11          declared=holds      observed=holds      
+  SAF3B_ACC      declared=holds      observed=holds      
+  PMK1           declared=holds      observed=holds      
+  DL2_SAME       declared=holds      observed=holds      
+  REFUSED_NOPOS  declared=holds      observed=holds      
+  ALARM_ROOM     declared=holds      observed=holds      
+  INDEX_RESERVE  declared=holds      observed=holds      
+  SAF3           declared=holds      observed=holds      
+  SAF5           declared=violated   observed=violated   depth 12
+  SAF7           declared=holds      observed=holds      
+  SAF8           declared=n/a        observed=n/a        
+  CENT_N         declared=holds      observed=holds      
+  CENT_E         declared=holds      observed=holds      
+  R_AT_STATUS    declared=holds      observed=holds      
+  C1_VS_82       declared=violated   observed=violated   depth 12
+  P_COVERED                    declared=any          observed=reached      
+  P_COVERED_INC                declared=any          observed=reached      
+  P_COVERED_AFTER_LOST         declared=any          observed=reached      
+  P_LINK                       declared=any          observed=reached      
+  P_DL2_FIRST_RECEIPT_STMT     declared=any          observed=reached      
+  P_DL2_FIRST_REFUSAL          declared=any          observed=reached      
+  P_EPOCH_KNOWN                declared=any          observed=reached      
+  P_EPOCH_STALE                declared=any          observed=reached      
+  P_OPEN_LOST                  declared=any          observed=reached      
+  P_OPEN_CLOSES_LIVE           declared=any          observed=reached      
+  P_EVICT                      declared=any          observed=reached      
+  P_NOTCOV_BY_ALARM            declared=any          observed=reached      
+  P_NOTCOV_BY_REFUSED_STMT     declared=any          observed=reached      
+  P_NOTCOV_STALE_CARRY         declared=any          observed=reached      
+  P_ST7_FAIL                   declared=any          observed=reached      
+  P_ALARM_TAKEN                declared=any          observed=reached      
+  shortest trace for SAF5:
+      1. courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)
+      2. decision1(run0->u)
+      3. courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt
+      4. courier_reads(FROM_ZERO,N1)
+      5. courier_delivers NOTICE(ce1,k2,run0=u/1)#29 -> receipt
+      6. courier_loses_state
+      7. adversary_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#47 -> receipt
+      8. courier_takes_challenge->token1 -> opens epoch(COURIER_STATE_LOST,closes=1)
+      9. courier_delivers EPOCH_OPEN(ce2,COURIER_STATE_LOST,closes=1)#23 -> receipt
+     10. courier_reads(REFRESH,N1)
+     11. courier_delivers NOTICE(ce2,k2,run0=u/1)#75 -> receipt + LINKED
+     12. courier_delivers STATEMENT(ce2,k3,j1,tok1,REFRESH,at1,N1,carried0)#206 -> receipt
+  shortest trace for C1_VS_82:
+      1. courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)
+      2. decision1(run0->u)
+      3. courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt
+      4. courier_reads(FROM_ZERO,N1)
+      5. courier_delivers NOTICE(ce1,k2,run0=u/1)#29 -> receipt
+      6. courier_loses_state
+      7. adversary_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#47 -> receipt
+      8. courier_takes_challenge->token1 -> opens epoch(COURIER_STATE_LOST,closes=1)
+      9. courier_delivers EPOCH_OPEN(ce2,COURIER_STATE_LOST,closes=1)#23 -> receipt
+     10. courier_reads(REFRESH,N1)
+     11. courier_delivers NOTICE(ce2,k2,run0=u/1)#75 -> receipt + LINKED
+     12. courier_delivers STATEMENT(ce2,k3,j1,tok1,REFRESH,at1,N1,carried0)#206 -> receipt
+  verdict agrees with declaration: True

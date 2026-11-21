@@ -1,0 +1,90 @@
+config MU_MT5_wall: states=103185 transitions=375873 depth=18 complete=True secs=4.5
+  SAF1           declared=violated   observed=violated   depth 7
+  SAF2           declared=holds      observed=holds      
+  SAF4           declared=holds      observed=holds      
+  SAF6           declared=holds      observed=holds      
+  SAF10          declared=holds      observed=holds      
+  SAF10_L10      declared=holds      observed=holds      
+  SAF11          declared=holds      observed=holds      
+  SAF3B_ACC      declared=violated   observed=violated   depth 11
+  PMK1           declared=holds      observed=holds      
+  DL2_SAME       declared=holds      observed=holds      
+  REFUSED_NOPOS  declared=holds      observed=holds      
+  ALARM_ROOM     declared=holds      observed=holds      
+  INDEX_RESERVE  declared=holds      observed=holds      
+  SAF3           declared=violated   observed=violated   depth 7
+  SAF5           declared=holds      observed=holds      
+  SAF7           declared=violated   observed=violated   depth 11
+  SAF8           declared=n/a        observed=n/a        
+  CENT_N         declared=holds      observed=holds      
+  CENT_E         declared=holds      observed=holds      
+  R_AT_STATUS    declared=violated   observed=violated   depth 11
+  C1_VS_82       declared=holds      observed=holds      
+  P_COVERED                    declared=any          observed=reached      
+  P_COVERED_INC                declared=any          observed=reached      
+  P_COVERED_AFTER_REBOOT       declared=any          observed=reached      
+  P_COVERED_AFTER_RESTART      declared=any          observed=reached      
+  P_COVERED_REFRESH_NEWMEP     declared=any          observed=reached      
+  P_DL2_FIRST_RECEIPT_STMT     declared=any          observed=reached      
+  P_DL2_FIRST_REFUSAL          declared=any          observed=reached      
+  P_EVICT                      declared=any          observed=reached      
+  P_EXPIRED_STMT               declared=any          observed=reached      
+  P_ANOMALY_AGE                declared=any          observed=reached      
+  P_NOTCOV_BY_ALARM            declared=any          observed=reached      
+  P_NOTCOV_BY_REFUSED_STMT     declared=any          observed=reached      
+  P_NOTCOV_STALE_CARRY         declared=any          observed=reached      
+  P_ST7_FAIL                   declared=any          observed=reached      
+  P_ALARM_TAKEN                declared=any          observed=reached      
+  shortest trace for SAF1:
+      1. courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)
+      2. tick
+      3. tick
+      4. wall_clock_back
+      5. courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt
+      6. courier_reads(FROM_ZERO,N0)
+      7. courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> receipt
+  shortest trace for SAF3B_ACC:
+      1. courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)
+      2. tick
+      3. wall_clock_back
+      4. decision1(run0->x)
+      5. courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt
+      6. courier_reads(FROM_ZERO,N1)
+      7. courier_delivers NOTICE(ce1,k2,run0=x/1)#21 -> receipt
+      8. courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#31 -> receipt
+      9. courier_takes_challenge->token1
+     10. courier_reads(INCREMENTAL,N1)
+     11. courier_delivers STATEMENT(ce1,k4,j2,tok1,INCREMENTAL,at1,N1,carried1)#56 -> receipt
+  shortest trace for SAF3:
+      1. courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)
+      2. tick
+      3. tick
+      4. wall_clock_back
+      5. courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt
+      6. courier_reads(FROM_ZERO,N0)
+      7. courier_delivers STATEMENT(ce1,k2,j1,tok0,FROM_ZERO,at0,N0,carried0)#13 -> receipt
+  shortest trace for SAF7:
+      1. courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)
+      2. tick
+      3. wall_clock_back
+      4. decision1(run0->x)
+      5. courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt
+      6. courier_reads(FROM_ZERO,N1)
+      7. courier_delivers NOTICE(ce1,k2,run0=x/1)#21 -> receipt
+      8. courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#31 -> receipt
+      9. courier_takes_challenge->token1
+     10. courier_reads(INCREMENTAL,N1)
+     11. courier_delivers STATEMENT(ce1,k4,j2,tok1,INCREMENTAL,at1,N1,carried1)#56 -> receipt
+  shortest trace for R_AT_STATUS:
+      1. courier_takes_challenge->token0 -> opens epoch(FIRST,closes=None)
+      2. tick
+      3. wall_clock_back
+      4. decision1(run0->x)
+      5. courier_delivers EPOCH_OPEN(ce1,FIRST,closes=None)#4 -> receipt
+      6. courier_reads(FROM_ZERO,N1)
+      7. courier_delivers NOTICE(ce1,k2,run0=x/1)#21 -> receipt
+      8. courier_delivers STATEMENT(ce1,k3,j1,tok0,FROM_ZERO,at0,N1,carried0)#31 -> receipt
+      9. courier_takes_challenge->token1
+     10. courier_reads(INCREMENTAL,N1)
+     11. courier_delivers STATEMENT(ce1,k4,j2,tok1,INCREMENTAL,at1,N1,carried1)#56 -> receipt
+  verdict agrees with declaration: True

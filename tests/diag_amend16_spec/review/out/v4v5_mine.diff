@@ -1,0 +1,110 @@
+8,10c8,11
+< **Version: 4.** Version 1 (commit `1495320`) was reviewed by a separate agent and modelled by another; version 2
+< (commit `2694b52`) corrected it and was reviewed again; version 3 corrected what the second review found and was
+< reviewed a third time; version 4 corrects what the third review found. Every
+---
+> **Version: 5.** Version 1 (commit `1495320`) was reviewed by a separate agent and modelled by another; version 2
+> (commit `2694b52`) corrected it and was reviewed and modelled again; version 3 (`6f1ed23`) and version 4 (`d958810`)
+> corrected what the second and third reviews found; version 5 corrects what the model of version 2 found that
+> version 4 still had, and the two low findings left open on version 4. Every
+431,434c432,436
+<   `reason`, one of FIRST or COURIER_STATE_LOST; and `commit = Hb(s_1)` for a secret s_1 of 32 random bytes that the
+<   courier has written durably first.
+< - **I-E-2. The mailbox, on an EPOCH_OPEN whose `chain_epoch` it has never seen.** It closes the budget's open chain
+<   epoch, if any, recording why; it keeps every notice, receipt and piece of evidence of every earlier epoch; it starts
+---
+>   `reason`, one of FIRST, COURIER_STATE_LOST or MAILBOX_STATE_LOST; `closes`, the budget's open chain epoch as the
+>   head in the mailbox's last challenge showed it, or none; and `commit = Hb(s_1)` for a secret s_1 of 32 random bytes
+>   that the courier has written durably first.
+> - **I-E-2. The mailbox, on an EPOCH_OPEN whose `chain_epoch` it has never seen and whose `closes` is the budget's open
+>   chain epoch (none, where it has none).** It closes that epoch, if any, recording why; it keeps every notice, receipt and piece of evidence of every earlier epoch; it starts
+440c442,444
+<   (409 EPOCH_KNOWN) and changes nothing: an old EPOCH_OPEN replayed cannot close the open epoch.
+---
+>   (409 EPOCH_KNOWN) and changes nothing: an old EPOCH_OPEN replayed cannot close the open epoch. An EPOCH_OPEN whose
+>   `closes` is not the budget's open chain epoch is refused (409 EPOCH_STALE): one that was made and never delivered
+>   cannot close an epoch opened after it.
+445c449,451
+<   new chain epoch with reason COURIER_STATE_LOST and read from decision 0.
+---
+>   new chain epoch with reason COURIER_STATE_LOST and read from decision 0. A courier that has sent an EPOCH_OPEN and
+>   has no answer to it sends it again before it does anything else, and does not read the earlier epoch's head as a
+>   loss of state meanwhile; if it is refused as stale, it makes another from a new challenge.
+461,463c467,470
+<   courier without its state, or restored from a copy older than its last accepted statement, cannot produce `reveal`,
+<   so no statement of the open epoch can be counted for it, and it cannot claim COVERED, until it has opened a new
+<   epoch and read from 0.
+---
+>   courier without its state, or restored from a copy that does not hold the secret the mailbox's commit names, cannot
+>   produce `reveal`, so no statement of the open epoch can be counted for it, and it cannot claim COVERED, until it
+>   has opened a new epoch and read from 0. A copy taken while a statement was on its way already holds the next
+>   secret: it is the same state, and it goes on.
+469c476,477
+<   takes only the next item of a chain (7.3).
+---
+>   takes only the next item of a chain (7.3). The courier sends a statement only when it holds a receipt or a link for
+>   every item the statement commits to; M-D-1 is the mailbox's defence where one arrives first all the same.
+489,492c497,504
+< - **I-O-4. The mailbox behind its own receipts.** If the courier holds a receipt of this mailbox for a position of the
+<   open chain epoch beyond the head the mailbox now signs for that epoch, the mailbox has lost state. Receipts of a
+<   closed chain epoch are not compared. The courier makes the reading not whole
+<   (MAILBOX_ROLLBACK), opens a new chain epoch and delivers everything again.
+---
+> - **I-O-4. The mailbox behind what the courier knows.** The courier keeps durably the N and head of the last statement
+>   of its own that the mailbox accepted, or that it sent and has had no refusal of (its **own anchor**). The mailbox
+>   has lost state if the courier holds a receipt of this mailbox for a position of the open chain epoch beyond the
+>   head the mailbox now signs for that epoch (receipts of a closed chain epoch are not compared), or if the anchor in
+>   the mailbox's challenge is lower than the courier's own anchor. The courier then makes the reading not whole
+>   (MAILBOX_ROLLBACK), opens a new chain epoch with reason MAILBOX_STATE_LOST and delivers everything again; and in
+>   its reading from 0 the hash it computes at its own anchor's N MUST be its own anchor's head, or it is a FORK
+>   (O-3).
+546,547c558,560
+<   statement (its digest, N, head, token, tick) are kept. The body of an alarm MUST be dropped, oldest first, when
+<   keeping it would leave more than ALARMS_KEEP alarm bodies for the budget; its index entry is kept. A notice about a run, its receipt, and evidence a held notice binds are
+---
+>   statement (its digest, N, head, token, tick) are kept. Before an alarm's body is stored, and within the same handling
+>   (E-Q-6), the oldest alarm bodies of the budget MUST be dropped until fewer than ALARMS_KEEP are held; their index
+>   entries are kept. A notice about a run, its receipt, and evidence a held notice binds are
+654,655c667,668
+< | DL-2 | If an item with the same digest is already held in the budget's open chain epoch, or was refused there as a statement: answer as the first time (the first receipt, the first LINKED acknowledgement, or the first refusal) | — (nothing changes) |
+< | DL-3 | It is an EPOCH_OPEN with a `chain_epoch` never seen, k = 1 and `prev` = A(0) of that epoch; or its `chain_epoch` is the budget's open epoch, its k is the head's k + 1 and its `prev` is the head's A | 409 EPOCH_KNOWN, or 409 CHAIN_POSITION with the mailbox's signed head; nothing kept; **no token is touched** |
+---
+> | DL-2 | If an item with the same digest is already held in the budget's open chain epoch, or was refused there as a statement at 7.4: answer as the first time (the first receipt, the first LINKED acknowledgement, or the first 422) | — (nothing changes) |
+> | DL-3 | It is an EPOCH_OPEN with a `chain_epoch` never seen, whose `closes` is the budget's open epoch, with k = 1 and `prev` = A(0) of the new epoch; or its `chain_epoch` is the budget's open epoch, its k is the head's k + 1 and its `prev` is the head's A | 409 EPOCH_KNOWN, 409 EPOCH_STALE, or 409 CHAIN_POSITION with the mailbox's signed head; nothing kept; **no token is touched** |
+673c686
+< as evidence with the checks that failed; and the answer is 422 naming them.
+---
+> as evidence, without its `reveal`, with its digest and the checks that failed; and the answer is 422 naming them.
+764c777
+< | SAF-10 | safety | No statement is counted, in any chain epoch, whose checkpoint does not sign back the head of the last statement accepted for the budget |
+---
+> | SAF-10 | safety | No statement is counted, in any chain epoch, whose checkpoint does not sign back the head of the last statement accepted for the budget that the mailbox's record holds. If the mailbox has lost that record, the courier's own anchor stands in for it (I-O-4); if both are lost, nothing does (L-10) |
+793,794c806,808
+< - L-10. A mailbox whose own durable state is rolled back cannot see it. The courier sees it only while it holds a
+<   later receipt (I-O-4); if both lose their state together, nothing here detects it.
+---
+> - L-10. A mailbox whose own durable state is lost or rolled back cannot see it, and its anchor goes with it. The
+>   courier sees it while it holds a later receipt or its own anchor (I-O-4); if both lose their state together,
+>   nothing here detects it, and a fork or rollback of the witness below the lost anchor passes.
+809c823
+< | `POST /deliver` an item | a writing name | 200 a signed receipt (or the first receipt and a LINKED acknowledgement); 400; 403; 409 EPOCH_KNOWN; 409 CHAIN_POSITION with the signed head; 409 EVIDENCE_MISSING; 422 with the failed checks; 507 naming the room |
+---
+> | `POST /deliver` an item | a writing name | 200 a signed receipt (or the first receipt and a LINKED acknowledgement); 400; 403; 409 EPOCH_KNOWN; 409 EPOCH_STALE; 409 CHAIN_POSITION with the signed head; 409 EVIDENCE_MISSING; 422 with the failed checks; 507 naming the room |
+930a945,961
+> 
+> ### Changes from version 4 to version 5
+> 
+> M20 to M29 are the modeller's findings on version 2 (Part 6 of the reports); M22, M23 and M28 were already met by
+> versions 3 and 4 (F21, F30, I-ID-2). F33 and F34 are the reviewer's two low findings on version 4.
+> 
+> | Finding | Severity | What was changed |
+> |---|---|---|
+> | M20 | HIGH | SAF-10 says what it rests on; the courier keeps its own anchor, takes a challenge whose anchor is behind it as the mailbox's loss of state, and checks the chain against its own anchor in the reading from 0 (I-O-4, SAF-10, L-10); a third reason for opening an epoch (I-E-1) |
+> | M21 | MEDIUM | an EPOCH_OPEN names the epoch it closes and is refused if that is not the open one (I-E-1, I-E-2, I-E-3, DL-3, 11) |
+> | M24 | LOW | I-E-8's wording |
+> | M25 | LOW | DL-2 answers again only a statement refused at 7.4 |
+> | M26 | LOW | a courier whose EPOCH_OPEN is unanswered sends it again first (I-E-4) |
+> | M27 | LOW | MAILBOX_STATE_LOST as a reason (I-E-1, I-O-4) |
+> | M29 | LOW | a statement is sent only when its items are acknowledged (I-S-1) |
+> | F33 | LOW | a refused statement is kept without its `reveal` (7.4) |
+> | F34 | LOW | alarm bodies are dropped before the new one is stored (E-Q-4) |

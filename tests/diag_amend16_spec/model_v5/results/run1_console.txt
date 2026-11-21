@@ -1,0 +1,150 @@
+22:25:05 done FD_CHAIN: config FD_CHAIN: states=23006 transitions=71275 depth=17 complete=True secs=0.8
+22:25:10 done FD_EPOCH: config FD_EPOCH: states=103338 transitions=376542 depth=18 complete=True secs=4.7
+22:25:14 done FD_RESTORE: config FD_RESTORE: states=289794 transitions=1031399 depth=26 complete=True secs=10.4
+22:25:19 done FD_SUSP: config FD_SUSP: states=90262 transitions=384025 depth=20 complete=True secs=4.5
+22:25:19 done FD_REQ: config FD_REQ: states=1497 transitions=5945 depth=15 complete=True secs=0.0
+22:25:20 done FD_EPOCH_L: config FD_EPOCH_L: states=218533 transitions=813431 depth=19 complete=True secs=10.6
+22:25:20 done FD_REQ_L: config FD_REQ_L: states=36306 transitions=179469 depth=22 complete=True secs=1.2
+22:25:21 done FD_ALARM: config FD_ALARM: states=5271 transitions=14766 depth=18 complete=True secs=0.2
+22:25:21 done FD_EVID: config FD_EVID: states=3088 transitions=8745 depth=20 complete=True secs=0.1
+22:25:22 done FD_EVID_L: config FD_EVID_L: states=25232 transitions=66369 depth=24 complete=True secs=0.9
+22:25:23 done FD_SKIPEV: config FD_SKIPEV: states=29016 transitions=80831 depth=24 complete=True secs=1.1
+22:25:24 done FD_FORK: config FD_FORK: states=48222 transitions=159304 depth=22 complete=True secs=1.4
+22:25:25 done FD_ALARM_L: config FD_ALARM_L: states=85994 transitions=306110 depth=24 complete=True secs=4.0
+22:25:26 done FD_QUOTA_NOTICE: config FD_QUOTA_NOTICE: states=37162 transitions=97623 depth=20 complete=True secs=1.0
+22:25:47 done FD_CHAIN_L: config FD_CHAIN_L: states=727990 transitions=2803318 depth=23 complete=True secs=42.7
+22:25:47 done FD_QUOTA_INDEX: config FD_QUOTA_INDEX: states=2522 transitions=5976 depth=18 complete=True secs=0.1
+22:25:48 done FD_QUOTA_OBS: config FD_QUOTA_OBS: states=13022 transitions=47105 depth=22 complete=True secs=0.5
+22:25:48 done FD_QUOTA_ALARM: config FD_QUOTA_ALARM: states=2103 transitions=5658 depth=17 complete=True secs=0.1
+22:25:50 done FD_WIPE: config FD_WIPE: states=58438 transitions=208469 depth=25 complete=True secs=2.5
+22:25:53 done FD_FORK_L: config FD_FORK_L: states=716183 transitions=2513825 depth=25 complete=True secs=28.9
+22:25:54 done FD_QUOTA_NOTICE_L: config FD_QUOTA_NOTICE_L: states=608304 transitions=1955984 depth=26 complete=True secs=27.8
+22:26:01 done FD_WIPE_BOTHLOST: config FD_WIPE_BOTHLOST: states=246966 transitions=805798 depth=25 complete=True secs=7.3
+22:26:02 done FD_STATUS: config FD_STATUS: states=47808 transitions=262532 depth=19 complete=True secs=1.3
+22:26:05 done FD_WIPE_FORK: config FD_WIPE_FORK: states=349026 transitions=1264013 depth=28 complete=True secs=14.7
+22:26:06 done CV_RESUME: config CV_RESUME: states=6137 transitions=20957 depth=21 complete=True secs=0.2
+22:26:06 done CV_OLDCURSOR: config CV_OLDCURSOR: states=6434 transitions=22795 depth=21 complete=True secs=0.2
+22:26:12 done CV_NOCHECK: config CV_NOCHECK: states=108011 transitions=438119 depth=25 complete=True secs=5.9
+22:26:15 done OA_CARRYBREAK: config OA_CARRYBREAK: states=62812 transitions=237507 depth=20 complete=True secs=3.0
+22:26:16 done MU_DL2_off: config MU_DL2_off: states=23006 transitions=71275 depth=17 complete=True secs=0.7
+22:26:16 done MU_DL2_newreceipt: config MU_DL2_newreceipt: states=23006 transitions=71275 depth=17 complete=True secs=0.7
+22:26:17 done MU_DL3_order: config MU_DL3_order: states=23006 transitions=71275 depth=17 complete=True secs=0.8
+22:26:18 done MU_DL3_spend: config MU_DL3_spend: states=23006 transitions=71275 depth=17 complete=True secs=0.8
+22:26:19 done MU_DL2_AFTER_DL3: config MU_DL2_AFTER_DL3: states=31863 transitions=96228 depth=18 complete=True secs=1.0
+22:26:20 done MU_REFUSED_POS: config MU_REFUSED_POS: states=22718 transitions=70091 depth=17 complete=True secs=0.8
+22:26:20 done AR_WIPE_FORK_DROPANCHOR: config AR_WIPE_FORK_DROPANCHOR: states=413840 transitions=1525485 depth=28 complete=True secs=17.7
+22:26:21 done MU_OPEN_KNOWN: config MU_OPEN_KNOWN: states=23006 transitions=71275 depth=17 complete=True secs=0.8
+22:26:21 done MU_CLOSES_off: config MU_CLOSES_off: states=30017 transitions=88894 depth=17 complete=True secs=1.0
+22:26:22 done MU_ST7_R: config MU_ST7_R: states=22414 transitions=69099 depth=17 complete=True secs=0.7
+22:26:22 done MU_C15_off: config MU_C15_off: states=23006 transitions=71275 depth=17 complete=True secs=0.8
+22:26:23 done MU_C17_off: config MU_C17_off: states=23006 transitions=71275 depth=17 complete=True secs=0.8
+22:26:31 done MU_ST2: config MU_ST2: states=275195 transitions=984038 depth=26 complete=True secs=9.1
+22:26:32 done MU_ST5_RESUME: config MU_ST5_RESUME: states=5649 transitions=19295 depth=20 complete=True secs=0.2
+22:26:32 done MU_ST7_FZ_OLDCURSOR: config MU_ST7_FZ_OLDCURSOR: states=6066 transitions=21355 depth=20 complete=True secs=0.2
+22:26:33 done MU_ST5: config MU_ST5: states=289794 transitions=1031399 depth=26 complete=True secs=10.0
+22:26:36 done MU_ANCHOR_off_NOCHECK: config MU_ANCHOR_off_NOCHECK: states=70685 transitions=272804 depth=23 complete=True secs=3.4
+22:26:58 done MU_NO_OWN_ANCHOR: config MU_NO_OWN_ANCHOR: states=466582 transitions=1746185 depth=28 complete=True secs=21.9
+22:27:02 done MU_ANCHOR_off: config MU_ANCHOR_off: states=716183 transitions=2513825 depth=25 complete=True secs=29.4
+22:27:02 done MU_ST1_epoch: config MU_ST1_epoch: states=97659 transitions=357745 depth=18 complete=True secs=3.8
+22:27:03 done FD_RESTORE_L: config FD_RESTORE_L: states=2666917 transitions=9728622 depth=27 complete=True secs=117.9
+22:27:06 done MU_ST3: config MU_ST3: states=103338 transitions=376542 depth=18 complete=True secs=4.0
+22:27:07 done MU_MK5: config MU_MK5: states=103338 transitions=376542 depth=18 complete=True secs=5.0
+22:27:08 done MU_C12_age: config MU_C12_age: states=103338 transitions=376542 depth=18 complete=True secs=5.2
+22:27:11 done MU_C1_epoch: config MU_C1_epoch: states=103338 transitions=376542 depth=18 complete=True secs=4.3
+22:27:11 done MU_MT5_wall: config MU_MT5_wall: states=103185 transitions=375873 depth=18 complete=True secs=4.5
+22:27:12 done MU_MEPOCH: config MU_MEPOCH: states=101819 transitions=363286 depth=16 complete=True secs=4.1
+22:27:12 done MU_REQ_REPLAY: config MU_REQ_REPLAY: states=8737 transitions=30905 depth=17 complete=True secs=0.3
+22:27:13 done MU_C1_alarm: config MU_C1_alarm: states=5271 transitions=14766 depth=18 complete=True secs=0.2
+22:27:13 done MU_OR2: config MU_OR2: states=6566 transitions=19330 depth=18 complete=True secs=0.2
+22:27:13 done MU_ALARM_NOTOKEN: config MU_ALARM_NOTOKEN: states=4469 transitions=12945 depth=18 complete=True secs=0.1
+22:27:13 done FD_WIPE_FORK_L: config FD_WIPE_FORK_L: states=1883512 transitions=6853589 depth=30 complete=True secs=79.1
+22:27:13 done MU_DL4_held: config MU_DL4_held: states=3000 transitions=9024 depth=17 complete=True secs=0.1
+22:27:13 done MU_C1_gap: config MU_C1_gap: states=3088 transitions=8745 depth=20 complete=True secs=0.1
+22:27:13 done MU_EQ6_off: config MU_EQ6_off: states=4039 transitions=11632 depth=20 complete=True secs=0.1
+22:27:13 done MU_ORPHAN_NOTHELD: config MU_ORPHAN_NOTHELD: states=4756 transitions=13909 depth=21 complete=True secs=0.2
+22:27:14 done MU_GAP_NO_REBEGIN: config MU_GAP_NO_REBEGIN: states=3088 transitions=8745 depth=20 complete=True secs=0.1
+22:27:14 done MU2_ORPHAN_NOTHELD+GAP_NO_REBEGIN: config MU2_ORPHAN_NOTHELD+GAP_NO_REBEGIN: states=4246 transitions=12147 depth=21 complete=True secs=0.1
+22:27:14 done MU_REFUSED_KEEPS_POS: config MU_REFUSED_KEEPS_POS: states=20666 transitions=61263 depth=18 complete=True secs=0.6
+22:27:14 done MU_NO_INDEX_RESERVE: config MU_NO_INDEX_RESERVE: states=2103 transitions=5658 depth=17 complete=True secs=0.1
+22:27:15 done MU_ALARM_STORE_FIRST: config MU_ALARM_STORE_FIRST: states=2068 transitions=6178 depth=17 complete=True secs=0.1
+22:27:15 done MU_C16_off: config MU_C16_off: states=37162 transitions=97623 depth=20 complete=True secs=1.0
+22:27:15 done MU_OUTBOX_KEEPS_STMT: config MU_OUTBOX_KEEPS_STMT: states=14240 transitions=52761 depth=24 complete=True secs=0.5
+22:27:15 done MU_TICK_CROSS: config MU_TICK_CROSS: states=111380 transitions=403174 depth=18 complete=True secs=4.5
+22:27:16 done MU_MT1_mono: config MU_MT1_mono: states=90272 transitions=383917 depth=20 complete=True secs=4.7
+22:27:16 done MU_CS2_nonce: config MU_CS2_nonce: states=65455 transitions=348414 depth=19 complete=True secs=1.8
+| config | declared violated | observed violated | states | search | shortest trace length | declared = observed | time |
+|---|---|---|---|---|---|---|---|
+| FD_CHAIN | - | - | 23006 | complete | - | NO: P_OPEN_CLOSES_LIVE, P_COURIER_LOST | 1s |
+| FD_CHAIN_L | - | - | 727990 | complete | - | NO: P_OPEN_CLOSES_LIVE, P_COURIER_LOST | 43s |
+| FD_RESTORE | - | - | 289794 | complete | - | yes | 10s |
+| FD_RESTORE_L | - | - | 2666917 | complete | - | yes | 118s |
+| FD_EPOCH | - | - | 103338 | complete | - | yes | 5s |
+| FD_EPOCH_L | - | - | 218533 | complete | - | yes | 11s |
+| FD_SUSP | - | - | 90262 | complete | - | yes | 4s |
+| FD_REQ | - | - | 1497 | complete | - | yes | 0s |
+| FD_REQ_L | - | - | 36306 | complete | - | yes | 1s |
+| FD_ALARM | - | - | 5271 | complete | - | yes | 0s |
+| FD_ALARM_L | - | - | 85994 | complete | - | yes | 4s |
+| FD_EVID | - | - | 3088 | complete | - | yes | 0s |
+| FD_EVID_L | - | - | 25232 | complete | - | yes | 1s |
+| FD_SKIPEV | - | - | 29016 | complete | - | yes | 1s |
+| FD_FORK | - | - | 48222 | complete | - | yes | 1s |
+| FD_FORK_L | - | - | 716183 | complete | - | yes | 29s |
+| FD_QUOTA_NOTICE | - | - | 37162 | complete | - | yes | 1s |
+| FD_QUOTA_NOTICE_L | - | - | 608304 | complete | - | yes | 28s |
+| FD_QUOTA_INDEX | - | - | 2522 | complete | - | yes | 0s |
+| FD_QUOTA_OBS | - | - | 13022 | complete | - | yes | 0s |
+| FD_QUOTA_ALARM | - | - | 2103 | complete | - | yes | 0s |
+| FD_WIPE | - | - | 58438 | complete | - | yes | 2s |
+| FD_WIPE_FORK | - | SAF10_L10 | 349026 | complete | SAF10_L10:16 | NO: SAF10_L10 | 15s |
+| FD_WIPE_FORK_L | - | SAF10_L10 | 1883512 | complete | SAF10_L10:16 | NO: SAF10_L10 | 79s |
+| FD_WIPE_BOTHLOST | SAF10_L10 | SAF10_L10 | 246966 | complete | SAF10_L10:13 | yes | 7s |
+| FD_STATUS | - | - | 47808 | complete | - | yes | 1s |
+| AR_WIPE_FORK_DROPANCHOR | SAF10 | SAF10, SAF10_L10 | 413840 | complete | SAF10:13, SAF10_L10:16 | NO: SAF10_L10 | 18s |
+| CV_RESUME | - | - | 6137 | complete | - | yes | 0s |
+| CV_OLDCURSOR | - | - | 6434 | complete | - | yes | 0s |
+| CV_NOCHECK | - | - | 108011 | complete | - | yes | 6s |
+| OA_CARRYBREAK | CENT_N | CENT_N | 62812 | complete | CENT_N:9 | yes | 3s |
+| MU_DL2_off | SAF6 | SAF6 | 23006 | complete | SAF6:10 | yes | 1s |
+| MU_DL2_newreceipt | SAF6 | SAF6 | 23006 | complete | SAF6:10 | yes | 1s |
+| MU_DL3_order | - | - | 23006 | complete | - | yes | 1s |
+| MU_DL3_spend | - | - | 23006 | complete | - | yes | 1s |
+| MU_DL2_AFTER_DL3 | DL2_SAME | DL2_SAME | 31863 | complete | DL2_SAME:5 | yes | 1s |
+| MU_REFUSED_POS | REFUSED_NOPOS | REFUSED_NOPOS | 22718 | complete | REFUSED_NOPOS:6 | yes | 1s |
+| MU_OPEN_KNOWN | - | - | 23006 | complete | - | yes | 1s |
+| MU_CLOSES_off | - | - | 30017 | complete | - | yes | 1s |
+| MU_ST7_R | SAF3B_ACC | SAF3B_ACC | 22414 | complete | SAF3B_ACC:10 | yes | 1s |
+| MU_C15_off | C1_VS_82, SAF7 | C1_VS_82, SAF7 | 23006 | complete | C1_VS_82:10, SAF7:10 | yes | 1s |
+| MU_C17_off | C1_VS_82, R_AT_STATUS, SAF7 | C1_VS_82, R_AT_STATUS, SAF7 | 23006 | complete | C1_VS_82:10, R_AT_STATUS:10, SAF7:10 | yes | 1s |
+| MU_ST2 | SAF1 | SAF1 | 275195 | complete | SAF1:6 | yes | 9s |
+| MU_ST5 | - | - | 289794 | complete | - | yes | 10s |
+| MU_ST5_RESUME | SAF4 | SAF4 | 5649 | complete | SAF4:7 | yes | 0s |
+| MU_ST7_FZ_OLDCURSOR | C1_VS_82, SAF5 | C1_VS_82, SAF5 | 6066 | complete | C1_VS_82:12, SAF5:12 | yes | 0s |
+| MU_ANCHOR_off | - | - | 716183 | complete | - | yes | 29s |
+| MU_ANCHOR_off_NOCHECK | CENT_N, SAF10 | CENT_N, SAF10 | 70685 | complete | CENT_N:11, SAF10:10 | yes | 3s |
+| MU_NO_OWN_ANCHOR | SAF10 | SAF10, SAF10_L10 | 466582 | complete | SAF10:13, SAF10_L10:16 | NO: SAF10_L10 | 22s |
+| MU_ST1_epoch | - | - | 97659 | complete | - | yes | 4s |
+| MU_MK5 | - | - | 103338 | complete | - | yes | 5s |
+| MU_ST3 | - | - | 103338 | complete | - | yes | 4s |
+| MU_C12_age | C1_VS_82, SAF3 | C1_VS_82, SAF3 | 103338 | complete | C1_VS_82:6, SAF3:6 | yes | 5s |
+| MU_C1_epoch | - | - | 103338 | complete | - | yes | 4s |
+| MU_MT5_wall | R_AT_STATUS, SAF1, SAF3, SAF3B_ACC, SAF7 | R_AT_STATUS, SAF1, SAF3, SAF3B_ACC, SAF7 | 103185 | complete | R_AT_STATUS:11, SAF1:7, SAF3:7, SAF3B_ACC:11, SAF7:11 | yes | 4s |
+| MU_MEPOCH | R_AT_STATUS, SAF1, SAF3, SAF3B_ACC, SAF7 | R_AT_STATUS, SAF1, SAF3, SAF3B_ACC, SAF7 | 101819 | complete | R_AT_STATUS:12, SAF1:5, SAF3:5, SAF3B_ACC:10, SAF7:12 | yes | 4s |
+| MU_TICK_CROSS | - | - | 111380 | complete | - | yes | 4s |
+| MU_MT1_mono | R_AT_STATUS, SAF1, SAF3, SAF3B_ACC, SAF7 | R_AT_STATUS, SAF1, SAF3, SAF3B_ACC, SAF7 | 90272 | complete | R_AT_STATUS:11, SAF1:7, SAF3:7, SAF3B_ACC:11, SAF7:11 | yes | 5s |
+| MU_REQ_REPLAY | PMK1 | PMK1 | 8737 | complete | PMK1:2 | yes | 0s |
+| MU_C1_alarm | C1_VS_82, SAF7 | C1_VS_82, SAF7 | 5271 | complete | C1_VS_82:7, SAF7:7 | yes | 0s |
+| MU_OR2 | CENT_N | CENT_N | 6566 | complete | CENT_N:10 | yes | 0s |
+| MU_ALARM_NOTOKEN | - | - | 4469 | complete | - | yes | 0s |
+| MU_DL4_held | SAF2 | SAF2 | 3000 | complete | SAF2:7 | yes | 0s |
+| MU_C1_gap | C1_VS_82, CENT_E, SAF7 | C1_VS_82, SAF7 | 3088 | complete | C1_VS_82:8, SAF7:8 | NO: CENT_E | 0s |
+| MU_EQ6_off | SAF11, SAF2 | SAF11, SAF2 | 4039 | complete | SAF11:7, SAF2:8 | yes | 0s |
+| MU_ORPHAN_NOTHELD | - | - | 4756 | complete | - | yes | 0s |
+| MU_GAP_NO_REBEGIN | - | - | 3088 | complete | - | yes | 0s |
+| MU2_ORPHAN_NOTHELD+GAP_NO_REBEGIN | C1_VS_82, CENT_E, SAF7 | C1_VS_82, CENT_E, SAF7 | 4246 | complete | C1_VS_82:11, CENT_E:11, SAF7:11 | yes | 0s |
+| MU_C16_off | C1_VS_82, SAF7 | C1_VS_82, SAF7 | 37162 | complete | C1_VS_82:10, SAF7:10 | yes | 1s |
+| MU_REFUSED_KEEPS_POS | - | - | 20666 | complete | - | yes | 1s |
+| MU_NO_INDEX_RESERVE | INDEX_RESERVE | - | 2103 | complete | - | NO: INDEX_RESERVE | 0s |
+| MU_ALARM_STORE_FIRST | ALARM_ROOM | ALARM_ROOM | 2068 | complete | ALARM_ROOM:8 | yes | 0s |
+| MU_OUTBOX_KEEPS_STMT | - | - | 14240 | complete | - | yes | 0s |
+| MU_CS2_nonce | SAF8 | SAF8 | 65455 | complete | SAF8:4 | yes | 2s |
