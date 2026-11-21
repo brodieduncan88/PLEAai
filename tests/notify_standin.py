@@ -222,8 +222,15 @@ class World:
             urllib.request.urlopen, courier._context = orig_open, orig_ctx
 
     def run(self, clock):
-        with self.wired():
-            return courier.one_pass(self.cfg, clock)
+        """One pass at `clock`.  The courier's own times (a notice's time among them) are taken from that clock, one second
+        more at each call, so that a notice made again at a later pass is a notice of its own (Amendment 16, seventh form)."""
+        saved_now, tick = courier.now, iter(range(10 ** 6))
+        courier.now = lambda: time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(clock + next(tick)))
+        try:
+            with self.wired():
+                return courier.one_pass(self.cfg, clock)
+        finally:
+            courier.now = saved_now
 
     def state(self):
         return json.loads((self.tmp / 'state' / 'state.json').read_text())['roots'].get(ROOT, {})
