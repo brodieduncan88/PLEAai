@@ -300,10 +300,9 @@ def _ascii_line(words) -> bool:
     return isinstance(words, str) and all(0x20 <= ord(ch) <= 0x7e for ch in words)
 
 
-WHY_2 = {'INTERRUPTED': WHY['INTERRUPTED'], 'INDETERMINATE': WHY['INDETERMINATE'], 'NO_OUTCOME': WHY['NO_OUTCOME'], 'UNVERIFIED': WHY['UNVERIFIED'], 'REFUNDED': WHY['REFUNDED'],
-         'UNREADABLE': 'The courier could not read this run from the witness, and does not know its outcome: it does not say that the run passed or failed, '
-                       'nor that the witness is down (the witness answered the courier\'s checkpoint, and the courier still reads the other runs).  '
-                       'If the run becomes readable, the notice of its outcome follows.',
+WHY_2 = {'INTERRUPTED': 'The gate signed that it does not know the outcome, and the run is counted.  If the gate signs a verdict for it later that calls for a notice, '
+                        'the courier makes that notice when it reads it.',   # eighth form (M2): form 1 keeps WHY's words 'INDETERMINATE': WHY['INDETERMINATE'], 'NO_OUTCOME': WHY['NO_OUTCOME'], 'UNVERIFIED': WHY['UNVERIFIED'], 'REFUNDED': WHY['REFUNDED'],
+         'UNREADABLE': 'The courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.',   # Amendment 16, eighth form (M2)
          'INCONSISTENT': 'The gate signed PASS, and the numbers in the same signed result do not meet the limit stated in it.  '
                          'The courier did not run the check: it compared the numbers the result gives.'}
 CRITERIA_SHOWN = 5
@@ -329,6 +328,12 @@ def notice_reason(result, form) -> object:
     return rc
 
 
+HEADLINES_2 = dict(HEADLINES, **{                                 # Amendment 16, eighth form (M2): form 2's own headlines where form 1's would not be true
+    'COURIER_BLOCKED': 'THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR',
+    'COURIER_FAILED': 'THE COURIER HAS MET AN ERROR IT DID NOT EXPECT IN ITS WORK ON THIS BUDGET',
+    'UNREADABLE': 'THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN'})
+
+
 def notice_text_2(outcome, aid, root, result, seq, courier, why=None) -> str:
     """The words of a courier's notice of form 2 (Amendment 16, P5): always four lines, and the last always the courier's.
     Everything the service can choose (a run's name, a reason code, each criterion's id, comparison, achieved value, limit and
@@ -349,7 +354,7 @@ def notice_text_2(outcome, aid, root, result, seq, courier, why=None) -> str:
             "Words in quotation marks are shown as data: they are the service's, or what the courier was told, and not the courier's own words.  "
             "The verification service did not write this notice.  It does not say the check is correct.  "
             "A receipt for it says that the mailbox holds it, not that anyone has read it.")
-    return '\n'.join((HEADLINES[outcome], subject, '  '.join(parts), last))
+    return '\n'.join((HEADLINES_2[outcome], subject, '  '.join(parts), last))
 
 
 def watching_text(root, seq, head, courier) -> str:
