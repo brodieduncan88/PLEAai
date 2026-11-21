@@ -4280,7 +4280,8 @@ def r30():
         finally:
             courier._append = saved_append
         ref_lines = (w_.tmp / 'state' / 'refused.jsonl').read_text().splitlines() if (w_.tmp / 'state' / 'refused.jsonl').exists() else []
-        k2 = (made(p1), bool(st1.get('stopped')), st1['last_pass']['ended'], isinstance(st1.get('refusal_unwritten'), dict), len(ref_lines), 'refusal_unwritten' in st2)
+        k2 = (made(p1), bool(st1.get('stopped')), st1['last_pass']['ended'], isinstance(st1.get('refusal_unwritten'), dict), len(ref_lines), 'refusal_unwritten' in st2,
+              st1['last_pass']['why'], st1.get('unfinished_since'), [x.get('why', '') for x in p1.get('courier_failed', [])] if isinstance(p1, dict) else p1)
         # K3: a fault in the sending code, and a log of deliveries that is not UTF-8
         w_ = S.World(name='courier-k3'); att = []; w_.effect(att, 'run-a', S.PASS); step(w_.run, t0); w_.effect(att, 'run-b', S.FAIL)
         try:
@@ -4296,7 +4297,7 @@ def r30():
             f_.write(b'\xff\xfe not utf-8\n')
         w_.effect(att, 'run-b', S.FAIL); p3 = step(w_.run, t0 + 10); st3c = step(w_.status)
         k3 = {'send fault': ((st3.get('send_fault') or {}).get('passes'), b3.get('coverage', ''), b3.get('courier', ''), [x.get('kind') for x in b3.get('notices not delivered') or []]),
-              'cleared': ('send_fault' in st3b, b3b.get('coverage', ''), [x['notice'].get('aid') for x in courier.read_deliveries(w_.tmp / 'state' / 'deliveries.jsonl')]),
+              'cleared': ('send_fault' in st3b, b3b.get('coverage', ''), [x['notice'].get('aid') for x in (lambda r_: r_ if isinstance(r_, list) else [])(step(courier.read_deliveries, w_.tmp / 'state' / 'deliveries.jsonl'))]),
               'log not UTF-8': ([x.get('why', '')[:60] for x in p3.get('courier_failed', [])] if isinstance(p3, dict) else p3, made(p3),
                                 ((st3c or {}).get('budgets', {}).get(S.ROOT, {}) if isinstance(st3c, dict) else {'raised': st3c}).get('log of deliveries'))}
         # K4: the mailbox down over several passes
@@ -4775,8 +4776,10 @@ def r30():
         'K1, K2: a fault while COURIER_STOPPED, COURIER_BLOCKED or COURIER_FAILED is made leaves the budget not marked stopped, or the alarm not marked sent; the pass ends as an error the courier did not expect (saying the alarm could not be made); the alarm is made at the next pass, and only then the mark set':
             holds(lambda: k1['COURIER_STOPPED'] == (None, 'failed', [('', 'COURIER_STOPPED')], True) and k1['COURIER_BLOCKED'] == (None, 'failed', [('', 'COURIER_BLOCKED')], True)
                   and k1['COURIER_FAILED'] == (None, 'failed', True, [('', 'COURIER_FAILED')], True)),
-        'K2: a fault while refused.jsonl is written does not keep COURIER_STOPPED from being made in that pass; the budget is stopped, the pass ends as an error the courier did not expect, the refusal is kept in the state and written at the next pass':
-            holds(lambda: k2 == ([('', 'COURIER_STOPPED')], True, 'failed', True, 1, False)),
+        'K2: a fault while refused.jsonl is written does not keep COURIER_STOPPED from being made in that pass; the budget is stopped, the pass ends as an error the courier did not expect, in words that name the ending whose work failed, with the time since no pass was completed; the refusal is kept in the state and written at the next pass':
+            holds(lambda: k2[:6] == ([('', 'COURIER_STOPPED')], True, 'failed', True, 1, False)
+                  and 'No space left on device (while the courier was ending a pass that came to: what the witness said cannot be believed)' in k2[6]
+                  and k2[7] == t0 + 10 and len(k2[8]) == 1 and k2[8][0].startswith('OSError')),
         'K3: a lasting fault in the sending code is kept in the state with the number of passes, shown in the status\'s coverage and courier lines, and each waiting notice says it was not tried for it; once the fault is gone it is cleared and the notice delivered':
             holds(lambda: k3['send fault'][0] == 3 and ', but the courier cannot send: ' in k3['send fault'][1] and 'the courier cannot send notices' in k3['send fault'][2]
                   and k3['send fault'][3] == ['not tried: the courier met an error while sending'] and k3['cleared'][0] is False and 'cannot send' not in k3['cleared'][1] and 'run-b' in k3['cleared'][2]),
