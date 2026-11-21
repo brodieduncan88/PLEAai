@@ -1,0 +1,391 @@
+{
+ "scenario": "T1f",
+ "commit_src": "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/adv_test/src",
+ "stall_after": 900.0,
+ "pass_every": 100.0,
+ "passes": [
+  {
+   "pass": 0,
+   "clock": 0.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.007
+  },
+  {
+   "pass": 1,
+   "clock": 100.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.005
+  },
+  {
+   "pass": 2,
+   "clock": 200.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.005
+  },
+  {
+   "pass": 3,
+   "clock": 300.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 4,
+   "clock": 400.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.005
+  },
+  {
+   "pass": 5,
+   "clock": 500.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 6,
+   "clock": 600.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 7,
+   "clock": 700.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.005
+  },
+  {
+   "pass": 8,
+   "clock": 800.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.005
+  },
+  {
+   "pass": 9,
+   "clock": 900.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [
+    [
+     "",
+     "COURIER_BLOCKED"
+    ]
+   ],
+   "delivered": [
+    [
+     "",
+     "COURIER_BLOCKED"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.016
+  },
+  {
+   "pass": 10,
+   "clock": 1000.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 11,
+   "clock": 1100.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.003
+  },
+  {
+   "pass": 12,
+   "clock": 1200.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 0.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "NOT CONFIRMED (not yet read: the courier has not yet completed a pass that read this budget's chain to a checkpoint and asked the witness for its runs)",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:00:00Z by its clock)",
+   "status_bound": null,
+   "real_seconds": 0.003
+  }
+ ],
+ "mailbox": [
+  {
+   "aid": "",
+   "outcome": "COURIER_BLOCKED",
+   "made": "1970-01-01T00:15:00Z",
+   "received": "2026-11-21T08:57:16Z",
+   "text": "THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR\nBudget REQ-T/1/abababababababababababababababab.\nNo pass over this budget has been completed for 900 seconds by its clock; in the last, the courier has not been able to read the witness: \"w could not be asked (URLError)\".  While it cannot, it can make no notice of this budget's runs.  It tries again at each pass; once it reads the witness again, the notices of the runs it then reads follow, and no other notice that it is blocked is made until it has read the witness and then been blocked again.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 0.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 0,
+   "form": 2
+  }
+ ],
+ "keys": {
+  "courier": "56f2d96f41e43c3f43d0818fc6abdd7269066356ce93087edf39a10d4c83a877",
+  "mailbox": "e2b508bbba2c886fd48b392e7eeb4a772b43e931967a7d3544cb4324739da79f",
+  "witness": "beaaaa6afaf8fb6314a5f366644a37f5a36f34dd43a1af9f3ff1ba32a48805c2"
+ },
+ "dirs": {
+  "state": "/tmp/r30-cwz5kym1/state",
+  "mailbox": "/tmp/r30-cwz5kym1/mbox/notices"
+ }
+}

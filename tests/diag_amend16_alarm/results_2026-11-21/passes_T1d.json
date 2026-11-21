@@ -1,0 +1,951 @@
+{
+ "scenario": "T1d",
+ "commit_src": "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/adv_test/src",
+ "stall_after": 900.0,
+ "pass_every": 100.0,
+ "passes": [
+  {
+   "pass": 0,
+   "clock": 0.0,
+   "note": "before the trouble",
+   "ended": "read",
+   "how": "read whole",
+   "exit": 0,
+   "asked": [
+    [
+     "a-00",
+     "answered"
+    ],
+    [
+     "a-01",
+     "answered"
+    ],
+    [
+     "y-old-fail",
+     "answered"
+    ],
+    [
+     "z-old-fail",
+     "answered"
+    ]
+   ],
+   "after_last_run": [],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [
+    [
+     "made, not yet accepted by the mailbox",
+     1
+    ],
+    [
+     "accepted by the mailbox (a signed receipt; not a person's acknowledgement)",
+     1
+    ]
+   ],
+   "put_off": 0,
+   "unfinished_since": null,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1)",
+   "status_courier": "reading the witness",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.025
+  },
+  {
+   "pass": 1,
+   "clock": 100.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.007
+  },
+  {
+   "pass": 2,
+   "clock": 200.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 3,
+   "clock": 300.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 4,
+   "clock": 400.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 5,
+   "clock": 500.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 6,
+   "clock": 600.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.005
+  },
+  {
+   "pass": 7,
+   "clock": 700.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 8,
+   "clock": 800.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 9,
+   "clock": 900.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.004
+  },
+  {
+   "pass": 10,
+   "clock": 1000.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [
+    [
+     "",
+     "COURIER_BLOCKED"
+    ]
+   ],
+   "delivered": [
+    [
+     "",
+     "COURIER_BLOCKED"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.01
+  },
+  {
+   "pass": 11,
+   "clock": 1100.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.005
+  },
+  {
+   "pass": 12,
+   "clock": 1200.0,
+   "note": "the witness answers nothing",
+   "ended": "blocked",
+   "how": "the courier is blocked: it cannot read the witness",
+   "exit": 1,
+   "asked": [],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": false,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did not read this budget: the courier is blocked: it cannot read the witness",
+   "status_courier": "the courier is blocked: it cannot read the witness (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.005
+  },
+  {
+   "pass": 13,
+   "clock": 1300.0,
+   "note": "the witness answers again",
+   "ended": "read",
+   "how": "read whole",
+   "exit": 0,
+   "asked": [
+    [
+     "a-00",
+     "answered"
+    ],
+    [
+     "a-01",
+     "answered"
+    ],
+    [
+     "y-old-fail",
+     "answered"
+    ],
+    [
+     "n-01-fail",
+     "answered"
+    ],
+    [
+     "n-02-fail",
+     "answered"
+    ],
+    [
+     "n-03-fail",
+     "answered"
+    ],
+    [
+     "n-04-fail",
+     "answered"
+    ],
+    [
+     "n-05-fail",
+     "answered"
+    ],
+    [
+     "n-06-fail",
+     "answered"
+    ],
+    [
+     "n-07-fail",
+     "answered"
+    ],
+    [
+     "n-08-fail",
+     "answered"
+    ],
+    [
+     "n-09-fail",
+     "answered"
+    ],
+    [
+     "n-10-fail",
+     "answered"
+    ],
+    [
+     "n-11-fail",
+     "answered"
+    ],
+    [
+     "n-12-fail",
+     "answered"
+    ],
+    [
+     "n-13-fail",
+     "answered"
+    ],
+    [
+     "z-old-fail",
+     "answered"
+    ]
+   ],
+   "after_last_run": [],
+   "made": [
+    [
+     "a-00",
+     "NO_OUTCOME"
+    ],
+    [
+     "a-01",
+     "NO_OUTCOME"
+    ],
+    [
+     "y-old-fail",
+     "FAIL"
+    ],
+    [
+     "n-01-fail",
+     "FAIL"
+    ],
+    [
+     "n-02-fail",
+     "FAIL"
+    ],
+    [
+     "n-03-fail",
+     "FAIL"
+    ],
+    [
+     "n-04-fail",
+     "FAIL"
+    ],
+    [
+     "n-05-fail",
+     "FAIL"
+    ],
+    [
+     "n-06-fail",
+     "FAIL"
+    ],
+    [
+     "n-07-fail",
+     "FAIL"
+    ],
+    [
+     "n-08-fail",
+     "FAIL"
+    ],
+    [
+     "n-09-fail",
+     "FAIL"
+    ],
+    [
+     "n-10-fail",
+     "FAIL"
+    ],
+    [
+     "n-11-fail",
+     "FAIL"
+    ],
+    [
+     "n-12-fail",
+     "FAIL"
+    ],
+    [
+     "n-13-fail",
+     "FAIL"
+    ],
+    [
+     "z-old-fail",
+     "FAIL"
+    ]
+   ],
+   "delivered": [
+    [
+     "a-00",
+     "NO_OUTCOME"
+    ],
+    [
+     "a-01",
+     "NO_OUTCOME"
+    ],
+    [
+     "y-old-fail",
+     "FAIL"
+    ],
+    [
+     "n-01-fail",
+     "FAIL"
+    ],
+    [
+     "n-02-fail",
+     "FAIL"
+    ],
+    [
+     "n-03-fail",
+     "FAIL"
+    ],
+    [
+     "n-04-fail",
+     "FAIL"
+    ],
+    [
+     "n-05-fail",
+     "FAIL"
+    ],
+    [
+     "n-06-fail",
+     "FAIL"
+    ],
+    [
+     "n-07-fail",
+     "FAIL"
+    ],
+    [
+     "n-08-fail",
+     "FAIL"
+    ],
+    [
+     "n-09-fail",
+     "FAIL"
+    ],
+    [
+     "n-10-fail",
+     "FAIL"
+    ],
+    [
+     "n-11-fail",
+     "FAIL"
+    ],
+    [
+     "n-12-fail",
+     "FAIL"
+    ],
+    [
+     "n-13-fail",
+     "FAIL"
+    ],
+    [
+     "z-old-fail",
+     "FAIL"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": null,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1)",
+   "status_courier": "reading the witness",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.165
+  },
+  {
+   "pass": 14,
+   "clock": 1400.0,
+   "note": "the witness answers again",
+   "ended": "read",
+   "how": "read whole",
+   "exit": 0,
+   "asked": [
+    [
+     "a-00",
+     "answered"
+    ],
+    [
+     "a-01",
+     "answered"
+    ],
+    [
+     "n-14-fail",
+     "answered"
+    ]
+   ],
+   "after_last_run": [],
+   "made": [
+    [
+     "n-14-fail",
+     "FAIL"
+    ]
+   ],
+   "delivered": [
+    [
+     "n-14-fail",
+     "FAIL"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": null,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1)",
+   "status_courier": "reading the witness",
+   "status_bound": "1 pass whose checkpoint and chain were read",
+   "real_seconds": 0.022
+  },
+  {
+   "pass": 15,
+   "clock": 1500.0,
+   "note": "the witness answers again",
+   "ended": "read",
+   "how": "read whole",
+   "exit": 0,
+   "asked": [
+    [
+     "a-00",
+     "answered"
+    ],
+    [
+     "a-01",
+     "answered"
+    ],
+    [
+     "n-15-fail",
+     "answered"
+    ]
+   ],
+   "after_last_run": [],
+   "made": [
+    [
+     "n-15-fail",
+     "FAIL"
+    ]
+   ],
+   "delivered": [
+    [
+     "n-15-fail",
+     "FAIL"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": null,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1)",
+   "status_courier": "reading the witness",
+   "status_bound": "1 pass whose checkpoint and chain were read",
+   "real_seconds": 0.021
+  }
+ ],
+ "mailbox": [
+  {
+   "aid": "",
+   "outcome": "COURIER_BLOCKED",
+   "made": "1970-01-01T00:16:40Z",
+   "received": "2026-11-21T08:57:14Z",
+   "text": "THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR\nBudget REQ-T/1/abababababababababababababababab.\nNo pass over this budget has been completed for 900 seconds by its clock; in the last, the courier has not been able to read the witness: \"w could not be asked (URLError)\".  While it cannot, it can make no notice of this budget's runs.  It tries again at each pass; once it reads the witness again, the notices of the runs it then reads follow, and no other notice that it is blocked is made until it has read the witness and then been blocked again.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 1.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 1,
+   "form": 2
+  },
+  {
+   "aid": "a-00",
+   "outcome": "NO_OUTCOME",
+   "made": "1970-01-01T00:21:41Z",
+   "received": "2026-11-21T08:57:14Z",
+   "text": "A RUN WAS ADMITTED AND HAS NO OUTCOME\nRun \"a-00\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\n\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "",
+   "outcome": "WATCHING",
+   "made": "1970-01-01T00:00:01Z",
+   "received": "2026-11-21T08:57:14Z",
+   "text": "THE COURIER HAS BEGUN TO WATCH THIS BUDGET\nBudget REQ-T/1/abababababababababababababababab.\nThe courier has read this budget's chain from the witness to decision 1, whose hash is 6b3f4ed3f49da85f47616ae850bb31b95cc796eff849ba0df6a55729a64777b6, and has asked the witness for every run in it that may call for a notice; a run it cannot read is reported in a notice of its own (UNREADABLE).  From that decision on, it makes a notice of each run that calls for one.  This statement says the courier began to watch; it is not a notice of any run.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 1.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 1,
+   "form": 2
+  },
+  {
+   "aid": "n-01-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:21:50Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-01-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-08-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:22:11Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-08-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-03-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:21:56Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-03-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-09-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:22:14Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-09-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-12-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:22:23Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-12-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-06-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:22:05Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-06-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "y-old-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:21:47Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"y-old-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-15-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:25:01Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-15-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 17.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 17,
+   "form": 2
+  },
+  {
+   "aid": "n-14-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:23:21Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-14-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 16.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 16,
+   "form": 2
+  },
+  {
+   "aid": "n-13-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:22:26Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-13-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "a-01",
+   "outcome": "NO_OUTCOME",
+   "made": "1970-01-01T00:21:44Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "A RUN WAS ADMITTED AND HAS NO OUTCOME\nRun \"a-01\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\n\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-10-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:22:17Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-10-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-11-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:22:20Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-11-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-04-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:21:59Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-04-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-05-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:22:02Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-05-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-02-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:21:53Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-02-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "n-07-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:22:08Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"n-07-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "z-old-fail",
+   "outcome": "FAIL",
+   "made": "1970-01-01T00:22:29Z",
+   "received": "2026-11-21T08:57:15Z",
+   "text": "DECLARED CHECK NOT MET (FAIL)\nRun \"z-old-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe service's reason code: \"LIMIT_NOT_MET\".  Its criteria: criterion \"service_temperature\" achieved \"180\", comparison \">=\", limit \"200\", units \"C\".  Its detail: \"d\".\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  }
+ ],
+ "keys": {
+  "courier": "df9cee451d396d4c71c28e7b4758e46b6ce75c8a831e8790b9b1e0fd706c57a7",
+  "mailbox": "fdd1ecf67f25e074f0b8441e19588d419528368dec9cf399ffba20e3744cd039",
+  "witness": "69e726631e3aa96261f87598b262e510b2c55536679021b9c140f1af14a2a15a"
+ },
+ "dirs": {
+  "state": "/tmp/r30-pv95ptjf/state",
+  "mailbox": "/tmp/r30-pv95ptjf/mbox/notices"
+ }
+}

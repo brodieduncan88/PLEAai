@@ -1,0 +1,48 @@
+p 0 t=    0 read     exit 0 since=None sent=0 made=[] delivered=[] put_off=0 before the trouble
+      asked: o-0 o-1 o-2 o-3
+p 1 t=  100 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: o-0 o-1 h-old-fail[dropped while read]
+p 2 t=  200 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: o-2 o-3 f-02-fail[dropped while read]
+p 3 t=  300 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: o-0 o-1 f-03-fail[dropped while read]
+p 4 t=  400 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: o-2 o-3 f-04-fail[dropped while read]
+p 5 t=  500 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: o-0 o-1 f-05-fail[dropped while read]
+p 6 t=  600 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: o-2 o-3 f-06-fail[dropped while read]
+p 7 t=  700 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: o-0 o-1 f-07-fail[dropped while read]
+p 8 t=  800 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: o-2 o-3 f-08-fail[dropped while read]
+p 9 t=  900 blocked  exit 1 since=100.0 sent=0 made=[['o-0', 'NO_OUTCOME'], ['o-1', 'NO_OUTCOME']] delivered=[['o-0', 'NO_OUTCOME'], ['o-1', 'NO_OUTCOME']] put_off=0 
+      asked: o-0 o-1 f-09-fail[dropped while read]
+p10 t= 1000 blocked  exit 1 since=100.0 sent=1 made=[['h-old-fail', 'UNREADABLE'], ['o-2', 'NO_OUTCOME'], ['o-3', 'NO_OUTCOME'], ['', 'COURIER_BLOCKED']] delivered=[['h-old-fail', 'UNREADABLE'], ['o-2', 'NO_OUTCOME'], ['o-3', 'NO_OUTCOME'], ['', 'COURIER_BLOCKED']] put_off=0 
+      asked: o-2 o-3 f-10-fail[dropped while read]
+p11 t= 1100 blocked  exit 1 since=100.0 sent=1 made=[['f-02-fail', 'UNREADABLE']] delivered=[['f-02-fail', 'UNREADABLE']] put_off=0 
+      asked: o-0 o-1 f-11-fail[dropped while read]
+p12 t= 1200 blocked  exit 1 since=100.0 sent=1 made=[['f-03-fail', 'UNREADABLE']] delivered=[['f-03-fail', 'UNREADABLE']] put_off=0 
+      asked: o-2 o-3 f-12-fail[dropped while read]
+p13 t= 1300 blocked  exit 1 since=100.0 sent=1 made=[['f-04-fail', 'UNREADABLE']] delivered=[['f-04-fail', 'UNREADABLE']] put_off=0 
+      asked: o-0 o-1 f-13-fail[dropped while read]
+p14 t= 1400 blocked  exit 1 since=100.0 sent=1 made=[['f-05-fail', 'UNREADABLE']] delivered=[['f-05-fail', 'UNREADABLE']] put_off=0 
+      asked: o-2 o-3 f-14-fail[dropped while read]
+p15 t= 1500 blocked  exit 1 since=100.0 sent=1 made=[['f-06-fail', 'UNREADABLE']] delivered=[['f-06-fail', 'UNREADABLE']] put_off=0 
+      asked: o-0 o-1 f-15-fail[dropped while read]
+p16 t= 1600 blocked  exit 1 since=100.0 sent=1 made=[['f-07-fail', 'UNREADABLE']] delivered=[['f-07-fail', 'UNREADABLE']] put_off=0 
+      asked: o-2 o-3 f-16-fail[dropped while read]
+MAILBOX:
+   1970-01-01T00:20:01Z 2026-11-21T08:57:13Z 'f-03-fail' UNREADABLE sig True receipt True
+   1970-01-01T00:15:04Z 2026-11-21T08:57:13Z 'o-1' NO_OUTCOME sig True receipt True
+   1970-01-01T00:26:41Z 2026-11-21T08:57:13Z 'f-07-fail' UNREADABLE sig True receipt True
+   1970-01-01T00:25:01Z 2026-11-21T08:57:13Z 'f-06-fail' UNREADABLE sig True receipt True
+   1970-01-01T00:16:41Z 2026-11-21T08:57:13Z 'h-old-fail' UNREADABLE sig True receipt True
+   1970-01-01T00:16:44Z 2026-11-21T08:57:13Z 'o-2' NO_OUTCOME sig True receipt True
+   1970-01-01T00:00:01Z 2026-11-21T08:57:13Z '' WATCHING sig True receipt True
+   1970-01-01T00:18:21Z 2026-11-21T08:57:13Z 'f-02-fail' UNREADABLE sig True receipt True
+   1970-01-01T00:16:47Z 2026-11-21T08:57:13Z 'o-3' NO_OUTCOME sig True receipt True
+   1970-01-01T00:15:01Z 2026-11-21T08:57:13Z 'o-0' NO_OUTCOME sig True receipt True
+   1970-01-01T00:23:21Z 2026-11-21T08:57:13Z 'f-05-fail' UNREADABLE sig True receipt True
+   1970-01-01T00:21:41Z 2026-11-21T08:57:13Z 'f-04-fail' UNREADABLE sig True receipt True
+   1970-01-01T00:16:50Z 2026-11-21T08:57:13Z '' COURIER_BLOCKED sig True receipt True

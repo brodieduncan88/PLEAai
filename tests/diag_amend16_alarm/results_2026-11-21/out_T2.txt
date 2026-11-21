@@ -1,0 +1,173 @@
+p 0 t=    0 read     exit 0 since=None sent=0 made=[] delivered=[] put_off=0 before the trouble
+      asked: a-00 a-01 a-02 a-03 a-04 a-05 a-06 a-07 a-08 a-09 a-10 a-11 a-12 a-13 a-14 a-15 a-16 a-17 a-18 a-19 a-20 a-21 a-22 a-23 a-24 a-25 a-26 a-27 a-28 a-29 a-30 a-31 a-32 a-33 a-34 a-35 a-36 a-37 a-38 a-39 a-40 a-41 a-42 a-43 a-44 a-45 
+p 1 t=  100 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-00[dropped while read]
+p 2 t=  200 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-01[dropped while read]
+p 3 t=  300 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-02[dropped while read]
+p 4 t=  400 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-03[dropped while read]
+p 5 t=  500 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-04[dropped while read]
+p 6 t=  600 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-05[dropped while read]
+p 7 t=  700 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-06[dropped while read]
+p 8 t=  800 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-07[dropped while read]
+p 9 t=  900 read     exit 1 since=None sent=0 made=[['a-08', 'NO_OUTCOME'], ['a-09', 'NO_OUTCOME'], ['y-old-fail', 'FAIL'], ['a-10', 'NO_OUTCOME'], ['a-11', 'NO_OUTCOME'], ['a-12', 'NO_OUTCOME'], ['a-13', 'NO_OUTCOME'], ['a-14', 'NO_OUTCOME'], ['a-15', 'NO_OUTCOME'], ['a-16', 'NO_OUTCOME'], ['a-17', 'NO_OUTCOME'], ['a-00', 'NO_OUTCOME']] delivered=[['a-08', 'NO_OUTCOME'], ['a-09', 'NO_OUTCOME'], ['y-old-fail', 'FAIL'], ['a-10', 'NO_OUTCOME'], ['a-11', 'NO_OUTCOME'], ['a-12', 'NO_OUTCOME'], ['a-13', 'NO_OUTCOME'], ['a-14', 'NO_OUTCOME'], ['a-15', 'NO_OUTCOME'], ['a-16', 'NO_OUTCOME'], ['a-17', 'NO_OUTCOME'], ['a-00', 'NO_OUTCOME']] put_off=71 the witness answers the whole pass, slowly
+      asked: a-08[answered slowly] a-09[answered slowly] y-old-fail s-00[answered slowly] s-01[answered slowly] s-02[answered slowly] s-03[answered slowly] s-04[answered slowly] s-05[answered slowly] s-06[answered slowly] s-07[answered slowly]
+p10 t= 1000 blocked  exit 1 since=1000.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-18[dropped while read]
+p11 t= 1100 blocked  exit 1 since=1000.0 sent=0 made=[['a-01', 'UNREADABLE']] delivered=[['a-01', 'UNREADABLE']] put_off=0 
+      asked: a-19[dropped while read]
+p12 t= 1200 blocked  exit 1 since=1000.0 sent=0 made=[['a-02', 'UNREADABLE']] delivered=[['a-02', 'UNREADABLE']] put_off=0 
+      asked: a-20[dropped while read]
+p13 t= 1300 blocked  exit 1 since=1000.0 sent=0 made=[['a-03', 'UNREADABLE']] delivered=[['a-03', 'UNREADABLE']] put_off=0 
+      asked: a-21[dropped while read]
+p14 t= 1400 blocked  exit 1 since=1000.0 sent=0 made=[['a-04', 'UNREADABLE']] delivered=[['a-04', 'UNREADABLE']] put_off=0 
+      asked: a-22[dropped while read]
+p15 t= 1500 blocked  exit 1 since=1000.0 sent=0 made=[['a-05', 'UNREADABLE']] delivered=[['a-05', 'UNREADABLE']] put_off=0 
+      asked: a-23[dropped while read]
+p16 t= 1600 blocked  exit 1 since=1000.0 sent=0 made=[['a-06', 'UNREADABLE']] delivered=[['a-06', 'UNREADABLE']] put_off=0 
+      asked: a-24[dropped while read]
+p17 t= 1700 blocked  exit 1 since=1000.0 sent=0 made=[['a-07', 'UNREADABLE']] delivered=[['a-07', 'UNREADABLE']] put_off=0 
+      asked: a-25[dropped while read]
+p18 t= 1800 read     exit 1 since=None sent=0 made=[['a-26', 'NO_OUTCOME'], ['a-27', 'NO_OUTCOME'], ['a-28', 'NO_OUTCOME'], ['a-29', 'NO_OUTCOME'], ['a-30', 'NO_OUTCOME'], ['a-31', 'NO_OUTCOME'], ['a-32', 'NO_OUTCOME'], ['a-33', 'NO_OUTCOME'], ['a-34', 'NO_OUTCOME'], ['a-35', 'NO_OUTCOME'], ['a-01', 'NO_OUTCOME']] delivered=[['a-26', 'NO_OUTCOME'], ['a-27', 'NO_OUTCOME'], ['a-28', 'NO_OUTCOME'], ['a-29', 'NO_OUTCOME'], ['a-30', 'NO_OUTCOME'], ['a-31', 'NO_OUTCOME'], ['a-32', 'NO_OUTCOME'], ['a-33', 'NO_OUTCOME'], ['a-34', 'NO_OUTCOME'], ['a-35', 'NO_OUTCOME'], ['a-01', 'NO_OUTCOME']] put_off=61 the witness answers the whole pass, slowly
+      asked: a-26[answered slowly] a-27[answered slowly] s-10[answered slowly] s-11[answered slowly] s-12[answered slowly] s-13[answered slowly] s-14[answered slowly] s-15[answered slowly] s-16[answered slowly] s-17[answered slowly] s-18[answe
+p19 t= 1900 blocked  exit 1 since=1900.0 sent=0 made=[['a-18', 'UNREADABLE']] delivered=[['a-18', 'UNREADABLE']] put_off=0 
+      asked: a-36[dropped while read]
+p20 t= 2000 blocked  exit 1 since=1900.0 sent=0 made=[['a-19', 'UNREADABLE']] delivered=[['a-19', 'UNREADABLE']] put_off=0 
+      asked: a-37[dropped while read]
+p21 t= 2100 blocked  exit 1 since=1900.0 sent=0 made=[['a-20', 'UNREADABLE']] delivered=[['a-20', 'UNREADABLE']] put_off=0 
+      asked: a-38[dropped while read]
+p22 t= 2200 blocked  exit 1 since=1900.0 sent=0 made=[['a-21', 'UNREADABLE']] delivered=[['a-21', 'UNREADABLE']] put_off=0 
+      asked: a-39[dropped while read]
+p23 t= 2300 blocked  exit 1 since=1900.0 sent=0 made=[['a-22', 'UNREADABLE']] delivered=[['a-22', 'UNREADABLE']] put_off=0 
+      asked: a-40[dropped while read]
+p24 t= 2400 blocked  exit 1 since=1900.0 sent=0 made=[['a-23', 'UNREADABLE']] delivered=[['a-23', 'UNREADABLE']] put_off=0 
+      asked: a-41[dropped while read]
+p25 t= 2500 blocked  exit 1 since=1900.0 sent=0 made=[['a-24', 'UNREADABLE']] delivered=[['a-24', 'UNREADABLE']] put_off=0 
+      asked: a-42[dropped while read]
+p26 t= 2600 blocked  exit 1 since=1900.0 sent=0 made=[['a-25', 'UNREADABLE']] delivered=[['a-25', 'UNREADABLE']] put_off=0 
+      asked: a-43[dropped while read]
+p27 t= 2700 read     exit 1 since=None sent=0 made=[['a-44', 'NO_OUTCOME'], ['a-45', 'NO_OUTCOME'], ['n-new-fail', 'FAIL'], ['a-46', 'NO_OUTCOME'], ['a-47', 'NO_OUTCOME'], ['a-48', 'NO_OUTCOME'], ['a-49', 'NO_OUTCOME'], ['a-50', 'NO_OUTCOME'], ['a-51', 'NO_OUTCOME'], ['a-52', 'NO_OUTCOME'], ['a-53', 'NO_OUTCOME'], ['a-54', 'NO_OUTCOME'], ['a-55', 'NO_OUTCOME'], ['a-56', 'NO_OUTCOME'], ['a-57', 'NO_OUTCOME'], ['a-58', 'NO_OUTCOME'], ['a-59', 'NO_OUTCOME'], ['a-60', 'NO_OUTCOME'], ['a-61', 'NO_OUTCOME'], ['a-62', 'NO_OUTCOME'], ['a-63', 'NO_OUTCOME'], ['a-02', 'NO_OUTCOME']] delivered=[['a-44', 'NO_OUTCOME'], ['a-45', 'NO_OUTCOME'], ['n-new-fail', 'FAIL'], ['a-46', 'NO_OUTCOME'], ['a-47', 'NO_OUTCOME'], ['a-48', 'NO_OUTCOME'], ['a-49', 'NO_OUTCOME'], ['a-50', 'NO_OUTCOME'], ['a-51', 'NO_OUTCOME'], ['a-52', 'NO_OUTCOME'], ['a-53', 'NO_OUTCOME'], ['a-54', 'NO_OUTCOME'], ['a-55', 'NO_OUTCOME'], ['a-56', 'NO_OUTCOME'], ['a-57', 'NO_OUTCOME'], ['a-58', 'NO_OUTCOME'], ['a-59', 'NO_OUTCOME'], ['a-60', 'NO_OUTCOME'], ['a-61', 'NO_OUTCOME'], ['a-62', 'NO_OUTCOME'], ['a-63', 'NO_OUTCOME'], ['a-02', 'NO_OUTCOME']] put_off=50 the witness answers the whole pass, slowly
+      asked: a-44[answered slowly] a-45[answered slowly] n-new-fail a-46[answered slowly] a-47[answered slowly] a-48[answered slowly] a-49[answered slowly] a-50[answered slowly] a-51[answered slowly] a-52[answered slowly] a-53[answered slowly]
+p28 t= 2800 blocked  exit 1 since=2800.0 sent=0 made=[['a-36', 'UNREADABLE']] delivered=[['a-36', 'UNREADABLE']] put_off=0 
+      asked: a-64[dropped while read]
+p29 t= 2900 blocked  exit 1 since=2800.0 sent=0 made=[['a-37', 'UNREADABLE']] delivered=[['a-37', 'UNREADABLE']] put_off=0 
+      asked: a-65[dropped while read]
+p30 t= 3000 blocked  exit 1 since=2800.0 sent=0 made=[['a-38', 'UNREADABLE']] delivered=[['a-38', 'UNREADABLE']] put_off=0 
+      asked: a-66[dropped while read]
+p31 t= 3100 blocked  exit 1 since=2800.0 sent=0 made=[['a-39', 'UNREADABLE']] delivered=[['a-39', 'UNREADABLE']] put_off=0 
+      asked: a-67[dropped while read]
+p32 t= 3200 blocked  exit 1 since=2800.0 sent=0 made=[['a-40', 'UNREADABLE']] delivered=[['a-40', 'UNREADABLE']] put_off=0 
+      asked: a-68[dropped while read]
+p33 t= 3300 blocked  exit 1 since=2800.0 sent=0 made=[['a-41', 'UNREADABLE']] delivered=[['a-41', 'UNREADABLE']] put_off=0 
+      asked: a-69[dropped while read]
+p34 t= 3400 blocked  exit 1 since=2800.0 sent=0 made=[['a-42', 'UNREADABLE'], ['z-old-fail', 'FAIL']] delivered=[['a-42', 'UNREADABLE'], ['z-old-fail', 'FAIL']] put_off=0 
+      asked: z-old-fail a-00[dropped while read]
+p35 t= 3500 blocked  exit 1 since=2800.0 sent=0 made=[['a-43', 'UNREADABLE']] delivered=[['a-43', 'UNREADABLE']] put_off=0 
+      asked: a-08[dropped while read]
+p36 t= 3600 read     exit 1 since=None sent=0 made=[['a-03', 'NO_OUTCOME']] delivered=[['a-03', 'NO_OUTCOME']] put_off=49 the witness answers the whole pass, slowly
+      asked: a-09[answered slowly] a-10[answered slowly] a-11[answered slowly] a-12[answered slowly] a-13[answered slowly] a-14[answered slowly] a-15[answered slowly] a-16[answered slowly] a-17[answered slowly] a-01[answered slowly] a-26[answe
+p37 t= 3700 blocked  exit 1 since=3700.0 sent=0 made=[['a-64', 'UNREADABLE']] delivered=[['a-64', 'UNREADABLE']] put_off=0 
+      asked: a-02[dropped while read]
+p38 t= 3800 blocked  exit 1 since=3700.0 sent=0 made=[['a-65', 'UNREADABLE']] delivered=[['a-65', 'UNREADABLE']] put_off=0 
+      asked: a-44[dropped while read]
+p39 t= 3900 blocked  exit 1 since=3700.0 sent=0 made=[['a-66', 'UNREADABLE']] delivered=[['a-66', 'UNREADABLE']] put_off=0 
+      asked: a-45[dropped while read]
+p40 t= 4000 blocked  exit 1 since=3700.0 sent=0 made=[['a-67', 'UNREADABLE']] delivered=[['a-67', 'UNREADABLE']] put_off=0 
+      asked: a-46[dropped while read]
+p41 t= 4100 blocked  exit 1 since=3700.0 sent=0 made=[['a-68', 'UNREADABLE']] delivered=[['a-68', 'UNREADABLE']] put_off=0 
+      asked: a-47[dropped while read]
+p42 t= 4200 blocked  exit 1 since=3700.0 sent=0 made=[['a-69', 'UNREADABLE']] delivered=[['a-69', 'UNREADABLE']] put_off=0 
+      asked: a-48[dropped while read]
+p43 t= 4300 blocked  exit 1 since=3700.0 sent=0 made=[['a-00', 'UNREADABLE']] delivered=[['a-00', 'UNREADABLE']] put_off=0 
+      asked: a-49[dropped while read]
+p44 t= 4400 blocked  exit 1 since=3700.0 sent=0 made=[['a-08', 'UNREADABLE']] delivered=[['a-08', 'UNREADABLE']] put_off=0 
+      asked: a-50[dropped while read]
+p45 t= 4500 read     exit 1 since=None sent=0 made=[['a-04', 'NO_OUTCOME']] delivered=[['a-04', 'NO_OUTCOME']] put_off=49 the witness answers the whole pass, slowly
+      asked: a-51[answered slowly] a-52[answered slowly] a-53[answered slowly] a-54[answered slowly] a-55[answered slowly] a-56[answered slowly] a-57[answered slowly] a-58[answered slowly] a-59[answered slowly] a-60[answered slowly] a-61[answe
+MAILBOX:
+   1970-01-01T00:15:01Z 2026-11-21T08:57:18Z 'a-08' NO_OUTCOME sig True receipt True
+   1970-01-01T00:00:01Z 2026-11-21T08:57:18Z '' WATCHING sig True receipt True
+   1970-01-01T00:15:07Z 2026-11-21T08:57:19Z 'y-old-fail' FAIL sig True receipt True
+   1970-01-01T00:15:04Z 2026-11-21T08:57:19Z 'a-09' NO_OUTCOME sig True receipt True
+   1970-01-01T00:15:13Z 2026-11-21T08:57:21Z 'a-11' NO_OUTCOME sig True receipt True
+   1970-01-01T00:15:16Z 2026-11-21T08:57:21Z 'a-12' NO_OUTCOME sig True receipt True
+   1970-01-01T00:15:19Z 2026-11-21T08:57:21Z 'a-13' NO_OUTCOME sig True receipt True
+   1970-01-01T00:15:10Z 2026-11-21T08:57:21Z 'a-10' NO_OUTCOME sig True receipt True
+   1970-01-01T00:15:28Z 2026-11-21T08:57:22Z 'a-16' NO_OUTCOME sig True receipt True
+   1970-01-01T00:15:31Z 2026-11-21T08:57:22Z 'a-17' NO_OUTCOME sig True receipt True
+   1970-01-01T00:15:22Z 2026-11-21T08:57:22Z 'a-14' NO_OUTCOME sig True receipt True
+   1970-01-01T00:15:25Z 2026-11-21T08:57:22Z 'a-15' NO_OUTCOME sig True receipt True
+   1970-01-01T00:15:34Z 2026-11-21T08:57:23Z 'a-00' NO_OUTCOME sig True receipt True
+   1970-01-01T00:30:01Z 2026-11-21T08:57:23Z 'a-26' NO_OUTCOME sig True receipt True
+   1970-01-01T00:20:01Z 2026-11-21T08:57:23Z 'a-02' UNREADABLE sig True receipt True
+   1970-01-01T00:18:21Z 2026-11-21T08:57:23Z 'a-01' UNREADABLE sig True receipt True
+   1970-01-01T00:26:41Z 2026-11-21T08:57:23Z 'a-06' UNREADABLE sig True receipt True
+   1970-01-01T00:23:21Z 2026-11-21T08:57:23Z 'a-04' UNREADABLE sig True receipt True
+   1970-01-01T00:30:04Z 2026-11-21T08:57:23Z 'a-27' NO_OUTCOME sig True receipt True
+   1970-01-01T00:28:21Z 2026-11-21T08:57:23Z 'a-07' UNREADABLE sig True receipt True
+   1970-01-01T00:21:41Z 2026-11-21T08:57:23Z 'a-03' UNREADABLE sig True receipt True
+   1970-01-01T00:25:01Z 2026-11-21T08:57:23Z 'a-05' UNREADABLE sig True receipt True
+   1970-01-01T00:30:19Z 2026-11-21T08:57:26Z 'a-32' NO_OUTCOME sig True receipt True
+   1970-01-01T00:30:07Z 2026-11-21T08:57:26Z 'a-28' NO_OUTCOME sig True receipt True
+   1970-01-01T00:30:16Z 2026-11-21T08:57:26Z 'a-31' NO_OUTCOME sig True receipt True
+   1970-01-01T00:30:13Z 2026-11-21T08:57:26Z 'a-30' NO_OUTCOME sig True receipt True
+   1970-01-01T00:30:10Z 2026-11-21T08:57:26Z 'a-29' NO_OUTCOME sig True receipt True
+   1970-01-01T00:30:28Z 2026-11-21T08:57:27Z 'a-35' NO_OUTCOME sig True receipt True
+   1970-01-01T00:35:01Z 2026-11-21T08:57:27Z 'a-20' UNREADABLE sig True receipt True
+   1970-01-01T00:31:41Z 2026-11-21T08:57:27Z 'a-18' UNREADABLE sig True receipt True
+   1970-01-01T00:33:21Z 2026-11-21T08:57:27Z 'a-19' UNREADABLE sig True receipt True
+   1970-01-01T00:40:01Z 2026-11-21T08:57:27Z 'a-23' UNREADABLE sig True receipt True
+   1970-01-01T00:30:22Z 2026-11-21T08:57:27Z 'a-33' NO_OUTCOME sig True receipt True
+   1970-01-01T00:30:31Z 2026-11-21T08:57:27Z 'a-01' NO_OUTCOME sig True receipt True
+   1970-01-01T00:38:21Z 2026-11-21T08:57:27Z 'a-22' UNREADABLE sig True receipt True
+   1970-01-01T00:30:25Z 2026-11-21T08:57:27Z 'a-34' NO_OUTCOME sig True receipt True
+   1970-01-01T00:36:41Z 2026-11-21T08:57:27Z 'a-21' UNREADABLE sig True receipt True
+   1970-01-01T00:45:10Z 2026-11-21T08:57:28Z 'a-46' NO_OUTCOME sig True receipt True
+   1970-01-01T00:43:21Z 2026-11-21T08:57:28Z 'a-25' UNREADABLE sig True receipt True
+   1970-01-01T00:45:04Z 2026-11-21T08:57:28Z 'a-45' NO_OUTCOME sig True receipt True
+   1970-01-01T00:41:41Z 2026-11-21T08:57:28Z 'a-24' UNREADABLE sig True receipt True
+   1970-01-01T00:45:13Z 2026-11-21T08:57:28Z 'a-47' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:01Z 2026-11-21T08:57:28Z 'a-44' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:07Z 2026-11-21T08:57:28Z 'n-new-fail' FAIL sig True receipt True
+   1970-01-01T00:45:19Z 2026-11-21T08:57:29Z 'a-49' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:25Z 2026-11-21T08:57:29Z 'a-51' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:16Z 2026-11-21T08:57:29Z 'a-48' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:22Z 2026-11-21T08:57:29Z 'a-50' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:37Z 2026-11-21T08:57:30Z 'a-55' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:31Z 2026-11-21T08:57:30Z 'a-53' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:40Z 2026-11-21T08:57:30Z 'a-56' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:34Z 2026-11-21T08:57:30Z 'a-54' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:28Z 2026-11-21T08:57:30Z 'a-52' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:46Z 2026-11-21T08:57:31Z 'a-58' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:49Z 2026-11-21T08:57:31Z 'a-59' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:43Z 2026-11-21T08:57:31Z 'a-57' NO_OUTCOME sig True receipt True
+   1970-01-01T00:45:52Z 2026-11-21T08:57:31Z 'a-60' NO_OUTCOME sig True receipt True
+   1970-01-01T00:50:01Z 2026-11-21T08:57:32Z 'a-38' UNREADABLE sig True receipt True
+   1970-01-01T00:45:58Z 2026-11-21T08:57:32Z 'a-62' NO_OUTCOME sig True receipt True
+   1970-01-01T00:53:21Z 2026-11-21T08:57:32Z 'a-40' UNREADABLE sig True receipt True
+   1970-01-01T00:56:41Z 2026-11-21T08:57:32Z 'a-42' UNREADABLE sig True receipt True
+   1970-01-01T00:46:04Z 2026-11-21T08:57:32Z 'a-02' NO_OUTCOME sig True receipt True
+   1970-01-01T00:46:01Z 2026-11-21T08:57:32Z 'a-63' NO_OUTCOME sig True receipt True
+   1970-01-01T00:46:41Z 2026-11-21T08:57:32Z 'a-36' UNREADABLE sig True receipt True
+   1970-01-01T00:58:21Z 2026-11-21T08:57:32Z 'a-43' UNREADABLE sig True receipt True
+   1970-01-01T00:45:55Z 2026-11-21T08:57:32Z 'a-61' NO_OUTCOME sig True receipt True
+   1970-01-01T00:48:21Z 2026-11-21T08:57:32Z 'a-37' UNREADABLE sig True receipt True
+   1970-01-01T00:55:01Z 2026-11-21T08:57:32Z 'a-41' UNREADABLE sig True receipt True
+   1970-01-01T00:51:41Z 2026-11-21T08:57:32Z 'a-39' UNREADABLE sig True receipt True
+   1970-01-01T00:56:44Z 2026-11-21T08:57:32Z 'z-old-fail' FAIL sig True receipt True
+   1970-01-01T01:05:01Z 2026-11-21T08:57:37Z 'a-66' UNREADABLE sig True receipt True
+   1970-01-01T01:03:21Z 2026-11-21T08:57:37Z 'a-65' UNREADABLE sig True receipt True
+   1970-01-01T01:13:21Z 2026-11-21T08:57:37Z 'a-08' UNREADABLE sig True receipt True
+   1970-01-01T01:01:41Z 2026-11-21T08:57:37Z 'a-64' UNREADABLE sig True receipt True
+   1970-01-01T01:10:01Z 2026-11-21T08:57:37Z 'a-69' UNREADABLE sig True receipt True
+   1970-01-01T01:11:41Z 2026-11-21T08:57:37Z 'a-00' UNREADABLE sig True receipt True
+   1970-01-01T01:06:41Z 2026-11-21T08:57:37Z 'a-67' UNREADABLE sig True receipt True
+   1970-01-01T01:00:01Z 2026-11-21T08:57:37Z 'a-03' NO_OUTCOME sig True receipt True
+   1970-01-01T01:08:21Z 2026-11-21T08:57:37Z 'a-68' UNREADABLE sig True receipt True
+   1970-01-01T01:15:01Z 2026-11-21T08:57:41Z 'a-04' NO_OUTCOME sig True receipt True

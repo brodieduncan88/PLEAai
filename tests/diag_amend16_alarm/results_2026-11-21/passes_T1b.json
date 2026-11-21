@@ -1,0 +1,962 @@
+{
+ "scenario": "T1b",
+ "commit_src": "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/amend16/adv_test/src",
+ "stall_after": 900.0,
+ "pass_every": 100.0,
+ "passes": [
+  {
+   "pass": 0,
+   "clock": 0.0,
+   "note": "before the trouble",
+   "ended": "read",
+   "how": "read whole",
+   "exit": 0,
+   "asked": [
+    [
+     "o-0",
+     "answered"
+    ],
+    [
+     "o-1",
+     "answered"
+    ],
+    [
+     "o-2",
+     "answered"
+    ],
+    [
+     "o-3",
+     "answered"
+    ]
+   ],
+   "after_last_run": [],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [
+    [
+     "made, not yet accepted by the mailbox",
+     1
+    ],
+    [
+     "accepted by the mailbox (a signed receipt; not a person's acknowledgement)",
+     1
+    ]
+   ],
+   "put_off": 0,
+   "unfinished_since": null,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1)",
+   "status_courier": "reading the witness",
+   "status_bound": "0 passes whose checkpoint and chain were read",
+   "real_seconds": 0.026
+  },
+  {
+   "pass": 1,
+   "clock": 100.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"h-old-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-0",
+     "answered"
+    ],
+    [
+     "o-1",
+     "answered"
+    ],
+    [
+     "h-old-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"h-old-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"h-old-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.012
+  },
+  {
+   "pass": 2,
+   "clock": 200.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-02-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-2",
+     "answered"
+    ],
+    [
+     "o-3",
+     "answered"
+    ],
+    [
+     "f-02-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-02-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-02-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.013
+  },
+  {
+   "pass": 3,
+   "clock": 300.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-03-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-0",
+     "answered"
+    ],
+    [
+     "o-1",
+     "answered"
+    ],
+    [
+     "f-03-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-03-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-03-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.014
+  },
+  {
+   "pass": 4,
+   "clock": 400.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-04-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-2",
+     "answered"
+    ],
+    [
+     "o-3",
+     "answered"
+    ],
+    [
+     "f-04-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-04-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-04-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.013
+  },
+  {
+   "pass": 5,
+   "clock": 500.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-05-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-0",
+     "answered"
+    ],
+    [
+     "o-1",
+     "answered"
+    ],
+    [
+     "f-05-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-05-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-05-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.016
+  },
+  {
+   "pass": 6,
+   "clock": 600.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-06-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-2",
+     "answered"
+    ],
+    [
+     "o-3",
+     "answered"
+    ],
+    [
+     "f-06-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-06-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-06-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.015
+  },
+  {
+   "pass": 7,
+   "clock": 700.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-07-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-0",
+     "answered"
+    ],
+    [
+     "o-1",
+     "answered"
+    ],
+    [
+     "f-07-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-07-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-07-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.016
+  },
+  {
+   "pass": 8,
+   "clock": 800.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-08-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-2",
+     "answered"
+    ],
+    [
+     "o-3",
+     "answered"
+    ],
+    [
+     "f-08-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [],
+   "delivered": [],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-08-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-08-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.015
+  },
+  {
+   "pass": 9,
+   "clock": 900.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-09-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-0",
+     "answered"
+    ],
+    [
+     "o-1",
+     "answered"
+    ],
+    [
+     "f-09-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [
+    [
+     "o-0",
+     "NO_OUTCOME"
+    ],
+    [
+     "o-1",
+     "NO_OUTCOME"
+    ]
+   ],
+   "delivered": [
+    [
+     "o-0",
+     "NO_OUTCOME"
+    ],
+    [
+     "o-1",
+     "NO_OUTCOME"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": false,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-09-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-09-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.028
+  },
+  {
+   "pass": 10,
+   "clock": 1000.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-10-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-2",
+     "answered"
+    ],
+    [
+     "o-3",
+     "answered"
+    ],
+    [
+     "f-10-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [
+    [
+     "h-old-fail",
+     "UNREADABLE"
+    ],
+    [
+     "o-2",
+     "NO_OUTCOME"
+    ],
+    [
+     "o-3",
+     "NO_OUTCOME"
+    ],
+    [
+     "",
+     "COURIER_BLOCKED"
+    ]
+   ],
+   "delivered": [
+    [
+     "h-old-fail",
+     "UNREADABLE"
+    ],
+    [
+     "o-2",
+     "NO_OUTCOME"
+    ],
+    [
+     "o-3",
+     "NO_OUTCOME"
+    ],
+    [
+     "",
+     "COURIER_BLOCKED"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-10-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-10-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.039
+  },
+  {
+   "pass": 11,
+   "clock": 1100.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-11-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-0",
+     "answered"
+    ],
+    [
+     "o-1",
+     "answered"
+    ],
+    [
+     "f-11-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [
+    [
+     "f-02-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "delivered": [
+    [
+     "f-02-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-11-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-11-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.02
+  },
+  {
+   "pass": 12,
+   "clock": 1200.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-12-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-2",
+     "answered"
+    ],
+    [
+     "o-3",
+     "answered"
+    ],
+    [
+     "f-12-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [
+    [
+     "f-03-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "delivered": [
+    [
+     "f-03-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-12-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-12-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.022
+  },
+  {
+   "pass": 13,
+   "clock": 1300.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-13-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-0",
+     "answered"
+    ],
+    [
+     "o-1",
+     "answered"
+    ],
+    [
+     "f-13-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [
+    [
+     "f-04-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "delivered": [
+    [
+     "f-04-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-13-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-13-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.027
+  },
+  {
+   "pass": 14,
+   "clock": 1400.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-14-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-2",
+     "answered"
+    ],
+    [
+     "o-3",
+     "answered"
+    ],
+    [
+     "f-14-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [
+    [
+     "f-05-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "delivered": [
+    [
+     "f-05-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-14-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-14-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.025
+  },
+  {
+   "pass": 15,
+   "clock": 1500.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-15-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-0",
+     "answered"
+    ],
+    [
+     "o-1",
+     "answered"
+    ],
+    [
+     "f-15-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [
+    [
+     "f-06-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "delivered": [
+    [
+     "f-06-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-15-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-15-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.026
+  },
+  {
+   "pass": 16,
+   "clock": 1600.0,
+   "note": "",
+   "ended": "blocked",
+   "how": "the witness stopped answering after the courier asked it for run \"f-16-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "exit": 1,
+   "asked": [
+    [
+     "o-2",
+     "answered"
+    ],
+    [
+     "o-3",
+     "answered"
+    ],
+    [
+     "f-16-fail",
+     "dropped while read"
+    ]
+   ],
+   "after_last_run": [
+    [
+     "/checkpoint",
+     "no answer (URLError)"
+    ]
+   ],
+   "made": [
+    [
+     "f-07-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "delivered": [
+    [
+     "f-07-fail",
+     "UNREADABLE"
+    ]
+   ],
+   "coverage_events": [],
+   "put_off": 0,
+   "unfinished_since": 100.0,
+   "blocked_sent": true,
+   "outbox": [],
+   "witness_answers_again": true,
+   "status_coverage": "CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended after one run: the witness stopped answering after the courier asked it for run \"f-16-fail\"; the runs asked for before it in that pass were asked for as usual",
+   "status_courier": "the witness stopped answering after the courier asked it for run \"f-16-fail\"; the runs asked for before it in that pass were asked for as usual (no pass completed since 1970-01-01T00:01:40Z by its clock)",
+   "status_bound": "2 passes whose checkpoint and chain were read",
+   "real_seconds": 0.029
+  }
+ ],
+ "mailbox": [
+  {
+   "aid": "f-03-fail",
+   "outcome": "UNREADABLE",
+   "made": "1970-01-01T00:20:01Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN\nRun \"f-03-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:05:00Z by its clock, the witness stopped answering.  The courier has not been able to read this run since 1970-01-01T00:05:00Z by its clock.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 13.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 13,
+   "form": 2
+  },
+  {
+   "aid": "o-1",
+   "outcome": "NO_OUTCOME",
+   "made": "1970-01-01T00:15:04Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "A RUN WAS ADMITTED AND HAS NO OUTCOME\nRun \"o-1\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\n\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 10.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 10,
+   "form": 2
+  },
+  {
+   "aid": "f-07-fail",
+   "outcome": "UNREADABLE",
+   "made": "1970-01-01T00:26:41Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN\nRun \"f-07-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:11:40Z by its clock, the witness stopped answering.  The courier has not been able to read this run since 1970-01-01T00:11:40Z by its clock.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 17.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 17,
+   "form": 2
+  },
+  {
+   "aid": "f-06-fail",
+   "outcome": "UNREADABLE",
+   "made": "1970-01-01T00:25:01Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN\nRun \"f-06-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:10:00Z by its clock, the witness stopped answering.  The courier has not been able to read this run since 1970-01-01T00:10:00Z by its clock.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 16.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 16,
+   "form": 2
+  },
+  {
+   "aid": "h-old-fail",
+   "outcome": "UNREADABLE",
+   "made": "1970-01-01T00:16:41Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN\nRun \"h-old-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:01:40Z by its clock, the witness stopped answering.  The courier has not been able to read this run since 1970-01-01T00:01:40Z by its clock.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 11.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 11,
+   "form": 2
+  },
+  {
+   "aid": "o-2",
+   "outcome": "NO_OUTCOME",
+   "made": "1970-01-01T00:16:44Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "A RUN WAS ADMITTED AND HAS NO OUTCOME\nRun \"o-2\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\n\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 11.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 11,
+   "form": 2
+  },
+  {
+   "aid": "",
+   "outcome": "WATCHING",
+   "made": "1970-01-01T00:00:01Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "THE COURIER HAS BEGUN TO WATCH THIS BUDGET\nBudget REQ-T/1/abababababababababababababababab.\nThe courier has read this budget's chain from the witness to decision 1, whose hash is 714f20b20c975afe4092ef5e6cae4512791c1d6aaa584325525a687b58c057dd, and has asked the witness for every run in it that may call for a notice; a run it cannot read is reported in a notice of its own (UNREADABLE).  From that decision on, it makes a notice of each run that calls for one.  This statement says the courier began to watch; it is not a notice of any run.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 1.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 1,
+   "form": 2
+  },
+  {
+   "aid": "f-02-fail",
+   "outcome": "UNREADABLE",
+   "made": "1970-01-01T00:18:21Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN\nRun \"f-02-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:03:20Z by its clock, the witness stopped answering.  The courier has not been able to read this run since 1970-01-01T00:03:20Z by its clock.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 12,
+   "form": 2
+  },
+  {
+   "aid": "o-3",
+   "outcome": "NO_OUTCOME",
+   "made": "1970-01-01T00:16:47Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "A RUN WAS ADMITTED AND HAS NO OUTCOME\nRun \"o-3\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\n\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 11.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 11,
+   "form": 2
+  },
+  {
+   "aid": "o-0",
+   "outcome": "NO_OUTCOME",
+   "made": "1970-01-01T00:15:01Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "A RUN WAS ADMITTED AND HAS NO OUTCOME\nRun \"o-0\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\n\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 10.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 10,
+   "form": 2
+  },
+  {
+   "aid": "f-05-fail",
+   "outcome": "UNREADABLE",
+   "made": "1970-01-01T00:23:21Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN\nRun \"f-05-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:08:20Z by its clock, the witness stopped answering.  The courier has not been able to read this run since 1970-01-01T00:08:20Z by its clock.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 15.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 15,
+   "form": 2
+  },
+  {
+   "aid": "f-04-fail",
+   "outcome": "UNREADABLE",
+   "made": "1970-01-01T00:21:41Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN\nRun \"f-04-fail\", as the service named it, on budget REQ-T/1/abababababababababababababababab.\nThe courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:06:40Z by its clock, the witness stopped answering.  The courier has not been able to read this run since 1970-01-01T00:06:40Z by its clock.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 14.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 14,
+   "form": 2
+  },
+  {
+   "aid": "",
+   "outcome": "COURIER_BLOCKED",
+   "made": "1970-01-01T00:16:50Z",
+   "received": "2026-11-21T08:57:13Z",
+   "text": "THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR\nBudget REQ-T/1/abababababababababababababababab.\nNo pass over this budget has been completed for 900 seconds by its clock.  In the last pass, the witness stopped answering after the courier asked it for run \"f-10-fail\"; the runs asked for before it in that pass were asked for as usual, and the runs after it were not asked for in that pass.  The courier tries again at each pass.\nThis notice was made by the courier courier-t from what the witness gave it, read to decision 11.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.",
+   "notice_ok": [],
+   "receipt_ok": [],
+   "seq": 11,
+   "form": 2
+  }
+ ],
+ "keys": {
+  "courier": "a128ba1544f865bae297e1edc52c6a01dc6f002e38cc409cb60a4be94660eef0",
+  "mailbox": "a2938ac5f88d0c521034e4087d230a8399f07c703a7b67e95be4feefc34d670b",
+  "witness": "1073d43baaf6d2ef9a50480ea2b0df0357712a165237f5cd853e5c96cfc53a63"
+ },
+ "dirs": {
+  "state": "/tmp/r30-plk_nqzw/state",
+  "mailbox": "/tmp/r30-plk_nqzw/mbox/notices"
+ }
+}

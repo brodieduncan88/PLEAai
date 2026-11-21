@@ -1,0 +1,62 @@
+T2: 80 notices held by the mailbox; signature or receipt failures: 0
+
+UNREADABLE notices: 31.  One, whole:
+  | THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN
+  | Run "a-01", as the service named it, on budget REQ-T/1/abababababababababababababababab.
+  | The courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last
+  |   asked for this run, at 1970-01-01T00:03:20Z by its clock, the witness stopped answering.  The courier has not been able to read this run since
+  |   1970-01-01T00:03:20Z by its clock.
+  | This notice was made by the courier courier-t from what the witness gave it, read to decision 23.  Words in quotation marks are shown as data:
+  |   they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification
+  |   service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has
+  |   read it.
+  'when last asked, the witness stopped answering' true of the stand-in's record: 31 of 31
+  not asked again between that and the notice: 31 of 31
+  'not been able to read this run since T': no whole answer between T and the notice: 31 of 31
+  (no exceptions)
+
+FAIL notices: {'y-old-fail': 900.0, 'n-new-fail': 2700.0, 'z-old-fail': 3400.0}
+  n-new-fail: stand-in was asked for it at [(2700.0, 'answered')]; FAIL made t=2700.0
+    signed and held by the mailbox from t=100 until then: {'NO_OUTCOME': 22, 'FAIL': 1, 'UNREADABLE': 15}; any of them names n-new-fail: False; any that speaks of the budget or the passes as a whole: none
+  z-old-fail: stand-in was asked for it at [(0.0, 'answered'), (3400.0, 'answered')]; FAIL made t=3400.0
+    signed and held by the mailbox from t=100 until then: {'NO_OUTCOME': 43, 'FAIL': 2, 'UNREADABLE': 21}; any of them names z-old-fail: False; any that speaks of the budget or the passes as a whole: none
+  y-old-fail: stand-in was asked for it at [(0.0, 'answered'), (900.0, 'answered')]; FAIL made t=900.0
+    signed and held by the mailbox from t=100 until then: {}; any of them names y-old-fail: False; any that speaks of the budget or the passes as a whole: none
+
+WATCHING (coverage) statements: [1]; passes that read every run not done (exit 0): [0.0]
+decision named in each notice's last line is the decision recorded in the notice: True
+
+Status (local, not signed):
+  t=800: ended blocked / exit 1 / unfinished_since 100.0
+      coverage: CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended
+          after one run: the witness stopped answering after the courier asked it for run "a-07"; the runs asked for before it in that pass were asked for as
+          usual
+      bound: 32 passes whose checkpoint and chain were read
+      courier: the witness stopped answering after the courier asked it for run "a-07"; the runs asked for before it in that pass were asked for as usual (no
+          pass completed since 1970-01-01T00:01:40Z by its clock)
+  t=900: ended read / exit 1 / unfinished_since None
+      coverage: CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass did
+          not complete: 71 runs put off
+      bound: 32 passes whose checkpoint and chain were read
+      courier: reading the witness
+  t=1700: ended blocked / exit 1 / unfinished_since 1000.0
+      coverage: CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended
+          after one run: the witness stopped answering after the courier asked it for run "a-25"; the runs asked for before it in that pass were asked for as
+          usual
+      bound: 29 passes whose checkpoint and chain were read
+      courier: the witness stopped answering after the courier asked it for run "a-25"; the runs asked for before it in that pass were asked for as usual (no
+          pass completed since 1970-01-01T00:16:40Z by its clock)
+  t=2600: ended blocked / exit 1 / unfinished_since 1900.0
+      coverage: CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended
+          after one run: the witness stopped answering after the courier asked it for run "a-43"; the runs asked for before it in that pass were asked for as
+          usual
+      bound: 25 passes whose checkpoint and chain were read
+      courier: the witness stopped answering after the courier asked it for run "a-43"; the runs asked for before it in that pass were asked for as usual (no
+          pass completed since 1970-01-01T00:31:40Z by its clock)
+  t=3500: ended blocked / exit 1 / unfinished_since 2800.0
+      coverage: CONFIRMED (the mailbox accepted the courier's statement that it watches this budget, a signed receipt; from decision 1), but the last pass ended
+          after one run: the witness stopped answering after the courier asked it for run "a-08"; the runs asked for before it in that pass were asked for as
+          usual
+      bound: 21 passes whose checkpoint and chain were read
+      courier: the witness stopped answering after the courier asked it for run "a-08"; the runs asked for before it in that pass were asked for as usual (no
+          pass completed since 1970-01-01T00:46:40Z by its clock)

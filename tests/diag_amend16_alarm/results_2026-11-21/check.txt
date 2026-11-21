@@ -1,0 +1,293 @@
+scenario T1a: 16 passes, clocks 0..1500; first pass that did not complete: t=100.0
+  signatures from disk: 25 notices held by the mailbox; notices whose courier signature fails: 0; receipts that fail: 0; readable copies present: 25; lines in the courier's log of deliveries: 25
+  alarms held by the mailbox: [('COURIER_BLOCKED', 1004)]
+  ALARM COURIER_BLOCKED: streak of unfinished passes began t=100.0; deadline t=1000.0; made at pass clock t=1000.0 (notice time 1970-01-01T00:16:44Z = 1004); late by +0 s; taken by the mailbox in the pass at t=1000.0
+  alarm text:
+    | THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR
+    | Budget REQ-T/1/abababababababababababababababab.
+    | No pass over this budget has been completed for 900 seconds by its clock.  In the last pass, the witness stopped answering after the courier asked it for run "a-09"; the runs asked for before it in that pass were asked for as usual, and the runs after it were not asked for in that pass.  The courier tries again at each pass.
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.
+    N in the text 900; last completed pass t=0.0; time since it 1000.0; made - streak start 900
+    run named 'a-09'; asked in that pass: [['a-09', 'dropped while read']]; after it: [['/checkpoint', 'no answer (URLError)']]
+    last line: This notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they ar...
+  statements of coverage (WATCHING) held: [1]; passes that completed: [0]
+  failure notice of z-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of y-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of n-01-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  every notice signed and held: {'UNREADABLE': 6, 'FAIL': 17, 'COURIER_BLOCKED': 1, 'WATCHING': 1}
+  one UNREADABLE notice, whole:
+    | THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN
+    | Run "a-04", as the service named it, on budget REQ-T/1/abababababababababababababababab.
+    | The courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:08:20Z by its clock, the witness stopped answering.  The courier has not bee
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 16.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this
+  [ok] one alarm
+  [ok] alarm made at the first pass at or after the deadline
+  [ok] alarm signed by the courier key (from disk)
+  [ok] alarm held by the mailbox with a valid receipt (from disk)
+  [ok] alarm in the courier log of deliveries (from disk)
+  [ok] state on disk marks the alarm as sent
+  [ok] "no pass completed for N seconds": N is no more than the time since the last completed pass
+  [ok] the run named is the last the courier asked for in that pass, and its answer was dropped
+  [ok] after it the witness did not answer the next request
+  [ok] the runs asked for before it in that pass were answered
+  [ok] no run was asked for after it in that pass
+  [ok] provenance: "read to decision N" is the decision the courier had read
+  [ok] provenance: in the pass that made the alarm the witness gave the courier something
+  [ok] no statement of coverage was made in a pass that did not complete
+
+scenario T1b: 17 passes, clocks 0..1600; first pass that did not complete: t=100.0
+  signatures from disk: 13 notices held by the mailbox; notices whose courier signature fails: 0; receipts that fail: 0; readable copies present: 13; lines in the courier's log of deliveries: 13
+  alarms held by the mailbox: [('COURIER_BLOCKED', 1010)]
+  ALARM COURIER_BLOCKED: streak of unfinished passes began t=100.0; deadline t=1000.0; made at pass clock t=1000.0 (notice time 1970-01-01T00:16:50Z = 1010); late by +0 s; taken by the mailbox in the pass at t=1000.0
+  alarm text:
+    | THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR
+    | Budget REQ-T/1/abababababababababababababababab.
+    | No pass over this budget has been completed for 900 seconds by its clock.  In the last pass, the witness stopped answering after the courier asked it for run "f-10-fail"; the runs asked for before it in that pass were asked for as usual, and the runs after it were not asked for in that pass.  The courier tries again at each pass.
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 11.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.
+    N in the text 900; last completed pass t=0.0; time since it 1000.0; made - streak start 900
+    run named 'f-10-fail'; asked in that pass: [['o-2', 'answered'], ['o-3', 'answered'], ['f-10-fail', 'dropped while read']]; after it: [['/checkpoint', 'no answer (URLError)']]
+    last line: This notice was made by the courier courier-t from what the witness gave it, read to decision 11.  Words in quotation marks are shown as data: they ar...
+  statements of coverage (WATCHING) held: [1]; passes that completed: [0]
+  failure notice of h-old-fail: NOT MADE within the passes run
+  every notice signed and held: {'UNREADABLE': 7, 'NO_OUTCOME': 4, 'WATCHING': 1, 'COURIER_BLOCKED': 1}
+  one UNREADABLE notice, whole:
+    | THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN
+    | Run "f-03-fail", as the service named it, on budget REQ-T/1/abababababababababababababababab.
+    | The courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:05:00Z by its clock, the witness stopped answering.  The courier has not bee
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 13.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this
+  [ok] one alarm
+  [ok] alarm made at the first pass at or after the deadline
+  [ok] alarm signed by the courier key (from disk)
+  [ok] alarm held by the mailbox with a valid receipt (from disk)
+  [ok] alarm in the courier log of deliveries (from disk)
+  [ok] state on disk marks the alarm as sent
+  [ok] "no pass completed for N seconds": N is no more than the time since the last completed pass
+  [ok] the run named is the last the courier asked for in that pass, and its answer was dropped
+  [ok] after it the witness did not answer the next request
+  [ok] the runs asked for before it in that pass were answered
+  [ok] no run was asked for after it in that pass
+  [ok] provenance: "read to decision N" is the decision the courier had read
+  [ok] provenance: in the pass that made the alarm the witness gave the courier something
+  [ok] no statement of coverage was made in a pass that did not complete
+
+scenario T1c: 15 passes, clocks 100..1500; first pass that did not complete: t=100.0
+  signatures from disk: 24 notices held by the mailbox; notices whose courier signature fails: 0; receipts that fail: 0; readable copies present: 24; lines in the courier's log of deliveries: 24
+  alarms held by the mailbox: [('COURIER_BLOCKED', 1004)]
+  ALARM COURIER_BLOCKED: streak of unfinished passes began t=100.0; deadline t=1000.0; made at pass clock t=1000.0 (notice time 1970-01-01T00:16:44Z = 1004); late by +0 s; taken by the mailbox in the pass at t=1000.0
+  alarm text:
+    | THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR
+    | Budget REQ-T/1/abababababababababababababababab.
+    | No pass over this budget has been completed for 900 seconds by its clock.  In the last pass, the witness stopped answering after the courier asked it for run "a-09"; the runs asked for before it in that pass were asked for as usual, and the runs after it were not asked for in that pass.  The courier tries again at each pass.
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.
+    N in the text 900; last completed pass t=None; time since it None; made - streak start 900
+    run named 'a-09'; asked in that pass: [['a-09', 'dropped while read']]; after it: [['/checkpoint', 'no answer (URLError)']]
+    last line: This notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they ar...
+  statements of coverage (WATCHING) held: []; passes that completed: []
+  failure notice of z-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of y-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of n-01-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  every notice signed and held: {'UNREADABLE': 6, 'FAIL': 17, 'COURIER_BLOCKED': 1}
+  one UNREADABLE notice, whole:
+    | THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN
+    | Run "a-00", as the service named it, on budget REQ-T/1/abababababababababababababababab.
+    | The courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:01:40Z by its clock, the witness stopped answering.  The courier has not bee
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this
+  [ok] one alarm
+  [ok] alarm made at the first pass at or after the deadline
+  [ok] alarm signed by the courier key (from disk)
+  [ok] alarm held by the mailbox with a valid receipt (from disk)
+  [ok] alarm in the courier log of deliveries (from disk)
+  [ok] state on disk marks the alarm as sent
+  [ok] "no pass completed for N seconds": N is no more than the time since the last completed pass
+  [ok] the run named is the last the courier asked for in that pass, and its answer was dropped
+  [ok] after it the witness did not answer the next request
+  [ok] the runs asked for before it in that pass were answered
+  [ok] no run was asked for after it in that pass
+  [ok] provenance: "read to decision N" is the decision the courier had read
+  [ok] provenance: in the pass that made the alarm the witness gave the courier something
+  [ok] no statement of coverage was made in a pass that did not complete
+
+scenario T1d: 16 passes, clocks 0..1500; first pass that did not complete: t=100.0
+  signatures from disk: 21 notices held by the mailbox; notices whose courier signature fails: 0; receipts that fail: 0; readable copies present: 21; lines in the courier's log of deliveries: 21
+  alarms held by the mailbox: [('COURIER_BLOCKED', 1000)]
+  ALARM COURIER_BLOCKED: streak of unfinished passes began t=100.0; deadline t=1000.0; made at pass clock t=1000.0 (notice time 1970-01-01T00:16:40Z = 1000); late by +0 s; taken by the mailbox in the pass at t=1000.0
+  alarm text:
+    | THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR
+    | Budget REQ-T/1/abababababababababababababababab.
+    | No pass over this budget has been completed for 900 seconds by its clock; in the last, the courier has not been able to read the witness: "w could not be asked (URLError)".  While it cannot, it can make no notice of this budget's runs.  It tries again at each pass; once it reads the witness again, the notices of the runs it then reads follow, and no other notice that it is blocked is made until it has read the witness and then been blocked again.
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 1.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.
+    N in the text 900; last completed pass t=0.0; time since it 1000.0; made - streak start 900
+    in that pass: runs asked []; how it ended: the courier is blocked: it cannot read the witness
+    last line: This notice was made by the courier courier-t from what the witness gave it, read to decision 1.  Words in quotation marks are shown as data: they are...
+  statements of coverage (WATCHING) held: [1]; passes that completed: [0, 1300, 1400, 1500]
+  failure notice of z-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of y-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of n-01-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  every notice signed and held: {'FAIL': 17, 'COURIER_BLOCKED': 1, 'NO_OUTCOME': 2, 'WATCHING': 1}
+  [ok] one alarm
+  [ok] alarm made at the first pass at or after the deadline
+  [ok] alarm signed by the courier key (from disk)
+  [ok] alarm held by the mailbox with a valid receipt (from disk)
+  [ok] alarm in the courier log of deliveries (from disk)
+  [ok] state on disk marks the alarm as sent
+  [ok] "no pass completed for N seconds": N is no more than the time since the last completed pass
+  [ok] in that pass the witness answered nothing
+  [ok] provenance: the courier had read something of this budget before (decision > 0)
+  [ok] provenance: "read to decision N" is the decision the courier had read
+  [NOT SO] provenance: in the pass that made the alarm the witness gave the courier something
+  [ok] no statement of coverage was made in a pass that did not complete
+
+scenario T1e: 16 passes, clocks 0..1500; first pass that did not complete: t=100.0
+  signatures from disk: 25 notices held by the mailbox; notices whose courier signature fails: 0; receipts that fail: 0; readable copies present: 25; lines in the courier's log of deliveries: 25
+  alarms held by the mailbox: [('COURIER_BLOCKED', 1003)]
+  ALARM COURIER_BLOCKED: streak of unfinished passes began t=100.0; deadline t=1000.0; made at pass clock t=1000.0 (notice time 1970-01-01T00:16:43Z = 1003); late by +0 s; taken by the mailbox in the pass at t=1300.0
+  alarm text:
+    | THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR
+    | Budget REQ-T/1/abababababababababababababababab.
+    | No pass over this budget has been completed for 900 seconds by its clock.  In the last pass, the witness stopped answering after the courier asked it for run "a-09"; the runs asked for before it in that pass were asked for as usual, and the runs after it were not asked for in that pass.  The courier tries again at each pass.
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.
+    N in the text 900; last completed pass t=0.0; time since it 1000.0; made - streak start 900
+    run named 'a-09'; asked in that pass: [['a-09', 'dropped while read']]; after it: [['/checkpoint', 'no answer (URLError)']]
+    last line: This notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they ar...
+  statements of coverage (WATCHING) held: [1]; passes that completed: [0]
+  failure notice of z-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of y-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of n-01-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  every notice signed and held: {'COURIER_BLOCKED': 1, 'FAIL': 17, 'UNREADABLE': 6, 'WATCHING': 1}
+  one UNREADABLE notice, whole:
+    | THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN
+    | Run "a-00", as the service named it, on budget REQ-T/1/abababababababababababababababab.
+    | The courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:01:40Z by its clock, the witness stopped answering.  The courier has not bee
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this
+  [ok] one alarm
+  [ok] alarm made at the first pass at or after the deadline
+  [ok] alarm signed by the courier key (from disk)
+  [ok] alarm held by the mailbox with a valid receipt (from disk)
+  [ok] alarm in the courier log of deliveries (from disk)
+  [ok] state on disk marks the alarm as sent
+  [ok] "no pass completed for N seconds": N is no more than the time since the last completed pass
+  [ok] the run named is the last the courier asked for in that pass, and its answer was dropped
+  [ok] after it the witness did not answer the next request
+  [ok] the runs asked for before it in that pass were answered
+  [ok] no run was asked for after it in that pass
+  [ok] provenance: "read to decision N" is the decision the courier had read
+  [ok] provenance: in the pass that made the alarm the witness gave the courier something
+  [ok] no statement of coverage was made in a pass that did not complete
+
+scenario T1f: 13 passes, clocks 0..1200; first pass that did not complete: t=0.0
+  signatures from disk: 1 notices held by the mailbox; notices whose courier signature fails: 0; receipts that fail: 0; readable copies present: 1; lines in the courier's log of deliveries: 1
+  alarms held by the mailbox: [('COURIER_BLOCKED', 900)]
+  ALARM COURIER_BLOCKED: streak of unfinished passes began t=0.0; deadline t=900.0; made at pass clock t=900.0 (notice time 1970-01-01T00:15:00Z = 900); late by +0 s; taken by the mailbox in the pass at t=900.0
+  alarm text:
+    | THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR
+    | Budget REQ-T/1/abababababababababababababababab.
+    | No pass over this budget has been completed for 900 seconds by its clock; in the last, the courier has not been able to read the witness: "w could not be asked (URLError)".  While it cannot, it can make no notice of this budget's runs.  It tries again at each pass; once it reads the witness again, the notices of the runs it then reads follow, and no other notice that it is blocked is made until it has read the witness and then been blocked again.
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 0.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.
+    N in the text 900; last completed pass t=None; time since it None; made - streak start 900
+    in that pass: runs asked []; how it ended: the courier is blocked: it cannot read the witness
+    last line: This notice was made by the courier courier-t from what the witness gave it, read to decision 0.  Words in quotation marks are shown as data: they are...
+  statements of coverage (WATCHING) held: []; passes that completed: []
+  every notice signed and held: {'COURIER_BLOCKED': 1}
+  [ok] one alarm
+  [ok] alarm made at the first pass at or after the deadline
+  [ok] alarm signed by the courier key (from disk)
+  [ok] alarm held by the mailbox with a valid receipt (from disk)
+  [ok] alarm in the courier log of deliveries (from disk)
+  [ok] state on disk marks the alarm as sent
+  [ok] "no pass completed for N seconds": N is no more than the time since the last completed pass
+  [ok] in that pass the witness answered nothing
+  [NOT SO] provenance: the courier had read something of this budget before (decision > 0)
+  [ok] provenance: "read to decision N" is the decision the courier had read
+  [NOT SO] provenance: in the pass that made the alarm the witness gave the courier something
+  [ok] no statement of coverage was made in a pass that did not complete
+
+scenario Ka: 16 passes, clocks 0..1500; first pass that did not complete: t=100.0
+  signatures from disk: 25 notices held by the mailbox; notices whose courier signature fails: 0; receipts that fail: 0; readable copies present: 25; lines in the courier's log of deliveries: 25
+  alarms held by the mailbox: [('COURIER_BLOCKED', 1104)]
+  ALARM COURIER_BLOCKED: streak of unfinished passes began t=100.0; deadline t=1000.0; made at pass clock t=1100.0 (notice time 1970-01-01T00:18:24Z = 1104); late by +100 s; taken by the mailbox in the pass at t=1100.0
+  alarm text:
+    | THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR
+    | Budget REQ-T/1/abababababababababababababababab.
+    | No pass over this budget has been completed for 1000 seconds by its clock.  In the last pass, the witness stopped answering after the courier asked it for run "a-10"; the runs asked for before it in that pass were asked for as usual, and the runs after it were not asked for in that pass.  The courier tries again at each pass.
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 13.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.
+    N in the text 1000; last completed pass t=0.0; time since it 1100.0; made - streak start 1000
+    run named 'a-10'; asked in that pass: [['a-10', 'dropped while read']]; after it: [['/checkpoint', 'no answer (URLError)']]
+    last line: This notice was made by the courier courier-t from what the witness gave it, read to decision 13.  Words in quotation marks are shown as data: they ar...
+  statements of coverage (WATCHING) held: [1]; passes that completed: [0]
+  failure notice of z-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of y-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of n-01-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  every notice signed and held: {'FAIL': 17, 'UNREADABLE': 6, 'WATCHING': 1, 'COURIER_BLOCKED': 1}
+  one UNREADABLE notice, whole:
+    | THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN
+    | Run "a-05", as the service named it, on budget REQ-T/1/abababababababababababababababab.
+    | The courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:10:00Z by its clock, the witness stopped answering.  The courier has not bee
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 17.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this
+  [ok] one alarm
+  [ok] alarm made at the first pass at or after the deadline
+  [ok] alarm signed by the courier key (from disk)
+  [ok] alarm held by the mailbox with a valid receipt (from disk)
+  [ok] alarm in the courier log of deliveries (from disk)
+  [ok] state on disk marks the alarm as sent
+  [ok] "no pass completed for N seconds": N is no more than the time since the last completed pass
+  [ok] the run named is the last the courier asked for in that pass, and its answer was dropped
+  [ok] after it the witness did not answer the next request
+  [ok] the runs asked for before it in that pass were answered
+  [ok] no run was asked for after it in that pass
+  [ok] provenance: "read to decision N" is the decision the courier had read
+  [ok] provenance: in the pass that made the alarm the witness gave the courier something
+  [ok] no statement of coverage was made in a pass that did not complete
+
+scenario Kb: 16 passes, clocks 0..1500; first pass that did not complete: t=100.0
+  signatures from disk: 25 notices held by the mailbox; notices whose courier signature fails: 0; receipts that fail: 0; readable copies present: 25; lines in the courier's log of deliveries: 25
+  alarms held by the mailbox: [('COURIER_BLOCKED', 1004)]
+  ALARM COURIER_BLOCKED: streak of unfinished passes began t=100.0; deadline t=1000.0; made at pass clock t=1000.0 (notice time 1970-01-01T00:16:44Z = 1004); late by +0 s; taken by the mailbox in the pass at t=1100.0
+  alarm text:
+    | THE COURIER HAS NOT COMPLETED A PASS OVER THIS BUDGET: THE WITNESS DID NOT GIVE IT WHAT IT ASKED FOR
+    | Budget REQ-T/1/abababababababababababababababab.
+    | No pass over this budget has been completed for 900 seconds by its clock.  In the last pass, the witness stopped answering after the courier asked it for run "a-09"; the runs asked for before it in that pass were asked for as usual, and the runs after it were not asked for in that pass.  The courier tries again at each pass.
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this notice.  The verification service did not write this notice.  It does not say the check is correct.  A receipt for it says that the mailbox holds it, not that anyone has read it.
+    N in the text 900; last completed pass t=0.0; time since it 1000.0; made - streak start 900
+    run named 'a-09'; asked in that pass: [['a-09', 'dropped while read']]; after it: [['/checkpoint', 'no answer (URLError)']]
+    last line: This notice was made by the courier courier-t from what the witness gave it, read to decision 12.  Words in quotation marks are shown as data: they ar...
+  statements of coverage (WATCHING) held: [1]; passes that completed: [0]
+  failure notice of z-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of y-old-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  failure notice of n-01-fail: made at pass t=1300 (1200 s after it could first be read, t=100)
+  every notice signed and held: {'FAIL': 17, 'UNREADABLE': 6, 'COURIER_BLOCKED': 1, 'WATCHING': 1}
+  one UNREADABLE notice, whole:
+    | THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN
+    | Run "a-04", as the service named it, on budget REQ-T/1/abababababababababababababababab.
+    | The courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:08:20Z by its clock, the witness stopped answering.  The courier has not bee
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 16.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this
+  [ok] one alarm
+  [ok] alarm made at the first pass at or after the deadline
+  [ok] alarm signed by the courier key (from disk)
+  [ok] alarm held by the mailbox with a valid receipt (from disk)
+  [ok] alarm in the courier log of deliveries (from disk)
+  [ok] state on disk marks the alarm as sent
+  [ok] "no pass completed for N seconds": N is no more than the time since the last completed pass
+  [ok] the run named is the last the courier asked for in that pass, and its answer was dropped
+  [ok] after it the witness did not answer the next request
+  [ok] the runs asked for before it in that pass were answered
+  [ok] no run was asked for after it in that pass
+  [ok] provenance: "read to decision N" is the decision the courier had read
+  [ok] provenance: in the pass that made the alarm the witness gave the courier something
+  [ok] no statement of coverage was made in a pass that did not complete
+
+scenario T2: 46 passes, clocks 0..4500; first pass that did not complete: t=100.0
+  signatures from disk: 80 notices held by the mailbox; notices whose courier signature fails: 0; receipts that fail: 0; readable copies present: 80; lines in the courier's log of deliveries: 80
+  alarms held by the mailbox: []
+  statements of coverage (WATCHING) held: [1]; passes that completed: [0, 900, 1800, 2700, 3600, 4500]
+  failure notice of z-old-fail: made at pass t=3400 (3300 s after it could first be read, t=100)
+  failure notice of y-old-fail: made at pass t=900 (800 s after it could first be read, t=100)
+  failure notice of n-new-fail: made at pass t=2700 (2600 s after it could first be read, t=100)
+  every notice signed and held: {'NO_OUTCOME': 45, 'UNREADABLE': 31, 'FAIL': 3, 'WATCHING': 1}
+  one UNREADABLE notice, whole:
+    | THE COURIER HAS NOT BEEN ABLE TO READ ONE RUN: ITS OUTCOME IS NOT KNOWN
+    | Run "a-66", as the service named it, on budget REQ-T/1/abababababababababababababababab.
+    | The courier could not read this run and does not know its outcome.  This notice does not say that the run passed or failed.  When the courier last asked for this run, at 1970-01-01T00:50:00Z by its clock, the witness stopped answering.  The courier has not bee
+    | This notice was made by the courier courier-t from what the witness gave it, read to decision 23.  Words in quotation marks are shown as data: they are what the courier was given or recorded (the service's words, or the text of an error), not sentences of this
+  [NOT SO] one alarm
+  [ok] no statement of coverage was made in a pass that did not complete
+

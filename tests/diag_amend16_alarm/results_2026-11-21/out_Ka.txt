@@ -1,0 +1,58 @@
+p 0 t=    0 read     exit 0 since=None sent=0 made=[] delivered=[] put_off=0 before the trouble: the witness answers
+      asked: a-00 a-01 a-02 a-03 a-04 a-05 a-06 a-07 a-08 a-09 a-10 a-11 y-old-fail z-old-fail
+p 1 t=  100 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-00[dropped while read]
+p 2 t=  200 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-01[dropped while read]
+p 3 t=  300 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-02[dropped while read]
+p 4 t=  400 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-03[dropped while read]
+p 5 t=  500 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-04[dropped while read]
+p 6 t=  600 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-05[dropped while read]
+p 7 t=  700 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-06[dropped while read]
+p 8 t=  800 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-07[dropped while read]
+p 9 t=  900 blocked  exit 1 since=100.0 sent=0 made=[] delivered=[] put_off=0 
+      asked: a-08[dropped while read]
+p10 t= 1000 killed   exit None since=100.0 sent=0 made=[] delivered=[] put_off=0 KILLED before the state holding the alarm is saved: child exit 137
+      asked: a-09[dropped while read]
+p11 t= 1100 blocked  exit 1 since=100.0 sent=1 made=[['a-01', 'UNREADABLE'], ['', 'COURIER_BLOCKED']] delivered=[['a-01', 'UNREADABLE'], ['', 'COURIER_BLOCKED']] put_off=0 
+      asked: a-10[dropped while read]
+p12 t= 1200 blocked  exit 1 since=100.0 sent=1 made=[['a-02', 'UNREADABLE']] delivered=[['a-02', 'UNREADABLE']] put_off=0 
+      asked: a-11[dropped while read]
+p13 t= 1300 blocked  exit 1 since=100.0 sent=1 made=[['a-03', 'UNREADABLE'], ['z-old-fail', 'FAIL'], ['y-old-fail', 'FAIL'], ['n-01-fail', 'FAIL'], ['n-02-fail', 'FAIL'], ['n-03-fail', 'FAIL'], ['n-04-fail', 'FAIL'], ['n-05-fail', 'FAIL'], ['n-06-fail', 'FAIL'], ['n-07-fail', 'FAIL'], ['n-08-fail', 'FAIL'], ['n-09-fail', 'FAIL'], ['n-10-fail', 'FAIL'], ['n-11-fail', 'FAIL'], ['n-12-fail', 'FAIL'], ['n-13-fail', 'FAIL']] delivered=[['a-03', 'UNREADABLE'], ['z-old-fail', 'FAIL'], ['y-old-fail', 'FAIL'], ['n-01-fail', 'FAIL'], ['n-02-fail', 'FAIL'], ['n-03-fail', 'FAIL'], ['n-04-fail', 'FAIL'], ['n-05-fail', 'FAIL'], ['n-06-fail', 'FAIL'], ['n-07-fail', 'FAIL'], ['n-08-fail', 'FAIL'], ['n-09-fail', 'FAIL'], ['n-10-fail', 'FAIL'], ['n-11-fail', 'FAIL'], ['n-12-fail', 'FAIL'], ['n-13-fail', 'FAIL']] put_off=0 
+      asked: z-old-fail y-old-fail n-01-fail n-02-fail n-03-fail n-04-fail n-05-fail n-06-fail n-07-fail n-08-fail n-09-fail n-10-fail n-11-fail n-12-fail n-13-fail a-00[dropped while read]
+p14 t= 1400 blocked  exit 1 since=100.0 sent=1 made=[['a-04', 'UNREADABLE'], ['n-14-fail', 'FAIL']] delivered=[['a-04', 'UNREADABLE'], ['n-14-fail', 'FAIL']] put_off=0 
+      asked: n-14-fail a-01[dropped while read]
+p15 t= 1500 blocked  exit 1 since=100.0 sent=1 made=[['a-05', 'UNREADABLE'], ['n-15-fail', 'FAIL']] delivered=[['a-05', 'UNREADABLE'], ['n-15-fail', 'FAIL']] put_off=0 
+      asked: n-15-fail a-02[dropped while read]
+MAILBOX:
+   1970-01-01T00:21:44Z 2026-11-21T08:57:16Z 'z-old-fail' FAIL sig True receipt True
+   1970-01-01T00:21:41Z 2026-11-21T08:57:16Z 'a-03' UNREADABLE sig True receipt True
+   1970-01-01T00:21:47Z 2026-11-21T08:57:16Z 'y-old-fail' FAIL sig True receipt True
+   1970-01-01T00:22:02Z 2026-11-21T08:57:16Z 'n-05-fail' FAIL sig True receipt True
+   1970-01-01T00:21:56Z 2026-11-21T08:57:16Z 'n-03-fail' FAIL sig True receipt True
+   1970-01-01T00:22:05Z 2026-11-21T08:57:16Z 'n-06-fail' FAIL sig True receipt True
+   1970-01-01T00:16:41Z 2026-11-21T08:57:16Z 'a-00' UNREADABLE sig True receipt True
+   1970-01-01T00:22:17Z 2026-11-21T08:57:16Z 'n-10-fail' FAIL sig True receipt True
+   1970-01-01T00:00:01Z 2026-11-21T08:57:16Z '' WATCHING sig True receipt True
+   1970-01-01T00:20:01Z 2026-11-21T08:57:16Z 'a-02' UNREADABLE sig True receipt True
+   1970-01-01T00:22:14Z 2026-11-21T08:57:16Z 'n-09-fail' FAIL sig True receipt True
+   1970-01-01T00:18:21Z 2026-11-21T08:57:16Z 'a-01' UNREADABLE sig True receipt True
+   1970-01-01T00:21:50Z 2026-11-21T08:57:16Z 'n-01-fail' FAIL sig True receipt True
+   1970-01-01T00:18:24Z 2026-11-21T08:57:16Z '' COURIER_BLOCKED sig True receipt True
+   1970-01-01T00:21:53Z 2026-11-21T08:57:16Z 'n-02-fail' FAIL sig True receipt True
+   1970-01-01T00:21:59Z 2026-11-21T08:57:16Z 'n-04-fail' FAIL sig True receipt True
+   1970-01-01T00:22:11Z 2026-11-21T08:57:16Z 'n-08-fail' FAIL sig True receipt True
+   1970-01-01T00:22:08Z 2026-11-21T08:57:16Z 'n-07-fail' FAIL sig True receipt True
+   1970-01-01T00:25:01Z 2026-11-21T08:57:17Z 'a-05' UNREADABLE sig True receipt True
+   1970-01-01T00:23:21Z 2026-11-21T08:57:17Z 'a-04' UNREADABLE sig True receipt True
+   1970-01-01T00:25:04Z 2026-11-21T08:57:17Z 'n-15-fail' FAIL sig True receipt True
+   1970-01-01T00:23:24Z 2026-11-21T08:57:17Z 'n-14-fail' FAIL sig True receipt True
+   1970-01-01T00:22:26Z 2026-11-21T08:57:17Z 'n-13-fail' FAIL sig True receipt True
+   1970-01-01T00:22:23Z 2026-11-21T08:57:17Z 'n-12-fail' FAIL sig True receipt True
+   1970-01-01T00:22:20Z 2026-11-21T08:57:17Z 'n-11-fail' FAIL sig True receipt True
