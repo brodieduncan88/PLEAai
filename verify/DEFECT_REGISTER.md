@@ -8,7 +8,8 @@ validation and not a declaration. Nothing is repaired by it. **This is a draft**
 transcribed without change. Part B is the status history since that edition. Part C adds, separately, four findings
 outside the courier from the diagnostics of Amendment 16 (S-1 to S-4) and the deployment-security blockers. Part D
 keeps the eight confirmed defects of the courier at `e25a297`. No row of Part A is changed, renumbered, regraded or
-removed.
+removed. Part E, added later on 21 November, holds the findings of the design gate (S-5 to S-7); Parts A to D are as
+they were.
 
 ## The source of Part A, and how it was transcribed
 
@@ -320,3 +321,79 @@ letters are not the D-numbers of Part A.
 
 Reported by the eighth internal review of `e25a297` and not re-confirmed: F1, F2, F4, F5. Their disposition against
 the Step 2 model is in `verify/STEP2_DESIGN_AMEND16_2026-11-21.md`, section 8.
+
+## Part E. Findings of the design gate of 21 November 2026 (added; Parts A to D are unchanged)
+
+Found in the final design gate before any Step 3, on real deployments built from the unchanged `e25a297` over fresh
+databases, by the author's tests and by the independent reviewer's. The note is
+`verify/DESIGN_GATE_AMEND16_2026-11-21.md`; the evidence is in `tests/diag_amend16_gate/`; the reviewer's reports are in
+`verify/DESIGN_GATE_REVIEW_AMEND16_2026-11-21.md`. They are numbered on from Part C. None is repaired. The frozen
+gateway is unchanged. S-1 to S-4, B-1 to B-3 and Part D stand as they are.
+
+### S-5. A verdict report recorded with a RELEASE decision, or before its run starts, is believed
+
+- **What happens.** The witness keeps whatever evidence is sent with a RELEASE or a RECONCILE, whatever it decides, and
+  its reading of a run gives all of it back. `check_record.run_outcome` counts any authentic EFFECT report of the
+  run's scope, wherever it sits. So a gate-signed report over a PASS result can be put on record with a RELEASE (after
+  the run is final, before its START, or before the attempt exists) or with a RECONCILE before the run's nonce is in
+  the chain. With the PASS result then stored, the courier reads PASS and makes no notice for a run whose gate host
+  signed FAIL.
+- **Where.** `plea_gateway/store.py` 762-788 (frozen gateway); `verify/check_record.py` 188-203; `verify/courier.py`
+  (the courier does not look at which decision a report sits at).
+- **Evidence.** `tests/diag_amend16_gate/gate_release.py`, steps C1 to C6 (two real runs, X and Y: the courier made no
+  notice); the reviewer's `review/rv_conflict.py`, R1 and R3.
+- **Reproduction conditions.** As S-1: the gate's key, the client's certificate and the database role `plea_local`.
+  `DIAG_DB=<fresh database> python tests/diag_amend16_gate/gate_release.py SRC OUT`.
+- **What limits it.** The record's checker fails a record whose report sits at a RELEASE (its sixth check), while
+  giving the run the outcome PASS. A report sent with a RECONCILE sits at a reconcile decision; no record of that case
+  with a realistic forged result was made. Every such report comes with a decision of the chain naming the run, so a
+  reader that follows the chain can see that something was recorded; nothing at `e25a297` reads the run again.
+- **Affected trust boundaries.** As S-1.
+- **Standing.** Open. A second route to S-1.
+- **Remediation status.** None made. The design gate's rule (every gate-signed report of a run counts towards a
+  conflict; only the report at the recorded verdict is believed) is specified, not reviewed in its corrected form, and
+  not implemented.
+
+### S-6. The size of a gate report is not bounded
+
+- **What happens.** The store and the witness set no limit on a run's nonce or on a report's result digest short of
+  the database's own limits, nor on the number of reports for one run. A report of 70,448 bytes (a nonce of 70,000
+  characters) was recorded as a run's verdict; a report of 200,435 bytes (a result digest of 200,000 characters) was
+  recorded as a repeat; one run's answer was made 5,002,287 bytes with five reports. Each report was authentic for its
+  scope.
+- **Where.** `plea_gateway/store.py` (START and evidence take any length); `plea_gateway/witness_service.py` 157 (any
+  length of request); `plea_gateway/evidence.py` (the digest is a free string under the signature).
+- **Evidence.** `tests/diag_amend16_gate/gate_sizes.py`, D1; the reviewer's `review/rv_phase2.py`, P2 and P3.
+- **Reproduction conditions.** The gate's key and the database role `plea_local`.
+- **What follows.** A notice in the mailbox's 64 KiB cannot always carry two reports whole, or one. Every reader of a
+  run's answer must expect megabytes. A service can make each reading of a budget as slow as it likes, and so keep it
+  NOT COVERED, which is a loss of liveness and not of safety.
+- **Standing.** Open. An operational risk and a constraint on any design. A bound would be a change to the frozen
+  gateway and is not proposed.
+- **Remediation status.** None made.
+
+### S-7. The courier does not read the reports of runs in some phases
+
+- **What happens.** The courier of `e25a297` asks the witness for a run's reports only when the run is EFFECT or
+  CONSUMED. For a run that is NO_EFFECT, INDETERMINATE or RELEASED it takes the chain's word and reads nothing. And
+  for an EFFECT run, `run_outcome` ignores a NO_EFFECT report. So a second, conflicting report on such a run is never
+  examined.
+- **Where.** `verify/courier.py` 403; `verify/check_record.py` 196-199.
+- **Evidence.** Code reading; the reviewer's R1 (a NO_EFFECT report on an EFFECT run, kept and ignored) and P5 (a
+  released run carrying a gate-signed EFFECT report).
+- **Standing.** Open. Found by the independent reviewer.
+- **Remediation status.** None made.
+
+### Observations of the design gate, not entered as defects
+
+- The store answers a refused replacement of a stored result as success, and stores nothing
+  (`tests/diag_amend16_gate/gate_result_store.py`).
+- The witness gives a checkpoint, with any nonce, to the governor's certificate (`gate_token.py`, A8).
+- The mailbox does not check a notice's words: a notice of an outcome it knows is taken with any text up to its limit
+  (`gate_sizes.py`, D2).
+- The record's sixth check compares reports with one gate key, where the courier and the witness take a list
+  (`verify/check_record.py` 854; code reading by the reviewer).
+- The record's checker appears to fail any record that carries a fence report (the reviewer's P5; not investigated).
+- The baseline's receipt-counted freshness was broken on the real mailbox: a statement of coverage signed three hours
+  earlier was receipted with the current time (the reviewer's R5). This is the fault the erratum of 21 November
+  already corrects in the design; the mailbox itself is unchanged.
