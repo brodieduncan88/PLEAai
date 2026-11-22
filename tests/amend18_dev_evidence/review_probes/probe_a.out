@@ -1,0 +1,25 @@
+tuple one            front_dir=True  MADE engineer_keys=('6df79bdd4448b9a572fa53bcea2e type=tuple len=1
+list one             front_dir=True  MADE engineer_keys=('6df79bdd4448b9a572fa53bcea2e type=tuple len=1
+list subclass one    front_dir=True  MADE engineer_keys=('6df79bdd4448b9a572fa53bcea2e type=tuple len=1
+str subclass one     front_dir=True  MADE engineer_keys=('6df79bdd4448b9a572fa53bcea2e type=tuple len=1
+empty tuple          front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 0 were given, so it is not started)
+empty list           front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 0 were given, so it is not started)
+same twice           front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 2 were given, so it is not started)
+two                  front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 2 were given, so it is not started)
+upper                front_dir=False REFUSED (the engineer key given is not 64 lower-case hex digits, so the front door is not started)
+short                front_dir=False REFUSED (the engineer key given is not 64 lower-case hex digits, so the front door is not started)
+long                 front_dir=False REFUSED (the engineer key given is not 64 lower-case hex digits, so the front door is not started)
+leading space        front_dir=False REFUSED (the engineer key given is not 64 lower-case hex digits, so the front door is not started)
+trailing newline     front_dir=False REFUSED (the engineer key given is not 64 lower-case hex digits, so the front door is not started)
+None in tuple        front_dir=False REFUSED (the engineer key given is not 64 lower-case hex digits, so the front door is not started)
+bytes                front_dir=False REFUSED (the engineer key given is not 64 lower-case hex digits, so the front door is not started)
+bare str             front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 0 were given, so it is not started)
+generator            front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 0 were given, so it is not started)
+set                  front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 0 were given, so it is not started)
+frozenset            front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 0 were given, so it is not started)
+dict                 front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 0 were given, so it is not started)
+None                 front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 0 were given, so it is not started)
+int                  front_dir=False REFUSED (exactly one engineer key is pinned for a front door in this profile; 0 were given, so it is not started)
+fullwidth digits     front_dir=False REFUSED (the engineer key given is not 64 lower-case hex digits, so the front door is not started)
+arabic-indic digit   front_dir=False REFUSED (the engineer key given is not 64 lower-case hex digits, so the front door is not started)
+nested tuple         front_dir=False REFUSED (the engineer key given is not 64 lower-case hex digits, so the front door is not started)

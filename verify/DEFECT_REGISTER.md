@@ -619,3 +619,45 @@ copy on the diagnostic branch is not changed.
 | F1, F2 | retired; properties carried by R30 and F7 | `e1f1082` | the official front run | their earlier results stand |
 
 - No row is closed. Closing is the owner's act.
+
+### G13. 22 November 2026: the owner's decisions on Amendment 17; Amendment 18 in development
+
+- **The owner's decisions** ("Amendment 17 Owner Decisions and Stage B Authorisation"):
+  - D5, D21, D16, D20, D6 and D35 stay internally tested, not closed.
+  - Amendment 17's declaration and results are not changed.
+- **D16, more pinned keys (G9), changed.** The owner approved exactly one engineer key per front door for this
+  assessment profile.
+  - Amendment 18 makes the front door refuse to be made, or to start, with none, more than one, or a key of another
+    form (commit `8c4762f`, `verify/AMEND18_DEV_LOG.md`).
+  - Rotation of the key is not supported in this profile; the readme gives the steps of a new start.
+  - Key-independent revocation is not built.
+  - Status: implemented; development runs pass (F39, F10, F12, F37, F38). Planted defects: 3 of 3 caught. One internal
+    review found nothing critical, high or medium. Official runs: in Amendment 18.
+  - What remains of D16, unchanged:
+    - a revocation neither side has yet recorded can be undone by a put-back;
+    - a database restore with the file undoes later bindings;
+    - revocation by name has its own risks (G9 to G11);
+    - `jobs.json` read by name can be blocked (file-based denial of service);
+    - the gate host may still pin several keys;
+    - the lows of the Amendment 18 review.
+- **The planted-defect coverage of Amendment 17's code.** The final pass ran against `203bdca` (`203bdca7bf4f…`): 37 of
+  37 planted defects caught, 14 not planted. No gap. Amendment 18's change is covered by its own 3.
+- **D6.**
+  - R1 to R13 keep their 53 assertions.
+  - R14, R17, R18, R25 and R26 on the test-only route are accepted as supplementary evidence only.
+  - Their front-door equivalents are specified in `plan/D6_FRONT_DOOR_EQUIVALENTS_2026-11-22.md`, to pass before D6 is
+    closed.
+  - R29 is kept.
+  - The database-role-only false-verdict question (Finding 2) stays open until independently tested.
+- **D20: the owner's question answered** (`verify/AMEND18_DEV_LOG.md` entry 3; `tests/amend18_dev_evidence/d20/`). The
+  rounding case of D20 (more than 28 significant digits, written rounded) cannot change a PASS or a FAIL: where it
+  would, the record's checker refuses the verdict and the gate answers UNKNOWN.
+- **D20-F (new, medium; recorded, not changed): a false PASS through float parsing.**
+  - The check's JSON numbers are read as binary floats.
+  - So a value on the wrong side of the limit, but closer to it than a float resolves (about 1e-14 at 200), is signed
+    PASS (RUN, both comparisons), and the record verifies.
+  - It needs a check that computes more precisely than a float and prints the result as a JSON number.
+  - The correction is likely small, but it is a change of behaviour: it needs its own amendment and the owner's
+    approval.
+- **D21:** a process of the code from before Amendment 17, during a rolling upgrade, stops a budget's runs (G7, L-d).
+  Recorded again as an availability limit; not changed.

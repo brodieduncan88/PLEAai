@@ -1,0 +1,13 @@
+order check: last four entries: ['more than one engineer key accepted', 'an engineer key of another form accepted', "the front door's start does not check its keys", 'a move not written when it cannot be recorded']
+
+== CONTROL (unmutated)
+{"made": {"one": ["made", true], "none": ["refused", true], "two": ["refused", true], "the same twice": ["refused", true], "upper case": ["refused", true], "short": ["refused", true], "not text": ["refused", true]}, "front_dir_created": {"one": true, "none": false, "two": false, "the same twice": false, "upper case": false, "short": false, "not text": false}, "started": {"none": [2, true, false, false], "two": [1, true, false, true], "the same twice": [1, true, false, true], "upper case": [1, true, false, true]}, "check1": true, "check2_without_port": true}
+
+== more than one engineer key accepted: count=1 planted=True compiles=True
+{"made": {"one": ["made", true], "none": ["refused", true], "two": ["made", false], "the same twice": ["made", false], "upper case": ["refused", true], "short": ["refused", true], "not text": ["refused", true]}, "front_dir_created": {"one": true, "none": false, "two": true, "the same twice": true, "upper case": false, "short": false, "not text": false}, "started": {"none": [2, true, false, false], "two": [1, false, true, false], "the same twice": [1, false, true, false], "upper case": [1, true, false, true]}, "check1": false, "check2_without_port": false}
+
+== an engineer key of another form accepted: count=1 planted=True compiles=True
+{"made": {"one": ["made", true], "none": ["refused", true], "two": ["refused", true], "the same twice": ["refused", true], "upper case": ["made", false], "short": ["made", false], "not text": ["refused", true]}, "front_dir_created": {"one": true, "none": false, "two": false, "the same twice": false, "upper case": true, "short": true, "not text": false}, "started": {"none": [2, true, false, false], "two": [1, true, false, true], "the same twice": [1, true, false, true], "upper case": [1, false, true, false]}, "check1": false, "check2_without_port": false}
+
+== the front door's start does not check its keys: count=1 planted=True compiles=True
+{"made": {"one": ["made", true], "none": ["refused", true], "two": ["refused", true], "the same twice": ["refused", true], "upper case": ["refused", true], "short": ["refused", true], "not text": ["refused", true]}, "front_dir_created": {"one": true, "none": false, "two": false, "the same twice": false, "upper case": false, "short": false, "not text": false}, "started": {"none": [2, true, false, false], "two": [1, false, true, true], "the same twice": [1, false, true, true], "upper case": [1, false, true, true]}, "check1": true, "check2_without_port": false}

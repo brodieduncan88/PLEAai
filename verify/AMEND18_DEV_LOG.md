@@ -123,3 +123,28 @@ that returns the bytes a check prints. Each probe's expectations were written in
     numbers as decimals (`json.loads(..., parse_float=decimal.Decimal)` in `baseline.evaluate`). It is not made here:
     it changes behaviour, so it needs its own amendment and the owner's approval. The owner asked that this exercise
     not be broadened into a numerical redesign.
+
+## Entry 4. The review, what is done with it, and the declaration
+
+- The review of `ba82e66..8c4762f` is kept as returned in `verify/reviews/AMEND18_REVIEW_8C4762F_2026-11-22.md`, with its
+  probes in `tests/amend18_dev_evidence/review_probes/`.
+  - It found nothing critical, high or medium. Every one of its predictions held.
+  - It confirms the change does what point 1 of the owner's decision asks, and weakens nothing earlier.
+  - It confirms that all 51 earlier planted-defect texts plant identically at `203bdca`, `ba82e66` and `8c4762f`.
+- **L-1, accepted (documentation only).** The readme's steps for replacing a key were incomplete. It now says:
+  - a replaced key is a new start;
+  - record every revocation while the old key is pinned;
+  - baseline again under the new key;
+  - give the gate host the new key;
+  - enrol new names;
+  - never pin the old key again.
+- **L-2, recorded, not changed.** F39's clause "binds no port" is looked at after the process has ended, so it cannot
+  fail. The defects are caught by F39's other clauses (the review, probe C). The fixed port 8979 could meet another
+  user of it.
+- **L-3, recorded, not changed.** For an `engineer_keys` that is neither a list nor a tuple, the refusal says "0 were
+  given". It fails closed; only the wording is wrong.
+- **L-4.** The register is updated in G13.
+- **Informational, recorded.** The check is of form only (a 64-hex string that is not a valid key admits nobody). The
+  gate host pins its own keys through `VERIFY_ENGINEER_KEYS` and may hold several; the owner's decision is about the
+  front door, and this is not changed.
+- Under entry 2's rule no further review follows. The declaration is `verify/DECLARED_AMEND18.md`.

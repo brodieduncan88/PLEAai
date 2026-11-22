@@ -1,0 +1,2 @@
+pinned B: usable={'job-a': False, 'job-r': False} admit(job-a)=None record_revocations=0
+pinned A: usable={'job-a': True, 'job-r': True} admit(job-a)='raised StateUnavailable' record_revocations=raised StateUnavailable

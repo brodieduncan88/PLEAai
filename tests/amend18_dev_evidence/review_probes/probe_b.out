@@ -1,0 +1,9 @@
+none                 exit=2        0.3s front_dir=False traceback=False last=front_door.py: error: the following arguments are required: --engineer-key
+same twice           exit=1        0.3s front_dir=False traceback=False last=front door: not started: exactly one engineer key is pinned for a front door in this profile; 2 were given, so it is not started
+two                  exit=1        0.3s front_dir=False traceback=False last=front door: not started: exactly one engineer key is pinned for a front door in this profile; 2 were given, so it is not started
+upper                exit=1        0.2s front_dir=False traceback=False last=front door: not started: the engineer key given is not 64 lower-case hex digits, so the front door is not started
+leading space        exit=1        0.3s front_dir=False traceback=False last=front door: not started: the engineer key given is not 64 lower-case hex digits, so the front door is not started
+empty                exit=1        0.3s front_dir=False traceback=False last=front door: not started: the engineer key given is not 64 lower-case hex digits, so the front door is not started
+comma-joined         exit=1        0.3s front_dir=False traceback=False last=front door: not started: the engineer key given is not 64 lower-case hex digits, so the front door is not started
+abbreviated second   exit=1        0.2s front_dir=False traceback=False last=front door: not started: exactly one engineer key is pinned for a front door in this profile; 2 were given, so it is not started
+one valid            exit=1        0.3s front_dir=True  traceback=True  last=FileNotFoundError: [Errno 2] No such file or directory

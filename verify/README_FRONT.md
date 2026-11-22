@@ -145,8 +145,18 @@ revoked under one would not cover another key's enrolment of the same name.
 
 **Rotation of the engineer key is not supported in this assessment profile.** A front door started with a different key
 does not read the bindings or baselines signed by the earlier one, so its jobs are refused; nothing moves a job to a new
-key. Should a key have to be replaced, revoke its jobs under it first, from a list of its job names kept outside HOME
-(jobs.json and the log can be changed by whoever can write HOME), and enrol new names under the new key.
+key. Should a key have to be replaced, it is a new start, not a rotation (after the review of Amendment 18, L-1):
+
+1. While the old key is still the one pinned, revoke every job under it, from a list of its job names kept outside HOME
+   (jobs.json and the log can be changed by whoever can write HOME), and see each revocation recorded: the console ends
+   with status 0. A revocation the console could not record is recorded only by a front door that pins the old key, so
+   it must be recorded before the switch.
+2. Baseline every requirement again under the new key (`verify_ctl.py baseline`): a card names its engineer's key, so each
+   new baseline has a new hash, and its budget is provisioned anew.
+3. Give the gate host the new key (it pins engineer keys itself, through `VERIFY_ENGINEER_KEYS`), and start the front door
+   with the new key alone.
+4. Enrol new job names under the new key. Never pin the old key again: a revocation left unrecorded under it could then
+   be undone by putting an earlier binding back.
 
 The engineer, for each job, after baselining with `verify_ctl.py baseline`:
 
