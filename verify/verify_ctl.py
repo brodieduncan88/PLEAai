@@ -44,7 +44,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from plea_gateway import RootExists, Store                          # noqa: E402
 from baseline import FORMAT, BaselineInvalid, card_hash, evaluate, root_for, sha256_hex, validate_card   # noqa: E402
 from verify_record import Key, acknowledgement_message, attempts_of, build, load_envelope, now, sign_envelope   # noqa: E402
-from verify_client import OUTCOME_WORDS, met_lines                  # noqa: E402  (Amendment 9: a pass is shown as the declared check met)
+from service_client import OUTCOME_WORDS, met_lines                 # noqa: E402  (Amendment 9: a pass is shown as the declared check met; Amendment 17: from service_client)
 import notices                                                       # noqa: E402  (Amendment 7: notices the service kept undelivered)
 import check_record                                                  # noqa: E402  (Amendment 17, D20: controls put to the record's checker)
 

@@ -109,3 +109,59 @@ the owner's rules VP-1 to VP-6 (`plan/GOVERNANCE_NOTE_2026-11-22.md`). Nothing h
 - **Kept, and changed.** Kept in `tests/amend17_dev_evidence/r32_run2/`, with the diff. The two enrolments now give the
   reason. No predicate is changed.
 - **Declared before run 3.** The test file has SHA-256 `0fa75b1a49ba9bc6b099c9dfaa7851c8839eb0ef444186ef75ca797d31fdfc9b`. Expected: R32, R8 and R10 pass.
+
+## Entry 8. A4 (D6, D35): the first client retired, and the gate suite moved to the front door
+
+- **Code.**
+  - `verify/verify_client.py` refuses to run (exit 4) and names the route.
+  - Its shared part, used by the front door and the console, is `verify/service_client.py`, unchanged in what it does,
+    without the assistant's transport (`submit`) and without a configuration file of its own.
+  - `deploy.Services.client_config` and `submit`, which put the gateway's database credential in an assistant's
+    workspace, raise.
+  - The readmes' legacy lines are corrected (D35).
+  - `verify/experiment/` used the first client; its results are kept, and the readme says it cannot be run again as it
+    stands.
+- **Tests.** Every gate test reached the service through the first client, not only R1 to R13, because they share one
+  helper (`Run`). So all of them move to the front door: `Run` makes a front-door deployment, enrols a job, and submits by
+  `front_client.py`. Besides `Run`:
+  - R10, R15, R18 and R27 enrol a job where they made a workspace.
+  - R18 and R24 read the front door's view and status.
+  - R18 and R23 read the first client's words from `service_client`.
+  - Journals are the front door's.
+  - R11 is rewritten, with its five assertions kept (two reworded to name the front door). What the workspace's credential
+    could do is now tested with the service's own role and the front door's certificate.
+  - R24's title names the front door's status in place of the first client's.
+  - F1 and F2 are retired; their properties are carried by R30 and F7 (comment in the front suite).
+- **Declared before the first run of the migrated suites (VP-5).**
+  - `tests/verify_tests.py` has SHA-256 `3b9ad3985aac286e2a49c4d310bdb84c27dbf59cb285710c4bbd3bec14db01fa`; `tests/verify_front_tests.py` has `5e158ba226f6813f7faa70a238dfb65cef30329ceaf8c0ec2bba9279966699bb`.
+  - Expected: the gate suite 32 of 32; the front suite 35 of 35 (F3 to F37).
+  - A test that does not pass is kept as it ran, and reported here before anything in it is changed.
+
+## Entry 9. The first run of the migrated suites, and what was changed after it
+
+- **Run 1, as declared in entry 8.**
+  - Gate suite 27 of 32: R1 to R13 passed through the front door, and R14, R17, R18, R25 and R26 failed.
+  - Front suite 34 of 35: F12 failed.
+  - Kept in `tests/amend17_dev_evidence/a4_run1/`, with both test files as run and `SHA256SUMS`.
+- **Why the five gate tests failed.** In each, what the gate signed and recorded was as before; the difference was the way in.
+  - R14: the front door words a missing card in its own terms ("NO USABLE BASELINE IS HELD FOR THIS JOB").
+  - R17: one of its designs is not an object, and the front door refuses it before the gate sees it, so its counts were
+    one short.
+  - R18: one check is about the first client's own answer.
+  - R25 and R26: they speak to the witness with certificates that the plain deployment admits and a front-door
+    deployment does not.
+- **Changed (VP-4; `CHANGE_verify_tests.diff` there).**
+  - These five keep the plain deployment and reach it as the service's own caller: `tests/service_route.py`, the first
+    client's code exactly as at `1b132e2` (SHA-256 `1cbfc5c09fa53fc46159abb75a2dd241782bece71aa05fb8414770199de23949`), run as a separate process with a configuration the test
+    writes.
+  - It stands for the service's own role (CAP-DB). It is never deployed or given to an assistant.
+  - No check of the five is changed.
+  - R1 to R13, R15, R23, R24 and R27 stay on the front door, where they passed.
+  - The assistant's route for the inputs of the five is tested by the front suite (F7: a design that is not an object;
+    F21: the words when no usable card is held).
+  - Open for the owner: whether these five should be rewritten for the front door as well.
+- **F12 failed for a fault in A2's code**, not the test. `Front()` read the certificate authority from its configuration
+  when made, and F12 makes one in its own process with a configuration that holds only the journal. The authority is now
+  read when a binding is first put to the record. Without it, nobody is admitted (StateUnavailable, then 503).
+- **Declared before run 2 (VP-5).** `tests/verify_tests.py` has SHA-256 `b028a3631da5074f5253235fc982da7226fb975568776668e8e5afea3baedbeb`. Expected: R14, R17, R18, R25, R26 and F12
+  pass.

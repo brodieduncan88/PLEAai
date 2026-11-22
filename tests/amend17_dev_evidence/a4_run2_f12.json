@@ -1,0 +1,58 @@
+{
+ "tests": {
+  "F12": {
+   "title": "The service dying part-way through a run leaves it counted, without a verdict, and never run again.",
+   "ok": true,
+   "checks": {
+    "the host died during the run (exit 137) and the tool did not say it passed": true,
+    "asked again, twice, the answer is UNKNOWN: interrupted, not met": true,
+    "the check was started once for that design and never produced a verdict": true,
+    "the record shows it INTERRUPTED and counted, and that design is not verified": true,
+    "a different design can still be verified": true,
+    "an error that is not the gate's signed \"unknown\" is reported as no verdict, not as an interrupted run (the front door's own code, called directly)": true
+   },
+   "evidence": {
+    "during": [
+     true,
+     "The verification service could not be reached (RemoteDisconnected).  NOT VERIFIE"
+    ],
+    "host_exit": 137,
+    "again": [
+     false,
+     "UNKNOWN: THE RUN WAS INTERRUPTED",
+     "INTERRUPTED",
+     false
+    ],
+    "again2": "UNKNOWN: THE RUN WAS INTERRUPTED",
+    "tool_calls_for_design": 1,
+    "verdicts_for_design": 0,
+    "outcomes": [
+     "INTERRUPTED",
+     "PASS"
+    ],
+    "released": {
+     "design_sha256": "3d052bbd639f6e6ef2e6994aaf59c480fae29d84702895123feecb15b625dc34",
+     "met": false,
+     "seen": true
+    },
+    "other": "DECLARED CHECK MET",
+    "stray": [
+     503,
+     "UNAVAILABLE",
+     null,
+     0
+    ],
+    "status_says": [
+     "Official runs 2: 1 met, 0 not met, 1 unknown."
+    ],
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 6.4
+  }
+ },
+ "passed": 1,
+ "of": 1,
+ "seconds": 6.4,
+ "PASS": true
+}

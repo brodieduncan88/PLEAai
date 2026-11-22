@@ -13,7 +13,7 @@ Each call is one HTTPS request.  Nothing here retries.  If the service cannot be
 asking again for the same design is safe, because the service returns the verdict it already has and never runs the
 check a second time.
 
-Exit status, as verify_client.py: 0 the declared check was met; 2 FAIL; 3 UNKNOWN or interrupted; 4 refused or the
+Exit status, as the first client (verify_client.py, retired by Amendment 17) gave it: 0 the declared check was met; 2 FAIL; 3 UNKNOWN or interrupted; 4 refused or the
 service could not be reached.  Nothing this command prints is the record.
 
 Standard library only, so this file and plea_verify_mcp.py can be copied to the assistant's machine on their own.

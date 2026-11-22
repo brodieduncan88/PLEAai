@@ -113,7 +113,7 @@ unchanged. `DECLARED_AMEND15.md` has the list, and the open items.
 | `front_client.py` | The assistant's side as a command: `show`, `submit`, `status`. Standard library only. |
 | `plea_verify_mcp.py` | The same three as MCP tools over stdio, and the signed baseline as a read-only resource. Standard library only. |
 | `deploy_front.py` | One service with a front door on one machine, for the tests and the demonstration. |
-| `../tests/verify_front_tests.py` | Tests F1 to F16. |
+| `../tests/verify_front_tests.py` | Tests F3 to F37 (F3 to F16 as declared first, F17 to F36 by Amendments 2 to 15, F37 by Amendment 17). F1 and F2 ran the first plug-in, which Amendment 17 retires; their properties are carried by R30 and F7. |
 
 `DECLARED_FRONT.md` states what the tests were expected to show before the official run; `REPORT_FRONT.md` gives
 the results.

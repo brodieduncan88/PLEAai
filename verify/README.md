@@ -26,7 +26,8 @@ evidence: nobody outside has reviewed or attacked it.
 | --- | --- |
 | `baseline.py` | The requirement card, the design space, and the decision: PASS, FAIL or UNKNOWN with a reason. A pass is signed as PASS and shown to people as the declared check met. |
 | `verify_tools.py` | The one tool the gate host runs. Never refunds a failure. Writes the engineer's notice. |
-| `verify_client.py` | The assistant's command: `show`, `submit`, `status`. Holds no signing key. |
+| `verify_client.py` | Retired by Amendment 17 (22 November 2026): it refuses to run. It was the first plug-in's assistant-side command, and it held the gateway's database credential in the assistant's workspace. The assistant's route is the front door (`front_client.py`, `plea_verify_mcp.py`; see `README_FRONT.md`). |
+| `service_client.py` | Amendment 17: the service's own reading of one baseline's runs and words, moved here from the first client; used by the front door and the console, never given to an assistant. |
 | `verify_ctl.py` | The engineer's console: baseline, revise, acknowledge, record. A second baseline for a requirement it already holds is a revision, or needs a reason that goes into the signed card. |
 | `verify_record.py` | The signed baseline envelope and the signed record. |
 | `check_record.py` | Checks a record offline. Stands alone: standard library and `cryptography` only. With `--checkpoint`, says whether the record is current against a checkpoint the witness signed. |
@@ -34,10 +35,10 @@ evidence: nobody outside has reviewed or attacked it.
 | `courier.py` | Notices to the engineer that the service does not write: reads only the witness, signs each notice with its own key, delivers it to the engineer's mailbox. |
 | `mailbox_service.py` | The engineer's mailbox: keeps each notice a courier delivers and signs a receipt for it. |
 | `sandbox.py` | The disposable sandbox each run of a check is made in, and thrown away after. |
-| `deploy.py` | One service on one machine, for the demo, the tests and the trials. |
+| `deploy.py` | One service on one machine, for the demo, the tests and the trials. Since Amendment 17 it writes no assistant workspace. |
 | `cases/pump-station-submain/` | The worked case: a 400 V sub-main that no allowed cable can make comply. |
-| `experiment/` | The trial of what assistants do with that job, with and without the service. |
-| `../tests/verify_tests.py` | Tests R1 to R13 of the plug-in itself. |
+| `experiment/` | The trial of what assistants do with that job, with and without the service. It was run with the first client, which is retired; its results are kept as they were, and it cannot be run again as it stands. |
+| `../tests/verify_tests.py` | Tests R1 to R32 of the gate and the service (R1 to R13 as declared first, R14 to R29 by Amendments 2 to 15, R30 to R32 by Amendment 17). Since Amendment 17 every test acts as the assistant through the front door, not the first client. |
 
 ## Is this the latest record? (Amendment 10, 19 November 2026)
 

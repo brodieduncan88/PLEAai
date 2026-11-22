@@ -4,9 +4,9 @@ Services(directory) makes a fresh deployment under `directory`: a certificate au
 the responsible engineer's key, and VERIFY_HOME.  start() runs the witness service (v1.2.1 with the readings of
 verification Amendments 10 and 11), the v1.2.1 gate host, unchanged, and the engineer's mailbox (Amendment 11), under
 mutual TLS, with the gate host loading verify_tools.  courier() runs one pass of the courier (Amendment 11), which reads
-only the witness and delivers to the mailbox.  client_config() writes what an assistant's workspace
-needs to call verify_client.py: the gateway database credential, the client certificate, the public keys and a copy
-of the signed baseline.
+only the witness and delivers to the mailbox.  Amendment 17 (D6): client_config() and submit(), which gave an assistant's
+workspace the gateway's database credential for the first client (verify_client.py), are retired and refuse; an assistant
+is given a job folder for the front door (deploy_front.py).
 
 What one machine does not show.  Here the gate, the witness, the database, the engineer's key and the assistant all
 run under one operating-system account, so the separation between them is by process and credential, not by machine.
@@ -127,20 +127,13 @@ class Services:
         return verify_ctl.make_baseline(self.home, source, draft, self.engineer, runs, alongside_reason=alongside_reason)    # Amendment 9: a second one needs a reason
 
     def client_config(self, workspace, baseline_hash: str) -> pathlib.Path:
-        """Write WORKSPACE/.verify/ (config, baseline copy, journal) and return the config path."""
-        d = pathlib.Path(workspace) / '.verify'; d.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(self.home / 'baselines' / baseline_hash / 'baseline.json', d / 'baseline.json')
-        cfg = {'local_dsn': LOCAL_DSN, 'witness_url': f'https://127.0.0.1:{self.ports["witness"]}', 'witness_keys': [self.keys['witness']],
-               'gate_url': f'https://127.0.0.1:{self.ports["host"]}', 'gate_key': self.keys['gate'], 'engineer_key': self.keys['engineer'],
-               'tls': {'ca': self.pki['ca'], 'cert': self.pki['governor'][0], 'key': self.pki['governor'][1]}, 'baseline': 'baseline.json', 'journal': 'submissions.jsonl'}
-        (d / 'config.json').write_text(json.dumps(cfg, indent=1) + '\n')
-        return d / 'config.json'
+        """Retired by Amendment 17 (D6): this wrote the gateway's database credential into an assistant's workspace, for the first
+        client.  No deployment does that now; an assistant is given a job folder by front_ctl.enrol (deploy_front.FrontServices)."""
+        raise RuntimeError('retired by Amendment 17 (D6): no assistant workspace is given a database credential; enrol a job (deploy_front)')
 
     def submit(self, config, design) -> tuple[int, str]:
-        """Run the assistant's command as the assistant would: (exit status, what it printed)."""
-        f = pathlib.Path(config).parent / 'design_submitted.json'; f.write_text(json.dumps(design))
-        out = subprocess.run([PY, '-B', str(HERE / 'verify_client.py'), '--config', str(config), 'submit', str(f)], capture_output=True, text=True, timeout=120)
-        return out.returncode, out.stdout + out.stderr
+        """Retired by Amendment 17 (D6), with the first client.  Use deploy_front.FrontServices.cli."""
+        raise RuntimeError('retired by Amendment 17 (D6): the first client is retired; submit through the front door (deploy_front)')
 
     def checkpointer(self):
         """Asks the witness, with the keeper's certificate, for the checkpoint a record carries.  (Amendment 10.)"""

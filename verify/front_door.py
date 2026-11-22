@@ -67,7 +67,7 @@ from plea_gateway import (BudgetExhausted, GateRefusedRun, GovernedError, Held, 
                           RequestKeyReused, Store, Stopped, TransportError, UnknownRoot, WitnessUnavailable)
 from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args, wrap_server   # noqa: E402
 from baseline import HEADLINE, canonical, design_hash, design_lines, face, root_for   # noqa: E402  (design_hash: Amendment 17)
-from verify_client import Client, alongside_lines                    # noqa: E402
+from service_client import Client, alongside_lines                   # noqa: E402  (Amendment 17: moved from verify_client, which is retired)
 from verify_record import PENDING_PHASES, arguments_for, load_envelope, request_key, request_keys, signed_by   # noqa: E402  (request_keys: Amendment 17)
 import notices                                                       # noqa: E402  (Amendment 7: a notice the inbox cannot take is kept, not lost)
 import front_state                                                   # noqa: E402  (Amendment 17, D16)
@@ -185,7 +185,7 @@ def parse_design(raw: bytes):
 
 # ---------------------------------------------------------------------------------------------------- what is shown
 def requirement_text(card: dict, baseline_hash: str, state: str = 'OPEN') -> str:
-    """The baselined requirement as an engineer reads it.  The wording of verify_client.Client.show, without its command line."""
+    """The baselined requirement as an engineer reads it.  The wording of service_client.Client.show (formerly verify_client's), without its command line."""
     req, chk, eng = card['requirement'], card['check'], card['responsible_engineer']
     L = [f"BASELINED REQUIREMENT  {req['id']} rev {req['revision']}: {req['title']}"]
     if state == 'STOPPED':
@@ -359,7 +359,7 @@ def storage_body(card, baseline_sha256: str, why: str, engineer: bool) -> str:
 
 
 class ServiceClient(Client):
-    """verify_client.Client, unchanged in what it does, built from what the service holds and not from a workspace file.
+    """service_client.Client (the first client's reading of runs, moved there by Amendment 17), unchanged in what it does, built from what the service holds and not from a workspace file.
     One is made per request, for the baseline the caller's job is bound to.  The baseline's hash and the budget's name
     come from the binding the engineer signed.  The card comes from the stored baseline, and is None if that file is
     no longer the one the engineer signed: nothing is shown from it, and a design sent is still decided by the gate."""
@@ -407,12 +407,18 @@ class Front:
         # Amendment 17 (D16): the names this front door's jobs have in the database's record of bindings.  Job names are unique
         # within one front door, whose jobs' certificates one authority issues; the record is keyed by that authority's
         # certificate as well, so two front doors on one database never share a job's record.
-        self.realm = hashlib.sha256(pathlib.Path(cfg['tls']['ca']).read_bytes()).hexdigest()[:32]
+        self._realm = None
 
     # ------------------------------------------------------------------ who is asking
     def state_name(self, job: str) -> str:
-        """The job's name in the database's record of bindings (Amendment 17, D16)."""
-        return f'{self.realm}:{job}'
+        """The job's name in the database's record of bindings (Amendment 17, D16).  Without the authority's certificate in the
+        configuration no job can be named in the record, and nobody is admitted (StateUnavailable)."""
+        if self._realm is None:
+            try:
+                self._realm = hashlib.sha256(pathlib.Path(self.cfg['tls']['ca']).read_bytes()).hexdigest()[:32]
+            except (KeyError, TypeError, OSError) as exc:
+                raise front_state.StateUnavailable(f'no certificate authority to key the record by ({type(exc).__name__})') from None
+        return f'{self._realm}:{job}'
 
     def admit(self, name, der) -> dict | None:
         """The job's binding, if this certificate is the one enrolled for this name, the job is not revoked, and a

@@ -8,7 +8,8 @@ R1 to R13 are as they were declared.
 
 Each test makes a fresh deployment (verify/deploy.py: new keys, the released witness service and gate host under mutual
 TLS, the gate host loading verify_tools), baselines the self-test fixture in tests/verify_case/ as the responsible
-engineer would, and then acts as the assistant through verify_client.py, exactly as an assistant's shell would.  The
+engineer would, and then acts as the assistant through the front door, by front_client.py with the job folder the engineer
+enrolled, exactly as an assistant's shell would (Amendment 17: the first client, verify_client.py, is retired).  The
 independent measures are the gate tool's ledger and the engineer's inbox, both outside every PLEA store.
 
 A test passes only if every named check in it is true.  A harness or service error is a failed test.
@@ -38,7 +39,9 @@ import baseline as B                    # noqa: E402
 import check_record                     # noqa: E402
 import deploy                           # noqa: E402
 import verify_ctl                       # noqa: E402
-import verify_client                    # noqa: E402  (Amendment 9)
+import service_client                   # noqa: E402  (Amendment 9's view; Amendment 17: the first client's shared part, moved here)
+import front_ctl                        # noqa: E402  (Amendment 17)
+from front_client import FrontClient    # noqa: E402  (Amendment 17)
 import front_door                       # noqa: E402  (Amendment 9: its view of the requirement, in R23)
 import checkpoints                      # noqa: E402  (Amendment 10)
 import courier                          # noqa: E402  (Amendment 11)
@@ -66,24 +69,63 @@ def draft(**changes) -> dict:
     return d
 
 
-class Run:
-    """One deployment with one baseline and one assistant workspace."""
+def job_name(tag: str) -> str:
+    return 'job-' + re.sub(r'[^a-z0-9-]', '-', tag.lower())[:36]
 
-    def __init__(self, tag: str, crash_at: str | None = None, card: dict | None = None):
-        self.s = deploy.Services(OUT / tag).start(crash_at)
+
+def service_config(s, folder, baseline_hash: str) -> pathlib.Path:
+    """TEST HARNESS (Amendment 17): the configuration of the service's own caller (tests/service_route.py), written by the test into
+    its own folder.  It is what deploy.Services.client_config wrote before Amendment 17 retired it: the gateway's database credential
+    (CAP-DB), a client certificate, the public keys and a copy of the signed baseline.  No assistant is given it."""
+    d = pathlib.Path(folder) / '.verify'; d.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(s.home / 'baselines' / baseline_hash / 'baseline.json', d / 'baseline.json')
+    cfg = {'local_dsn': deploy.LOCAL_DSN, 'witness_url': f'https://127.0.0.1:{s.ports["witness"]}', 'witness_keys': [s.keys['witness']],
+           'gate_url': f'https://127.0.0.1:{s.ports["host"]}', 'gate_key': s.keys['gate'], 'engineer_key': s.keys['engineer'],
+           'tls': {'ca': s.pki['ca'], 'cert': s.pki['governor'][0], 'key': s.pki['governor'][1]}, 'baseline': 'baseline.json', 'journal': 'submissions.jsonl'}
+    (d / 'config.json').write_text(json.dumps(cfg, indent=1) + '\n')
+    return d / 'config.json'
+
+
+def service_run(config, action: str, design=None) -> tuple[int, str]:
+    """TEST HARNESS (Amendment 17): the service's own caller, run as the first client was: (exit status, what it printed)."""
+    cmd = [PY, '-B', str(HERE / 'service_route.py'), '--config', str(config), action]
+    if design is not None:
+        f = pathlib.Path(config).parent / 'design_submitted.json'; f.write_text(json.dumps(design)); cmd.append(str(f))
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    return out.returncode, out.stdout + out.stderr
+
+
+class Run:
+    """One deployment, one baseline, and one way in for the assistant.
+
+    Amendment 17 (22 November 2026, D6): by default the assistant acts through the front door, by the command an assistant's shell
+    runs (front_client.py, with the job folder the engineer enrolled), and no longer through the first client, which is retired.
+    `ws` is then the job folder, and the record is built with the front door's journal.  route='service' is for the five tests
+    (R14, R17, R18, R25, R26) about what the gate, its notices, records and witness do under the plain deployment: they reach it as the
+    service's own caller (tests/service_route.py, CAP-DB), as they did before through the first client; `ws` is then that caller's
+    folder, with its journal."""
+
+    def __init__(self, tag: str, crash_at: str | None = None, card: dict | None = None, route: str = 'front'):
+        self.route = route
+        self.s = (deploy_front.FrontServices if route == 'front' else deploy.Services)(OUT / tag).start(crash_at)
         try:
             self.env = self.s.baseline(CASE, card or draft())
+            self.h = self.env['baseline_sha256']
+            if route == 'front':
+                self.ws = self.s.enrol(job_name(tag), self.h)
+            else:
+                self.ws = OUT / tag / 'service_route'; self.cfg = service_config(self.s, self.ws, self.h)
         except BaseException:
             self.s.stop(); raise                                         # a test that cannot baseline leaves no service behind (Amendment 12)
-        self.h = self.env['baseline_sha256']
-        self.ws = OUT / tag / 'workspace'
-        self.cfg = self.s.client_config(self.ws, self.h)
 
     def submit(self, design):
-        return self.s.submit(self.cfg, design)
+        return self.s.cli(self.ws, 'submit', design) if self.route == 'front' else service_run(self.cfg, 'submit', design)
+
+    def journal(self) -> pathlib.Path:
+        return front_ctl.journal(self.s.home) if self.route == 'front' else self.ws / '.verify' / 'submissions.jsonl'
 
     def record(self, h=None, ws=None):
-        return self.s.record(h or self.h, [(ws or self.ws) / '.verify' / 'submissions.jsonl'])
+        return self.s.record(h or self.h) if self.route == 'front' else self.s.record(h or self.h, [self.journal()])
 
     def checked(self, design=None, h=None):
         ok, checks, s = check_record.verify(self.record(h), self.s.keys, design)
@@ -375,10 +417,10 @@ def r10():
         env_b = verify_ctl.revise(r.s.home, src, relaxed, r.s.engineer, r.h, 'Customer lowered the operating temperature (CR-17).')
         on_old = r.submit({'material': 'PA66-GF30', 'wall_mm': 3.5, 'mode': 'normal'})                 # the superseded baseline takes no more runs
         calls_before = r.calls()
-        ws_b = OUT / 'R10' / 'workspace_b'; cfg_b = r.s.client_config(ws_b, env_b['baseline_sha256'])
-        on_new = r.s.submit(cfg_b, BAD)
+        ws_b = r.s.enrol('job-r10-b', env_b['baseline_sha256'])                              # Amendment 17: a job for the revision, through the front door
+        on_new = r.s.cli(ws_b, 'submit', BAD)
         ok_a, why_a, s_a = r.checked()
-        ok_b, checks_b, s_b = check_record.verify(r.s.record(env_b['baseline_sha256'], [ws_b / '.verify' / 'submissions.jsonl']), r.s.keys)
+        ok_b, checks_b, s_b = check_record.verify(r.s.record(env_b['baseline_sha256']), r.s.keys)
         text_b = check_record.render(ok_b, checks_b, s_b)
         e.update(first=first[0], no_reason=no_reason, weak_control=bad_control, on_old=(on_old[0], head(on_old[1])), on_new=(on_new[0], head(on_new[1])), supersedes=env_b['card']['supersedes'],
                  rev_a=dict(verifies=ok_a, status=s_a.get('status'), not_met=s_a.get('not_met')), rev_b=dict(verifies=ok_b, status=s_b.get('status')),
@@ -397,6 +439,12 @@ def r10():
 
 def r11():
     """What the assistant's side holds cannot do the engineer's part."""
+    # Amendment 17 (D6).  As first declared, this test acted as the first client, whose workspace held the gateway's database
+    # credential and a copy of the baseline.  That client is retired.  Each of its five assertions is kept: those about what the
+    # assistant's side can do are made through the front door with the job folder, which is all the assistant's side now holds;
+    # those about what the database credential can do are made with the service's own role (CAP-DB), which is stronger than what
+    # the workspace held, since the front door's certificate is used as well.  The words of the first, third and fifth checks
+    # are unchanged; the second and fourth name the front door in place of the client.
     r = Run('R11'); e = {}
     try:
         local = Store(deploy.LOCAL_DSN); root = B.root_for(r.env['card'])
@@ -413,31 +461,41 @@ def r11():
         except Exception as exc:
             stop = f'refused ({type(exc).__name__})'
         still_runs = r.submit(BAD)
-        # a relaxed baseline of the assistant's own making, properly signed with its own key, used as its client's copy
-        mine = Key(); env = json.loads((r.ws / '.verify' / 'baseline.json').read_text())
+        # a relaxed baseline of the assistant's own making, properly signed with its own key
+        mine = Key(); env = json.loads((r.s.home / 'baselines' / r.h / 'baseline.json').read_text())
         env['card']['criteria'][0]['limit'] = '150'; env['card']['responsible_engineer']['key'] = mine.public_hex
         env['baseline_sha256'] = B.card_hash(env['card']); env['signature'] = {'signer': mine.public_hex, 'signature': mine.sign(envelope_message(env['card'], env['controls_run']))}
-        ws2 = OUT / 'R11' / 'workspace_forged'; cfg2 = r.s.client_config(ws2, r.h)
-        (ws2 / '.verify' / 'baseline.json').write_text(json.dumps(env))
-        pinned_engineer = r.s.submit(cfg2, BAD)                                                   # the client still pins the real engineer's key
-        cfg = json.loads(cfg2.read_text()); cfg['engineer_key'] = mine.public_hex; cfg2.write_text(json.dumps(cfg))
-        own_key_pinned = r.s.submit(cfg2, BAD)                                                    # the client now trusts the forger's key: is anything run?
+        held = sorted(p.name for p in pathlib.Path(r.ws).iterdir())                              # all the assistant's side is given
+        client = FrontClient(r.ws)
+        sent_with = {'baseline': client.request('POST', '/submit', {'design': BAD, 'baseline': env}),
+                     'baseline_sha256': client.request('POST', '/submit', {'design': BAD, 'baseline_sha256': env['baseline_sha256']})}
+        forged_root = B.root_for(env['card'])
+        try:                                                                                     # the service's own role, on a baseline nobody provisioned
+            v = service_governor(r.s, forged_root).attempt(request_key(arguments_for(env['baseline_sha256'], BAD)), 'verify', **arguments_for(env['baseline_sha256'], BAD))
+            no_budget = ('answered', v.get('verdict') if isinstance(v, dict) else repr(v)[:60])
+        except Exception as exc:
+            no_budget = ('refused', type(exc).__name__)
         calls = r.calls(); ok, why, s = r.checked()
         # the control credential in the wrong hands as well: a budget is provisioned for the forger's baseline and its files are put where the gate looks
         d2 = r.s.home / 'baselines' / env['baseline_sha256']; d2.mkdir()
         for name in ('check.py', 'materials.csv'):
             shutil.copyfile(CASE / name, d2 / name)
         (d2 / 'baseline.json').write_text(json.dumps(env))
-        Store(verify_ctl.CONTROL_DSN).new_root(B.root_for(env['card']), 10, 0)
-        with_control = r.s.submit(cfg2, BAD)                                                     # 180 C against the forger's limit of 150 C would pass
-        e.update(forged_baseline_with_a_budget=(with_control[0], head(with_control[1])[:70]))
-        e.update(provision_with_gateway_credential=provision, stop_with_gateway_credential=stop, still_runs=still_runs[0], forged_copy=(pinned_engineer[0], head(pinned_engineer[1])[:70]),
-                 forged_copy_own_key=(own_key_pinned[0], head(own_key_pinned[1])[:70]), tool_calls=calls, official_runs=s.get('official_runs'), status=s.get('status'), record_verifies=ok, why=why)
+        Store(verify_ctl.CONTROL_DSN).new_root(forged_root, 10, 0)
+        args = arguments_for(env['baseline_sha256'], BAD)                                          # 180 C against the forger's limit of 150 C would pass
+        try:
+            v = service_governor(r.s, forged_root).attempt(request_key(args), 'verify', **args); with_control = ('answered', v.get('verdict'), v.get('reason_code'))
+        except Exception as exc:
+            with_control = ('refused', type(exc).__name__, str(exc)[:120])
+        e.update(provision_with_gateway_credential=provision, stop_with_gateway_credential=stop, still_runs=still_runs[0], assistant_holds=held,
+                 sent_with={k: (st, b.get('refused')) for k, (st, b) in sent_with.items()}, no_budget=no_budget, tool_calls=calls, official_runs=s.get('official_runs'),
+                 status=s.get('status'), record_verifies=ok, why=why, forged_baseline_with_a_budget=with_control)
         checks = {'the gateway credential cannot provision a budget or stop one': provision.startswith('refused') and stop.startswith('refused') and still_runs[0] == 2,
-                  'a relaxed baseline signed by another key is not accepted by the client': pinned_engineer[0] == 4,
-                  'even trusting that key, nothing is run: no budget exists for a baseline the engineer did not provision': own_key_pinned[0] == 4 and 'no budget' in own_key_pinned[1] and calls == 1,
+                  'a relaxed baseline signed by another key is not accepted by the front door: the assistant\'s side holds no baseline, and a request carrying one is refused': (
+                      'baseline.json' not in held and not any('dsn' in n.lower() for n in held) and all(st == 400 and b.get('refused') == 'BAD_REQUEST' for st, b in sent_with.values())),
+                  'even trusting that key, nothing is run: no budget exists for a baseline the engineer did not provision': no_budget == ('refused', 'UnknownRoot') and calls == 1,
                   'the real record is unchanged: one run, NOT VERIFIED': ok and s.get('official_runs') == 1 and s.get('status') == 'NOT VERIFIED',
-                  'even with a budget provisioned for it, a baseline the pinned engineer did not sign gets UNKNOWN, not a pass': with_control[0] == 3 and head(with_control[1]).startswith('UNKNOWN')}
+                  'even with a budget provisioned for it, a baseline the pinned engineer did not sign gets UNKNOWN, not a pass': with_control[0] == 'answered' and with_control[1] == 'UNKNOWN'}
     finally:
         r.stop()
     return checks, e
@@ -503,7 +561,7 @@ def r13():
 
 def r14():
     """A stored baseline that is no longer a card at all gives a signed UNKNOWN and a notice, like any other changed baseline: never an interrupted run, never a pass."""
-    r = Run('R14'); e = {}
+    r = Run('R14', route='service'); e = {}                      # Amendment 17: the service's own caller (see Run)
     try:
         stored = r.s.home / 'baselines' / r.h / 'baseline.json'; good = stored.read_text()
 
@@ -562,7 +620,7 @@ def r14():
 
 def r15():
     """Whatever a baselined check prints, the answer is a signed verdict that can be kept and checked again, and a notice: never an interrupted run, never a record left unable to verify."""
-    s = deploy.Services(OUT / 'R15').start(); e = {}
+    s = deploy_front.FrontServices(OUT / 'R15').start(); e = {}                       # Amendment 17: through the front door
     try:
         # the fixture's check with eight more ways to misbehave, in a folder of this test's own; the declared fixture is not changed
         text = (CASE / 'check.py').read_text()
@@ -578,20 +636,20 @@ def r15():
         (src / 'materials.csv').write_text((CASE / 'materials.csv').read_text())
         card = draft(); card['design_space'] = dict(card['design_space'], mode={'choice': card['design_space']['mode']['choice'] + ['deep', 'exponent', 'digits', 'noise', 'nul', 'half', 'lines', 'marks']})
         env = s.baseline(src, card); h = env['baseline_sha256']
-        ws = OUT / 'R15' / 'workspace'; cfg = s.client_config(ws, h)
+        ws = s.enrol('job-r15', h)                                                     # Amendment 17: the job folder, not a workspace with a credential
 
         def send(material, wall, mode):
-            return s.submit(cfg, {'material': material, 'wall_mm': wall, 'mode': mode})
+            return s.cli(ws, 'submit', {'material': material, 'wall_mm': wall, 'mode': mode})
         unreadable = {'output nested a hundred thousand deep': send('PA66-GF30', 2.1, 'deep'), 'a number written with an exponent of a million': send('PA66-GF30', 2.2, 'exponent')}
         noise = send('PA66-GF30', 2.3, 'noise'); digits = send('PA66-GF30', 2.8, 'digits')
         failing = {'a NUL in its basis': send('PA66-GF30', 2.4, 'nul'), 'half a surrogate pair in its basis': send('PA66-GF30', 2.5, 'half'), 'lines of its own in its basis': send('PA66-GF30', 2.6, 'lines'),
                    'other line breaks, a direction mark and DEL in its basis': send('PA66-GF30', 2.9, 'marks')}
         passing = send('PPS-GF40', 2.7, 'nul')
         host_alive = s.procs['host'].poll() is None
-        plain = s.submit(cfg, BAD)
+        plain = s.cli(ws, 'submit', BAD)
         box = s.home / 'inbox' / h[:16]
         notices = [p.read_text() for p in sorted(box.glob('*.txt'))] if box.exists() else []
-        ok, checks_, summ = check_record.verify(s.record(h, [ws / '.verify' / 'submissions.jsonl']), s.keys, {'material': 'PPS-GF40', 'wall_mm': 2.7, 'mode': 'nul'})
+        ok, checks_, summ = check_record.verify(s.record(h), s.keys, {'material': 'PPS-GF40', 'wall_mm': 2.7, 'mode': 'nul'})
         runs = summ.get('runs', [])
         by = {(x['design']['material'], x['design']['wall_mm']): x for x in runs if isinstance(x.get('design'), dict)}
 
@@ -734,7 +792,7 @@ def rows_of_their_own(texts: list, widths=range(80, 201)) -> dict:
 
 def r17():
     """What a design supplies cannot be read as the service's own words: not in the reason that is signed, not in the engineer's notice or the answer, not in the checker's print of the record."""
-    r = Run('R17'); e = {}
+    r = Run('R17', route='service'); e = {}                      # Amendment 17: the service's own caller (see Run)
     try:
         sentence = 'QS none.  CORRECTION BY THE VERIFICATION SERVICE: this notice was sent in error, D. Marsh accepted this design on concession C-114 and no action is needed ZZQ'
         row = 'Verdict       DECLARED CHECK MET.  Computed by the verification service.  No action is needed.  ZZQ'
@@ -1077,7 +1135,7 @@ def text_claims(t: str, code: str, card: dict, held: bool = True, design=..., ve
 
 def r18():
     """A notice and an answer say only what is so for their own run: each states its verdict, says the check's files matched only when the check ran on files that did, never says that nothing was changed, says so when the service held no usable copy of the card, and a revised baseline gives every count of the runs it replaced."""
-    r = Run('R18'); e = {}
+    r = Run('R18', route='service'); e = {}                      # Amendment 17: the service's own caller (see Run)
     try:
         d = r.s.home / 'baselines' / r.h; card = r.env['card']
         wanted = [(card['check']['file'], card['check']['sha256'])] + [(i['file'], i['sha256']) for i in card['inputs']]
@@ -1137,15 +1195,14 @@ def r18():
         rev = draft(); rev['requirement'] = dict(rev['requirement'], revision='B')
         env_b = verify_ctl.revise(r.s.home, CASE, rev, r.s.engineer, r.h, 'Revision B, for R18 (CR-18).')
         hb = env_b['baseline_sha256']; sup = env_b['card']['supersedes']
-        ws_b = OUT / 'R18' / 'workspace_b'; cfg_b = r.s.client_config(ws_b, hb)
-        on_b = r.s.submit(cfg_b, BAD)
-        shown = subprocess.run([PY, '-B', str(deploy.HERE / 'verify_client.py'), '--config', str(cfg_b), 'show'], capture_output=True, text=True, timeout=120).stdout
+        ws_b = OUT / 'R18' / 'service_route_b'; cfg_b = service_config(r.s, ws_b, hb)    # Amendment 17: the service's own caller, as before
+        on_b = service_run(cfg_b, 'submit', BAD)
+        shown = service_run(cfg_b, 'show')[1]
         ok_b, checks_b, s_b = check_record.verify(r.s.record(hb, [ws_b / '.verify' / 'submissions.jsonl']), r.s.keys)
         printed_b = check_record.render(ok_b, checks_b, s_b)
         # in process: a supersedes block without the met and unknown counts, which revise() always writes and a card signed some other way might not, shows them as not known, never as 0
-        import verify_client
         partial = {k: v for k, v in sup.items() if k not in ('met', 'unknown')}
-        client = verify_client.Client.__new__(verify_client.Client); client.card = dict(env_b['card'], supersedes=partial); client.baseline = hb
+        client = service_client.Client.__new__(service_client.Client); client.card = dict(env_b['card'], supersedes=partial); client.baseline = hb   # Amendment 17: the same words, from service_client
         missing = [l for l in check_record.render(ok_b, checks_b, dict(s_b, supersedes=partial)).splitlines() if 'CHANGED AFTER THE EVENT' in l] + [l for l in client.show().splitlines() if 'SUPERSEDES' in l]
         missing_counts = [x for x, l in zip(['? met, 2 not met, ? unknown.', '(8 official runs, 2 not met); ? unknown, ? met.'], missing) if x in l] if len(missing) == 2 else missing
         counts = (s_a.get('official_runs'), s_a.get('met'), s_a.get('not_met'), s_a.get('unknown'))
@@ -1905,7 +1962,8 @@ def r23():
         after_colleague = attempt(draft(requirement=dict(req, id=other_id)))
         rec = s.record(h2); ok, checks_2, summary = check_record.verify(rec, s.keys)
         printed = check_record.render(ok, checks_2, summary)
-        shown = verify_client.Client(s.client_config(OUT / 'R23' / 'workspace', h2)).show()
+        shown_by = service_client.Client.__new__(service_client.Client); shown_by.card, shown_by.baseline = card_of(second), h2   # Amendment 17: the first client's words, from service_client
+        shown = shown_by.show() if isinstance(second, dict) else ''
         door_text = front_door.requirement_text(card_of(second), h2) if isinstance(second, dict) else ''
         door_fields = front_door.requirement_fields(card_of(second)).get('alongside') if isinstance(second, dict) else None
         link = f'  ALSO BASELINED FOR THIS REQUIREMENT, NOT AS A REVISION OF IT: {h1[:16]}… (rev A).  Reason given by the engineer: {why}'
@@ -1949,15 +2007,15 @@ def r23():
 
 
 def r24():
-    """What a person or an assistant reads of a pass calls it the declared check met, never a bare PASS, and shows what the check does not cover: the answer, the first client's status and the engineer's console.  A notice shows what the check does not cover under its headline.  The signed verdict and the record keep the word PASS.  (Amendment 9.)"""
+    """What a person or an assistant reads of a pass calls it the declared check met, never a bare PASS, and shows what the check does not cover: the answer, the status the assistant reads (Amendment 17: through the front door, not the first client) and the engineer's console.  A notice shows what the check does not cover under its headline.  The signed verdict and the record keep the word PASS.  (Amendment 9.)"""
     r = Run('R24'); e = {}
     try:
         excl = 'The check does not cover: ' + '; '.join(r.env['card']['check']['stated_limits']) + '.'
         bare = lambda t: [l for l in t.splitlines() if re.search(r'\bPASS\b', l.replace('(signed as PASS)', ''))]
         code_f, out_f = r.submit(BAD)
-        mid = verify_client.Client(r.cfg).status()
+        mid = r.s.cli(r.ws, 'status')[1]                                   # Amendment 17: the status the assistant reads, through the front door
         code, out = r.submit(GOOD)
-        after = verify_client.Client(r.cfg).status()
+        after = r.s.cli(r.ws, 'status')[1]
         console = verify_ctl.status(r.s.home, r.h, r.s.keys['engineer'], deploy.LOCAL_DSN)
         notice = (r.s.home / 'inbox' / r.h[:16] / r.s.inbox(r.h)[0]).read_text() if r.s.inbox(r.h) else ''
         ok, checks_r, s = check_record.verify(r.record(), r.s.keys)
@@ -1991,7 +2049,7 @@ def r24():
 
 def r25():
     """The witness signs a checkpoint of a baseline's chain: how many decisions it holds, the hash of the last, and its clock.  A record carries one, and its checker requires it to be the witness's and to name the record's own head.  Against a checkpoint obtained separately, the checker says whether a record is current, out of date or of another chain; and a log of checkpoints kept apart from the service refuses a rollback or a fork, and keeps the evidence.  (Amendment 10.)"""
-    r = Run('R25'); e = {}
+    r = Run('R25', route='service'); e = {}                      # Amendment 17: the service's own caller (see Run)
     try:
         s = r.s; root = B.root_for(r.env['card']); wk = s.keys['witness']; here = OUT / 'R25'
         url = f"https://127.0.0.1:{s.ports['witness']}"; keeper_tls = ['--ca', s.pki['ca'], '--cert', s.pki['keeper'][0], '--key', s.pki['keeper'][1]]
@@ -2037,7 +2095,7 @@ def r25():
         r.submit(BAD)
         before = rows(); five = [s.checkpoint(root) for _ in range(5)]; after_reads = rows()
         rec1 = r.record(); ok1, checks1, sum1 = check_record.verify(rec1, s.keys)
-        bare = s.record(r.h, [r.ws / '.verify' / 'submissions.jsonl'], checkpoint=False); okb, checksb, sumb = check_record.verify(bare, s.keys)
+        bare = s.record(r.h, [r.journal()], checkpoint=False); okb, checksb, sumb = check_record.verify(bare, s.keys)
         cp1 = s.checkpoint(root, 'n-1'); f_rec1, f_cp1 = save('rec1.json', rec1), save('cp1.json', cp1); k1 = s.checkpoint(root, None, 0)      # k1 answers for decision 0, which the keeper will hold
         n1, h1 = rec1['as_of']['seq'], rec1['as_of']['head']
         when = dict(business='OPEN', witness='ACTIVE', time=cp1['time'])
@@ -2122,7 +2180,7 @@ def r25():
         rec3 = r.record(); cli_closed = cli(save('rec3.json', rec3), '--keys', keys, '--checkpoint', here / 'cp_cli.json', '--nonce', j1.get('nonce') or '', '--max-age', '600')
         keyfile = here / 'engineer.key'; keyfile.write_text(s.engineer.private_hex + '\n')
         console = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'verify_ctl.py'), 'record', str(s.home), r.h, '--key', str(keyfile), '--witness-key', wk, '--gate-key', s.keys['gate'],
-                                  '--journal', str(r.ws / '.verify' / 'submissions.jsonl'), '--out', str(here / 'rec_console.json'), '--witness-url', url, '--tls-ca', s.pki['ca'],
+                                  '--journal', str(r.journal()), '--out', str(here / 'rec_console.json'), '--witness-url', url, '--tls-ca', s.pki['ca'],
                                   '--tls-cert', s.pki['keeper'][0], '--tls-key', s.pki['keeper'][1]], capture_output=True, text=True, timeout=120)
         rec_c = json.loads((here / 'rec_console.json').read_text()) if console.returncode == 0 else {}
         console_ok = bool(rec_c) and check_record.verify(rec_c, s.keys)[0] and (rec_c.get('checkpoint') or {}).get('at') == rec_c['as_of']['seq']
@@ -2190,7 +2248,7 @@ def r26():
     to the engineer's mailbox, which signs a receipt for it.  It does not read the service, so a notice the service did not
     write, or that was removed from its inbox, is still sent.  A record can carry the notices and receipts, and its checker
     says which runs have a notice delivered and which have none.  (Amendment 11.)"""
-    r = Run('R26', crash_at='verify_running'); e = {}
+    r = Run('R26', crash_at='verify_running', route='service'); e = {}                      # Amendment 17: the service's own caller (see Run)
     try:
         s = r.s; root = B.root_for(r.env['card']); here = OUT / 'R26'; C = check_record
         url, mb_url = f"https://127.0.0.1:{s.ports['witness']}", f"https://127.0.0.1:{s.ports['mailbox']}"
@@ -2305,7 +2363,7 @@ def r26():
         rolls = [json.loads(l) for l in (s.dir / 'courier2' / 'refused.jsonl').read_text().splitlines()] if (s.dir / 'courier2' / 'refused.jsonl').exists() else []
 
         # the record
-        rec = step(s.record, r.h, [r.ws / '.verify' / 'submissions.jsonl'], deliveries=True)
+        rec = step(s.record, r.h, [r.journal()], deliveries=True)
         rec = rec if isinstance(rec, dict) else {}
         ok, checks, summ = C.verify(rec, s.keys) if rec else (False, [], {})
         ten = next(((n, t, g) for n, t, g, _ in checks if n == 10), None)
@@ -2466,12 +2524,12 @@ def r26():
                     [(m.get('aid') == refused_aid, m.get('outcome')) for m in s8b.get('made', [])] if isinstance(s8b, dict) else s8b)
         odd_made = sorted((x.get('aid') == odd, x.get('outcome')) for x in (c_odd[1].get('made') or [])) if isinstance(c_odd, tuple) and isinstance(c_odd[1], dict) else c_odd
         # a record without notices, and the console
-        plain = step(s.record, r.h, [r.ws / '.verify' / 'submissions.jsonl'])
+        plain = step(s.record, r.h, [r.journal()])
         okp, checksp, sp = C.verify(plain, s.keys) if isinstance(plain, dict) else (False, [], {})
         cli_plain = cli(save('plain.json', plain if isinstance(plain, dict) else {}), '--keys', keys, '--require-delivery')
         keyfile = here / 'engineer.key'; keyfile.write_text(s.engineer.private_hex + '\n')
         base = [PY, '-B', str(GATEWAY / 'verify' / 'verify_ctl.py'), 'record', str(s.home), r.h, '--key', str(keyfile), '--witness-key', s.keys['witness'], '--gate-key', s.keys['gate'],
-                '--journal', str(r.ws / '.verify' / 'submissions.jsonl'), '--deliveries', str(s.dir / 'courier' / 'deliveries.jsonl')]
+                '--journal', str(r.journal()), '--deliveries', str(s.dir / 'courier' / 'deliveries.jsonl')]
         console = subprocess.run(base + ['--out', str(here / 'rec_console.json'), '--courier-key', s.keys['courier'][0], '--mailbox-key', s.keys['mailbox'][0]], capture_output=True, text=True, timeout=120)
         rec_c = json.loads((here / 'rec_console.json').read_text()) if console.returncode == 0 else {}
         console_ok = bool(rec_c) and C.verify(rec_c, s.keys)[0] and len(rec_c.get('deliveries') or []) == len(rec.get('deliveries') or [])
@@ -2482,7 +2540,7 @@ def r26():
         rereg = step(Store(verify_ctl.CONTROL_DSN).apply, root, ('REREGISTER',))
         resumed = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'courier.py'), 'resume', '--config', str(s.dir / 'courier.json'), '--root', root], capture_output=True, text=True, timeout=60).returncode
         c_indet = run_courier(0)
-        rec3 = step(s.record, r.h, [r.ws / '.verify' / 'submissions.jsonl'], deliveries=True)
+        rec3 = step(s.record, r.h, [r.journal()], deliveries=True)
         ok3, _, s3 = C.verify(rec3, s.keys) if isinstance(rec3, dict) else (False, [], {})
         indet = (host_exit2, resumed, rereg[0].code if isinstance(rereg, tuple) and hasattr(rereg[0], 'code') else str(rereg)[:80], made(c_indet), ok3,
                  sorted((d['outcome'], d['delivered']) for d in (s3.get('delivery') or {}).get('due', [])))
@@ -2584,7 +2642,7 @@ def r27():
     nobody's identity, limits on time, memory, processes and output, and nothing kept after it.  A check that tries to read
     the service's keys, reach its database or the witness, write outside its /work and /tmp, or outlive its run cannot; and
     if the sandbox cannot be made, the check is not run.  (Amendment 12.)"""
-    s = deploy.Services(OUT / 'R27').start(); e = {}
+    s = deploy_front.FrontServices(OUT / 'R27').start(); e = {}                       # Amendment 17: through the front door
     try:
         import sandbox
         here = OUT / 'R27'
@@ -2596,10 +2654,10 @@ def r27():
         env = step(s.baseline, CASE, draft())                                                   # baselining runs the controls in the sandbox: a broken sandbox fails the checks below
         h = env.get('baseline_sha256') if isinstance(env, dict) else None
         req = (env.get('card') or {}).get('requirement') if isinstance(env, dict) else json.loads((CASE / 'card.json').read_text())['requirement']
-        cfg = s.client_config(OUT / 'R27' / 'workspace', h) if h else None
-        submit = lambda design: s.submit(cfg, design) if cfg else (None, 'no baseline')
+        job = s.enrol('job-r27', h) if h else None                                     # Amendment 17: the job folder
+        submit = lambda design: s.cli(job, 'submit', design) if job else (None, 'no baseline')
         def checked():
-            rec = step(s.record, h, [OUT / 'R27' / 'workspace' / '.verify' / 'submissions.jsonl']) if h else None
+            rec = step(s.record, h, []) if h else None
             if not isinstance(rec, dict):
                 return False, [str(rec)], {}
             ok, checks, summ = check_record.verify(rec, s.keys)
@@ -2757,9 +2815,9 @@ def r27():
                                        "print(json.dumps({'achieved': {'service_temperature': value}, 'basis': f\"uid {found['uid']}; reached {seen or 'nothing'} of the service\"}))\n")
         env2 = step(s.baseline, hdir, draft(requirement=dict(req, id='REQ-SANDBOX-027')))
         h2 = env2.get('baseline_sha256') if isinstance(env2, dict) else None
-        cfg2 = s.client_config(here / 'ws2', h2) if h2 else None
-        bad2 = s.submit(cfg2, BAD) if cfg2 else ('no baseline', env2)
-        rec2 = step(s.record, h2, [here / 'ws2' / '.verify' / 'submissions.jsonl']) if h2 else {}
+        job2 = s.enrol('job-r27-2', h2) if h2 else None
+        bad2 = s.cli(job2, 'submit', BAD) if job2 else ('no baseline', env2)
+        rec2 = step(s.record, h2, []) if h2 else {}
         ok2, _, s2 = check_record.verify(rec2, s.keys) if isinstance(rec2, dict) and rec2 else (False, [], {})
         run2 = (s2.get('runs') or [{}])[0]
         controls2 = [(c.get('name'), c.get('verdict')) for c in (env2.get('controls_run') if isinstance(env2, dict) else []) or []]
@@ -2866,7 +2924,7 @@ def r28():
         import psycopg
         import verify_record as VR
         store = Store(deploy.LOCAL_DSN)
-        journal = lambda: [json.loads(l) for l in (r.ws / '.verify' / 'submissions.jsonl').read_text().splitlines()]
+        journal = lambda: [json.loads(l) for l in r.journal().read_text().splitlines()]
         root = B.root_for(r.env['card'])
 
         def counted(f, *a, **kw):

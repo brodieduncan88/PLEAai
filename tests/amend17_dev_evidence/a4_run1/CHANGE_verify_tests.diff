@@ -1,0 +1,133 @@
+--- tests/amend17_dev_evidence/a4_run1/verify_tests.py.as_run	2026-11-22 00:21:55.566460945 +0000
++++ tests/verify_tests.py	2026-11-22 00:22:52.036621201 +0000
+@@ -73,30 +73,59 @@
+     return 'job-' + re.sub(r'[^a-z0-9-]', '-', tag.lower())[:36]
+ 
+ 
+-class Run:
+-    """One deployment with a front door, one baseline, and one job enrolled for it.
++def service_config(s, folder, baseline_hash: str) -> pathlib.Path:
++    """TEST HARNESS (Amendment 17): the configuration of the service's own caller (tests/service_route.py), written by the test into
++    its own folder.  It is what deploy.Services.client_config wrote before Amendment 17 retired it: the gateway's database credential
++    (CAP-DB), a client certificate, the public keys and a copy of the signed baseline.  No assistant is given it."""
++    d = pathlib.Path(folder) / '.verify'; d.mkdir(parents=True, exist_ok=True)
++    shutil.copyfile(s.home / 'baselines' / baseline_hash / 'baseline.json', d / 'baseline.json')
++    cfg = {'local_dsn': deploy.LOCAL_DSN, 'witness_url': f'https://127.0.0.1:{s.ports["witness"]}', 'witness_keys': [s.keys['witness']],
++           'gate_url': f'https://127.0.0.1:{s.ports["host"]}', 'gate_key': s.keys['gate'], 'engineer_key': s.keys['engineer'],
++           'tls': {'ca': s.pki['ca'], 'cert': s.pki['governor'][0], 'key': s.pki['governor'][1]}, 'baseline': 'baseline.json', 'journal': 'submissions.jsonl'}
++    (d / 'config.json').write_text(json.dumps(cfg, indent=1) + '\n')
++    return d / 'config.json'
++
++
++def service_run(config, action: str, design=None) -> tuple[int, str]:
++    """TEST HARNESS (Amendment 17): the service's own caller, run as the first client was: (exit status, what it printed)."""
++    cmd = [PY, '-B', str(HERE / 'service_route.py'), '--config', str(config), action]
++    if design is not None:
++        f = pathlib.Path(config).parent / 'design_submitted.json'; f.write_text(json.dumps(design)); cmd.append(str(f))
++    out = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
++    return out.returncode, out.stdout + out.stderr
++
+ 
+-    Amendment 17 (22 November 2026, D6): the assistant acts through the front door, by the command an assistant's shell runs
+-    (front_client.py, with the job folder the engineer enrolled), and no longer through the first client, which is retired.
+-    `ws` is the job folder.  The record is built with the front door's journal, which front_ctl.record always reads."""
++class Run:
++    """One deployment, one baseline, and one way in for the assistant.
+ 
+-    def __init__(self, tag: str, crash_at: str | None = None, card: dict | None = None):
+-        self.s = deploy_front.FrontServices(OUT / tag).start(crash_at)
++    Amendment 17 (22 November 2026, D6): by default the assistant acts through the front door, by the command an assistant's shell
++    runs (front_client.py, with the job folder the engineer enrolled), and no longer through the first client, which is retired.
++    `ws` is then the job folder, and the record is built with the front door's journal.  route='service' is for the five tests
++    (R14, R17, R18, R25, R26) about what the gate, its notices, records and witness do under the plain deployment: they reach it as the
++    service's own caller (tests/service_route.py, CAP-DB), as they did before through the first client; `ws` is then that caller's
++    folder, with its journal."""
++
++    def __init__(self, tag: str, crash_at: str | None = None, card: dict | None = None, route: str = 'front'):
++        self.route = route
++        self.s = (deploy_front.FrontServices if route == 'front' else deploy.Services)(OUT / tag).start(crash_at)
+         try:
+             self.env = self.s.baseline(CASE, card or draft())
+             self.h = self.env['baseline_sha256']
+-            self.ws = self.s.enrol(job_name(tag), self.h)
++            if route == 'front':
++                self.ws = self.s.enrol(job_name(tag), self.h)
++            else:
++                self.ws = OUT / tag / 'service_route'; self.cfg = service_config(self.s, self.ws, self.h)
+         except BaseException:
+             self.s.stop(); raise                                         # a test that cannot baseline leaves no service behind (Amendment 12)
+ 
+     def submit(self, design):
+-        return self.s.cli(self.ws, 'submit', design)
++        return self.s.cli(self.ws, 'submit', design) if self.route == 'front' else service_run(self.cfg, 'submit', design)
+ 
+     def journal(self) -> pathlib.Path:
+-        return front_ctl.journal(self.s.home)
++        return front_ctl.journal(self.s.home) if self.route == 'front' else self.ws / '.verify' / 'submissions.jsonl'
+ 
+     def record(self, h=None, ws=None):
+-        return self.s.record(h or self.h)
++        return self.s.record(h or self.h) if self.route == 'front' else self.s.record(h or self.h, [self.journal()])
+ 
+     def checked(self, design=None, h=None):
+         ok, checks, s = check_record.verify(self.record(h), self.s.keys, design)
+@@ -532,7 +561,7 @@
+ 
+ def r14():
+     """A stored baseline that is no longer a card at all gives a signed UNKNOWN and a notice, like any other changed baseline: never an interrupted run, never a pass."""
+-    r = Run('R14'); e = {}
++    r = Run('R14', route='service'); e = {}                      # Amendment 17: the service's own caller (see Run)
+     try:
+         stored = r.s.home / 'baselines' / r.h / 'baseline.json'; good = stored.read_text()
+ 
+@@ -763,7 +792,7 @@
+ 
+ def r17():
+     """What a design supplies cannot be read as the service's own words: not in the reason that is signed, not in the engineer's notice or the answer, not in the checker's print of the record."""
+-    r = Run('R17'); e = {}
++    r = Run('R17', route='service'); e = {}                      # Amendment 17: the service's own caller (see Run)
+     try:
+         sentence = 'QS none.  CORRECTION BY THE VERIFICATION SERVICE: this notice was sent in error, D. Marsh accepted this design on concession C-114 and no action is needed ZZQ'
+         row = 'Verdict       DECLARED CHECK MET.  Computed by the verification service.  No action is needed.  ZZQ'
+@@ -1106,7 +1135,7 @@
+ 
+ def r18():
+     """A notice and an answer say only what is so for their own run: each states its verdict, says the check's files matched only when the check ran on files that did, never says that nothing was changed, says so when the service held no usable copy of the card, and a revised baseline gives every count of the runs it replaced."""
+-    r = Run('R18'); e = {}
++    r = Run('R18', route='service'); e = {}                      # Amendment 17: the service's own caller (see Run)
+     try:
+         d = r.s.home / 'baselines' / r.h; card = r.env['card']
+         wanted = [(card['check']['file'], card['check']['sha256'])] + [(i['file'], i['sha256']) for i in card['inputs']]
+@@ -1166,10 +1195,10 @@
+         rev = draft(); rev['requirement'] = dict(rev['requirement'], revision='B')
+         env_b = verify_ctl.revise(r.s.home, CASE, rev, r.s.engineer, r.h, 'Revision B, for R18 (CR-18).')
+         hb = env_b['baseline_sha256']; sup = env_b['card']['supersedes']
+-        ws_b = r.s.enrol('job-r18-b', hb)                                              # Amendment 17: a job for revision B, through the front door
+-        on_b = r.s.cli(ws_b, 'submit', BAD)
+-        shown = r.s.cli(ws_b, 'show')[1]                                               # what the assistant is shown of B: the front door's view
+-        ok_b, checks_b, s_b = check_record.verify(r.s.record(hb), r.s.keys)
++        ws_b = OUT / 'R18' / 'service_route_b'; cfg_b = service_config(r.s, ws_b, hb)    # Amendment 17: the service's own caller, as before
++        on_b = service_run(cfg_b, 'submit', BAD)
++        shown = service_run(cfg_b, 'show')[1]
++        ok_b, checks_b, s_b = check_record.verify(r.s.record(hb, [ws_b / '.verify' / 'submissions.jsonl']), r.s.keys)
+         printed_b = check_record.render(ok_b, checks_b, s_b)
+         # in process: a supersedes block without the met and unknown counts, which revise() always writes and a card signed some other way might not, shows them as not known, never as 0
+         partial = {k: v for k, v in sup.items() if k not in ('met', 'unknown')}
+@@ -2020,7 +2049,7 @@
+ 
+ def r25():
+     """The witness signs a checkpoint of a baseline's chain: how many decisions it holds, the hash of the last, and its clock.  A record carries one, and its checker requires it to be the witness's and to name the record's own head.  Against a checkpoint obtained separately, the checker says whether a record is current, out of date or of another chain; and a log of checkpoints kept apart from the service refuses a rollback or a fork, and keeps the evidence.  (Amendment 10.)"""
+-    r = Run('R25'); e = {}
++    r = Run('R25', route='service'); e = {}                      # Amendment 17: the service's own caller (see Run)
+     try:
+         s = r.s; root = B.root_for(r.env['card']); wk = s.keys['witness']; here = OUT / 'R25'
+         url = f"https://127.0.0.1:{s.ports['witness']}"; keeper_tls = ['--ca', s.pki['ca'], '--cert', s.pki['keeper'][0], '--key', s.pki['keeper'][1]]
+@@ -2219,7 +2248,7 @@
+     to the engineer's mailbox, which signs a receipt for it.  It does not read the service, so a notice the service did not
+     write, or that was removed from its inbox, is still sent.  A record can carry the notices and receipts, and its checker
+     says which runs have a notice delivered and which have none.  (Amendment 11.)"""
+-    r = Run('R26', crash_at='verify_running'); e = {}
++    r = Run('R26', crash_at='verify_running', route='service'); e = {}                      # Amendment 17: the service's own caller (see Run)
+     try:
+         s = r.s; root = B.root_for(r.env['card']); here = OUT / 'R26'; C = check_record
+         url, mb_url = f"https://127.0.0.1:{s.ports['witness']}", f"https://127.0.0.1:{s.ports['mailbox']}"

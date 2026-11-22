@@ -460,3 +460,13 @@ copy on the diagnostic branch is not changed.
 | Id | Status now | Commit | Evidence | Reviewed by | What remains |
 |---|---|---|---|---|---|
 | D20 | implemented; reproduced before the change; development runs pass (R32, R8, R10) | the A3 commit (named in a later entry) | `tests/amend17_dev_evidence/d20_repro_before.json`, `r32_r8_r10_run3.json` | not yet | a value given to more than 28 significant digits that does not cross its limit is still written rounded in the record; that is consistent, but it is not the value the check printed |
+
+### G5. 22 November 2026: D6 and D35 in development; the A3 commit named
+
+- The row for D20 in G4 says "the A3 commit". That commit is `0128d46`.
+
+| Id | Status now | Commit | Evidence | Reviewed by | What remains |
+|---|---|---|---|---|---|
+| D6 | implemented; development runs pass (R1 to R13 through the front door; gate 27 of 32 then the other five on their route; front 34 of 35 then F12) | the A4 commit (named in a later entry) | `tests/amend17_dev_evidence/a4_run1/`, `a4_run2_gate5.json`, `a4_run2_f12.json` | not yet | five gate tests (R14, R17, R18, R25, R26) still reach the service through a copy of the first client's transport, kept in `tests/` as the service's own caller (CAP-DB); `verify/experiment/` cannot be run again as it stands |
+| D35 | implemented (the readmes' lines corrected) | the A4 commit | `verify/README.md`, `verify/README_FRONT.md` | not yet | the register's own D35 row cites a file not in this tree (G-1) |
+| F1, F2 (front-door tests) | retired with the first client; their properties carried by R30 and F7 | the A4 commit | comment at the head of the front suite | not yet | their results before Amendment 17 stand as they were |

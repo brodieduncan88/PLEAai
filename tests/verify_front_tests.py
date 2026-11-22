@@ -5,7 +5,8 @@ and F20, added by Amendment 3 (verify/DECLARED_AMEND3.md), and F21, added by Ame
 
     verify_front_tests.py [F1 F6 ...]     all thirty-four by default; writes outputs/verify_front_tests.json; exits 1 if any test fails
 
-F1 and F2 run the first plug-in as it was released, with no front door, and show the two defects this work is for.
+F1 and F2 ran the first plug-in as it was released, with no front door, and showed the two defects this work is for; they are
+retired by Amendment 17 with the first plug-in, and their properties are carried by R30 and F7.
 F3 to F16 make a fresh deployment with a front door (verify/deploy_front.py: new keys; the released witness service
 and gate host, unchanged, admitting only the front door's certificate; front_door.py; the gate host loading
 verify_tools), baseline the self-test fixture in tests/verify_case/ as the responsible engineer would, enrol a job,
@@ -39,7 +40,6 @@ import deploy_front                     # noqa: E402
 import front_ctl                        # noqa: E402
 import front_door                       # noqa: E402
 import notices as service_notices       # noqa: E402  (Amendment 8: the gate's proof that it can write an inbox)
-import verify_client                    # noqa: E402
 import verify_ctl                       # noqa: E402
 from deploy_front import text_of        # noqa: E402
 from front_client import FrontClient    # noqa: E402
@@ -171,53 +171,15 @@ def direct(url: str, ca: str, cert: str, key: str, body: dict | None = None):
 
 
 # ====================================================================== the two defects, on the first plug-in as released
-def f1():
-    """The first plug-in, with no front door: a caller holding the workspace's credentials can run a design against another baseline and be told PASS."""
-    s = deploy.Services(OUT / 'F1').start(); e = {}
-    try:
-        a = s.baseline(CASE, draft()); ha = a['baseline_sha256']
-        b = s.baseline(case_b('F1'), relaxed(), alongside_reason='a relaxed copy baselined as new, as the test needs'); hb = b['baseline_sha256']             # a relaxed copy, baselined as new
-        cfg = s.client_config(OUT / 'F1' / 'workspace', ha)
-        honest = s.submit(cfg, BAD)                                                    # 180 C against A's 200 C
-        c = verify_client.Client(cfg)                                                  # what the workspace holds, used directly
-        args = arguments_for(hb, BAD)                                                  # the caller names baseline B
-        verdict = c.governor().attempt(request_key(args), 'verify', **args)            # on A's budget
-        journal = [cfg.parent / 'submissions.jsonl']
-        ok_a, checks_a, s_a = check_record.verify(s.record(ha, journal), s.keys)
-        ok_b, _, s_b = check_record.verify(s.record(hb), s.keys)
-        bad = [n for n, _, good, _ in checks_a if not good]
-        e.update(honest=(honest[0], head(honest[1])), told=(verdict.get('verdict'), verdict.get('reason_code')), verdict_names=str(verdict.get('baseline_sha256'))[:16],
-                 is_b=verdict.get('baseline_sha256') == hb, runs_on_a=s_a.get('official_runs'), runs_on_b=s_b.get('official_runs'), notices_a=len(s.inbox(ha)), notices_b=len(s.inbox(hb)),
-                 record_a_verifies=ok_a, record_a_fails_checks=bad, why=failing(checks_a), record_b_verifies=ok_b)
-        checks = {'sent honestly, the design fails against A (exit status 2)': honest[0] == 2 and head(honest[1]) == FAILED,
-                  'naming baseline B on A\'s budget, the same design is told PASS': verdict.get('verdict') == 'PASS' and verdict.get('baseline_sha256') == hb,
-                  'the run is charged to A, B shows no run, and nobody is sent a notice for it': s_a.get('official_runs') == 2 and s_b.get('official_runs') == 0 and e['notices_a'] == 1 and e['notices_b'] == 0,
-                  'the record of A no longer verifies, at checks 5 and 6 only': not ok_a and bad == [5, 6]}
-    finally:
-        s.stop()
-    return checks, e
-
-
-def f2():
-    """The first plug-in, with no front door: one design the database cannot store leaves the record of its baseline unable to verify."""
-    s = deploy.Services(OUT / 'F2').start(); e = {}
-    try:
-        got = {}
-        for name, design in (('a NUL character in a value', dict(GOOD, material='PPS-GF40\u0000')), ('an infinite number', dict(GOOD, wall_mm=float('inf')))):
-            env = s.baseline(CASE, draft(), alongside_reason='a second baseline of the same requirement, one for each case, as the test needs' if got else None); h = env['baseline_sha256']
-            cfg = s.client_config(OUT / 'F2' / f'workspace_{len(got)}', h)
-            first = s.submit(cfg, design); again = s.submit(cfg, design); good = s.submit(cfg, GOOD)
-            ok, checks, summ = check_record.verify(s.record(h, [cfg.parent / 'submissions.jsonl']), s.keys, GOOD)
-            got[name] = dict(first=first[0], traceback='Traceback' in first[1], again=again[0], good=(good[0], head(good[1])), record_verifies=ok, fails=[n for n, _, g, _ in checks if not g],
-                             why=failing(checks), outcomes=sorted(r['outcome'] for r in summ.get('runs', [])), status=summ.get('status'))
-        e.update(got)
-        checks = {'the client stops with a traceback (exit status 1), both times': all(g['first'] == 1 and g['again'] == 1 and g['traceback'] for g in got.values()),
-                  'a run is left with a signed verdict and no stored result': all('INVALID' in g['outcomes'] for g in got.values()),
-                  'a good design sent afterwards meets the check (exit status 0)': all(g['good'] == (0, MET) for g in got.values()),
-                  'but the record of that baseline no longer verifies, at check 6 only, and its status is NOT VERIFIED': all(not g['record_verifies'] and g['fails'] == [6] and g['status'] == 'NOT VERIFIED' for g in got.values())}
-    finally:
-        s.stop()
-    return checks, e
+# F1 and F2 are retired by Amendment 17 (22 November 2026, D6).  They ran the first plug-in (verify_client.py), which held the
+# gateway's database credential in the assistant's workspace, to show the two defects the front door was built for.  That
+# plug-in now refuses to run.  Their text and results are as they were, at 1b132e2 and in every results file before Amendment 17.
+#   F1 (a caller holding the workspace's credentials runs a design against another baseline on one baseline's budget and is told
+#      PASS): the attack is now refused by the gate host itself, before anything is claimed or signed.  It is carried by R30,
+#      made with the service's own database role and the front door's certificate, which is more than the workspace held.
+#   F2 (a design the database cannot store leaves the record of its baseline unable to verify): such a design is refused by the
+#      front door before anything is run, counted, journaled or recorded.  It is carried by F7, which sends both of F2's designs
+#      (a NUL in a value, an infinite number) and twelve more, through the front door, the MCP tool and the command line.
 
 
 # ====================================================================== the front door and the MCP server
@@ -1875,7 +1837,7 @@ def f37():
     return checks, e
 
 
-TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35, 'F36': f36, 'F37': f37}
+TESTS = {'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35, 'F36': f36, 'F37': f37}
 
 
 def main():
