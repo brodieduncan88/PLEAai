@@ -3536,7 +3536,96 @@ def r34():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31, 'R32': r32, 'R33': r33, 'R34': r34}
+def raw_number_case(tag: str, rows: dict) -> pathlib.Path:
+    """Amendment 19 (D20-F): the fixture's check, made to print each material's value as its table writes it, as a JSON number (not a
+    string), as a check that computes in decimal, or prints more digits than a binary float holds, prints it."""
+    src = OUT / tag / 'case'; src.mkdir(parents=True, exist_ok=True)
+    check = (CASE / 'check.py').read_text()
+    a = "value = float(rows[design['material']]['max_service_c'])"
+    b = "print(json.dumps({'achieved': {'service_temperature': value}, 'basis': f\"limited by the continuous-use rating of {design['material']}: {value:g} C\"}))"
+    assert check.count(a) == 1 and check.count(b) == 1, "the test's own setting up: the fixture's check is not as expected"
+    check = check.replace(a, "value = rows[design['material']]['max_service_c']")
+    check = check.replace(b, "print('{\"achieved\": {\"service_temperature\": %s}, \"basis\": %s}' % (value, json.dumps('limited by the continuous-use rating of ' + design['material'] + ': ' + value + ' C')))")
+    (src / 'check.py').write_text(check)
+    (src / 'materials.csv').write_text('material,max_service_c\n' + ''.join(f'{m},{v}\n' for m, v in rows.items()))
+    return src
+
+
+D20F_CASES = [  # (criterion, token as the check prints it, (verdict, reason) expected; None: any reason)
+    ('GE', '200', ('PASS', 'MET')), ('GE', '2e2', ('PASS', 'MET')), ('GE', '0.2e3', ('PASS', 'MET')),
+    ('GE', '199.99999999999999', ('FAIL', 'LIMIT_NOT_MET')), ('GE', '200.00000000000001', ('PASS', 'MET')),
+    ('GE', '1.9999999999999999e2', ('FAIL', 'LIMIT_NOT_MET')), ('GE', '2.0000000000000001e2', ('PASS', 'MET')),
+    ('GE', '199.9999999999999999999999999', ('FAIL', 'LIMIT_NOT_MET')), ('GE', '200.0000000000000000000000001', ('PASS', 'MET')),
+    ('GE', '199.99999999999999999999999999999', ('UNKNOWN', 'CHECK_OUTPUT_INVALID')), ('GE', '199.' + '9' * 1000, ('UNKNOWN', 'CHECK_OUTPUT_INVALID')),
+    ('GE', '1e999999', ('UNKNOWN', None)), ('GE', '1e-999999', ('UNKNOWN', None)), ('GE', 'NaN', ('UNKNOWN', 'CHECK_OUTPUT_INVALID')),
+    ('GE', '1e', ('UNKNOWN', 'CHECK_OUTPUT_INVALID')), ('GE', '01', ('UNKNOWN', 'CHECK_OUTPUT_INVALID')),
+    ('LE', '200', ('PASS', 'MET')), ('LE', '200.00000000000001', ('FAIL', 'LIMIT_NOT_MET')), ('LE', '199.99999999999999', ('PASS', 'MET')),
+    ('NEG', '-5', ('PASS', 'MET')), ('NEG', '-5.00000000000000001', ('FAIL', 'LIMIT_NOT_MET')), ('NEG', '-4.99999999999999999', ('PASS', 'MET')),
+]
+
+
+def r35():
+    """Amendment 19 (D20-F).  A number the check prints is decided as printed: a value on the wrong side of a limit by less than a binary float can tell apart is never signed PASS, and a record that verifies offline holds the value as the check printed it."""
+    import copy, decimal, types
+    s = deploy_front.FrontServices(OUT / 'R35').start(); e = {}
+    try:
+        # 1 and 2. through the front door, a baselined check that prints JSON numbers
+        rows = {'PA66-GF30': '180', 'PPS-GF40': '220', 'PEEK': '250', 'PX-EDGE': '199.99999999999999', 'PX-AT': '200', 'PX-ABOVE': '200.00000000000001'}
+        src = raw_number_case('R35', rows)
+        card = draft(); card['design_space'] = dict(card['design_space'], material={'choice': ['PA66-GF30', 'PPS-GF40', 'PX-EDGE', 'PX-AT', 'PX-ABOVE']})
+        env = s.baseline(src, card); h = env['baseline_sha256']; job = s.enrol('job-r35', h)
+        answers = {m: s.cli(job, 'submit', {'material': m, 'wall_mm': 3, 'mode': 'normal'}) for m in ('PX-EDGE', 'PX-AT', 'PX-ABOVE')}
+        rec = s.record(h); ok, checks_, summ = check_record.verify(rec, s.keys)
+        written = {}
+        for a in rec.get('attempts', []):
+            d = (a.get('arguments') or {}).get('design') or {}; res = a.get('result') or {}
+            if d.get('material') in answers:
+                written[d['material']] = (res.get('verdict'), ((res.get('criteria') or [{}])[0]).get('achieved'))
+        e.update(answers={m: (x[0], head(x[1])) for m, x in answers.items()}, written=written, verifies=ok, why=[f'{n} {t_}: {d}' for n, t_, g, d in checks_ if not g])
+        # 3. in process, the gate's own decision path for a list of printed numbers (only the sandbox is stood in for)
+        os.environ['VERIFY_HOME'] = str(OUT / 'R35' / 'tools_home')
+        try:
+            import verify_tools
+        finally:
+            del os.environ['VERIFY_HOME']
+        GE = json.loads((CASE / 'card.json').read_text()); GE['check']['sha256'] = B.sha256_hex((CASE / GE['check']['file']).read_bytes())
+        for i in GE['inputs']:
+            i['sha256'] = B.sha256_hex((CASE / i['file']).read_bytes())
+        LE = copy.deepcopy(GE); LE['criteria'][0]['comparison'] = '<='
+        NEG = copy.deepcopy(GE); NEG['criteria'][0].update(limit='-5', plausible={'min': '-100', 'max': '100'})
+        cards = {'GE': GE, 'LE': LE, 'NEG': NEG}; design = {'material': 'PPS-GF40', 'wall_mm': 3, 'mode': 'normal'}
+        kept = B.sandbox.run; matrix = []
+        try:
+            for crit, token, want in D20F_CASES:
+                out = '{"achieved": {"service_temperature": %s}, "basis": "the test"}' % token
+                B.sandbox.run = lambda files, script, stdin, timeout=30.0, _o=out, **kw: types.SimpleNamespace(state='RAN', returncode=0, stdout=_o.encode(), stderr=b'', detail='')
+                r = verify_tools._decide(CASE, cards[crit], design)
+                c = cards[crit]['criteria'][0]
+                try:
+                    v = decimal.Decimal(token); exact = (v >= decimal.Decimal(c['limit'])) if c['comparison'] == '>=' else (v <= decimal.Decimal(c['limit']))
+                except decimal.InvalidOperation:
+                    exact = None
+                if exact is not None and not decimal.Decimal(token).is_finite():
+                    exact = None
+                matrix.append(dict(criterion=crit, token=token[:40], exact=exact, verdict=r['verdict'], reason=r['reason_code'], want=want,
+                                   rederive=check_record.rederive(cards[crit], r, design), size=len(B.canonical(r).encode())))
+        finally:
+            B.sandbox.run = kept
+        e['matrix'] = matrix
+        checks = {'through the front door, a check printing as a JSON number a value below the limit by less than a binary float resolves (199.99999999999999 against at least 200) is signed FAIL, not PASS; the record holds it as printed, and verifies offline':
+                      answers['PX-EDGE'][0] == 2 and written.get('PX-EDGE') == ('FAIL', '199.99999999999999') and ok,
+                  'the limit exactly (200), and a value above it by as little (200.00000000000001), are signed PASS, each held as printed':
+                      answers['PX-AT'][0] == 0 and answers['PX-ABOVE'][0] == 0 and written.get('PX-AT') == ('PASS', '200') and written.get('PX-ABOVE') == ('PASS', '200.00000000000001'),
+                  'in process, for 22 printed numbers on three criteria (at least, at most, a negative limit): none is PASS unless its exact value meets the criterion; each gives the verdict expected; every PASS and FAIL is accepted by the record\'s checker; no verdict is 64 KiB or more':
+                      len(matrix) == len(D20F_CASES) and not any(x['verdict'] == 'PASS' and x['exact'] is not True for x in matrix)
+                      and all(x['verdict'] == x['want'][0] and (x['want'][1] is None or x['reason'] == x['want'][1]) for x in matrix)
+                      and not any(x['rederive'] for x in matrix if x['verdict'] in ('PASS', 'FAIL')) and all(x['size'] < 65536 for x in matrix)}
+    finally:
+        s.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31, 'R32': r32, 'R33': r33, 'R34': r34, 'R35': r35}
 
 
 def main():
