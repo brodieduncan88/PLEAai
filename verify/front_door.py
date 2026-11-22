@@ -66,9 +66,9 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from plea_gateway import (BudgetExhausted, GateRefusedRun, GovernedError, Held, InProgress, OutcomeInvalid, ReceiptInvalid,   # noqa: E402
                           RequestKeyReused, Store, Stopped, TransportError, UnknownRoot, WitnessUnavailable)
 from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args, wrap_server   # noqa: E402
-from baseline import HEADLINE, canonical, design_lines, face, root_for   # noqa: E402
+from baseline import HEADLINE, canonical, design_hash, design_lines, face, root_for   # noqa: E402  (design_hash: Amendment 17)
 from verify_client import Client, alongside_lines                    # noqa: E402
-from verify_record import PENDING_PHASES, arguments_for, load_envelope, request_key, signed_by   # noqa: E402
+from verify_record import PENDING_PHASES, arguments_for, load_envelope, request_key, request_keys, signed_by   # noqa: E402  (request_keys: Amendment 17)
 import notices                                                       # noqa: E402  (Amendment 7: a notice the inbox cannot take is kept, not lost)
 
 JOB_NAME = re.compile(r'^[a-z0-9][a-z0-9-]{1,40}$')
@@ -520,7 +520,7 @@ class Front:
                         args = json.loads(line)
                     except ValueError:
                         continue
-                    if isinstance(args, dict) and request_key(args) == key:
+                    if isinstance(args, dict) and key in request_keys(args):     # Amendment 17: a run of either form
                         return args.get('design')
         except OSError:
             return None
@@ -734,6 +734,8 @@ class Front:
         outcome = verdict.get('verdict') if isinstance(verdict, dict) else None
         if outcome not in ('PASS', 'FAIL', 'UNKNOWN') or verdict.get('baseline_sha256') != c.baseline:
             return 502, dict(head, **refusal('SERVICE_REFUSED', 'REFUSED by the verification service: the verdict returned is not for this job\'s baseline.  NOT VERIFIED.'))
+        if verdict.get('design_sha256') != design_hash(design):          # Amendment 17 (D21): never another design's verdict, whatever the keys
+            return 502, dict(head, **refusal('SERVICE_REFUSED', 'REFUSED by the verification service: the verdict returned is not for this design.  NOT VERIFIED.'))
         return 200, dict(head, outcome=outcome, met=outcome == 'PASS', declared_check_met=outcome == 'PASS',             # Amendment 9: the words for a pass,
                          check_does_not_cover=list(c.card['check']['stated_limits']) if c.card is not None else None,     # and what the check does not cover
                          exit={'PASS': 0, 'FAIL': 2}.get(outcome, 3), aid=aid, runs=runs, verdict=verdict,

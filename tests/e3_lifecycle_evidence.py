@@ -16,6 +16,7 @@ import time
 
 from common import ADMIN_DSN, GATE, LOCAL_DSN, Store, WitnessService, fresh_root, replay_lockstep, write_output
 from plea_gateway import BudgetExhausted, GateSigner, Governor, NoEffect, RemoteWitness, VerdictRefused
+from plea_gateway.governor import attempt_id   # Amendment 17 (D21)
 
 
 def run_root(admin, local, w, root, gate, raise_on_second: bool):
@@ -41,7 +42,7 @@ def run_root(admin, local, w, root, gate, raise_on_second: bool):
     obs = admin.observe(root)
     log = admin.audit(root)
     labels = [d['op'][3] for d in log if d['op'][0] == 'RECONCILE']
-    evidence = [e for i in range(1, 6) for e in admin.evidence_for(root, 'a-' + __import__('hashlib').sha256(f'{root}:c{i}'.encode()).hexdigest()[:16])]
+    evidence = [e for i in range(1, 6) for e in admin.evidence_for(root, attempt_id(f'{root}:c{i}'))]     # Amendment 17: the identity as the governor makes it
     return {'root': root, **outcome, 'executions': len(ran), 'phases': sorted(a[2] for a in obs['attempts']), 'credit': obs['credit'],
             'reconcile_labels': labels, 'evidence_rows': len(evidence), 'evidence_derived': sorted(set(e['derived'] for e in evidence)),
             'lockstep': replay_lockstep(admin, root, 3, 1)[0], 'chain': admin.verify_chain(root)[0]}

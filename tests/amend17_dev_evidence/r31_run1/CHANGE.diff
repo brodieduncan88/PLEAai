@@ -1,0 +1,53 @@
+--- /tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/vp/r31_run1/verify_tests.py.failing	2026-11-21 23:52:48.291029804 +0000
++++ tests/verify_tests.py	2026-11-21 23:53:19.656011528 +0000
+@@ -3278,18 +3278,21 @@
+         and e['full']['verifies'] and e['full']['identities'] == 'current')
+     checks['a record made before, with 64-bit identities, still verifies, and says which form it is'] = ok_s and sum_s.get('identities') == 'legacy' and len(e['legacy_sample']['says']) == 1
+     checks['a record whose runs mix the two forms fails at check 5'] = not e['full']['mixed_verifies'] and 5 in e['full']['mixed_fails']
+-    # (b) and (c): a front door in this process, given a 16-bit key, then a 16-bit attempt identity
+-    for case, width in (('request_key', 4), ('attempt_id', 4)):
++    # (b), (c) and (d): a front door in this process, given a 16-bit key, then a 16-bit attempt identity, then the 16-bit key with the
++    # governor's own replay guard taken out (in this process only), so that the front door's check of the design is reached
++    for case, width in (('request_key', 4), ('attempt_id', 4), ('front_door_check', 4)):
+         s = deploy_front.FrontServices(OUT / 'R31' / case).start(); got = {}
+-        saved = (front_door.request_key, governor_module.attempt_id)
++        saved = (front_door.request_key, governor_module.attempt_id, governor_module.Governor._replay)
+         try:
+             env = s.baseline(CASE, draft()); h = env['baseline_sha256']; s.enrol('job-r31' + case[0], h)
+             s.stop_front()
+             front = in_process_front(s); binding = front_door.read_jobs(s.home)['job-r31' + case[0]]
+-            if case == 'request_key':
++            if case in ('request_key', 'front_door_check'):
+                 narrow = lambda args, legacy=False: 'verify:' + sha(canonical(args))[:width]
+                 good, bad = meeting(lambda d: sha(canonical(arguments_for(h, d))), width)
+                 front_door.request_key = narrow
++                if case == 'front_door_check':           # the governor's nonce and signed-report checks on a stored outcome, taken out
++                    governor_module.Governor._replay = lambda self, outcome, nonce, aid=None, tool=None, arguments=None: outcome['value']
+             else:
+                 narrow = lambda key: 'a2-' + sha(key)[:width]
+                 good, bad = meeting(lambda d: sha(request_key(arguments_for(h, d))), width)
+@@ -3299,14 +3302,18 @@
+             got = dict(designs=(good, bad), first=(st1, b1.get('outcome'), b1.get('code') or b1.get('reason')), second=(st2, b2.get('outcome'), b2.get('met'), (b2.get('text') or b2.get('error') or '')[:200]),
+                        code2=b2.get('code'), tool_calls=len(s.ledger('called')) - calls0, runs=s.ledger('verdict')[-1:] and [x.get('design_sha256')[:12] for x in s.ledger('verdict')])
+         finally:
+-            front_door.request_key, governor_module.attempt_id = saved
++            front_door.request_key, governor_module.attempt_id, governor_module.Governor._replay = saved
+             s.stop()
+         e[case] = got
+-    k, i = e['request_key'], e['attempt_id']
+-    checks['with a 16-bit request key, the second design shares the first one\'s key, and is refused, not told the first one\'s pass'] = (
+-        k['first'][:2] == (200, 'PASS') and k['second'][0] == 502 and k['second'][2] is not True and 'not for this design' in k['second'][3] and k['tool_calls'] == 1)
+-    checks['with a 16-bit attempt identity, the second design is refused by the store, is not run, and gets no verdict'] = (
+-        i['first'][:2] == (200, 'PASS') and i['second'][0] == 409 and i['second'][2] is not True and 'ATTEMPT_BOUND_TO_OTHER_REQUEST' in i['second'][3] and i['tool_calls'] == 1)
++    k, i, f = e['request_key'], e['attempt_id'], e['front_door_check']
++    # Predicates restated on 22 November 2026 after the first development run, before any declaration (VP-1 to VP-5): run 1 showed
++    # that the governor's own nonce check refuses the second design (RequestKeyReused) before the store or the front door's new
++    # check is reached.  The kept source and output are in tests/amend17_dev_evidence/r31_run1/.
++    refused_by_governor = lambda x: x['first'][:2] == (200, 'PASS') and x['second'][0] == 502 and x['second'][2] is not True and 'RequestKeyReused' in x['second'][3] and x['tool_calls'] == 1
++    checks['with a 16-bit request key, the second design shares the first one\'s key; the governor refuses it, it is not run, and it is not told the first one\'s pass'] = refused_by_governor(k)
++    checks['with a 16-bit attempt identity, the second design is refused in the same way: not run, no verdict'] = refused_by_governor(i)
++    checks['with the governor\'s replay guard taken out as well, the front door refuses the first design\'s verdict for the second design'] = (
++        f['first'][:2] == (200, 'PASS') and f['second'][0] == 502 and f['second'][2] is not True and 'not for this design' in f['second'][3] and f['tool_calls'] == 1)
+     return checks, e
+ 
+ 

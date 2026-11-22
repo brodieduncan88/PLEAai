@@ -1,0 +1,2399 @@
+{
+ "tests": {
+  "F1": {
+   "title": "The first plug-in, with no front door: a caller holding the workspace's credentials can run a design against another baseline and be told PASS.",
+   "ok": false,
+   "checks": {},
+   "error": "GateRefusedRun: 403: {\"error\": \"BASELINE_NOT_ADMITTED_BUDGET: the budget this attempt was admitted under is not the one its arguments would be decided against; nothing was run and nothing was signed\"}",
+   "seconds": 3.2
+  },
+  "F2": {
+   "title": "The first plug-in, with no front door: one design the database cannot store leaves the record of its baseline unable to verify.",
+   "ok": true,
+   "checks": {
+    "the client stops with a traceback (exit status 1), both times": true,
+    "a run is left with a signed verdict and no stored result": true,
+    "a good design sent afterwards meets the check (exit status 0)": true,
+    "but the record of that baseline no longer verifies, at check 6 only, and its status is NOT VERIFIED": true
+   },
+   "evidence": {
+    "a NUL character in a value": {
+     "first": 1,
+     "traceback": true,
+     "again": 1,
+     "good": [
+      0,
+      "DECLARED CHECK MET"
+     ],
+     "record_verifies": false,
+     "fails": [
+      6
+     ],
+     "why": [
+      "6 gate reports and re-derived verdicts: a2-6ccc8e69f2649b35866fc26a0a0ec3f67d98632c03bae70bdd722e320d85e0de: the gate signed a verdict, but none is given"
+     ],
+     "outcomes": [
+      "INVALID",
+      "PASS"
+     ],
+     "status": "NOT VERIFIED"
+    },
+    "an infinite number": {
+     "first": 1,
+     "traceback": true,
+     "again": 1,
+     "good": [
+      0,
+      "DECLARED CHECK MET"
+     ],
+     "record_verifies": false,
+     "fails": [
+      6
+     ],
+     "why": [
+      "6 gate reports and re-derived verdicts: a2-b91ea9aba4e25e9ba83a32d6a5ed660f36585907f937ddb41ae3c698fac50ec8: the gate signed a verdict, but none is given"
+     ],
+     "outcomes": [
+      "INVALID",
+      "PASS"
+     ],
+     "status": "NOT VERIFIED"
+    }
+   },
+   "seconds": 6.1
+  },
+  "F3": {
+   "title": "Through the MCP server, a design that does not meet the requirement gets a signed FAIL with the reason, kept on the record and sent to the engineer.",
+   "ok": true,
+   "checks": {
+    "the tool result leads with FAIL and the required and achieved values, and is not marked as a tool error": true,
+    "the same verdict is given as fields: outcome FAIL, not met, for this job's baseline": true,
+    "the record holds the FAIL with reason LIMIT_NOT_MET, 180 against 200, margin -20": true,
+    "the record verifies offline and its status is NOT VERIFIED": true,
+    "one notice is in the engineer's inbox, from the service, naming the failure": true
+   },
+   "evidence": {
+    "is_error": false,
+    "first_line": "FAIL: REQUIREMENT NOT MET",
+    "says_values": true,
+    "outcome": "FAIL",
+    "met": false,
+    "names_baseline": true,
+    "text_blocks": 2,
+    "record_verifies": true,
+    "why": [],
+    "status": "NOT VERIFIED",
+    "run": {
+     "outcome": "FAIL",
+     "reason": "LIMIT_NOT_MET",
+     "criteria": [
+      {
+       "id": "service_temperature",
+       "met": false,
+       "limit": "200",
+       "units": "C",
+       "margin": "-20",
+       "achieved": "180",
+       "quantity": "continuous service temperature",
+       "comparison": ">="
+      }
+     ]
+    },
+    "notices": [
+     "20261121T235933Z_FAIL_3a94e4be.txt"
+    ],
+    "notice_head": [
+     "To: D. Marsh",
+     "From: the verification service (not the assistant)",
+     "",
+     "FAIL: REQUIREMENT NOT MET"
+    ]
+   },
+   "seconds": 3.8
+  },
+  "F4": {
+   "title": "The same design sent again, by tool call or by command line, returns the same verdict: one run, one notice.",
+   "ok": true,
+   "checks": {
+    "all four answers are the same FAIL (the command line exits with status 2)": true,
+    "they name one run": true,
+    "the check ran once and one notice was sent": true,
+    "the record shows one official run": true
+   },
+   "evidence": {
+    "heads": [
+     "FAIL: REQUIREMENT NOT MET",
+     "FAIL: REQUIREMENT NOT MET",
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "cli": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "aids": [
+     "a2-3a8228cc954abe22fde78a8cb1a72737c59a8ff85847348731908a097291e562",
+     "a2-3a8228cc954abe22fde78a8cb1a72737c59a8ff85847348731908a097291e562",
+     "a2-3a8228cc954abe22fde78a8cb1a72737c59a8ff85847348731908a097291e562"
+    ],
+    "tool_calls": 1,
+    "notices": 1,
+    "official_runs": 1,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 3.8
+  },
+  "F5": {
+   "title": "The server offers exactly three tools, and a call that is not exactly a design goes no further.",
+   "ok": true,
+   "checks": {
+    "the tools are plea_show_requirement, plea_submit_design and plea_status, and no other": true,
+    "plea_submit_design takes `design` and nothing else; the other two take nothing": true,
+    "the relay refuses each malformed call itself and says nothing was sent": true,
+    "asked directly, the front door refuses the same shapes (400)": true,
+    "nothing was run or recorded: no run of the check, no audit row, no journal line, no notice": true
+   },
+   "evidence": {
+    "names": [
+     "plea_show_requirement",
+     "plea_submit_design",
+     "plea_status"
+    ],
+    "schemas": {
+     "plea_show_requirement": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+     },
+     "plea_submit_design": {
+      "type": "object",
+      "properties": {
+       "design": {
+        "type": "object",
+        "description": "The design-space parameters and their values, and nothing else."
+       }
+      },
+      "required": [
+       "design"
+      ],
+      "additionalProperties": false
+     },
+     "plea_status": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+     }
+    },
+    "relay": {
+     "an extra argument naming a baseline": [
+      true,
+      "Nothing was sent.  plea_submit_design takes exactly one argu"
+     ],
+     "an extra argument naming a check": [
+      true,
+      "Nothing was sent.  plea_submit_design takes exactly one argu"
+     ],
+     "no design": [
+      true,
+      "Nothing was sent.  plea_submit_design takes exactly one argu"
+     ],
+     "a design that is a list": [
+      true,
+      "Nothing was sent.  plea_submit_design takes exactly one argu"
+     ],
+     "a design that is text": [
+      true,
+      "Nothing was sent.  plea_submit_design takes exactly one argu"
+     ],
+     "an argument to plea_status": [
+      true,
+      "Nothing was sent.  plea_status takes no arguments."
+     ],
+     "an argument to plea_show_requirement": [
+      true,
+      "Nothing was sent.  plea_show_requirement takes no arguments."
+     ]
+    },
+    "door": {
+     "an extra field naming a baseline": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "a design that is a list": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "an empty object": [
+      400,
+      "BAD_REQUEST"
+     ]
+    },
+    "tool_calls": 0,
+    "audit_rows": 0,
+    "journal_lines": 0,
+    "notices": 0
+   },
+   "seconds": 3.1
+  },
+  "F6": {
+   "title": "Through the front door a caller cannot choose the baseline: the defect of F1 is closed.",
+   "ok": true,
+   "checks": {
+    "a baseline named as a tool argument or as a field of the request is refused and nothing is run": true,
+    "a baseline named in a header changes nothing: the design is decided against the job's own baseline and fails": true,
+    "a baseline named inside the design is a design outside the baseline: FAIL, on the record": true,
+    "every verdict returned names the job's own baseline": true,
+    "the relaxed baseline has no run and no audit row; the job's record verifies with two failures, NOT VERIFIED": true,
+    "both failures were sent to the engineer of the job's baseline": true
+   },
+   "evidence": {
+    "by_tool": [
+     true,
+     "Nothing was sent.  plea_submit_design ta"
+    ],
+    "by_body": [
+     400,
+     "BAD_REQUEST"
+    ],
+    "by_header": [
+     200,
+     "FAIL"
+    ],
+    "by_query": 404,
+    "before": [
+     1,
+     8,
+     0
+    ],
+    "inside": "FAIL: DESIGN OUTSIDE THE BASELINE",
+    "honest": "FAIL: REQUIREMENT NOT MET",
+    "verdicts_name_a": [
+     true,
+     true,
+     true
+    ],
+    "show_q": 404,
+    "base_q": 404,
+    "record_a": {
+     "verifies": true,
+     "why": [],
+     "runs": 2,
+     "status": "NOT VERIFIED",
+     "reasons": [
+      "DESIGN_OUTSIDE_BASELINE",
+      "LIMIT_NOT_MET"
+     ]
+    },
+    "record_b": {
+     "verifies": true,
+     "runs": 0
+    },
+    "notices_a": 2,
+    "notices_b": 0,
+    "audit_rows_b": 0
+   },
+   "seconds": 4.7
+  },
+  "F7": {
+   "title": "A request that is not a design is refused before anything happens: the defect of F2 is closed.",
+   "ok": true,
+   "checks": {
+    "each of fourteen malformed requests is refused (400, or 411 with no length)": true,
+    "through the tool and the command line the same input is refused, and the answer says nothing was recorded": true,
+    "nothing happened: no run of the check, no audit row, no notice, no journal line": true,
+    "a good design sent afterwards meets the check, and the record verifies: one run, DECLARED CHECK MET": true
+   },
+   "evidence": {
+    "answers": {
+     "a NUL character in a value": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "a NUL character in a name": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "a number too large to be finite": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "Infinity": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "NaN": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "half a surrogate pair": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "a line break in a value": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "a repeated name": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "bytes that are not JSON": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "bytes that are not UTF-8": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "six levels of nesting": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "a body over 16 KiB": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "a negative length": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "no length": [
+      411,
+      "LENGTH_REQUIRED"
+     ]
+    },
+    "by_tool": [
+     true,
+     "REFUSED: a string holds a character that is not printable.  Nothing was run and nothing wa"
+    ],
+    "by_cli": [
+     4,
+     "REFUSED: NaN and Infinity are not JSON.  Nothing was run and nothing was recorded."
+    ],
+    "after_bad": [
+     0,
+     0,
+     0,
+     0
+    ],
+    "good": "DECLARED CHECK MET",
+    "record_verifies": true,
+    "why": [],
+    "status": "DECLARED CHECK MET",
+    "official_runs": 1,
+    "released": {
+     "design_sha256": "3d052bbd639f6e6ef2e6994aaf59c480fae29d84702895123feecb15b625dc34",
+     "met": true,
+     "seen": true
+    }
+   },
+   "seconds": 3.7
+  },
+  "F8": {
+   "title": "What the assistant's side holds cannot reach the store, the witness or the gate, and cannot sign anything.",
+   "ok": true,
+   "checks": {
+    "the job folder holds the service address, the authority's certificate and the job's certificate and key, and nothing else": true,
+    "the job's certificate is refused by the witness service and by the gate host (403)": true,
+    "so is any other certificate of the authority that is not the front door's": true,
+    "the MCP server and its client import the standard library only": true,
+    "started with an empty environment and that folder alone, the server still gets a design verified": true
+   },
+   "evidence": {
+    "files": [
+     "ca.crt",
+     "job.crt",
+     "job.json",
+     "job.key"
+    ],
+    "secrets_found": [],
+    "reach": {
+     "job certificate, witness": 403,
+     "job certificate, witness accept": 403,
+     "job certificate, gate host": 403,
+     "job certificate, gate host run": 403,
+     "another certificate of the same authority, witness": 403,
+     "another certificate of the same authority, gate host": 403,
+     "the front door's own certificate, witness": 200,
+     "the front door's own certificate, gate host": 200
+    },
+    "imports": {
+     "plea_verify_mcp.py": [
+      "argparse",
+      "front_client",
+      "json",
+      "os",
+      "pathlib",
+      "ssl",
+      "sys"
+     ],
+     "front_client.py": [
+      "argparse",
+      "http",
+      "json",
+      "pathlib",
+      "ssl",
+      "sys",
+      "urllib"
+     ]
+    },
+    "env": {
+     "PATH": "/usr/bin:/bin",
+     "LANG": "C.UTF-8"
+    },
+    "with_empty_environment": "DECLARED CHECK MET",
+    "tool_calls": 1
+   },
+   "seconds": 3.7
+  },
+  "F9": {
+   "title": "Nothing the engineer does is offered to the assistant's side, by tool or by address.",
+   "ok": true,
+   "checks": {
+    "a call to any other tool name is an unknown tool (-32602)": true,
+    "the server answers no other kind of request, and serves no resource but the signed baseline": true,
+    "the front door answers 404 to every other address and method": true,
+    "nothing changed: the bindings, the baselines, the budget, the audit rows, the ledger, the inbox": true
+   },
+   "evidence": {
+    "tools": {
+     "verify": -32602,
+     "plea_baseline": -32602,
+     "plea_revise": -32602,
+     "plea_acknowledge": -32602,
+     "plea_record": -32602,
+     "plea_enrol": -32602,
+     "plea_rebind": -32602,
+     "plea_keygen": -32602,
+     "plea_stop": -32602,
+     "baseline": -32602,
+     "revise": -32602,
+     "acknowledge": -32602,
+     "record": -32602
+    },
+    "methods": {
+     "prompts/list": -32601,
+     "sampling/createMessage": -32601,
+     "logging/setLevel": -32601,
+     "completion/complete": -32601,
+     "tools/register": -32601,
+     "resources/subscribe": -32601
+    },
+    "other_resource": -32002,
+    "paths": {
+     "POST /baseline": 404,
+     "POST /revise": 404,
+     "POST /acknowledge": 404,
+     "POST /record": 404,
+     "POST /enrol": 404,
+     "POST /rebind": 404,
+     "POST /revoke": 404,
+     "POST /jobs": 404,
+     "POST /keys": 404,
+     "POST /stop": 404,
+     "POST /requirement": 404,
+     "POST /status": 404,
+     "POST /": 404,
+     "GET /record": 404,
+     "GET /jobs": 404,
+     "GET /keys": 404,
+     "GET /ledger": 404,
+     "GET /inbox": 404,
+     "GET /acknowledgements": 404,
+     "GET /front/jobs.json": 404,
+     "GET /../engineer.key": 404,
+     "GET /submit": 404,
+     "GET /": 404,
+     "PUT /requirement": 404,
+     "DELETE /requirement": 404,
+     "PATCH /requirement": 404
+    },
+    "unchanged": true,
+    "business": "OPEN"
+   },
+   "seconds": 3.0
+  },
+  "F10": {
+   "title": "Only the certificate the engineer enrolled, for a job the engineer has not revoked, under a binding the engineer signed, is answered.",
+   "ok": true,
+   "checks": {
+    "a certificate from another authority gets no answer at all": true,
+    "a certificate of this authority that was not enrolled is refused (403), whatever its name": true,
+    "a binding pointed at another baseline, or re-signed by another key, or unreadable, admits nobody": true,
+    "after the engineer revokes the job its own certificate is refused, and the tool says so as an error": true,
+    "putting the earlier signed binding back in the file does not undo the revocation": true,
+    "nothing was run in any of this": true
+   },
+   "evidence": {
+    "submit": {
+     "the right name from another authority": [
+      null,
+      "SSLError"
+     ],
+     "this authority, a name never enrolled": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the enrolled name, another certificate": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the front door's own name": [
+      403,
+      "NOT_ENROLLED"
+     ]
+    },
+    "read": {
+     "the right name from another authority": [
+      null,
+      "SSLError"
+     ],
+     "this authority, a name never enrolled": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the enrolled name, another certificate": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the front door's own name": [
+      403,
+      "NOT_ENROLLED"
+     ]
+    },
+    "enrolled": 200,
+    "edited": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "resigned": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "broken": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "restored": 200,
+    "revoked": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "put_back": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "by_tool": [
+     true,
+     "REFUSED: this certificate is not enrolled for a job, or the job was re"
+    ],
+    "by_cli": 4,
+    "enrol_again": "job-a is already enrolled; a job name is used once",
+    "relaxed_copy_after_revoking": "REQ-SELFTEST-001 is already under baseline 71ea4bae074d595b\u2026 on job jo",
+    "tool_calls": 0,
+    "audit_rows": 0,
+    "audit_rows_other": 0
+   },
+   "seconds": 3.8
+  },
+  "F11": {
+   "title": "A job moves to another baseline only when that baseline is a signed revision of its own, which says what it replaced and what had failed.",
+   "ok": true,
+   "checks": {
+    "moving the job to a baseline that is merely different is refused, and so is a second job for the same requirement with no reason": true,
+    "once the engineer revises, the old baseline takes no further runs: the tool reports the refusal as an error, nothing is run, and the requirement shown says so": true,
+    "after the move the requirement shown says what it replaced, what had failed and why": true,
+    "the design that failed on A meets the check on B, and B's record is headed CHANGED AFTER THE EVENT": true,
+    "the old record still verifies and still shows the failure": true,
+    "the service's log holds the enrolment and the move, each signed by the engineer, the move naming what it replaced": true
+   },
+   "evidence": {
+    "first": "FAIL: REQUIREMENT NOT MET",
+    "rebind_to_unrelated": "job-a is bound to ad41097fe08cd949\u2026 and this baseline does not supersede it.  A job moves ",
+    "second_job": "REQ-SELFTEST-001 is already under baseline ad41097fe08cd949\u2026 on job job-a.  A change to a ",
+    "still_a": [
+     true,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "on_old": [
+     true,
+     "STOPPED",
+     "REFUSED: this baseline has been stopped (it was superseded o"
+    ],
+    "ran_on_old": 0,
+    "shown_old": [
+     false,
+     [
+      "NO FURTHER RUNS ARE ACCEPTED ON THIS BASELINE: D. Marsh has "
+     ]
+    ],
+    "shown": [
+     "THIS BASELINE SUPERSEDES ad41097fe08cd949\u2026 (1 official runs, 1 not met); 0 unknown, 0 met.  Reason given: Customer lowered the operating temperature (CR-17)."
+    ],
+    "on_new": [
+     "DECLARED CHECK MET",
+     true
+    ],
+    "rev_a": {
+     "verifies": true,
+     "why": [],
+     "status": "NOT VERIFIED",
+     "not_met": 1
+    },
+    "rev_b": {
+     "verifies": true,
+     "status": "DECLARED CHECK MET",
+     "released": {
+      "design_sha256": "3a94e4bee21282fdcad24b5fd7bbd593c47e864c747dda8bd5123abcb7c04e46",
+      "met": true,
+      "seen": true
+     }
+    },
+    "headline": [
+     "CHANGED AFTER THE EVENT: this baseline replaced ad41097fe08cd949\u2026 (rev A) after 1 official runs on i"
+    ],
+    "log": [
+     [
+      "ENROL",
+      "job-a",
+      "ad41097f",
+      ""
+     ],
+     [
+      "REBIND",
+      "job-a",
+      "c24693e6",
+      "ad41097f"
+     ]
+    ],
+    "log_signed": [
+     true,
+     true
+    ]
+   },
+   "seconds": 6.7
+  },
+  "F12": {
+   "title": "The service dying part-way through a run leaves it counted, without a verdict, and never run again.",
+   "ok": true,
+   "checks": {
+    "the host died during the run (exit 137) and the tool did not say it passed": true,
+    "asked again, twice, the answer is UNKNOWN: interrupted, not met": true,
+    "the check was started once for that design and never produced a verdict": true,
+    "the record shows it INTERRUPTED and counted, and that design is not verified": true,
+    "a different design can still be verified": true,
+    "an error that is not the gate's signed \"unknown\" is reported as no verdict, not as an interrupted run (the front door's own code, called directly)": true
+   },
+   "evidence": {
+    "during": [
+     true,
+     "The verification service could not be reached (RemoteDisconnected).  NOT VERIFIE"
+    ],
+    "host_exit": 137,
+    "again": [
+     false,
+     "UNKNOWN: THE RUN WAS INTERRUPTED",
+     "INTERRUPTED",
+     false
+    ],
+    "again2": "UNKNOWN: THE RUN WAS INTERRUPTED",
+    "tool_calls_for_design": 1,
+    "verdicts_for_design": 0,
+    "outcomes": [
+     "INTERRUPTED",
+     "PASS"
+    ],
+    "released": {
+     "design_sha256": "3d052bbd639f6e6ef2e6994aaf59c480fae29d84702895123feecb15b625dc34",
+     "met": false,
+     "seen": true
+    },
+    "other": "DECLARED CHECK MET",
+    "stray": [
+     503,
+     "UNAVAILABLE",
+     null,
+     0
+    ],
+    "status_says": [
+     "Official runs 2: 1 met, 0 not met, 1 unknown."
+    ],
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 6.8
+  },
+  "F13": {
+   "title": "Two jobs on one service each see and charge only their own baseline.",
+   "ok": true,
+   "checks": {
+    "the same design fails for one job and meets the check for the other, each against its own baseline": true,
+    "each job's status shows its own run only": true,
+    "each record verifies with one run, and only the failing job's engineer notice was sent": true,
+    "a second job for a requirement already under another baseline needs the engineer's reason, which is kept in the signed log": true,
+    "a job that asks too often is refused (429) without slowing the other": true
+   },
+   "evidence": {
+    "paced": [
+     200,
+     200,
+     200,
+     429,
+     200
+    ],
+    "a": "FAIL: REQUIREMENT NOT MET",
+    "b": "DECLARED CHECK MET",
+    "a_names": true,
+    "b_names": true,
+    "status_a": {
+     "total": 1,
+     "PASS": 0,
+     "FAIL": 1,
+     "UNKNOWN": 0
+    },
+    "status_b": {
+     "total": 1,
+     "PASS": 1,
+     "FAIL": 0,
+     "UNKNOWN": 0
+    },
+    "b_sees": "REQ-SELFTEST-002",
+    "record_a": {
+     "verifies": true,
+     "runs": 1,
+     "status": "NOT VERIFIED"
+    },
+    "record_b": {
+     "verifies": true,
+     "runs": 1,
+     "status": "DECLARED CHECK MET"
+    },
+    "notices_a": 1,
+    "notices_b": 0,
+    "quiet": "REQ-SELFTEST-001 is already under baseline d9d4fafb4ffc2a8f\u2026 on job job-a.  A ch",
+    "notes": [
+     [
+      "job-a",
+      null
+     ],
+     [
+      "job-b",
+      null
+     ],
+     [
+      "job-c",
+      "Separate prototype build, agreed with the client (CR-21)."
+     ]
+    ]
+   },
+   "seconds": 7.2
+  },
+  "F14": {
+   "title": "The MCP server speaks both forms of the protocol, says nothing but protocol on its output, and makes one request per call.",
+   "ok": true,
+   "checks": {
+    "opened with the handshake, each earlier revision is agreed as asked, and an unknown one is answered with the latest of them": true,
+    "a revision without those fields is not sent them: no annotations or structured content in 2024-11-05, structured content from 2025-06-18": true,
+    "with the version on each request (2026-07-28) the same three tools are served, complete, and server/discover lists the versions": true,
+    "an unsupported version, a request with no capabilities, and a tool call before any opening are refused with their codes and nothing is run": true,
+    "a line that is not JSON and a batch each get an error reply, a notification gets none, and closing the input ends the server (exit 0)": true,
+    "with the service unreachable a call reports that as an error after one connection, not more, and runs nothing": true,
+    "when the service is back the same call gets its verdict, from one run": true
+   },
+   "evidence": {
+    "opened": {
+     "2025-11-25": "2025-11-25",
+     "2025-06-18": "2025-06-18",
+     "2025-03-26": "2025-03-26",
+     "2024-11-05": "2024-11-05",
+     "2099-01-01": "2025-11-25"
+    },
+    "old_tool_fields": [
+     "description",
+     "inputSchema",
+     "name"
+    ],
+    "old_has_structured": false,
+    "mid_has_structured": true,
+    "modern": {
+     "result_type": "complete",
+     "server": "plea-verification",
+     "tools": [
+      "plea_show_requirement",
+      "plea_submit_design",
+      "plea_status"
+     ],
+     "versions": [
+      "2026-07-28",
+      "2025-11-25",
+      "2025-06-18",
+      "2025-03-26",
+      "2024-11-05"
+     ],
+     "call_type": "complete",
+     "has_structured": true
+    },
+    "wrong": [
+     -32022,
+     "2031-01-01",
+     true
+    ],
+    "no_caps": -32602,
+    "early": -32600,
+    "ping": {},
+    "parse": -32700,
+    "batch": -32600,
+    "after_note": [
+     3,
+     {}
+    ],
+    "exit": 0,
+    "stderr": "",
+    "down": [
+     true,
+     "The verification service could not be reached (SSLEOFError: "
+    ],
+    "connections": 1,
+    "ran_while_down": 0,
+    "back": "DECLARED CHECK MET",
+    "tool_calls": 1
+   },
+   "seconds": 5.4
+  },
+  "F15": {
+   "title": "A stored baseline changed after it was signed is not shown, and a design sent against it is decided UNKNOWN by the gate, counted, and sent to the engineer.",
+   "ok": true,
+   "checks": {
+    "the changed baseline is not shown, by address or by tool": true,
+    "a design that the relaxed card would pass is decided UNKNOWN by the gate, not a pass": true,
+    "so is one sent against a relaxed card properly signed by another key, and the runs are counted": true,
+    "with the file restored the requirement is shown again and still fails": true,
+    "all three results were sent to the engineer": true,
+    "a stored file that is no longer a card at all, or is nested too deep to read, is not shown, and a design sent is decided UNKNOWN by the gate in the same way and sent to the engineer (Amendment 2)": true,
+    "no run met the check, the record verifies and the status is NOT VERIFIED": true
+   },
+   "evidence": {
+    "shown": [
+     500,
+     "BASELINE_UNAVAILABLE"
+    ],
+    "given": [
+     500,
+     "BASELINE_UNAVAILABLE"
+    ],
+    "by_tool": [
+     true,
+     "The baseline held by the verification service for this job i"
+    ],
+    "relaxed_card": [
+     false,
+     "UNKNOWN: NO USABLE BASELINE IS HELD FOR THIS JOB",
+     "UNKNOWN",
+     "BASELINE_MISMATCH"
+    ],
+    "forged": [
+     "UNKNOWN: NO USABLE BASELINE IS HELD FOR THIS JOB",
+     "UNKNOWN"
+    ],
+    "status_meanwhile": [
+     200,
+     2
+    ],
+    "restored": "FAIL: REQUIREMENT NOT MET",
+    "shown_again": 200,
+    "not_a_card": [
+     false,
+     "UNKNOWN: NO USABLE BASELINE IS HELD FOR THIS JOB",
+     "UNKNOWN",
+     false,
+     "BASELINE_MISMATCH"
+    ],
+    "too_deep": [
+     false,
+     "UNKNOWN: NO USABLE BASELINE IS HELD FOR THIS JOB",
+     "UNKNOWN",
+     false,
+     "BASELINE_MISMATCH"
+    ],
+    "shown_not_a_card": [
+     500,
+     "BASELINE_UNAVAILABLE"
+    ],
+    "shown_deep": [
+     500,
+     "BASELINE_UNAVAILABLE"
+    ],
+    "notices_before": 3,
+    "notices": 5,
+    "outcomes": [
+     "FAIL",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN",
+     "UNKNOWN"
+    ],
+    "status": "NOT VERIFIED",
+    "met": 0,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 4.9
+  },
+  "F16": {
+   "title": "One run at a time for a job: a second design sent while the first is being checked is refused and not run.",
+   "ok": true,
+   "checks": {
+    "while the first design is being checked, a second is refused (409), by address and by tool, and is not run": true,
+    "the status can still be read meanwhile": true,
+    "the check that did not finish is stopped and is UNKNOWN, never a pass": true,
+    "afterwards the second design is verified, and each design was run once": true,
+    "the record verifies: one unknown, one met": true
+   },
+   "evidence": {
+    "second": [
+     409,
+     "IN_PROGRESS"
+    ],
+    "by_tool": [
+     true,
+     "REFUSED: a design is already being verified for this job.  Ask again f"
+    ],
+    "status": 200,
+    "calls_meanwhile": [
+     {
+      "material": "PPS-GF40",
+      "wall_mm": 3,
+      "mode": "hang"
+     }
+    ],
+    "took": 30.5,
+    "first": [
+     503,
+     "UNAVAILABLE"
+    ],
+    "after": [
+     200,
+     "UNKNOWN",
+     "CHECK_ERROR"
+    ],
+    "good": "DECLARED CHECK MET",
+    "calls": [
+     "hang",
+     "normal"
+    ],
+    "outcomes": [
+     "PASS",
+     "UNKNOWN"
+    ],
+    "record_verifies": true,
+    "why": [],
+    "status_of_record": "DECLARED CHECK MET"
+   },
+   "seconds": 36.9
+  },
+  "F17": {
+   "title": "Two failures whose notices would have the same file name both reach the engineer: a notice is never written over another.\n    Restated by Amendment 14.  Before, the case was made by timing alone, two runs in a row ending within one second, and when\n    it was not made the test failed without having tested anything.  Now the naming is shown with no clock at all; and the\n    case is made through the service by two jobs sending at the same moment, and the test says for itself whether it was\n    made: COLLISION_HANDLED, COLLISION_MISHANDLED, or PRECONDITION_NOT_MET, which is a failure to test and never a pass.",
+   "ok": true,
+   "checks": {
+    "with no clock: two notices delivered under one name are two files, the second numbered, each with its own text, and nothing else is left": true,
+    "through the service the case was made: two designs whose hashes begin with the same eight digits, sent at the same moment by two jobs on the one baseline, both failed, with their notices named for the same second (a case not made is PRECONDITION_NOT_MET: a failure to test, never a pass)": true,
+    "and it was handled: each failure has its own notice, two files with different names, neither empty, each naming its own design": true,
+    "the inbox holds one notice for every failure, and the record verifies with all of them": true
+   },
+   "evidence": {
+    "no_clock": {
+     "wrote": [
+      [
+       "UNCLAIMED",
+       "20261120T000000Z_FAIL_ff539c34.txt"
+      ],
+      [
+       "UNCLAIMED",
+       "20261120T000000Z_FAIL_ff539c34_2.txt"
+      ]
+     ],
+     "files": [
+      "inbox/unclaimed/0000000000000000000000000000000000000000000000000000000000000000/20261120T000000Z_FAIL_ff539c34.txt",
+      "inbox/unclaimed/0000000000000000000000000000000000000000000000000000000000000000/20261120T000000Z_FAIL_ff539c34_2.txt"
+     ],
+     "own_text": [
+      true,
+      true
+     ]
+    },
+    "result": "COLLISION_HANDLED",
+    "tried": [
+     {
+      "outcomes": [
+       "FAIL",
+       "FAIL"
+      ],
+      "names": [
+       "20261122T000112Z_FAIL_ff539c34.txt",
+       "20261122T000112Z_FAIL_ff539c34_2.txt"
+      ],
+      "precondition_met": true
+     }
+    ],
+    "made": {
+     "pair": [
+      {
+       "material": "PA66-GF30",
+       "wall_mm": 2.016403,
+       "mode": "normal"
+      },
+      {
+       "material": "PA66-GF30",
+       "wall_mm": 2.019648,
+       "mode": "normal"
+      }
+     ],
+     "names": [
+      "20261122T000112Z_FAIL_ff539c34.txt",
+      "20261122T000112Z_FAIL_ff539c34_2.txt"
+     ],
+     "distinct": true,
+     "two_designs": true,
+     "own_text": [
+      true,
+      true
+     ],
+     "sizes": [
+      1922,
+      1922
+     ],
+     "same_hash_start": true,
+     "both_failed": true
+    },
+    "files": 2,
+    "failures": 2,
+    "record_verifies": true,
+    "why": [],
+    "not_met": 2,
+    "status": "NOT VERIFIED"
+   },
+   "seconds": 5.5
+  },
+  "F18": {
+   "title": "A number the database would hand back changed is refused before anything happens, so it cannot leave a record unable to verify.",
+   "ok": true,
+   "checks": {
+    "each of nine numbers the database would hand back changed is refused (400), and so are three nested inside the design, a negative zero among them": true,
+    "through the tool and the command line such a number in a design not sent before is refused, and each answer says nothing was recorded": true,
+    "nothing happened: no run of the check, no audit row, no notice": true,
+    "seven numbers beside them are decided: each a signed FAIL for a design outside the baseline, sent to the engineer, and the same answer when sent again": true,
+    "a good design then meets the check, and the record verifies: eight runs, DECLARED CHECK MET": true,
+    "the rule matches the database: of 872 numbers, the front door accepts a number exactly when the database hands it back as written, and some of each kind are in the sample": true
+   },
+   "evidence": {
+    "refused": {
+     "1e22": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "-0.0": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "1e16": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "1.5e16": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "1e308": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "-1e16": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "-0e0": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "-1e-400": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "10000000000000000.0": [
+      400,
+      "BAD_REQUEST"
+     ]
+    },
+    "nested": {
+     "{\"sizes\": [1, [1e22]]}": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "{\"sizes\": [1, [-0.0]]}": [
+      400,
+      "BAD_REQUEST"
+     ],
+     "[-1e16]": [
+      400,
+      "BAD_REQUEST"
+     ]
+    },
+    "by_tool": [
+     true,
+     "REFUSED: a number cannot be kept as written: with a decimal point or an exponent its size must be below 1e16, and it mus"
+    ],
+    "by_cli": [
+     4,
+     "REFUSED: a number cannot be kept as written: with a decimal point or an exponent its size must be below 1e16, and it mus"
+    ],
+    "after_refused": [
+     0,
+     0,
+     0
+    ],
+    "decided": {
+     "9999999999999998.0": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "-9999999999999998.0": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "12345678901234567890": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "-0": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "0.00001": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "1E-7": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "5e-324": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ]
+    },
+    "same_again": true,
+    "after_decided": [
+     7,
+     7
+    ],
+    "good": "DECLARED CHECK MET",
+    "record_verifies": true,
+    "why": [],
+    "status": "DECLARED CHECK MET",
+    "official_runs": 8,
+    "released": {
+     "design_sha256": "3d052bbd639f6e6ef2e6994aaf59c480fae29d84702895123feecb15b625dc34",
+     "met": true,
+     "seen": true
+    },
+    "sample": 872,
+    "accepted": 658,
+    "handed_back_as_written": 658,
+    "rule_and_database_differ_on": []
+   },
+   "seconds": 5.8
+  },
+  "F19": {
+   "title": "The engineer's inbox cannot be written: the run is still counted with its verdict, its notice is kept in the service's own store, and the answer says so; it is never a pass, and the record verifies.  (Amendment 2 recorded this as a known limit; Amendment 7 closes it, and this check now states the repaired behaviour.  Amendment 8: after the inbox is put back, a new run is admitted once the gate has shown that it can write it again.)",
+   "ok": true,
+   "checks": {
+    "with the inbox in place a failing design is FAIL": true,
+    "with a file where the inbox folder should be, the next failing design is still FAIL, counted with its verdict: not an interrupted run, not a tool error": true,
+    "its answer says the notice was not delivered, and the notice is kept once in the service's own store": true,
+    "the same design sent again is answered the same, and the check is not run a second time": true,
+    "every run has its verdict on the record, and all three are FAIL": true,
+    "with the inbox put back, and once the gate has shown that it can write it again, the next failing design is FAIL, and its notice goes to the inbox": true,
+    "no run met the check, the record verifies with all three in it, and the status is NOT VERIFIED": true
+   },
+   "evidence": {
+    "first": [
+     "FAIL: REQUIREMENT NOT MET",
+     "FAIL"
+    ],
+    "blocked": [
+     false,
+     "FAIL: REQUIREMENT NOT MET",
+     "FAIL",
+     false
+    ],
+    "blocked_says_undelivered": true,
+    "proved_again": "WRITABLE",
+    "again": [
+     "FAIL: REQUIREMENT NOT MET",
+     "FAIL"
+    ],
+    "after": [
+     "FAIL: REQUIREMENT NOT MET",
+     "FAIL"
+    ],
+    "tool_calls": 3,
+    "verdict_lines": 3,
+    "notices": 2,
+    "kept": 1,
+    "outcomes": [
+     "FAIL",
+     "FAIL",
+     "FAIL"
+    ],
+    "status": "NOT VERIFIED",
+    "met": 0,
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 5.4
+  },
+  "F20": {
+   "title": "Through the front door, what a design supplies cannot be read as the service's own words: not in the engineer's notice, not in the text of the answer, not in the checker's print of the record.",
+   "ok": true,
+   "checks": {
+    "each of six such designs sent by address, and one sent by tool, is decided FAIL / DESIGN_OUTSIDE_BASELINE and is not marked as a tool error; one sent while no usable baseline is held is UNKNOWN": true,
+    "the reason that is signed, in each answer and in the record, repeats no name and no text from a design": true,
+    "in the eight notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width": true,
+    "the text of each of the seven answers given for a design decided against the job's baseline sets it out the same way": true,
+    "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass": true,
+    "the checker's print of the record holds no word a sender wrote and prints, for each design outside the baseline, a reason equal to the one signed; the record verifies: seven not met, one unknown": true
+   },
+   "evidence": {
+    "by_address": {
+     "a name that is a sentence": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "a name padded with spaces, which the notice as it was showed as a row of its own at 80 columns": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "a text value that is a sentence": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "a name in letters of full width with characters that look blank": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "a text sent for a number, every name right": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ],
+     "a text with no plain space in it, in characters that look blank, sent for one of the baseline's parameters": [
+      200,
+      "FAIL",
+      "DESIGN_OUTSIDE_BASELINE"
+     ]
+    },
+    "by_tool": [
+     false,
+     "FAIL: DESIGN OUTSIDE THE BASELINE",
+     "FAIL"
+    ],
+    "no_card": [
+     200,
+     "UNKNOWN",
+     "BASELINE_MISMATCH"
+    ],
+    "notices": 8,
+    "in_notices": {
+     "lines_holding_what_was_sent": 8,
+     "not_marked_as_sent": 0,
+     "outside_quotes": 0,
+     "longer_than_78": 0,
+     "not_printable_ascii": 0,
+     "planted_words_shown": 0,
+     "letters_of_full_width_or_blank": 0
+    },
+    "in_answers": {
+     "lines_holding_what_was_sent": 7,
+     "not_marked_as_sent": 0,
+     "outside_quotes": 0,
+     "longer_than_78": 0,
+     "not_printable_ascii": 0,
+     "planted_words_shown": 0,
+     "letters_of_full_width_or_blank": 0
+    },
+    "rows_in_notices": {
+     "Verdict": [
+      7
+     ],
+     "Reason": [
+      8
+     ],
+     "STATUS": [
+      0
+     ],
+     "RECORD VERIFIED": [
+      0
+     ],
+     "forged": 0
+    },
+    "rows_in_answers": {
+     "Verdict": [
+      7
+     ],
+     "Reason": [
+      7
+     ],
+     "STATUS": [
+      0
+     ],
+     "RECORD VERIFIED": [
+      0
+     ],
+     "forged": 0
+    },
+    "in_reasons": 0,
+    "in_print": 0,
+    "rows_in_print": {
+     "Verdict": [
+      0
+     ],
+     "Reason": [
+      0
+     ],
+     "STATUS": [
+      1
+     ],
+     "RECORD VERIFIED": [
+      1
+     ],
+     "forged": 0
+    },
+    "print_gives_the_signed_reason": 7,
+    "outside": 7,
+    "record_verifies": true,
+    "why": [],
+    "not_met": 7,
+    "unknown": 1,
+    "met": 0
+   },
+   "seconds": 5.1
+  },
+  "F21": {
+   "title": "Through the front door, a notice and the tool's answer say only what is so for their run: a changed data file is said to be changed and nothing is said to be unchanged, the Verdict row states the verdict, and the requirement shown after a revision gives every count of the runs it replaced.",
+   "ok": true,
+   "checks": {
+    "a design that fails, one that passes, and two sent while a data file of the baseline is changed (by tool and by address) are answered FAIL, met, UNKNOWN and UNKNOWN; three notices are written": true,
+    "for the changed data file, the two notices and the two answers say the check or its data is not as baselined and must be restored, offer no different design, never say that nothing was changed, and state UNKNOWN on the Verdict row": true,
+    "for the failure, the notice and the answer say the check's files matched when it ran and what the check returned, and state FAIL on the Verdict row; no notice or answer, the pass's among them, has the old words, in any case": true,
+    "after the engineer revises and moves the job, the requirement shown gives every count of the runs on the baseline it replaced (4 runs, 1 not met, 2 unknown, 1 met) and the engineer's reason, also while the baseline is on hold; in process, other counts, none equal, are each put in their place": true,
+    "the new record's print gives the same counts and the engineer's reason, and both records verify": true,
+    "in process, the front door's own text for when it holds no usable card is, line for line, what is so: for every reason the gate gives with its card, a missing data file, a design of many names and an empty design among them, it begins with the gate's reason, and it says no usable baseline is held only for the gate's refusal; it sets the design out as sent and has no old words": true
+   },
+   "evidence": {
+    "heads": [
+     "FAIL: REQUIREMENT NOT MET",
+     "DECLARED CHECK MET",
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE",
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE"
+    ],
+    "notices": 3,
+    "changed": 4,
+    "failing": 2,
+    "old_words": 0,
+    "own_text_heads": [
+     "DECLARED CHECK MET",
+     "FAIL: REQUIREMENT NOT MET",
+     "FAIL: DESIGN OUTSIDE THE BASELINE",
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE",
+     "UNKNOWN: THE CHECK DID NOT RUN TO A RESULT",
+     "UNKNOWN: THE CHECK GAVE NO USABLE RESULT",
+     "UNKNOWN: THE RESULT IS NOT PLAUSIBLE",
+     "UNKNOWN: THE CHECK OR ITS DATA NO LONGER MATCHES THE BASELINE",
+     "FAIL: DESIGN OUTSIDE THE BASELINE",
+     "UNKNOWN: THE CHECK DID NOT RUN TO A RESULT",
+     "UNKNOWN: NO USABLE BASELINE IS HELD FOR THIS JOB"
+    ],
+    "own_text_known": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "own_text_old_words": 0,
+    "changed_said": [
+     [
+      true,
+      true,
+      false,
+      [
+       "Verdict       UNKNOWN.  Decide"
+      ]
+     ],
+     [
+      true,
+      true,
+      false,
+      [
+       "Verdict       UNKNOWN.  Decide"
+      ]
+     ],
+     [
+      true,
+      true,
+      false,
+      [
+       "Verdict       UNKNOWN.  Decide"
+      ]
+     ],
+     [
+      true,
+      true,
+      false,
+      [
+       "Verdict       UNKNOWN.  Decide"
+      ]
+     ]
+    ],
+    "failing_said": [
+     [
+      true,
+      true,
+      [
+       "Verdict       FAIL.  Computed "
+      ]
+     ],
+     [
+      true,
+      true,
+      [
+       "Verdict       FAIL.  Computed "
+      ]
+     ]
+    ],
+    "counts_a": [
+     4,
+     1,
+     1,
+     2
+    ],
+    "shown": [
+     "THIS BASELINE SUPERSEDES f03a5e85c3ff842f\u2026 (4 official runs, 1 not met); 2 unknown, 1 met.  Reason given: Customer lowered the operating temperature (CR-21)."
+    ],
+    "printed": [
+     "CHANGED AFTER THE EVENT: this baseline replaced f03a5e85c3ff842f\u2026 (rev A) after 4 official runs on it: 1 met, 1 not met, 2 unknown.  Reason given by the engineer: Customer lowered the operating temperature (CR-21)."
+    ],
+    "distinct": [
+     "THIS BASELINE SUPERSEDES f03a5e85c3ff842f\u2026 (7 official runs, 2 not met); 4 unknown, 1 met.  Reason given: Customer lowered the operating temperature (CR-21)."
+    ],
+    "on_hold": [
+     "THIS BASELINE SUPERSEDES f03a5e85c3ff842f\u2026 (4 official runs, 1 not met); 2 unknown, 1 met.  Reason given: Customer lowered the operating temperature (CR-21)."
+    ],
+    "on_b": "DECLARED CHECK MET",
+    "record_a": [
+     true,
+     []
+    ],
+    "record_b": true
+   },
+   "seconds": 6.3
+  },
+  "F22": {
+   "title": "A full journal stops new runs at the door: the next design is refused with nothing run and nothing counted, and the journal keeps its size.  (Amendment 7, D1.)",
+   "ok": true,
+   "checks": {
+    "the first run is answered as before": true,
+    "at the size limit the next design is refused at the door with 507, STORAGE_FULL, and the refusal says nothing was run": true,
+    "nothing was run or counted for it, and the journal did not grow": true
+   },
+   "evidence": {
+    "first": "DECLARED CHECK MET",
+    "refused": [
+     507,
+     "STORAGE_FULL"
+    ],
+    "text": "REFUSED: the verification service has stopped accepting runs: the journal of submissions has reached its size limit.  Nothing was run and nothing was counted.  The responsible engineer has been sent a notice of this.",
+    "calls": [
+     1,
+     1
+    ],
+    "size": [
+     156,
+     156
+    ]
+   },
+   "seconds": 3.4
+  },
+  "F23": {
+   "title": "With less free space on the journal's disk than the service keeps for notices, a new design is refused at the door; a design already journaled is refused there too: the door keeps the room for a notice before any attempt, and adds no line.  (Amendment 7, D1.)",
+   "ok": true,
+   "checks": {
+    "before the reserve is reached, a new design is run and journaled": true,
+    "a repeat of it, with room to spare, is answered and adds no line and no run": true,
+    "the same design again, at the reserve, is refused too, and adds no line and no run": true,
+    "a new design at the reserve is refused at the door: 507, STORAGE_FULL, nothing run or counted, no line added": true
+   },
+   "evidence": {
+    "first": [
+     200,
+     "PASS"
+    ],
+    "repeat": [
+     507,
+     null
+    ],
+    "new": [
+     507,
+     "STORAGE_FULL"
+    ],
+    "lines": [
+     1,
+     1,
+     1
+    ],
+    "calls": [
+     1,
+     1,
+     1
+    ]
+   },
+   "seconds": 3.4
+  },
+  "F24": {
+   "title": "A run cut off when the gate host dies is counted INTERRUPTED, and the service writes one notice of it to the engineer, however often the answer is asked for again.  (Amendment 7, D11.)",
+   "ok": true,
+   "checks": {
+    "the host died during the run (exit 137) and the tool did not say it passed": true,
+    "asked again, the answer is INTERRUPTED each time": true,
+    "the engineer has one notice of the run, and it is the only notice in the inbox": true,
+    "the notice says the run was interrupted, is not a pass, will not be run again, and shows the design": true,
+    "the notice says no verdict was recorded": true,
+    "the answer does not say the notice was lost": true
+   },
+   "evidence": {
+    "host_exit": 137,
+    "again": "UNKNOWN: THE RUN WAS INTERRUPTED",
+    "notices": [
+     "INTERRUPTED_a2-afe6c0f01c7c1e11a4d776477cfa6669fe9ba4cca4cd83b93f8697cceb9bc16f.txt"
+    ],
+    "body_head": [
+     "To: D. Marsh",
+     "From: the verification service (not the assistant)",
+     "",
+     "UNKNOWN: THE RUN WAS INTERRUPTED"
+    ]
+   },
+   "seconds": 6.0
+  },
+  "F25": {
+   "title": "A verdict the service cannot put in the engineer's inbox is still returned at the door, its answer says where the notice went, and the engineer's console lists the notice as kept undelivered.  (Amendment 7, D2 and D3.)",
+   "ok": true,
+   "checks": {
+    "the run is decided and its verdict returned at the door, not refused": true,
+    "the answer says the notice was not delivered": true,
+    "the notice is kept in the service's own store, once": true,
+    "the engineer's console lists the kept notice": true
+   },
+   "evidence": {
+    "outcome": "FAIL",
+    "met": false,
+    "refused": false,
+    "kept": [
+     "20261122T000151Z_FAIL_3a94e4be.txt"
+    ],
+    "status_line": [
+     "1 notices kept undelivered, in /tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/wt_hard/outputs/verify_front_tests/F25/home/undelivered/3e2585c2c224d00872c5bd25267e324c8b91d055b4ce20a1ed4a70ebb276cb24: 20261122T000151Z_FAIL_3a94e4be.txt"
+    ]
+   },
+   "seconds": 3.5
+  },
+  "F26": {
+   "title": "A journal write that fails part-way is taken back: the line is not left torn, the design is refused at the door with 507 and nothing is run, and the next design is journaled whole.  (Amendment 7, D1.)",
+   "ok": true,
+   "checks": {
+    "a journal write that fails part-way is refused at the door with 507, STORAGE_FULL, and nothing is run": true,
+    "the part-written line is taken back, so the journal is as it was": true,
+    "the next design is journaled whole, and answered": true
+   },
+   "evidence": {
+    "refused": [
+     507,
+     "STORAGE_FULL"
+    ],
+    "journal_unchanged": true,
+    "calls": [
+     0,
+     0
+    ],
+    "next": [
+     200,
+     "PASS"
+    ],
+    "lines_whole": true
+   },
+   "seconds": 3.4
+  },
+  "F27": {
+   "title": "A run the gate has not yet signed as interrupted is not noticed by a look at the job's runs: it is still PENDING.  The ask that the gate answers as interrupted writes its engineer one notice, and later looks and asks write no second one.  (Amendment 7, D11.)",
+   "ok": true,
+   "checks": {
+    "the host died during the run (exit 137)": true,
+    "a look before the gate has signed the run shows it pending, and writes no notice": true,
+    "the ask the gate answers as interrupted writes its engineer one notice": true,
+    "later looks and asks write no second notice": true
+   },
+   "evidence": {
+    "host_exit": 137,
+    "first_look": [
+     "PENDING"
+    ],
+    "after_first": [],
+    "after_ask": [
+     "INTERRUPTED_a2-78c95180d564109b41add740ddafbf4da78be6e2bc432e9af7c47f282e785326.txt"
+    ],
+    "later": [
+     "INTERRUPTED"
+    ],
+    "after_later": [
+     "INTERRUPTED_a2-78c95180d564109b41add740ddafbf4da78be6e2bc432e9af7c47f282e785326.txt"
+    ],
+    "again": "UNKNOWN: THE RUN WAS INTERRUPTED",
+    "after_again2": [
+     "INTERRUPTED_a2-78c95180d564109b41add740ddafbf4da78be6e2bc432e9af7c47f282e785326.txt"
+    ]
+   },
+   "seconds": 5.7
+  },
+  "F28": {
+   "title": "A job is not enrolled on a baseline, or moved to a revision, until the gate has shown that it can write that baseline's inbox: with the gate not running, or with an inbox the gate cannot write, the engineer is refused there and then, and nothing is changed.  (Amendment 8, D3.)",
+   "ok": true,
+   "checks": {
+    "with the gate not running, a job is not enrolled on a new baseline: the refusal says the service has not shown that it can write the inbox, and nothing is changed: no binding, no folder, no line in the log of enrolments": true,
+    "with an inbox the gate cannot write, the gate says so when it starts, and enrolment is refused, saying the service cannot write the inbox; nothing is changed": true,
+    "once the inbox can be written, the gate shows it with no run, and the job is enrolled and its design answered": true,
+    "a job is not moved to a revision whose inbox the gate cannot write, and stays on its own baseline": true,
+    "once that inbox can be written, the job moves to the revision": true
+   },
+   "evidence": {
+    "down": "the verification service has not shown that it can write a notice to the inbox of this baseline (abd2422015f2f433\u2026), so a failure might not reach its ",
+    "after_down": [
+     false,
+     false,
+     false
+    ],
+    "state_blocked": "NOT_WRITABLE",
+    "blocked": "the verification service cannot write a notice to the inbox of this baseline (abd2422015f2f433\u2026), so a failure might not reach its engineer.  Start th",
+    "after_blocked": [
+     false,
+     false,
+     false
+    ],
+    "host_said": 1,
+    "state_restored": "WRITABLE",
+    "answered": [
+     false,
+     "DECLARED CHECK MET"
+    ],
+    "state_rev": "NOT_WRITABLE",
+    "moved": "the verification service cannot write a notice to the inbox of this baseline (e4e9118e90802dd8\u2026), so a failure might not reach its engineer.  Start th",
+    "still": true,
+    "state_rev_restored": "WRITABLE",
+    "rebound": [
+     "REBIND",
+     true
+    ]
+   },
+   "seconds": 10.9
+  },
+  "F29": {
+   "title": "While the gate has not shown that it can write the baseline's inbox, the front door refuses a new run before anything is run, counted or journaled, says why, and tells the engineer once on the day for each reason; a design whose run is finished is still answered; a run that an earlier request began and that was not yet made is not made, and the refusal says that it is on the record; and when the gate shows it again, the refused designs are run.  (Amendment 8, D3.)",
+   "ok": true,
+   "checks": {
+    "with the proof good, a failing design is FAIL": true,
+    "with no proof on record, a new design is refused at the door, saying that the service has not shown it can write the inbox and that a failure might not reach the engineer; nothing is run, counted or journaled, and no result is sent": true,
+    "the engineer is told of the refusal: one notice in the inbox on the day for that reason, however many designs are refused; it says that the gate has not shown it can write there, that nothing is run or counted, and that no check gave it; and the caller is told that the engineer has been sent it": true,
+    "a design whose run is finished is still answered as before, and nothing more is run": true,
+    "a proof older than its limit, and a proof that says the inbox could not be written, each refuse a new design the same way, in their own words, and each is told to the engineer in a notice of its own, with its own reason": true,
+    "where the runs cannot be read, a design is not let through, though its run is finished; the refusal says only that this request ran nothing": true,
+    "when the gate shows again that it can write the inbox, the design refused before is run and answered": true,
+    "a run that an earlier request began and that was not yet made is not made while the proof is not good: the refusal says that it is on the record with no verdict yet, and does not say that nothing was run; it is made once the proof is good": true
+   },
+   "evidence": {
+    "first": "FAIL: REQUIREMENT NOT MET",
+    "none": [
+     true,
+     "INBOX_UNCHECKED",
+     null,
+     true
+    ],
+    "none_says": "REFUSED: the verification service has not shown that it can write a notice to the inbox of this baseline, so a failure m",
+    "told": [
+     "INBOX_UNCHECKED_20261122_NOT_WRITABLE.txt",
+     "INBOX_UNCHECKED_20261122_STALE.txt",
+     "INBOX_UNCHECKED_20261122_UNCHECKED.txt"
+    ],
+    "notice_head": [
+     "To: D. Marsh",
+     "From: the verification service (not the assistant)",
+     "",
+     "THE VERIFICATION SERVICE IS REFUSING NEW RUNS FOR THIS BASELINE",
+     "",
+     "Reason        The gate, which writes the notice of each failure, has not shown that it can write to this inbox.",
+     "              A failure might therefore not reach you, so no new run is admitted."
+    ],
+    "again": [
+     "FAIL: REQUIREMENT NOT MET",
+     "FAIL"
+    ],
+    "old": [
+     true,
+     "INBOX_UNCHECKED",
+     null,
+     true
+    ],
+    "old_says": "REFUSED: the verification service has not shown lately that it can write a notice to the inbox of this baselin",
+    "cannot": [
+     true,
+     "INBOX_UNCHECKED",
+     null,
+     true
+    ],
+    "cannot_says": "REFUSED: the verification service cannot write a notice to the inbox of this baseline, so a failure ",
+    "unread": [
+     503,
+     "INBOX_UNCHECKED"
+    ],
+    "unread_says": "g.  The responsible engineer has been sent a notice of this.",
+    "told_same": [
+     "INBOX_UNCHECKED_20261122_UNCHECKED.txt"
+    ],
+    "held_says": "a failure might not reach the responsible engineer.  An earlier request began a run of this design: it is on the record with no verdict yet, and it is not taken further until the service has shown that it can write the inbox.  This request ran nothing and counted nothing.  The responsible engineer has been sent a notice of this.",
+    "counts": [
+     [
+      1,
+      8,
+      1,
+      1
+     ],
+     [
+      1,
+      8,
+      1,
+      1
+     ],
+     [
+      1,
+      8,
+      1,
+      1
+     ],
+     [
+      1,
+      8,
+      1,
+      1
+     ],
+     [
+      1,
+      8,
+      1,
+      1
+     ],
+     [
+      1,
+      8,
+      1,
+      1
+     ],
+     [
+      2,
+      16,
+      2,
+      2
+     ],
+     [
+      2,
+      23,
+      2,
+      3
+     ],
+     [
+      2,
+      23,
+      2,
+      3
+     ],
+     [
+      3,
+      31,
+      3,
+      3
+     ]
+    ],
+    "states": [
+     "WRITABLE",
+     "WRITABLE",
+     "WRITABLE"
+    ],
+    "then": [
+     "FAIL: REQUIREMENT NOT MET",
+     "FAIL"
+    ],
+    "pending": [
+     true,
+     "UNAVAILABLE",
+     null,
+     false
+    ],
+    "held": [
+     true,
+     "INBOX_UNCHECKED",
+     null,
+     false
+    ],
+    "made": [
+     "FAIL: REQUIREMENT NOT MET",
+     "FAIL"
+    ]
+   },
+   "seconds": 10.6
+  },
+  "F30": {
+   "title": "Each baseline has its own share of the journal: a job that has used its baseline's share is refused, with nothing run or counted, while a job on another baseline still runs; the engineer of the refused baseline is sent one notice of it; a front door started afresh counts the share again from the journal; when room is made in the journal, the count is taken again; and a journal line that cannot be read stops no answer.  (Amendment 8, D1.)",
+   "ok": true,
+   "checks": {
+    "a design within its baseline's share is run": true,
+    "the next new designs for that baseline are refused at the door: 507, STORAGE_FULL, saying the baseline has used its share; nothing is run or counted, and the journal does not grow": true,
+    "a design already journaled for that baseline is still answered, with no new run": true,
+    "a job on another baseline still runs": true,
+    "the engineer of the refused baseline has one notice of it in the inbox, however many designs were refused; it gives the reason and says that nothing is run or counted and that no check gave it; the other baseline's inbox has none": true,
+    "the refusal tells the caller that the engineer has been sent a notice": true,
+    "a front door started afresh counts the share again from the journal, and refuses that baseline at once": true,
+    "when room is made in the journal, the count is taken again, and the baseline's next design is run": true,
+    "a journal line nested too deep to read, which the door never writes, is counted for no baseline and does not stop an answer": true
+   },
+   "evidence": {
+    "one": 159,
+    "first": [
+     200,
+     "FAIL"
+    ],
+    "refused": [
+     [
+      507,
+      "STORAGE_FULL"
+     ],
+     [
+      507,
+      "STORAGE_FULL"
+     ]
+    ],
+    "says": "REFUSED: the verification service has stopped accepting runs: this baseline has used its share of the journal of submissions.  Nothing was run and nothing was counted.  The responsible engineer has been sent a notice of this.",
+    "calls": [
+     1,
+     1,
+     1,
+     2,
+     2
+    ],
+    "sizes": [
+     159,
+     159
+    ],
+    "repeat": [
+     200,
+     "FAIL"
+    ],
+    "other": [
+     200,
+     "PASS"
+    ],
+    "told_a": [
+     "STORAGE_FULL_20261122_SHARE.txt"
+    ],
+    "told_b": [],
+    "notice_head": [
+     "To: D. Marsh",
+     "From: the verification service (not the assistant)",
+     "",
+     "THE VERIFICATION SERVICE IS REFUSING NEW RUNS FOR THIS BASELINE",
+     "",
+     "Reason        This baseline has used its share of the journal of submissions."
+    ],
+    "afresh": [
+     507,
+     "STORAGE_FULL"
+    ],
+    "room_made": [
+     200,
+     "FAIL",
+     1
+    ],
+    "deep_line": [
+     200,
+     "FAIL",
+     0
+    ]
+   },
+   "seconds": 7.2
+  },
+  "F31": {
+   "title": "A refusal for a full journal or a full disk reaches the engineer too: one notice on the day for each reason, in the inbox of the refused job's baseline; and where the inbox cannot take it, the notice is kept in the service's own store, the console lists it, and the caller is told that the engineer could not be sent it.  (Amendment 8, D1.)",
+   "ok": true,
+   "checks": {
+    "a full journal refuses the design, and the engineer has one notice of it in the inbox: it gives the reason and says that nothing is run or counted": true,
+    "the caller is told that the engineer has been sent a notice": true,
+    "a second design refused for the same reason on the same day writes no second notice; a refusal for too little disk is refused in its own words and writes a notice of its own, with its own reason": true,
+    "with the inbox unable to take it, the notice is kept in the service's own store, the engineer's console lists it, and the caller is told that the engineer could not be sent it": true,
+    "nothing was run or counted in any of these": true
+   },
+   "evidence": {
+    "full": [
+     507,
+     "STORAGE_FULL"
+    ],
+    "says": "REFUSED: the verification service has stopped accepting runs: the journal of submissions has reached its size limit.  Nothing was run and nothing was counted.  The responsible engineer has been sent a notice of this.",
+    "told1": [
+     "STORAGE_FULL_20261122_LIMIT.txt"
+    ],
+    "notice_head": [
+     "To: D. Marsh",
+     "From: the verification service (not the assistant)",
+     "",
+     "THE VERIFICATION SERVICE IS REFUSING NEW RUNS FOR THIS BASELINE",
+     "",
+     "Reason        The journal of submissions has reached its size limit."
+    ],
+    "low": [
+     507,
+     "STORAGE_FULL"
+    ],
+    "told2": [
+     "STORAGE_FULL_20261122_DISK.txt",
+     "STORAGE_FULL_20261122_LIMIT.txt"
+    ],
+    "told_same": [
+     "STORAGE_FULL_20261122_LIMIT.txt"
+    ],
+    "blocked": [
+     507,
+     "STORAGE_FULL"
+    ],
+    "blocked_says": "ing was counted.  The responsible engineer could not be sent a notice of this.  Tell the responsible engineer.",
+    "kept": [
+     "STORAGE_FULL_20261122_LIMIT.txt"
+    ],
+    "calls": 0,
+    "audit_rows": 0
+   },
+   "seconds": 2.9
+  },
+  "F32": {
+   "title": "A refusal does not deny a run that an earlier request began: while the gate has not shown that it can write the inbox, the door says that the run is on the record with no verdict yet, and takes it no further; a run the gate has signed as interrupted is finished, and its design is answered whatever the proof says; and a notice of a refusal that had to be kept in the service's own store has its copy in the inbox once the inbox can take it.  (Amendment 8, D3.)",
+   "ok": true,
+   "checks": {
+    "the host died during the run (exit 137), and the gate, started again with a file in place of the inbox, shows that it cannot write it": true,
+    "asked again while the proof is not good, the design is refused, and the refusal does not deny the run: it says that an earlier request began a run that is on the record with no verdict yet, and that this request ran nothing; it does not say that nothing was run; nothing more is run or counted": true,
+    "the notice of that refusal is kept in the service's own store, as the inbox cannot take it, and the caller is told that the engineer could not be sent it": true,
+    "once the gate has shown that it can write the inbox, the design is answered INTERRUPTED, with one notice of the run in the inbox": true,
+    "a run signed as interrupted is finished: with the proof saying again that the inbox could not be written, its design is still answered INTERRUPTED, nothing more is run, and no second notice of the run is written": true,
+    "a new design is then refused with nothing run, and the notice that was kept in the store has its copy in the inbox now that the inbox can take it; the caller is told that the engineer has been sent it": true
+   },
+   "evidence": {
+    "host_exit": 137,
+    "states": [
+     "NOT_WRITABLE",
+     "WRITABLE"
+    ],
+    "held": [
+     "INBOX_UNCHECKED",
+     "nnot write a notice to the inbox of this baseline, so a failure might not reach the responsible engineer.  An earlier request began a run of this design: it is on the record with no verdict yet, and it is not taken further until the service has shown that it can write the inbox.  This request ran nothing and counted nothing.  The responsible engineer could not be sent a notice of this.  Tell the responsible engineer."
+    ],
+    "counts": [
+     [
+      1,
+      7
+     ],
+     [
+      1,
+      7
+     ]
+    ],
+    "kept": [
+     "INBOX_UNCHECKED_20261122_NOT_WRITABLE.txt"
+    ],
+    "again": "INTERRUPTED",
+    "finished": "INTERRUPTED",
+    "interrupted_notices": [
+     [
+      "INTERRUPTED_a2-83cc5056fa5fcb98d665670db4455abfc1a9adfd18955060f37a4c16d2d4a300.txt"
+     ],
+     [
+      "INTERRUPTED_a2-83cc5056fa5fcb98d665670db4455abfc1a9adfd18955060f37a4c16d2d4a300.txt"
+     ]
+    ],
+    "new": [
+     "INBOX_UNCHECKED",
+     " failure might not reach the responsible engineer.  Nothing was run and nothing was counted.  The responsible engineer has been sent a notice of this."
+    ],
+    "in_inbox": [
+     "INBOX_UNCHECKED_20261122_NOT_WRITABLE.txt"
+    ]
+   },
+   "seconds": 6.9
+  },
+  "F33": {
+   "title": "Through the front door, what an assistant or a person reads of a pass calls it the declared check met and shows what the check does not cover: the answer's text and its fields, the status's text and its fields, the command line's answers, and the MCP server's descriptions and instructions.  The front door's own text, for when it cannot read the stored card, says that a result does not say the check is correct.  (Amendment 9.)",
+   "ok": true,
+   "checks": {
+    "the answer to a pass begins DECLARED CHECK MET, with what the check does not cover on the next line; its fields say the declared check was met and list what the check does not cover; the signed verdict in it still says PASS": true,
+    "the status's fields say whether a design has met the declared check under that name, before a run and after it, and no field is called verified, in the tool's result or in the front door's answer": true,
+    "the status's text, through the tool and through the command line, shows for which design the declared check was met, that this does not say the check is correct, and what the check does not cover": true,
+    "the command line's answer to a pass begins DECLARED CHECK MET, with what the check does not cover, and exits 0": true,
+    "no line of the words of the answers and the status (their first part; the second gives the fields, in which outcome is still PASS), nor of the tools' descriptions or the server's instructions, shows the bare word PASS": true,
+    "the tools' descriptions and the server's instructions call a pass the declared check met, and say it is not a statement that the check is correct": true,
+    "in process, the front door's own text for a pass, for when it cannot read the stored card, says that the result does not say the check is correct, and that what the check does not cover cannot be shown there": true
+   },
+   "evidence": {
+    "first": [
+     "DECLARED CHECK MET",
+     "The check does not cover: anything except the material's listed continuous-use temperature."
+    ],
+    "fields": {
+     "outcome": "PASS",
+     "met": true,
+     "declared_check_met": true,
+     "check_does_not_cover": [
+      "anything except the material's listed continuous-use temperature"
+     ]
+    },
+    "signed": "PASS",
+    "status_fields": [
+     false,
+     true,
+     false,
+     false
+    ],
+    "status_tail": [
+     "DECLARED CHECK MET, for design 3d052bbd639f6e6e\u2026 only.  This says what the declared check returned against the baselined limits.  It does not say the check is correct, the requirement is complete, or the design is safe.",
+     "The check does not cover: anything except the material's listed continuous-use temperature."
+    ],
+    "cli": [
+     0,
+     [
+      "DECLARED CHECK MET, for design 3d052bbd639f6e6e\u2026 only.  This says what the declared check returned against the baselined limits.  It does not say the check is correct, the requirement is complete, or the design is safe.",
+      "The check does not cover: anything except the material's listed continuous-use temperature."
+     ],
+     0,
+     [
+      "DECLARED CHECK MET",
+      "The check does not cover: anything except the material's listed continuous-use temperature."
+     ]
+    ],
+    "bare": [
+     [],
+     [],
+     [],
+     [],
+     []
+    ],
+    "said": "[\"Show the requirement exactly as the responsible engineer baselined it: the statement, the acceptance limits, the load case, the design space (what may be varied) and the declared check with what it does not cover.  Read-only.  Call it before proposing a design.  Nothing shown can be changed from h",
+    "own": [
+     "This result does not say the check is correct, the requirement is complete, or the design is safe.  What the check does not cover cannot be shown here: ask the responsible engineer.",
+     "The front door could not read the stored baseline for this job as the one the responsible engineer signed, so the requirement is not printed here.  The gate read it as signed and decided this result."
+    ]
+   },
+   "seconds": 4.0
+  },
+  "F34": {
+   "title": "The gate's check is called what it is: a new run refused without it is refused as INBOX_UNCHECKED, and its notice is named so.  And a run left pending when the gate host died gets its notice with no one sending its design again: the front door asks for it itself once it has seen it pending for a while, and only while the gate's check of the inbox is good; asking for it runs nothing again.  (Amendment 9.)",
+   "ok": true,
+   "checks": {
+    "the host died during the run (exit 137); started again, the gate shows that it can write the inbox; with a file in place of the inbox and the check taken away, the check is not good": true,
+    "while the gate's check of the inbox is not good, the front door, which looks for runs left pending every 0.3 seconds and asks after one, does not ask: the run is still pending, no notice of any kind is written, and nothing more was run": true,
+    "once the gate has shown again that it can write the inbox, the front door asks for the run itself, with no design sent by anyone: the run is INTERRUPTED, one notice of it is in the inbox, the check was not run again, and the front door's log says it asked": true,
+    "the design sent again afterwards is answered INTERRUPTED, with no second notice and nothing run; its fields say the declared check was not met, and what it does not cover": true,
+    "with no check on record, a new design is refused as INBOX_UNCHECKED, and the engineer's notice of it is named INBOX_UNCHECKED, for its reason; nothing is named as before": true
+   },
+   "evidence": {
+    "host_exit": 137,
+    "states": [
+     "WRITABLE",
+     "UNCHECKED",
+     "WRITABLE"
+    ],
+    "while_blocked": [
+     [
+      "PENDING"
+     ],
+     [],
+     [],
+     1
+    ],
+    "after": [
+     [
+      "INTERRUPTED"
+     ],
+     [
+      "INTERRUPTED_a2-9d269c79e7da7dafffaad3d5365604d35972409f1f20f2c8fc5dbb5abfc39a3c.txt"
+     ],
+     1,
+     0.4
+    ],
+    "logged": true,
+    "again": [
+     "INTERRUPTED",
+     [
+      [
+       "INTERRUPTED_a2-9d269c79e7da7dafffaad3d5365604d35972409f1f20f2c8fc5dbb5abfc39a3c.txt"
+      ],
+      1
+     ]
+    ],
+    "again_fields": [
+     false,
+     true
+    ],
+    "refused": [
+     "INBOX_UNCHECKED",
+     "REFUSED: the verification service has not shown that it can write a notice to the inbox of"
+    ],
+    "named": [
+     "INBOX_UNCHECKED_20261122_UNCHECKED.txt"
+    ]
+   },
+   "seconds": 11.3
+  },
+  "F35": {
+   "title": "The front door's look for runs left pending acts on one run less and less often while it cannot be finished, also when the journal does not hold its design, and leaves it after twelve times; it does not ask while its baseline's budget is held; and it writes the notice of a run cut off whose notice is missing, held or not, and in fixed words where the journal does not hold the design; none of it runs anything again.  (Amendment 9.)",
+   "ok": true,
+   "checks": {
+    "the host died during the run (exit 137) and, started again, shows that it can write the inbox; the run is pending": true,
+    "while an ask does not finish the run, it is asked for once it has been pending for the wait (10 s here), and again after 20 s and then 40 s more: twice the wait before each time": true,
+    "the wait stops growing at an hour, and after twelve asks the look leaves the run as it is; a look that cannot read the store forgets no wait; a wait of nought is taken as one second; nothing was run and no notice was written meanwhile": true,
+    "a run whose design the journal does not hold is looked for no more often: at 10 s, then 20 s after that, and not between": true,
+    "while the baseline's budget is held, the run is not asked for, though it is due, and is still pending": true,
+    "with the budget open again, the real ask, at once, makes the run INTERRUPTED, with one notice and nothing run again": true,
+    "a run cut off whose notice is missing is given it by the look, once it is due, and only once; nothing is run": true,
+    "with the budget held, a missing notice of a run cut off is still written, once it is due; nothing is run": true,
+    "where the journal does not hold the design, the notice is still written, in the service's fixed words, which say the design is not shown; nothing is run": true
+   },
+   "evidence": {
+    "host_exit": 137,
+    "state": "WRITABLE",
+    "counts": [
+     0,
+     0,
+     1,
+     1,
+     1,
+     2,
+     2,
+     3
+    ],
+    "capped": 12,
+    "waits": [
+     3600.0
+    ],
+    "kept": [
+     3600.0
+    ],
+    "brisk": 0,
+    "mid": [
+     [
+      "PENDING"
+     ],
+     1,
+     []
+    ],
+    "blind_counts": [
+     0,
+     1,
+     1,
+     1,
+     2,
+     2
+    ],
+    "held": [
+     0,
+     [
+      "PENDING"
+     ]
+    ],
+    "asked_real": [
+     {
+      "job": "job-a",
+      "aid": "a2-4ef2d23db452dca01448a0bfd9270146a79283ad769f2b5a57b9c7a23364b28a",
+      "status": 200,
+      "outcome": "INTERRUPTED"
+     }
+    ],
+    "after": [
+     [
+      "INTERRUPTED"
+     ],
+     [
+      "INTERRUPTED_a2-4ef2d23db452dca01448a0bfd9270146a79283ad769f2b5a57b9c7a23364b28a.txt"
+     ],
+     1
+    ],
+    "between": [],
+    "looks": [
+     [],
+     [
+      {
+       "job": "job-a",
+       "aid": "a2-4ef2d23db452dca01448a0bfd9270146a79283ad769f2b5a57b9c7a23364b28a",
+       "status": null,
+       "outcome": "INTERRUPTED_NOTICE_WRITTEN"
+      }
+     ],
+     []
+    ],
+    "restored": [
+     [
+      "INTERRUPTED_a2-4ef2d23db452dca01448a0bfd9270146a79283ad769f2b5a57b9c7a23364b28a.txt"
+     ],
+     1
+    ],
+    "held_looks": [
+     [],
+     [
+      {
+       "job": "job-a",
+       "aid": "a2-4ef2d23db452dca01448a0bfd9270146a79283ad769f2b5a57b9c7a23364b28a",
+       "status": null,
+       "outcome": "INTERRUPTED_NOTICE_WRITTEN"
+      }
+     ]
+    ],
+    "held_restored": [
+     [
+      "INTERRUPTED_a2-4ef2d23db452dca01448a0bfd9270146a79283ad769f2b5a57b9c7a23364b28a.txt"
+     ],
+     1
+    ],
+    "blind_looks": [
+     [],
+     [
+      {
+       "job": "job-a",
+       "aid": "a2-4ef2d23db452dca01448a0bfd9270146a79283ad769f2b5a57b9c7a23364b28a",
+       "status": null,
+       "outcome": "INTERRUPTED_NOTICE_WRITTEN"
+      }
+     ]
+    ],
+    "fixed": [
+     "e verification service did not finish this design's run: no verdict was recorded.  The run is counted, and it will not be run again.  NOT VERIFIED.  The design is not shown here.  This is not a pass.\n"
+    ],
+    "calls_at_end": 1
+   },
+   "seconds": 6.9
+  },
+  "F36": {
+   "title": "An answer does not take longer with every run already made on the baseline: of 25 designs sent one after another through\n    the front door, the last five are answered about as fast as the first five, and each answer counts the runs so far.\n    (Amendment 13.)",
+   "ok": true,
+   "checks": {
+    "25 designs sent one after another each get their FAIL, and each answer counts the runs so far, 1 to 25": true,
+    "the last five are answered about as fast as the first five: their middle time is less than a quarter of a second more (it was a second more before)": true,
+    "every failure has its notice, and the record verifies with all 25": true
+   },
+   "evidence": {
+    "seconds": [
+     0.562,
+     0.548,
+     0.546,
+     0.595,
+     0.62,
+     0.578,
+     0.53,
+     0.531,
+     0.66,
+     0.603,
+     0.54,
+     0.501,
+     0.547,
+     0.596,
+     0.566,
+     0.52,
+     0.601,
+     0.577,
+     0.613,
+     0.742,
+     0.548,
+     0.561,
+     0.553,
+     0.588,
+     0.546
+    ],
+    "first_five": 0.562,
+    "last_five": 0.553,
+    "grew_by": -0.009,
+    "totals": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25
+    ],
+    "outcomes": [
+     "FAIL"
+    ],
+    "record_verifies": true,
+    "why": [],
+    "not_met": 25,
+    "notices": 25
+   },
+   "seconds": 17.3
+  },
+  "F37": {
+   "title": "Amendment 17 (D16).  The latest binding seen for each job, and its revocation, are kept in the database: a restart forgets nothing, a revocation is never undone, and a stale, conflicting or mismatched binding admits nobody.",
+   "ok": false,
+   "checks": {},
+   "error": "AttributeError: module 'deploy_front' has no attribute 'OWNER_DSN'",
+   "seconds": 2.9
+  }
+ },
+ "passed": 35,
+ "of": 37,
+ "seconds": 241.2,
+ "PASS": false
+}

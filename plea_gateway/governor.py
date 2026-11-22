@@ -103,7 +103,11 @@ def _raise_for(decision: Decision, observation: dict, stage: str):
 
 
 def attempt_id(request_key: str) -> str:
-    return 'a-' + hashlib.sha256(request_key.encode()).hexdigest()[:16]
+    """Amendment 17 (22 November 2026, D21): the whole SHA-256 of the request key, 256 bits, marked 'a2-'.  Before it the
+    identity was 'a-' and 64 bits, so two request keys met after about 2^32 hashes and the second was refused for ever
+    (the store's ATTEMPT_BOUND_TO_OTHER_REQUEST).  Records made before keep their 'a-' identities; check_record.py
+    reads both forms, never mixed within one record."""
+    return 'a2-' + hashlib.sha256(request_key.encode()).hexdigest()
 
 
 def _phase_in(observation: dict, aid: str):

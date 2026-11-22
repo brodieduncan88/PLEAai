@@ -93,9 +93,18 @@ def arguments_for(baseline_sha256: str, design) -> dict:
     return {'baseline_sha256': baseline_sha256, 'design': design}
 
 
-def request_key(arguments: dict) -> str:
-    """The same rule plea_mcp.py uses: the tool name and a hash of its canonical arguments.  Never chosen by the caller."""
-    return f'{TOOL}:' + hashlib.sha256(canonical(arguments).encode()).hexdigest()[:24]
+def request_key(arguments: dict, legacy: bool = False) -> str:
+    """The same rule plea_mcp.py uses: the tool name and a hash of its canonical arguments.  Never chosen by the caller.
+    Amendment 17 (22 November 2026, D21): the whole hash.  At 96 bits two designs met after about 2^48 hashes, and the
+    second was then a repeat of the first: same request key, same attempt, the first design's stored verdict.  legacy=True
+    gives the earlier 96-bit form, only to find the designs of runs made before; no new run is made under it."""
+    h = hashlib.sha256(canonical(arguments).encode()).hexdigest()
+    return f'{TOOL}:' + (h[:24] if legacy else h)
+
+
+def request_keys(arguments: dict) -> tuple:
+    """Both forms, current first: what a run made before or after Amendment 17 may carry.  For finding designs only."""
+    return request_key(arguments), request_key(arguments, legacy=True)
 
 
 def outcome_of(phase: str, evidence: list, result) -> str:
@@ -139,7 +148,7 @@ def attempts_of(store, root: str, submissions: list, upto: int | None = None) ->
     source; each is used only if it hashes to an attempt's request key, so the source need not be trusted."""
     audit, observation = store.audit_snapshot(root)
     upto = len(audit) if upto is None else upto
-    by_key = {request_key(a): a for a in submissions}
+    by_key = {k: a for a in submissions for k in request_keys(a)}       # Amendment 17: a run of either form finds its design
     all_evidence, all_receipts, all_results = _stored_for(store, root)
     attempts = []
     for aid, req, phase, nonce, _receipt, _crossed in observation['attempts']:
@@ -154,7 +163,7 @@ def attempts_of(store, root: str, submissions: list, upto: int | None = None) ->
         arguments = by_key.get(req)
         if arguments is None and isinstance(result, dict) and 'design' in result:
             guess = arguments_for(result.get('baseline_sha256'), result['design'])
-            arguments = guess if request_key(guess) == req else None
+            arguments = guess if req in request_keys(guess) else None
         attempts.append({'aid': aid, 'request_key': req, 'arguments': arguments, 'phase': phase, 'nonce': nonce,
                          'outcome': outcome_of(phase, evidence, result), 'receipts': receipts, 'evidence': evidence, 'result': result})
     return attempts, {'audit': audit, 'observation': observation}

@@ -1,0 +1,822 @@
+{
+ "tests": {
+  "R17": {
+   "title": "What a design supplies cannot be read as the service's own words: not in the reason that is signed, not in the engineer's notice or the answer, not in the checker's print of the record.",
+   "ok": true,
+   "checks": {
+    "each of sixteen designs outside the baseline is answered FAIL: DESIGN OUTSIDE THE BASELINE (exit status 2); one sent while no usable baseline is held is UNKNOWN (exit status 3)": true,
+    "the reason that is signed repeats no name and no text from a design: none of the senders' words is in any recorded reason": true,
+    "it names the baseline's parameter, counts the names that are not the baseline's, and repeats a short number": true,
+    "in the seventeen notices, what a sender supplied is only on lines that begin \"sent:\", inside double quotes, in printable ASCII, on lines of at most 78 characters; none of the words planted further on in a name or a text is shown, and no letter of full width": true,
+    "the seventeen answers given to the caller, the one given while no usable baseline is held among them, set it out the same way": true,
+    "every line that begins \"sent:\", in the notices and in the answers, has one form: a parameter of the baseline or a name in quotes, then a text in quotes, a number, true, false, null or a count; and the four designs that add names to an approved design keep the approved design on the first line": true,
+    "a design with forty names of its own, and texts of its own for two of the baseline's parameters, is shown as those two, twelve of the names and a count of the other 28: the sender does not choose what is left out": true,
+    "a number is shown whole or not at all: one of 23 characters stands on the design's first line as it was sent, one of forty digits is named by its length, and no part of it is shown anywhere": true,
+    "folded at every width from 80 to 200 columns, the notices and the answers show one row beginning Reason for each, one beginning Verdict for each that has one, and no row beginning with a sender's words or with words of a pass": true,
+    "the checker's print of the record holds no word a sender wrote, shows one row beginning STATUS and one beginning RECORD VERIFIED at every width, its own, and for each design outside the baseline gives the reason that was signed, in its own words": true,
+    "a record that holds a sender's words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason": true,
+    "the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one": true,
+    "in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline's parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service's own repeats what was planted in a design": true,
+    "an ordinary design is set out on one line as it always was, an empty one is said to be empty, and a name of the baseline's own longer than 26 characters is cut on a line of what was sent": true,
+    "the record verifies: sixteen not met, one unknown, none met": true
+   },
+   "evidence": {
+    "form": {
+     "lines_sent": 62,
+     "not_of_the_form": 0,
+     "first_line_the_approved_design": 4
+    },
+    "grid": {
+     "designs": 15792,
+     "reason_differs": 0,
+     "raised": 0,
+     "line_too_long_or_not_ascii": 0,
+     "reason_or_own_line_repeats_what_was_sent": 0
+    },
+    "plain_lines": {
+     "an ordinary design": [
+      "Design        material = PPS-GF40, mode = normal, wall_mm = 3"
+     ],
+     "an empty design": [
+      "Design        no parameters were sent"
+     ],
+     "a baseline whose own name is long": "          sent: ppppppppppppppppppppppp... = \"QS x\""
+    },
+    "twenty": [
+     "\"xxxxxxxxxxxxxxxxxxxx\"",
+     "\"xxxxxxxxxxxxxxxxxxxx\"+1"
+    ],
+    "answers": {
+     "a name that is a sentence": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a name padded with spaces, which the notice as it was showed as a row of its own at 80 columns": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a text value that is a sentence": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a name in letters of full width with characters that look blank": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a value holding quotes and a backslash": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a value that is a list of text": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a number of forty digits": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a number outside its range": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "two plain names that are not in the baseline, one sorting after the baseline's": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "forty names that are not in the baseline, with texts of its own for two of the baseline's parameters": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a number of 23 characters": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a text sent for a number, every name right": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a text with no plain space in it, in characters that look blank, sent for one of the baseline's parameters": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "an object as a value": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "a design that is not an object": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ],
+     "two names in small letters that are not in the baseline": [
+      2,
+      "FAIL: DESIGN OUTSIDE THE BASELINE"
+     ]
+    },
+    "no_card": [
+     3,
+     "UNKNOWN: THE VERIFICATION SERVICE HOLDS NO USABLE COPY OF THIS BASELINE"
+    ],
+    "reasons": {
+     "a name that is a sentence": "the design must give exactly the baselined parameters; 1 of the names sent is not in the baseline; missing: material, mode, wall_mm.  The check was not run.",
+     "a name padded with spaces, which the notice as it was showed as a row of its own at 80 columns": "the design must give exactly the baselined parameters; 1 of the names sent is not in the baseline.  The check was not run.",
+     "a text value that is a sentence": "the value sent for material is not on the approved list (PA66-GF30, PPS-GF40).  The check was not run.",
+     "a name in letters of full width with characters that look blank": "the design must give exactly the baselined parameters; 1 of the names sent is not in the baseline.  The check was not run.",
+     "a value holding quotes and a backslash": "the value sent for mode is not on the approved list (normal, crash, garbage, nan, zero, huge, hang).  The check was not run.",
+     "a value that is a list of text": "the value sent for wall_mm is not a number.  The check was not run.",
+     "a number of forty digits": "the value sent for wall_mm is outside the baselined range 2 to 4.  The check was not run.",
+     "a number outside its range": "wall_mm = 9 is outside the baselined range 2 to 4.  The check was not run.",
+     "two plain names that are not in the baseline, one sorting after the baseline's": "the design must give exactly the baselined parameters; 2 of the names sent are not in the baseline.  The check was not run.",
+     "forty names that are not in the baseline, with texts of its own for two of the baseline's parameters": "the design must give exactly the baselined parameters; 40 of the names sent are not in the baseline.  The check was not run.",
+     "a number of 23 characters": "wall_mm = -0.000012345678901234568 is outside the baselined range 2 to 4.  The check was not run.",
+     "a text sent for a number, every name right": "the value sent for wall_mm is not a number.  The check was not run.",
+     "a text with no plain space in it, in characters that look blank, sent for one of the baseline's parameters": "the value sent for material is not on the approved list (PA66-GF30, PPS-GF40).  The check was not run.",
+     "an object as a value": "the value sent for mode is not on the approved list (normal, crash, garbage, nan, zero, huge, hang).  The check was not run.",
+     "a design that is not an object": "the design must be an object of parameters.  The check was not run.",
+     "two names in small letters that are not in the baseline": "the design must give exactly the baselined parameters; 2 of the names sent are not in the baseline.  The check was not run."
+    },
+    "notices": 17,
+    "in_notices": {
+     "lines_holding_what_was_sent": 27,
+     "not_marked_as_sent": 0,
+     "outside_quotes": 0,
+     "longer_than_78": 0,
+     "not_printable_ascii": 0,
+     "planted_words_shown": 0,
+     "letters_of_full_width_or_blank": 0
+    },
+    "in_answers": {
+     "lines_holding_what_was_sent": 27,
+     "not_marked_as_sent": 0,
+     "outside_quotes": 0,
+     "longer_than_78": 0,
+     "not_printable_ascii": 0,
+     "planted_words_shown": 0,
+     "letters_of_full_width_or_blank": 0
+    },
+    "rows_in_notices": {
+     "Verdict": [
+      16
+     ],
+     "Reason": [
+      17
+     ],
+     "STATUS": [
+      0
+     ],
+     "RECORD VERIFIED": [
+      0
+     ],
+     "forged": 0
+    },
+    "rows_in_answers": {
+     "Verdict": [
+      17
+     ],
+     "Reason": [
+      17
+     ],
+     "STATUS": [
+      0
+     ],
+     "RECORD VERIFIED": [
+      0
+     ],
+     "forged": 0
+    },
+    "forty": {
+     "own_parameters": 2,
+     "names": 12,
+     "and_the_rest": 1
+    },
+    "numbers": {
+     "whole": 1,
+     "named_by_its_length": 1,
+     "shown_in_part": 0
+    },
+    "headed": {
+     "notices_with_lines_sent": 14,
+     "with_the_heading_above_them": 14
+    },
+    "in_reasons": 0,
+    "in_print": 0,
+    "rows_in_print": {
+     "Verdict": [
+      0
+     ],
+     "Reason": [
+      0
+     ],
+     "STATUS": [
+      1
+     ],
+     "RECORD VERIFIED": [
+      1
+     ],
+     "forged": 0
+    },
+    "print_gives_the_signed_reason": 16,
+    "outside": 16,
+    "earlier_record_prints_the_same": true,
+    "unreadable_reason": {
+     "rows": 1,
+     "longest": 460,
+     "not_printable": 0
+    },
+    "sample": 4765,
+    "not_as_the_rule_says": [],
+    "record_verifies": true,
+    "why": [],
+    "not_met": 16,
+    "unknown": 1,
+    "met": 0
+   },
+   "seconds": 10.8
+  },
+  "R26": {
+   "title": "A courier that reads only the witness sends the engineer a notice of each run that calls for one, signed with its own key,\n    to the engineer's mailbox, which signs a receipt for it.  It does not read the service, so a notice the service did not\n    write, or that was removed from its inbox, is still sent.  A record can carry the notices and receipts, and its checker\n    says which runs have a notice delivered and which have none.  (Amendment 11.)",
+   "ok": true,
+   "checks": {
+    "the witness gives the courier's certificate its decisions, which follow on from the head a checkpoint names for decision 0 and hash one to the next, and a run's signed gate reports and stored result; reading adds no decision": true,
+    "the witness answers 404 for a budget it does not hold and 400 for no budget, a number that is not one, a page of 0 or 201 decisions, a budget name with a control character, no run named and a run named with a control character": true,
+    "the courier's certificate reads and can do nothing else: the witness refuses its write (403) and its other question (403); a certificate the witness does not know is refused the chain (403), and so is the keeper, which reads checkpoints only": true,
+    "a run cut off when the gate host dies gets no notice before the courier has seen it with no outcome for the time allowed, then a notice that it has none; once the gate signs that it does not know the outcome, a notice that it was interrupted; each is delivered": true,
+    "a failing run whose own notice was taken out of the service's inbox still gets the courier's notice of the failure, delivered; a passing run gets none; a second pass sends nothing more": true,
+    "the mailbox holds each notice with its receipt, which verifies under the mailbox's key and names that notice, and a readable copy that opens with what happened; the failure's copy gives the numbers; the courier's log holds the same notices": true,
+    "the courier's configuration names neither the service's home nor its database; it holds the courier's certificate and the witness's address": true,
+    "with the mailbox down, the notice of a failure is made and waits, and the pass exits 1; with the mailbox back, the next pass delivers it, makes no other, and exits 0": true,
+    "the mailbox refuses a notice signed by another key (403), one that is not a notice (400), a body that is not JSON (400) and a client that is not the courier (403); a notice delivered again gets the receipt first given and is kept once": true,
+    "a courier given another key for the mailbox takes no answer of the mailbox as a receipt: nothing is delivered, the notices wait, and the pass exits 1": true,
+    "the courier refuses decisions that were changed, skip one, or do not end at the head the checkpoint names, and takes them when they are whole": true,
+    "a courier whose last head the witness contradicts refuses the budget (a fork), keeps the witness's signed checkpoint as the evidence, exits 1, and stays stopped at the next pass": true,
+    "a courier told that the last decision it read is beyond the chain refuses the budget (a rollback), and keeps the witness's signed checkpoint of the shorter chain as the evidence": true,
+    "a record built with the courier's log verifies with a tenth check, the notices delivered; each run that calls for a notice (two failures and the interruption) has one delivered, and the run once without an outcome is named; the checker's command says so and exits 0 when delivery is required": true,
+    "a record that lacks the notice of one failure verifies, and says that run has no delivery evidence; the command exits 1 when delivery is required; a record that lacks the notice of the interruption says so, though it holds the earlier notice that the run had no outcome": true,
+    "the notices in a record cannot be changed or made up unseen: a notice edited, one signed by another courier key, one with a field added, one for another budget, a receipt signed by another key or for another notice, a notice naming a decision not in the record's chain, and one that says what the record does not (in its outcome or in its words), each fail check 10 alone": true,
+    "a run the gate signed an effect for is UNVERIFIED with no result, or with a result that does not hash to the digest the gate signed, and has its verdict with the true one; a notice that vouches for no result, made at that decision, is taken": true,
+    "the courier takes a checkpoint signed by the witness that signs back its own nonce and names the decision it asked about, and refuses an old one handed back, one naming another decision, and one signed by another key": true,
+    "a record carrying notices, checked with the three keys alone, verifies and says its notices were not checked; the command exits 1 when delivery is required, and 0 with the courier's and the mailbox's keys given": true,
+    "a courier reading the chain five decisions at a time, from the start, makes the notices of the interruption and the two failures, and delivers them": true,
+    "a courier given decisions it cannot read (one with no number, one numbered in text, one with no operation), none where the checkpoint says there are some, or a run's reports that are not a list, refuses the budget, does not stop with an error, and delivers to the mailbox a signed notice that it has stopped": true,
+    "a courier that cannot reach the witness exits 1; it sends nothing until it has been blocked for the time allowed, then one signed notice that it is blocked, not one at each pass": true,
+    "a client that connects to the mailbox and sends nothing does not hold up another; a body over 64 KiB is refused (400); a notice whose signature is spelt in capitals is refused (403) and not kept": true,
+    "when the control plane re-registers the budget, the run cut off before, the oddly named run and a run cut off now are made INDETERMINATE; a courier resumed after its refusal reads the budget again and sends a notice of each, and a record built after shows all three delivered": true,
+    "an attempt the gateway names oddly (\"!x\"), started and never admitted, gets a notice that it has no outcome, beside the notices of the other runs; once admitted and crossed, the witness answers for it by that name, and the courier sends nothing more of it": true,
+    "when the witness will not answer for one run, the courier still reads the others and sends their notices, says it could not read that one (with no time allowed, a notice that it is blocked), and sends its notice at the next pass, when the witness answers": true,
+    "a record without notices verifies and says it has none; the command says notices were not checked and exits 1 when delivery is required; the engineer's console, given the courier's log and the two keys, writes a record that carries the notices and verifies, and refuses without the keys": true
+   },
+   "evidence": {
+    "host_exit": 137,
+    "cut": 4,
+    "again": 3,
+    "bad": 2,
+    "good": 0,
+    "bad2": 2,
+    "own": [
+     "20261122T000353Z_FAIL_3a94e4be.txt"
+    ],
+    "couriers": {
+     "wait": [
+      0,
+      [],
+      []
+     ],
+     "cut": [
+      0,
+      [
+       "NO_OUTCOME"
+      ],
+      [
+       "NO_OUTCOME"
+      ]
+     ],
+     "interrupted": [
+      0,
+      [
+       "INTERRUPTED"
+      ],
+      [
+       "INTERRUPTED"
+      ]
+     ],
+     "fail": [
+      0,
+      [
+       "FAIL"
+      ],
+      [
+       "FAIL"
+      ]
+     ],
+     "again": [
+      0,
+      [],
+      []
+     ],
+     "down": [
+      1,
+      [
+       "FAIL"
+      ],
+      []
+     ],
+     "up": [
+      0,
+      [],
+      [
+       "FAIL"
+      ]
+     ],
+     "fork": [
+      1,
+      [
+       "COURIER_STOPPED"
+      ],
+      [
+       "COURIER_STOPPED"
+      ]
+     ],
+     "fork2": [
+      1,
+      [],
+      []
+     ],
+     "roll": [
+      1,
+      [
+       "COURIER_STOPPED"
+      ],
+      [
+       "COURIER_STOPPED"
+      ]
+     ]
+    },
+    "waiting": [
+     {
+      "root": "REQ-SELFTEST-001/A/f9c84ef08232ca35e0331d80ee665d1f",
+      "aid": "a2-a269b2fb37acdfebc223db6161563b7625cd2440be54c8c5cc11ce8db49b0c51",
+      "outcome": "FAIL",
+      "why": "127.0.0.1:8974 could not be asked (URLError)"
+     }
+    ],
+    "held": 3,
+    "log": 3,
+    "headlines": [
+     "A RUN WAS ADMITTED AND HAS NO OUTCOME",
+     "DECLARED CHECK NOT MET (FAIL)",
+     "THE RUN WAS INTERRUPTED: ADMITTED AND COUNTED, WITH NO VERDICT"
+    ],
+    "reads": [
+     39,
+     39
+    ],
+    "chain": [
+     200,
+     39,
+     true,
+     39
+    ],
+    "run": [
+     200,
+     1,
+     true
+    ],
+    "witness_says": {
+     "chain, unknown budget": 404,
+     "chain, no budget": 400,
+     "chain, after not a number": 400,
+     "chain, limit 0": 400,
+     "chain, limit 201": 400,
+     "chain, control character": 400,
+     "run, unknown budget": 404,
+     "run, no attempt": 400,
+     "run, attempt with a control character": 400,
+     "courier writes": 403,
+     "courier asks the key": 403,
+     "stranger reads the chain": 403,
+     "keeper reads the chain": 403
+    },
+    "mailbox_says": {
+     "another key": 403,
+     "not a notice": 400,
+     "not JSON": 400,
+     "keeper delivers": 403
+    },
+    "same_receipt": true,
+    "files": [
+     4,
+     4
+    ],
+    "wrongbox": [
+     1,
+     "the mailbox's answer is not a receipt for this notice: it is not signed by a mailbox key g"
+    ],
+    "rows_refused": [
+     true,
+     true,
+     true
+    ],
+    "wrong_head": "('RAISED', \"Refused: the decisions read do not end at the checkpoint's head after decision 3\")",
+    "forks": [
+     [
+      "FORK: the witness says another head for decision 39 than the",
+      "CHECKPOINT"
+     ]
+    ],
+    "rolls": [
+     [
+      "ROLLBACK: the witness says decision 89, which the courier re",
+      "CHECKPOINT",
+      39
+     ]
+    ],
+    "record": [
+     true,
+     [
+      10,
+      "notices delivered",
+      true
+     ],
+     {
+      "due": [
+       {
+        "aid": "a2-a269b2fb37acdfebc223db6161563b7625cd2440be54c8c5cc11ce8db49b0c51",
+        "outcome": "FAIL",
+        "delivered": true
+       },
+       {
+        "aid": "a2-a8f1c3571b1ad281fb36978b4e127f1167156c047b078994277be3136d7b44aa",
+        "outcome": "INTERRUPTED",
+        "delivered": true
+       },
+       {
+        "aid": "a2-e69a8941a2d54eaaff145cc34474cae27b75cebb2dadfec684aa91b1021ac117",
+        "outcome": "FAIL",
+        "delivered": true
+       }
+      ],
+      "no_outcome": [
+       "a2-a8f1c3571b1ad281fb36978b4e127f1167156c047b078994277be3136d7b44aa"
+      ],
+      "notices": 4
+     }
+    ],
+    "cli_full": [
+     0,
+     [
+      "NOTICES: 3 of 3 runs that call for a notice have one delivered to the engineer's mailbox, with its signed receipt.  A receipt says the mailbox holds the notice; it does not say the engineer read it."
+     ]
+    ],
+    "dropped": [
+     true,
+     [
+      {
+       "aid": "a2-a269b2fb37acdfebc223db6161563b7625cd2440be54c8c5cc11ce8db49b0c51",
+       "outcome": "FAIL",
+       "delivered": false
+      },
+      {
+       "aid": "a2-a8f1c3571b1ad281fb36978b4e127f1167156c047b078994277be3136d7b44aa",
+       "outcome": "INTERRUPTED",
+       "delivered": true
+      },
+      {
+       "aid": "a2-e69a8941a2d54eaaff145cc34474cae27b75cebb2dadfec684aa91b1021ac117",
+       "outcome": "FAIL",
+       "delivered": true
+      }
+     ]
+    ],
+    "cli_dropped": [
+     1,
+     [
+      "NOTICES: 2 of 3 runs that call for a notice have one delivered to the engineer's mailbox, with its signed receipt.  NO DELIVERY EVIDENCE: a2-a269b2fb37acdfebc223db6161563b7625cd2440be54c8c5cc11ce8db49b0c51 (FAIL).  A receipt says the mailbox holds the notice; it does not say the engineer read it."
+     ]
+    ],
+    "tampered": {
+     "notice edited": [
+      10
+     ],
+     "notice of another courier key": [
+      10
+     ],
+     "receipt of another key": [
+      10
+     ],
+     "decision not in the chain": [
+      10
+     ],
+     "outcome the record does not give": [
+      10
+     ],
+     "a field added to the notice": [
+      10
+     ],
+     "a receipt for another notice": [
+      10
+     ],
+     "a notice for another budget": [
+      10
+     ],
+     "words changed": [
+      10
+     ]
+    },
+    "unverified": {
+     "no result": "UNVERIFIED",
+     "a result changed": "UNVERIFIED",
+     "the result": "FAIL",
+     "a report not the gate's": "UNVERIFIED",
+     "a report for another nonce": "UNVERIFIED"
+    },
+    "courier_takes": {
+     "its own nonce, the decision asked": "TAKEN",
+     "an old checkpoint handed back": "refused: the checkpoint cannot be used: it does not sign back the courier's nonce",
+     "another decision named": "refused: the checkpoint cannot be used: it does not name decision 39",
+     "signed by another key": "refused: the checkpoint cannot be used: it is not signed by a witness key given"
+    },
+    "no_int": [
+     true,
+     [
+      {
+       "aid": "a2-a269b2fb37acdfebc223db6161563b7625cd2440be54c8c5cc11ce8db49b0c51",
+       "outcome": "FAIL",
+       "delivered": true
+      },
+      {
+       "aid": "a2-a8f1c3571b1ad281fb36978b4e127f1167156c047b078994277be3136d7b44aa",
+       "outcome": "INTERRUPTED",
+       "delivered": false
+      },
+      {
+       "aid": "a2-e69a8941a2d54eaaff145cc34474cae27b75cebb2dadfec684aa91b1021ac117",
+       "outcome": "FAIL",
+       "delivered": true
+      }
+     ]
+    ],
+    "early": [
+     true,
+     [
+      {
+       "aid": "a2-a269b2fb37acdfebc223db6161563b7625cd2440be54c8c5cc11ce8db49b0c51",
+       "outcome": "FAIL",
+       "delivered": true
+      },
+      {
+       "aid": "a2-a8f1c3571b1ad281fb36978b4e127f1167156c047b078994277be3136d7b44aa",
+       "outcome": "INTERRUPTED",
+       "delivered": true
+      },
+      {
+       "aid": "a2-e69a8941a2d54eaaff145cc34474cae27b75cebb2dadfec684aa91b1021ac117",
+       "outcome": "FAIL",
+       "delivered": true
+      }
+     ]
+    ],
+    "plain": [
+     true,
+     [
+      10,
+      "notices delivered (none in this record)",
+      true
+     ],
+     null
+    ],
+    "cli_plain": [
+     1,
+     [
+      "NOTICES: NOT CHECKED.  This record carries no notices delivered by a courier."
+     ]
+    ],
+    "console": [
+     0,
+     ""
+    ],
+    "console_nokeys": [
+     1,
+     "refused: --deliveries needs the courier's key and the mailbox's key (--courier-key, --mailbox-key)\n"
+    ],
+    "three_keys": [
+     true,
+     [
+      10,
+      "notices delivered (not checked: no courier and mailbox keys were given with the others)",
+      true
+     ],
+     "no courier and mailbox keys were given with the others"
+    ],
+    "cli_three": [
+     1,
+     [
+      "NOTICES: NOT CHECKED.  The record carries 4 notices delivered by a courier, but no courier and mailbox keys were given with the others (--courier-key, --mailbox-key)."
+     ]
+    ],
+    "cli_five": 0,
+    "paged": [
+     0,
+     [
+      "FAIL",
+      "FAIL",
+      "INTERRUPTED"
+     ]
+    ],
+    "bad_answers": {
+     "a decision with no number": [
+      [
+       {
+        "root": "REQ-SELFTEST-001/A/f9c84ef08232ca35e0331d80ee665d1f",
+        "why": "the witness gave None where decision 1 was due, or a decision that is not readable"
+       }
+      ],
+      [
+       "COURIER_STOPPED"
+      ]
+     ],
+     "a number that is text": [
+      [
+       {
+        "root": "REQ-SELFTEST-001/A/f9c84ef08232ca35e0331d80ee665d1f",
+        "why": "the witness gave '1' where decision 1 was due, or a decision that is not readable"
+       }
+      ],
+      [
+       "COURIER_STOPPED"
+      ]
+     ],
+     "no decisions": [
+      [
+       {
+        "root": "REQ-SELFTEST-001/A/f9c84ef08232ca35e0331d80ee665d1f",
+        "why": "the witness gave no decisions after 0, though its checkpoint says it holds 39"
+       }
+      ],
+      [
+       "COURIER_STOPPED"
+      ]
+     ],
+     "a decision with no operation": [
+      [
+       {
+        "root": "REQ-SELFTEST-001/A/f9c84ef08232ca35e0331d80ee665d1f",
+        "why": "the witness gave 1 where decision 1 was due, or a decision that is not readable"
+       }
+      ],
+      [
+       "COURIER_STOPPED"
+      ]
+     ],
+     "reports that are not a list": [
+      [
+       {
+        "root": "REQ-SELFTEST-001/A/f9c84ef08232ca35e0331d80ee665d1f",
+        "why": "the witness's reports for run a2-1cc5a11983a92be590ca733df255ed8aea2b45bf577396463ba7d7035e81523c are not a list"
+       }
+      ],
+      [
+       "COURIER_STOPPED"
+      ]
+     ]
+    },
+    "stopped_alarms": [
+     "COURIER_STOPPED",
+     "COURIER_STOPPED",
+     "COURIER_STOPPED",
+     "COURIER_STOPPED",
+     "COURIER_STOPPED"
+    ],
+    "blocked": [
+     1,
+     0,
+     1,
+     1,
+     [
+      "COURIER_BLOCKED"
+     ],
+     []
+    ],
+    "odd": [
+     [
+      "APPLIED",
+      [
+       200,
+       "APPLIED"
+      ],
+      "APPLIED",
+      "APPLIED",
+      [
+       200,
+       "APPLIED"
+      ],
+      "APPLIED",
+      [
+       200,
+       "APPLIED"
+      ]
+     ],
+     "INTENT_PENDING",
+     "CONSUMED",
+     0,
+     [
+      [
+       false,
+       "FAIL"
+      ],
+      [
+       false,
+       "FAIL"
+      ],
+      [
+       false,
+       "INTERRUPTED"
+      ],
+      [
+       true,
+       "NO_OUTCOME"
+      ]
+     ]
+    ],
+    "words_differ": true,
+    "odd2": [
+     0,
+     []
+    ],
+    "isolated": [
+     [
+      [
+       false,
+       "COURIER_BLOCKED"
+      ],
+      [
+       false,
+       "FAIL"
+      ],
+      [
+       false,
+       "INTERRUPTED"
+      ],
+      [
+       false,
+       "NO_OUTCOME"
+      ]
+     ],
+     1,
+     [
+      [
+       true,
+       "FAIL"
+      ]
+     ]
+    ],
+    "idle": [
+     200,
+     0.0
+    ],
+    "too_long": 400,
+    "upper": [
+     403,
+     21,
+     21
+    ],
+    "indet": [
+     137,
+     0,
+     "REREGISTERED_REDUCED",
+     [
+      "INDETERMINATE",
+      "INDETERMINATE",
+      "INDETERMINATE"
+     ],
+     true,
+     [
+      [
+       "FAIL",
+       true
+      ],
+      [
+       "FAIL",
+       true
+      ],
+      [
+       "INDETERMINATE",
+       true
+      ],
+      [
+       "INDETERMINATE",
+       true
+      ],
+      [
+       "INDETERMINATE",
+       true
+      ]
+     ]
+    ]
+   },
+   "seconds": 16.1
+  }
+ },
+ "passed": 2,
+ "of": 2,
+ "seconds": 26.9,
+ "PASS": true
+}

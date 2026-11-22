@@ -284,8 +284,21 @@ if not any(t.name == 'verify-delivery-proof' for t in threading.enumerate()):   
     threading.Thread(target=_watch, name='verify-delivery-proof', daemon=True).start()
 
 
+def bound(root, arguments) -> bool:
+    """Amendment 17 (22 November 2026, D5): the gate host asks this before it claims an attempt.  True only when the budget the
+    attempt was admitted under names the baseline its arguments would be decided against: the budget's name ends with the first
+    32 hex digits of the card's hash (baseline.root_for), and those are the first 32 of the baseline_sha256 sent.  Before this,
+    the tool was given the arguments only, and a caller holding the service's database role could admit an attempt under one
+    baseline's budget and have it decided against another's (D5; test F1 of the first front-door work).  It reads nothing from the
+    disk, so a baseline the service no longer holds is still bound, and is answered with a signed UNKNOWN as before."""
+    h = arguments.get('baseline_sha256') if isinstance(arguments, dict) else None
+    if not (isinstance(root, str) and isinstance(h, str) and len(h) == 64 and set(h) <= HEX and '/' in root):
+        return False
+    return root.rsplit('/', 1)[1] == h[:32]
+
+
 TOOLS = {
     'verify': ('Decide one design against one baselined requirement and return a signed PASS, FAIL or UNKNOWN with the reason.',
                {'type': 'object', 'properties': {'baseline_sha256': {'type': 'string'}, 'design': {'type': 'object'}}, 'required': ['baseline_sha256', 'design']},
-               verify),
+               verify, bound),
 }

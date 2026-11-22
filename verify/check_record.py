@@ -62,6 +62,7 @@ import calendar
 import decimal
 import hashlib
 import json
+import re
 import sys
 import time
 
@@ -387,12 +388,35 @@ def currency(record: dict, cp, witness_keys, now=None, max_age=None, nonce=None)
     return 'SUPERSEDED_UNPROVEN', out_of_date + 'This checkpoint does not say whether the record is a beginning of that chain.  Ask for the current record.' + closed
 
 
-def request_key(arguments) -> str:
-    return 'verify:' + sha(canonical(arguments))[:24]
+def request_key(arguments, legacy: bool = False) -> str:
+    """Amendment 17 (D21): the whole hash.  legacy=True gives the form made before it, 96 bits, for records made then."""
+    return 'verify:' + (sha(canonical(arguments))[:24] if legacy else sha(canonical(arguments)))
 
 
-def attempt_id(key: str) -> str:
-    return 'a-' + sha(key)[:16]
+def attempt_id(key: str, legacy: bool = False) -> str:
+    """Amendment 17 (D21): 'a2-' and the whole hash of the request key.  legacy=True gives the earlier 'a-' and 64 bits."""
+    return 'a-' + sha(key)[:16] if legacy else 'a2-' + sha(key)
+
+
+def identity_form(attempts) -> str | None:
+    """Which form of request key and attempt identity a record's runs carry: 'current' (Amendment 17), 'legacy' (before it),
+    or None when they are mixed, or are of neither form.  Only runs whose design the record gives are counted, since only their
+    keys and identities can be recomputed; a run with no design (one made under another name by whoever holds the service's
+    database role, or whose design the journal does not show) is listed and checked as before, and does not decide the form.
+    A record with no such runs is 'current'.  One record is never read as both: a run of the earlier form beside one of the
+    current form fails check 5."""
+    attempts = [a for a in attempts if isinstance(a.get('arguments'), dict)]
+    def form(a):
+        aid, key = a.get('aid'), a.get('request_key')
+        if not (isinstance(aid, str) and isinstance(key, str)):
+            return None
+        if re.fullmatch(r'a2-[0-9a-f]{64}', aid) and re.fullmatch(r'verify:[0-9a-f]{64}', key):
+            return 'current'
+        if re.fullmatch(r'a-[0-9a-f]{16}', aid) and re.fullmatch(r'verify:[0-9a-f]{24}', key):
+            return 'legacy'
+        return None
+    forms = {form(a) for a in attempts}
+    return 'current' if not forms else forms.pop() if len(forms) == 1 else None
 
 
 def nonce_for(root, aid, executor, tool, arguments) -> str:
@@ -593,6 +617,10 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
     chained = [[x[0], x[1], x[2], x[3]] for x in final.get('attempts', [])]
     if sorted(listed, key=str) != sorted(chained, key=str):
         bad(5, 'the runs listed are not the attempts in the last chained state')
+    ident = identity_form(attempts)                   # Amendment 17 (D21): one form of identity for the whole record
+    if ident is None:
+        bad(5, 'the runs\' request keys and attempt identities are not all of one form (the whole hash, or the 64-bit form made before 22 November 2026)')
+    legacy = ident == 'legacy'
     for a in attempts:
         aid, args = a.get('aid'), a.get('arguments')
         if not isinstance(args, dict):
@@ -601,7 +629,7 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
             continue
         if set(args) != {'baseline_sha256', 'design'}:
             bad(5, f'{aid}: unexpected arguments')
-        if request_key(args) != a.get('request_key') or attempt_id(a.get('request_key') or '') != aid:
+        if request_key(args, legacy) != a.get('request_key') or attempt_id(a.get('request_key') or '', legacy) != aid:
             bad(5, f'{aid}: the request key or attempt id does not recompute from the baseline and design')
         if args.get('baseline_sha256') != b_hash:
             bad(5, f'{aid}: sent against another baseline')
@@ -758,6 +786,7 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
                'unknown': sum(r['outcome'] not in ('PASS', 'FAIL') for r in rows_out), 'open': sum(1 for r in rows_out if r['outcome'] != 'PASS' and not r['acknowledged']),
                'status': 'DECLARED CHECK MET' if ok and met else 'NOT VERIFIED', 'met_designs': [r['design_sha256'] for r in met], 'released': released,
                'as_of': as_of, 'keys_pinned': pinned, 'receipts': n_receipts, 'audit_rows': len(audit),
+               'identities': ident,          # Amendment 17 (D21): 'current', 'legacy' (64-bit, before 22 November 2026) or None (mixed)
                'checkpoint': ({k: cp.get(k) for k in ('seq', 'time', 'business', 'witness', 'at')} if isinstance(cp, dict) and not problems[9] else None),
                'delivery': None if deliveries is None or problems[10] else {'unchecked': unchecked, 'notices': len(deliveries) if isinstance(deliveries, list) else 0} if unchecked else {
                    'due': [{'aid': r['aid'], 'outcome': r['outcome'], 'delivered': r['outcome'] in delivered.get(r['aid'], ())} for r in rows_out if r['outcome'] in DUE],
@@ -772,6 +801,8 @@ def render(ok: bool, checks: list, s: dict, current=None) -> str:
     req = s['requirement']
     L += ['', f"  {req.get('id')} rev {req.get('revision')}: {req.get('title')}", f"  \"{req.get('statement')}\"",
           f"  baselined {s['baselined_at']} by {s['engineer']}.  Baseline {s['baseline_sha256'][:16]}…   Record as of {s['as_of'].get('time')}, sequence number {s['as_of'].get('seq')}."]
+    if s.get('identities') == 'legacy':           # Amendment 17 (D21)
+        L.append('  Its runs carry 64-bit attempt identities and 96-bit request keys, the form made before 22 November 2026.')
     if s['supersedes']:
         sp = s['supersedes']
         L.append(f"  CHANGED AFTER THE EVENT: this baseline replaced {sp.get('baseline_sha256', '')[:16]}… (rev {sp.get('revision', '?')}) after {sp.get('official_runs', '?')} official runs "

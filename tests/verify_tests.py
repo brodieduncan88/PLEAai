@@ -42,9 +42,14 @@ import verify_client                    # noqa: E402  (Amendment 9)
 import front_door                       # noqa: E402  (Amendment 9: its view of the requirement, in R23)
 import checkpoints                      # noqa: E402  (Amendment 10)
 import courier                          # noqa: E402  (Amendment 11)
+import deploy_front                     # noqa: E402  (Amendment 17)
+import plea_gateway.governor as governor_module   # noqa: E402  (Amendment 17: R31 narrows the identity in this process)
 from plea_gateway import tls as TLS     # noqa: E402  (Amendment 10)
 from plea_gateway.receipts import Signer, sign_checkpoint   # noqa: E402  (Amendment 10)
 from plea_gateway import AuthorityError, Store      # noqa: E402
+from plea_gateway import GateHostClient, Governor, RemoteWitness   # noqa: E402  (Amendment 17)
+from plea_gateway.governor import attempt_id       # noqa: E402  (Amendment 17)
+from verify_record import arguments_for, request_key   # noqa: E402  (Amendment 17)
 from verify_record import Key, canonical, envelope_message, load_envelope, sign_envelope   # noqa: E402
 
 OUT = GATEWAY / 'outputs' / 'verify_tests'
@@ -855,7 +860,7 @@ def r17():
                       e['in_print'] == 0 and e['rows_in_print'] == {'Verdict': [0], 'Reason': [0], 'STATUS': [1], 'RECORD VERIFIED': [1], 'forged': 0} and e['outside'] == 16 and e['print_gives_the_signed_reason'] == 16,
                   'a record that holds a sender\'s words in its signed reasons, as one made before this amendment can, is printed without them: the print is the same, because the checker gives its own reason':
                       e['earlier_record_prints_the_same'] is True and 'QS' not in printed_earlier and 'CORRECTION' not in printed_earlier
-                      and e['unreadable_reason']['rows'] == 1 and e['unreadable_reason']['not_printable'] == 0 and e['unreadable_reason']['longest'] < 450,
+                      and e['unreadable_reason']['rows'] == 1 and e['unreadable_reason']['not_printable'] == 0 and e['unreadable_reason']['longest'] < 450 + 49,   # Amendment 17: the attempt identity at the head of the row is 49 characters longer (67, not 18); dev log entry 3
                   'the rule itself, for 4,765 texts, every character below U+0100 among them: what is shown is one quoted run of at most 20 printable ASCII characters with no two spaces together, it reads back as the first characters of the text, and the number after it is how many were left out; a text of 20 characters is shown whole and one of 21 is cut by one':
                       e['sample'] == 4765 and not bad_forms and e['twenty'] == ['"' + 'x' * 20 + '"', '"' + 'x' * 20 + '"+1'],
                   'in process, for 15,792 designs, 15,625 of them made of 25 awkward values for each of the baseline\'s parameters: the checker decides as the service does and gives the reason the service signs, neither stops with an error, no line of what was sent is longer than 78 characters or holds a character outside ASCII, and no reason and no line of the service\'s own repeats what was planted in a design':
@@ -1960,7 +1965,7 @@ def r24():
         lines, nl = out.strip().splitlines(), notice.strip().splitlines()
         met_line = (f"DECLARED CHECK MET, for design {B.design_hash(GOOD)[:16]}… only.  This says what the declared check returned against the baselined limits.  "
                     'It does not say the check is correct, the requirement is complete, or the design is safe.')
-        rows = lambda t: sorted(l.split()[1] for l in t.splitlines() if re.match(r'  a-[0-9a-f]+ ', l))       # runs are listed by their identity, not in the order sent
+        rows = lambda t: sorted(l.split()[1] for l in t.splitlines() if re.match(r'  a2?-[0-9a-f]+ ', l))       # runs are listed by their identity, not in the order sent (Amendment 17: either form)
         e.update(code=code, first_lines=lines[:2], last=lines[-1:], verdict_rows=[l for l in lines if l.startswith('Verdict ')], bare=(bare(out), bare(after), bare(console), bare(out_f)),
                  rows_after=rows(after), rows_console=rows(console), mid_tail=mid.splitlines()[-1:], after_tail=after.splitlines()[-2:], console_tail=console.splitlines()[-2:],
                  inbox_line=[l[:60] for l in console.splitlines() if l.startswith(('inbox writable', 'INBOX NOT CHECKED'))], notice_lines=nl[3:5] + nl[-1:],
@@ -3152,7 +3157,167 @@ def r29():
     return {k: bool(v) for k, v in checks.items()}, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29}
+# ====================================================================== Amendment 17 (22 November 2026): D5 and D21
+def relaxed_draft(**changes) -> dict:
+    """The fixture's requirement with its limit lowered to 170 C, so the design that fails at 200 C passes (as the front door's F1 made it)."""
+    d = draft(**changes)
+    d['criteria'] = [dict(d['criteria'][0], limit='170')]
+    d['controls'] = [{'name': 'PA66 passes at 170 C', 'design': BAD, 'expect': 'PASS'},
+                     {'name': 'PA6 (160 C) must fail at 170 C', 'design': {'material': 'PA6', 'wall_mm': 3, 'mode': 'normal'}, 'expect': 'FAIL'}]
+    return d
+
+
+def case_with_pa6(tag: str) -> pathlib.Path:
+    src = OUT / tag / 'case_b'; src.mkdir(parents=True, exist_ok=True)
+    (src / 'check.py').write_text((CASE / 'check.py').read_text()); (src / 'materials.csv').write_text((CASE / 'materials.csv').read_text() + 'PA6,160\n')
+    return src
+
+
+def service_governor(s, root):
+    """CAP-DB, used on purpose: the service's own database role (plea_local) and the front door's client certificate, with no
+    front door in the way.  This is what a dishonest or compromised service process holds.  It holds no signing key."""
+    tls = TLS.TLSClient(s.pki['ca'], *s.pki['frontdoor'])
+    witness = RemoteWitness(f"https://127.0.0.1:{s.ports['witness']}", s.keys['witness'], tls=tls)
+    host = GateHostClient(f"https://127.0.0.1:{s.ports['host']}", tls=tls, public_key=s.keys['gate'])
+    store = Store(deploy.LOCAL_DSN); obs = store.observe(root)
+    return Governor(store, witness, root, obs['k'], obs['m'], host=host)
+
+
+def attempt_of(record: dict, aid: str) -> dict:
+    return next((a for a in record.get('attempts', []) if a.get('aid') == aid), {})
+
+
+def r30():
+    """Amendment 17 (D5).  An attempt admitted under one baseline's budget is never decided against another baseline: the gate host refuses it before it is claimed, runs nothing and signs nothing."""
+    s = deploy_front.FrontServices(OUT / 'R30').start(); e = {}
+    try:
+        a = s.baseline(CASE, draft()); ha = a['baseline_sha256']; root_a = B.root_for(a['card'])
+        b = s.baseline(case_with_pa6('R30'), relaxed_draft(), alongside_reason='a relaxed copy baselined as new, as the test needs'); hb = b['baseline_sha256']
+        job = s.enrol('job-r30', ha)
+        honest = s.cli(job, 'submit', BAD)
+        before = len(s.ledger('called'))
+        gov = service_governor(s, root_a)
+        args = arguments_for(hb, BAD); key = request_key(args); aid = attempt_id(key)       # baseline B, on A's budget
+        try:
+            v = gov.attempt(key, 'verify', **args); told = {'answered': v.get('verdict') if isinstance(v, dict) else repr(v)[:80]}
+        except Exception as exc:
+            told = {'refused': type(exc).__name__, 'detail': str(exc)[:300]}
+        after = len(s.ledger('called'))
+        again = {}
+        try:
+            v = service_governor(s, root_a).attempt(key, 'verify', **args); again = {'answered': v.get('verdict') if isinstance(v, dict) else repr(v)[:80]}
+        except Exception as exc:
+            again = {'refused': type(exc).__name__, 'detail': str(exc)[:300]}
+        ok_a, checks_a, s_a = check_record.verify(s.record(ha), s.keys); rec_a = s.record(ha); mine = attempt_of(rec_a, aid)
+        ok_b, _, s_b = check_record.verify(s.record(hb), s.keys)
+        own = arguments_for(ha, GOOD); own_key = request_key(own)
+        try:
+            v = service_governor(s, root_a).attempt(own_key, 'verify', **own); matched = v.get('verdict') if isinstance(v, dict) else repr(v)[:80]
+        except Exception as exc:
+            matched = f'refused: {type(exc).__name__}: {str(exc)[:160]}'
+        e.update(honest=(honest[0], head(honest[1])), told=told, again=again, tool_calls=(before, after, len(s.ledger('called'))), attempt=dict(phase=mine.get('phase'), outcome=mine.get('outcome'),
+                 evidence=len(mine.get('evidence') or [])), record_a=dict(verifies=ok_a, why=[f'{n} {t}: {d}' for n, t, good, d in checks_a if not good], status=s_a.get('status'),
+                 outcomes=sorted(x['outcome'] for x in s_a.get('runs', []))), record_b=dict(verifies=ok_b, runs=s_b.get('official_runs')), notices_b=len(s.inbox(hb)), matched=matched)
+        refused = lambda x: x.get('refused') == 'GateRefusedRun' and 'BASELINE_NOT_ADMITTED_BUDGET' in x.get('detail', '')
+        checks = {'sent honestly through the front door, the design fails against A (exit status 2)': honest[0] == 2 and head(honest[1]) == 'FAIL: REQUIREMENT NOT MET',
+                  'naming baseline B on A\'s budget, the caller is refused by the gate host, twice, and is told no verdict': refused(told) and refused(again),
+                  'the check was not run for it, and no report was signed for it': after == before and mine.get('outcome') != 'PASS' and e['attempt']['evidence'] == 0,
+                  'B shows no run and no notice; A\'s record verifies and shows no pass': ok_b and s_b.get('official_runs') == 0 and e['notices_b'] == 0 and ok_a and s_a.get('met') == 0,
+                  'the same caller naming A on A\'s budget is still run and decided: only a mismatch is refused': matched == 'PASS'}
+    finally:
+        s.stop()
+    return checks, e
+
+
+def in_process_front(s):
+    """A front door made in this process from the deployment's own configuration, so that a test can give it a narrower key."""
+    cfg = {'witness_url': f"https://127.0.0.1:{s.ports['witness']}", 'witness_keys': [s.keys['witness']], 'gate_url': f"https://127.0.0.1:{s.ports['host']}",
+           'gate_key': s.keys['gate'], 'tls': {'ca': s.pki['ca'], 'cert': s.pki['frontdoor'][0], 'key': s.pki['frontdoor'][1]},
+           'journal': str(s.home / 'front' / 'submissions.jsonl'), 'journal_max_bytes': front_door.JOURNAL_MAX, 'disk_reserve_bytes': front_door.DISK_RESERVE,
+           'journal_share_bytes': front_door.JOURNAL_SHARE}
+    return front_door.Front(s.home, Store(deploy.LOCAL_DSN), cfg, [s.keys['engineer']])
+
+
+def meeting(pairs_of, width: int):
+    """Two designs, one that meets the check and one that does not, whose digests agree in their first `width` hex digits."""
+    goods = [dict(GOOD, wall_mm=2 + i / 10000) for i in range(1, 2001)]
+    seen = {pairs_of(g)[:width]: g for g in goods}
+    for j in range(1, 20001):
+        bad = dict(BAD, wall_mm=2 + j / 10000)
+        g = seen.get(pairs_of(bad)[:width])
+        if g is not None:
+            return g, bad
+    return None, None
+
+
+def r31():
+    """Amendment 17 (D21).  Request keys and attempt identities are the whole hash; where two designs share a narrower key, the second is refused, and is never given the first one's verdict."""
+    import hashlib
+    sha = lambda x: hashlib.sha256(x.encode()).hexdigest()
+    e = {}; checks = {}
+    # (a) the real service: the whole hash, and the record says so
+    r = deploy_front.FrontServices(OUT / 'R31' / 'full').start()
+    try:
+        env = r.baseline(CASE, draft()); h = env['baseline_sha256']; job = r.enrol('job-r31', h)
+        code, _ = r.cli(job, 'submit', BAD)
+        rec = r.record(h); ok, checks_, summ = check_record.verify(rec, r.keys)
+        a = rec['attempts'][0] if rec.get('attempts') else {}
+        text = check_record.render(ok, checks_, summ)
+        mixed = json.loads(json.dumps(rec)); mixed['attempts'][0]['aid'] = 'a-' + sha(mixed['attempts'][0]['request_key'])[:16]
+        body = {k: v for k, v in mixed.items() if k != 'signature'}; mixed = dict(body, signature={'signer': r.engineer.public_hex, 'signature': r.engineer.sign(canonical(body).encode())})
+        ok_mixed, checks_mixed, _ = check_record.verify(mixed, r.keys)
+        e['full'] = dict(exit=code, aid=a.get('aid'), key=a.get('request_key'), verifies=ok, identities=summ.get('identities'), mixed_verifies=ok_mixed,
+                         mixed_fails=[n for n, _, good, _ in checks_mixed if not good])
+    finally:
+        r.stop()
+    sample = json.loads((GATEWAY / 'verify' / 'sample' / 'record_revA.json').read_text()); skeys = json.loads((GATEWAY / 'verify' / 'sample' / 'keys.json').read_text())
+    ok_s, ch_s, sum_s = check_record.verify(sample, skeys)
+    e['legacy_sample'] = dict(verifies=ok_s, identities=sum_s.get('identities'), says=[l.strip() for l in check_record.render(ok_s, ch_s, sum_s).splitlines() if '64-bit' in l])
+    checks['a run made now carries a 256-bit attempt identity and request key, and its record verifies as of that form'] = (
+        e['full']['exit'] == 2 and re.fullmatch(r'a2-[0-9a-f]{64}', str(e['full']['aid'])) is not None and re.fullmatch(r'verify:[0-9a-f]{64}', str(e['full']['key'])) is not None
+        and e['full']['verifies'] and e['full']['identities'] == 'current')
+    checks['a record made before, with 64-bit identities, still verifies, and says which form it is'] = ok_s and sum_s.get('identities') == 'legacy' and len(e['legacy_sample']['says']) == 1
+    checks['a record whose runs mix the two forms fails at check 5'] = not e['full']['mixed_verifies'] and 5 in e['full']['mixed_fails']
+    # (b), (c) and (d): a front door in this process, given a 16-bit key, then a 16-bit attempt identity, then the 16-bit key with the
+    # governor's own replay guard taken out (in this process only), so that the front door's check of the design is reached
+    for case, width in (('request_key', 4), ('attempt_id', 4), ('front_door_check', 4)):
+        s = deploy_front.FrontServices(OUT / 'R31' / case).start(); got = {}
+        saved = (front_door.request_key, governor_module.attempt_id, governor_module.Governor._replay)
+        try:
+            env = s.baseline(CASE, draft()); h = env['baseline_sha256']; s.enrol('job-r31' + case[0], h)
+            s.stop_front()
+            front = in_process_front(s); binding = front_door.read_jobs(s.home)['job-r31' + case[0]]
+            if case in ('request_key', 'front_door_check'):
+                narrow = lambda args, legacy=False: 'verify:' + sha(canonical(args))[:width]
+                good, bad = meeting(lambda d: sha(canonical(arguments_for(h, d))), width)
+                front_door.request_key = narrow
+                if case == 'front_door_check':           # the governor's nonce and signed-report checks on a stored outcome, taken out
+                    governor_module.Governor._replay = lambda self, outcome, nonce, aid=None, tool=None, arguments=None: outcome['value']
+            else:
+                narrow = lambda key: 'a2-' + sha(key)[:width]
+                good, bad = meeting(lambda d: sha(request_key(arguments_for(h, d))), width)
+                governor_module.attempt_id = narrow
+            calls0 = len(s.ledger('called'))
+            st1, b1 = front.submit(binding, good); st2, b2 = front.submit(binding, bad)
+            got = dict(designs=(good, bad), first=(st1, b1.get('outcome'), b1.get('code') or b1.get('reason')), second=(st2, b2.get('outcome'), b2.get('met'), (b2.get('text') or b2.get('error') or '')[:200]),
+                       code2=b2.get('code'), tool_calls=len(s.ledger('called')) - calls0, runs=s.ledger('verdict')[-1:] and [x.get('design_sha256')[:12] for x in s.ledger('verdict')])
+        finally:
+            front_door.request_key, governor_module.attempt_id, governor_module.Governor._replay = saved
+            s.stop()
+        e[case] = got
+    k, i, f = e['request_key'], e['attempt_id'], e['front_door_check']
+    # Predicates restated on 22 November 2026 after the first development run, before any declaration (VP-1 to VP-5): run 1 showed
+    # that the governor's own nonce check refuses the second design (RequestKeyReused) before the store or the front door's new
+    # check is reached.  The kept source and output are in tests/amend17_dev_evidence/r31_run1/.
+    refused_by_governor = lambda x: x['first'][:2] == (200, 'PASS') and x['second'][0] == 502 and x['second'][2] is not True and 'RequestKeyReused' in x['second'][3] and x['tool_calls'] == 1
+    checks['with a 16-bit request key, the second design shares the first one\'s key; the governor refuses it, it is not run, and it is not told the first one\'s pass'] = refused_by_governor(k)
+    checks['with a 16-bit attempt identity, the second design is refused in the same way: not run, no verdict'] = refused_by_governor(i)
+    checks['with the governor\'s replay guard taken out as well, the front door refuses the first design\'s verdict for the second design'] = (
+        f['first'][:2] == (200, 'PASS') and f['second'][0] == 502 and f['second'][2] is not True and 'not for this design' in f['second'][3] and f['tool_calls'] == 1)
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31}
 
 
 def main():

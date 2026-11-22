@@ -15,6 +15,8 @@ POST /run    {"root", "aid", "nonce", "receipt", "admission", "tool", "arguments
              the tool once: a second /run for the same (root, aid), from anywhere, returns the stored result and the
              same signed report with "repeat": true.  A concurrent duplicate is refused while the first is running.
              The verdict is EFFECT on return, NO_EFFECT when the tool raises NoEffect, UNKNOWN on any other exception.
+             Amendment 17 (D5): a tool's optional fourth entry, bind(root, arguments), is asked before the claim; unless
+             it answers True the request is refused 403 BASELINE_NOT_ADMITTED_BUDGET, nothing runs and nothing is signed.
              -> 200 {"result", "verdict", "report", "repeat"}   403 receipt or admission invalid, or not bound
              409 fenced or running   400 malformed   503 this host lost ownership of its state
 POST /fence  {"root", "aid", "receipt"}  The receipt is the witness's acceptance of the reservation.  The host
@@ -209,7 +211,7 @@ def make_handler(signer: GateSigner, witness_keys: tuple, tools: dict, state: Ho
                 return self._send(200, {'public_key': signer.public_hex, 'tls': isinstance(self.connection, ssl.SSLSocket), 'peer': self.peer_name,
                                         'instance': state.instance, 'lost': state.lost, 'generation': state.generation})
             if self.path == '/tools':
-                return self._send(200, {'tools': [{'name': n, 'description': d, 'inputSchema': s} for n, (d, s, _) in tools.items()]})
+                return self._send(200, {'tools': [{'name': n, 'description': t[0], 'inputSchema': t[1]} for n, t in tools.items()]})   # Amendment 17: an entry may carry a binder
             self._send(404, {'error': 'not found'})
 
         def do_POST(self):
@@ -244,6 +246,19 @@ def make_handler(signer: GateSigner, witness_keys: tuple, tools: dict, state: Ho
                 return self._send(403, {'error': f'admission invalid: {exc}'})
             if nonce != nonce_for(root, aid, signer.public_hex, tool, arguments):          # v0.6: the nonce binds executor, tool and arguments
                 return self._send(403, {'error': 'the nonce does not bind this executor, tool and arguments'})
+            # Amendment 17 (22 November 2026, D5).  A tool may name, as a fourth entry, a binder: bind(root, arguments) is True
+            # only when the budget the attempt was admitted under is the one its arguments may be decided against.  It is asked
+            # here, before the attempt is claimed, so a refused attempt is not run, has no report signed for it, and is left
+            # unclaimed in this host's state.  Any exception, or any answer but True, refuses.  A tool with no binder is as before.
+            binder = tools[tool][3] if len(tools[tool]) > 3 else None
+            if binder is not None:
+                try:
+                    bound = binder(root, arguments) is True
+                except Exception:
+                    bound = False
+                if not bound:
+                    return self._send(403, {'error': 'BASELINE_NOT_ADMITTED_BUDGET: the budget this attempt was admitted under is not the one '
+                                                     'its arguments would be decided against; nothing was run and nothing was signed'})
             try:
                 claimed = state.claim(root, aid, 'running', nonce)
             except StateLost as exc:

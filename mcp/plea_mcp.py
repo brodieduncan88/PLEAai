@@ -48,7 +48,7 @@ def canonical(value) -> str:
 
 
 def request_key(name: str, arguments: dict) -> str:
-    return f'{name}:' + hashlib.sha256(canonical(arguments).encode()).hexdigest()[:24]
+    return f'{name}:' + hashlib.sha256(canonical(arguments).encode()).hexdigest()       # Amendment 17 (D21): the whole hash, not 96 bits
 
 
 class UpstreamStdio:

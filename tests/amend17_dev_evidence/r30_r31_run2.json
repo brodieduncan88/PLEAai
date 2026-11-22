@@ -1,0 +1,184 @@
+{
+ "tests": {
+  "R30": {
+   "title": "Amendment 17 (D5).  An attempt admitted under one baseline's budget is never decided against another baseline: the gate host refuses it before it is claimed, runs nothing and signs nothing.",
+   "ok": true,
+   "checks": {
+    "sent honestly through the front door, the design fails against A (exit status 2)": true,
+    "naming baseline B on A's budget, the caller is refused by the gate host, twice, and is told no verdict": true,
+    "the check was not run for it, and no report was signed for it": true,
+    "B shows no run and no notice; A's record verifies and shows no pass": true,
+    "the same caller naming A on A's budget is still run and decided: only a mismatch is refused": true
+   },
+   "evidence": {
+    "honest": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "told": {
+     "refused": "GateRefusedRun",
+     "detail": "403: {\"error\": \"BASELINE_NOT_ADMITTED_BUDGET: the budget this attempt was admitted under is not the one its arguments would be decided against; nothing was run and nothing was signed\"}"
+    },
+    "again": {
+     "refused": "GateRefusedRun",
+     "detail": "403: {\"error\": \"BASELINE_NOT_ADMITTED_BUDGET: the budget this attempt was admitted under is not the one its arguments would be decided against; nothing was run and nothing was signed\"}"
+    },
+    "tool_calls": [
+     1,
+     1,
+     2
+    ],
+    "attempt": {
+     "phase": "CONSUMED",
+     "outcome": "PENDING",
+     "evidence": 0
+    },
+    "record_a": {
+     "verifies": true,
+     "why": [],
+     "status": "NOT VERIFIED",
+     "outcomes": [
+      "FAIL",
+      "PENDING"
+     ]
+    },
+    "record_b": {
+     "verifies": true,
+     "runs": 0
+    },
+    "notices_b": 0,
+    "matched": "PASS"
+   },
+   "seconds": 7.3
+  },
+  "R31": {
+   "title": "Amendment 17 (D21).  Request keys and attempt identities are the whole hash; where two designs share a narrower key, the second is refused, and is never given the first one's verdict.",
+   "ok": true,
+   "checks": {
+    "a run made now carries a 256-bit attempt identity and request key, and its record verifies as of that form": true,
+    "a record made before, with 64-bit identities, still verifies, and says which form it is": true,
+    "a record whose runs mix the two forms fails at check 5": true,
+    "with a 16-bit request key, the second design shares the first one's key; the governor refuses it, it is not run, and it is not told the first one's pass": true,
+    "with a 16-bit attempt identity, the second design is refused in the same way: not run, no verdict": true,
+    "with the governor's replay guard taken out as well, the front door refuses the first design's verdict for the second design": true
+   },
+   "evidence": {
+    "full": {
+     "exit": 2,
+     "aid": "a2-984553f4f65c482f0f81a7ef89b340c5e0b8dc9bb2390c4f5ced35c2f4c6a217",
+     "key": "verify:ba3d1cf418ab5e7ef88385e8bc965d1bab59ecb6cdaf7fb85e0d12fa3a136415",
+     "verifies": true,
+     "identities": "current",
+     "mixed_verifies": false,
+     "mixed_fails": [
+      4,
+      5,
+      6
+     ]
+    },
+    "legacy_sample": {
+     "verifies": true,
+     "identities": "legacy",
+     "says": [
+      "Its runs carry 64-bit attempt identities and 96-bit request keys, the form made before 22 November 2026."
+     ]
+    },
+    "request_key": {
+     "designs": [
+      {
+       "material": "PPS-GF40",
+       "wall_mm": 2.1223,
+       "mode": "normal"
+      },
+      {
+       "material": "PA66-GF30",
+       "wall_mm": 2.0012,
+       "mode": "normal"
+      }
+     ],
+     "first": [
+      200,
+      "PASS",
+      null
+     ],
+     "second": [
+      502,
+      null,
+      null,
+      "REFUSED by the verification service (RequestKeyReused).  NOT VERIFIED."
+     ],
+     "code2": null,
+     "tool_calls": 1,
+     "runs": [
+      "d5b0da16e847"
+     ]
+    },
+    "attempt_id": {
+     "designs": [
+      {
+       "material": "PPS-GF40",
+       "wall_mm": 2.0486,
+       "mode": "normal"
+      },
+      {
+       "material": "PA66-GF30",
+       "wall_mm": 2.0041,
+       "mode": "normal"
+      }
+     ],
+     "first": [
+      200,
+      "PASS",
+      null
+     ],
+     "second": [
+      502,
+      null,
+      null,
+      "REFUSED by the verification service (RequestKeyReused).  NOT VERIFIED."
+     ],
+     "code2": null,
+     "tool_calls": 1,
+     "runs": [
+      "8ab99a2868f4"
+     ]
+    },
+    "front_door_check": {
+     "designs": [
+      {
+       "material": "PPS-GF40",
+       "wall_mm": 2.1371,
+       "mode": "normal"
+      },
+      {
+       "material": "PA66-GF30",
+       "wall_mm": 2.0034,
+       "mode": "normal"
+      }
+     ],
+     "first": [
+      200,
+      "PASS",
+      null
+     ],
+     "second": [
+      502,
+      null,
+      null,
+      "REFUSED by the verification service: the verdict returned is not for this design.  NOT VERIFIED."
+     ],
+     "code2": null,
+     "tool_calls": 1,
+     "runs": [
+      "2952838fb210"
+     ]
+    }
+   },
+   "seconds": 17.4
+  }
+ },
+ "passed": 2,
+ "of": 2,
+ "seconds": 24.7,
+ "PASS": true
+}
