@@ -94,3 +94,38 @@ its length only).
 committed in `f1dc370` (`tests/verify_tests.py` SHA-256 `bbc884b8…`, not changed since), both expected to pass:
 - the matrix: A1 to A4, all predictions holding;
 - R35: 3 of 3.
+
+**The runs of entry 2's declaration.** Both came out as declared.
+- The matrix's 'after' predictions held at `6e03e1c` (`matrix/after_6e03e1c.out`):
+  - no case is PASS unless its exact value meets its criterion;
+  - every PASS and FAIL is accepted by `rederive`;
+  - every verdict is under 1 KB;
+  - each case gives the verdict expected.
+- R35 passed 3 of 3 (`r35_after/`). Through the front door, 199.99999999999999 is now signed FAIL and held as
+  `199.99999999999999`. 200 and 200.00000000000001 are PASS, held as printed. The record verifies offline.
+
+## Entry 3. The candidate, and what is declared of it before anything is run on it
+
+**Planted defects: five are added** to `tests/amend17_mutants.py`:
+- JSON numbers read as binary floats again;
+- a decimal read from a JSON number refused;
+- a tolerance at the limit;
+- the record checker's refusal not asked;
+- the implausible reason writes the number in full.
+
+The candidate is the commit that adds this entry (named in the next). Declared of it (VP-5):
+- **The full suites, in development:**
+  - the gate, 35 of 35 tests (R1 to R35, 255 checks: Amendment 18's 252 and R35's 3);
+  - the front door, 37 of 37 (214 checks).
+- **The whole planted-defect runner against this exact commit:** 59 entries, 45 planted and 45 caught, 14 NOT PLANTED
+  (the same 14 as at `203bdca`).
+- **One review, by a separate AI agent instructed by the author, read-only**, of `git diff 2c1af26 <candidate>`.
+  - Questions:
+    - Does the correction remove the false PASS without a tolerance, and without a float made from a decimal?
+    - Can any value out of bounds still give an offline-accepted signed PASS, by this or a related mechanism?
+    - Is CHECK_OUTPUT_INVALID used only as the existing contract allows?
+    - Is the Option B stop correctly drawn?
+    - Does anything weaken an earlier property (R1 to R13 and their 53 assertions, R29, F39)?
+    - Are R35 and the five defects discriminating?
+  - Under the owner's point 2, no review-and-patch cycle follows. A substantive finding is either corrected once, as a
+    new declared candidate with its own evidence, or reported to the owner as it stands.

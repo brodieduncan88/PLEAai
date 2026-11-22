@@ -1,0 +1,2 @@
+R35  PASS  Amendment 19 (D20-F).  A number the check prints is decided as printed: a value on the wrong side of a limit by less than a binary float can tell apart is never signed PASS, and a record that verifies offline holds the value as the check printed it.
+VERIFY RESULT: PASS (1 of 1)

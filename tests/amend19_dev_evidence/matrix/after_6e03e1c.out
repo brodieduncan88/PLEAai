@@ -1,0 +1,675 @@
+[
+ {
+  "criterion": "GE",
+  "token": "200",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "detail_len": 0,
+  "verdict_bytes": 671,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "200.0",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "detail_len": 0,
+  "verdict_bytes": 671,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "2e2",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "detail_len": 0,
+  "verdict_bytes": 671,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "2E+2",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "detail_len": 0,
+  "verdict_bytes": 671,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "0.2e3",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "detail_len": 0,
+  "verdict_bytes": 671,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "199.99999999999999",
+  "exact_meets": false,
+  "expected_after": [
+   "FAIL",
+   "LIMIT_NOT_MET"
+  ],
+  "raised": null,
+  "verdict": "FAIL",
+  "reason": "LIMIT_NOT_MET",
+  "achieved": "199.99999999999999",
+  "detail_len": 0,
+  "verdict_bytes": 713,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "199.999999999999999",
+  "exact_meets": false,
+  "expected_after": [
+   "FAIL",
+   "LIMIT_NOT_MET"
+  ],
+  "raised": null,
+  "verdict": "FAIL",
+  "reason": "LIMIT_NOT_MET",
+  "achieved": "199.999999999999999",
+  "detail_len": 0,
+  "verdict_bytes": 715,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "200.00000000000001",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200.00000000000001",
+  "detail_len": 0,
+  "verdict_bytes": 701,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "1.9999999999999999e2",
+  "exact_meets": false,
+  "expected_after": [
+   "FAIL",
+   "LIMIT_NOT_MET"
+  ],
+  "raised": null,
+  "verdict": "FAIL",
+  "reason": "LIMIT_NOT_MET",
+  "achieved": "199.99999999999999",
+  "detail_len": 0,
+  "verdict_bytes": 713,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "2.0000000000000001e2",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200.00000000000001",
+  "detail_len": 0,
+  "verdict_bytes": 701,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "199.9999999999999999999999999",
+  "exact_meets": false,
+  "expected_after": [
+   "FAIL",
+   "LIMIT_NOT_MET"
+  ],
+  "raised": null,
+  "verdict": "FAIL",
+  "reason": "LIMIT_NOT_MET",
+  "achieved": "199.9999999999999999999999999",
+  "detail_len": 0,
+  "verdict_bytes": 735,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "200.0000000000000000000000001",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200.0000000000000000000000001",
+  "detail_len": 0,
+  "verdict_bytes": 723,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "199.99999999999999999999999999999",
+  "exact_meets": false,
+  "expected_after": [
+   "UNKNOWN",
+   "CHECK_OUTPUT_INVALID"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "CHECK_OUTPUT_INVALID",
+  "achieved": null,
+  "detail_len": 149,
+  "verdict_bytes": 835,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "200.00000000000000000000000000001",
+  "exact_meets": true,
+  "expected_after": [
+   "UNKNOWN",
+   "CHECK_OUTPUT_INVALID"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "CHECK_OUTPUT_INVALID",
+  "achieved": null,
+  "detail_len": 149,
+  "verdict_bytes": 835,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "199.999999999999999999999999999999999999... (1004 chars)",
+  "exact_meets": false,
+  "expected_after": [
+   "UNKNOWN",
+   "CHECK_OUTPUT_INVALID"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "CHECK_OUTPUT_INVALID",
+  "achieved": null,
+  "detail_len": 149,
+  "verdict_bytes": 835,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "250.000000000000000000000000000001",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "250",
+  "detail_len": 0,
+  "verdict_bytes": 672,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "199",
+  "exact_meets": false,
+  "expected_after": [
+   "FAIL",
+   "LIMIT_NOT_MET"
+  ],
+  "raised": null,
+  "verdict": "FAIL",
+  "reason": "LIMIT_NOT_MET",
+  "achieved": "199",
+  "detail_len": 0,
+  "verdict_bytes": 683,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "201",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "201",
+  "detail_len": 0,
+  "verdict_bytes": 671,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "2000000000000000000000000000000",
+  "exact_meets": true,
+  "expected_after": [
+   "UNKNOWN",
+   "RESULT_IMPLAUSIBLE"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "RESULT_IMPLAUSIBLE",
+  "achieved": null,
+  "detail_len": 112,
+  "verdict_bytes": 801,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "1e999999",
+  "exact_meets": true,
+  "expected_after": [
+   "UNKNOWN",
+   null
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "RESULT_IMPLAUSIBLE",
+  "achieved": null,
+  "detail_len": 111,
+  "verdict_bytes": 800,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "1e1000000",
+  "exact_meets": true,
+  "expected_after": [
+   "UNKNOWN",
+   null
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "RESULT_IMPLAUSIBLE",
+  "achieved": null,
+  "detail_len": 112,
+  "verdict_bytes": 801,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "1e-999999",
+  "exact_meets": false,
+  "expected_after": [
+   "UNKNOWN",
+   null
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "RESULT_IMPLAUSIBLE",
+  "achieved": null,
+  "detail_len": 111,
+  "verdict_bytes": 800,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "-1e999999",
+  "exact_meets": false,
+  "expected_after": [
+   "UNKNOWN",
+   null
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "RESULT_IMPLAUSIBLE",
+  "achieved": null,
+  "detail_len": 112,
+  "verdict_bytes": 801,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "NaN",
+  "exact_meets": null,
+  "expected_after": [
+   "UNKNOWN",
+   "CHECK_OUTPUT_INVALID"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "CHECK_OUTPUT_INVALID",
+  "achieved": null,
+  "detail_len": 65,
+  "verdict_bytes": 756,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "Infinity",
+  "exact_meets": null,
+  "expected_after": [
+   "UNKNOWN",
+   "CHECK_OUTPUT_INVALID"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "CHECK_OUTPUT_INVALID",
+  "achieved": null,
+  "detail_len": 65,
+  "verdict_bytes": 756,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "-Infinity",
+  "exact_meets": null,
+  "expected_after": [
+   "UNKNOWN",
+   "CHECK_OUTPUT_INVALID"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "CHECK_OUTPUT_INVALID",
+  "achieved": null,
+  "detail_len": 66,
+  "verdict_bytes": 757,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "1e",
+  "exact_meets": null,
+  "expected_after": [
+   "UNKNOWN",
+   "CHECK_OUTPUT_INVALID"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "CHECK_OUTPUT_INVALID",
+  "achieved": null,
+  "detail_len": 75,
+  "verdict_bytes": 767,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "--1",
+  "exact_meets": null,
+  "expected_after": [
+   "UNKNOWN",
+   "CHECK_OUTPUT_INVALID"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "CHECK_OUTPUT_INVALID",
+  "achieved": null,
+  "detail_len": 75,
+  "verdict_bytes": 767,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "01",
+  "exact_meets": null,
+  "expected_after": [
+   "UNKNOWN",
+   "CHECK_OUTPUT_INVALID"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "CHECK_OUTPUT_INVALID",
+  "achieved": null,
+  "detail_len": 75,
+  "verdict_bytes": 767,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "\"199.99999999999999\"",
+  "exact_meets": false,
+  "expected_after": [
+   "FAIL",
+   "LIMIT_NOT_MET"
+  ],
+  "raised": null,
+  "verdict": "FAIL",
+  "reason": "LIMIT_NOT_MET",
+  "achieved": "199.99999999999999",
+  "detail_len": 0,
+  "verdict_bytes": 713,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "\"200\"",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "detail_len": 0,
+  "verdict_bytes": 671,
+  "rederive": []
+ },
+ {
+  "criterion": "GE",
+  "token": "true",
+  "exact_meets": false,
+  "expected_after": [
+   "UNKNOWN",
+   "CHECK_OUTPUT_INVALID"
+  ],
+  "raised": null,
+  "verdict": "UNKNOWN",
+  "reason": "CHECK_OUTPUT_INVALID",
+  "achieved": null,
+  "detail_len": 66,
+  "verdict_bytes": 757,
+  "rederive": []
+ },
+ {
+  "criterion": "LE",
+  "token": "200",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "detail_len": 0,
+  "verdict_bytes": 671,
+  "rederive": []
+ },
+ {
+  "criterion": "LE",
+  "token": "200.00000000000001",
+  "exact_meets": false,
+  "expected_after": [
+   "FAIL",
+   "LIMIT_NOT_MET"
+  ],
+  "raised": null,
+  "verdict": "FAIL",
+  "reason": "LIMIT_NOT_MET",
+  "achieved": "200.00000000000001",
+  "detail_len": 0,
+  "verdict_bytes": 713,
+  "rederive": []
+ },
+ {
+  "criterion": "LE",
+  "token": "199.99999999999999",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "199.99999999999999",
+  "detail_len": 0,
+  "verdict_bytes": 701,
+  "rederive": []
+ },
+ {
+  "criterion": "LE",
+  "token": "2.0000000000000001e2",
+  "exact_meets": false,
+  "expected_after": [
+   "FAIL",
+   "LIMIT_NOT_MET"
+  ],
+  "raised": null,
+  "verdict": "FAIL",
+  "reason": "LIMIT_NOT_MET",
+  "achieved": "200.00000000000001",
+  "detail_len": 0,
+  "verdict_bytes": 713,
+  "rederive": []
+ },
+ {
+  "criterion": "NEG",
+  "token": "-5",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "-5",
+  "detail_len": 0,
+  "verdict_bytes": 669,
+  "rederive": []
+ },
+ {
+  "criterion": "NEG",
+  "token": "-5.0",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "-5",
+  "detail_len": 0,
+  "verdict_bytes": 669,
+  "rederive": []
+ },
+ {
+  "criterion": "NEG",
+  "token": "-5.00000000000000001",
+  "exact_meets": false,
+  "expected_after": [
+   "FAIL",
+   "LIMIT_NOT_MET"
+  ],
+  "raised": null,
+  "verdict": "FAIL",
+  "reason": "LIMIT_NOT_MET",
+  "achieved": "-5.00000000000000001",
+  "detail_len": 0,
+  "verdict_bytes": 717,
+  "rederive": []
+ },
+ {
+  "criterion": "NEG",
+  "token": "-4.99999999999999999",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "-4.99999999999999999",
+  "detail_len": 0,
+  "verdict_bytes": 705,
+  "rederive": []
+ },
+ {
+  "criterion": "NEG",
+  "token": "-5e0",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "-5",
+  "detail_len": 0,
+  "verdict_bytes": 669,
+  "rederive": []
+ },
+ {
+  "criterion": "NEG",
+  "token": "-0.5e1",
+  "exact_meets": true,
+  "expected_after": [
+   "PASS",
+   "MET"
+  ],
+  "raised": null,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "-5",
+  "detail_len": 0,
+  "verdict_bytes": 669,
+  "rederive": []
+ }
+]
+ALL PREDICTIONS HELD

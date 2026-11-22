@@ -31,6 +31,9 @@ jobs.json not kept.
 Amendment 18 (22 November 2026, the single engineer key): three are added.  They are named in the declaration of
 Amendment 18 and run alone (by name) against its candidate; the 51 earlier entries were run against 203bdca.
 
+Amendment 19 (22 November 2026, D20-F): five are added.  With the owner's direction that the planted-defect checks be run
+against the exact final candidate, the whole runner is run against Amendment 19's candidate.
+
     amend17_mutants.py COMMIT WORKDIR PYTHON OUT.json [NAME ...]
 """
 import json, pathlib, shutil, subprocess, sys, time
@@ -111,6 +114,13 @@ MUTANTS = [
     ('more than one engineer key accepted', 'verify/front_door.py', "    if len(keys) != 1:\n        raise EngineerKeys(", "    if len(keys) < 1:\n        raise EngineerKeys(", ['F39']),
     ('an engineer key of another form accepted', 'verify/front_door.py', "    if not isinstance(keys[0], str) or not HEX64.fullmatch(keys[0]):", "    if not isinstance(keys[0], str):", ['F39']),
     ('the front door\'s start does not check its keys', 'verify/front_door.py', "    try:\n        single_engineer_key(a.engineer_key)              # Amendment 18", "    try:\n        pass              # Amendment 18", ['F39']),
+    # Amendment 19
+    ('JSON numbers read as binary floats again', 'verify/baseline.py', "        out = json.loads(run.stdout.decode('utf-8'), parse_float=decimal.Decimal)", "        out = json.loads(run.stdout.decode('utf-8'))", ['R35']),
+    ('a decimal read from a JSON number refused', 'verify/baseline.py', "    if isinstance(value, bool) or not isinstance(value, (int, float, str, decimal.Decimal)):", "    if isinstance(value, bool) or not isinstance(value, (int, float, str)):", ['R35']),
+    ('a tolerance at the limit', 'verify/baseline.py', "    if criterion['comparison'] == '<=':\n        return achieved <= limit, text(limit - achieved)\n    return achieved >= limit, text(achieved - limit)",
+     "    if criterion['comparison'] == '<=':\n        return achieved <= limit + D('1e-12'), text(limit - achieved)\n    return achieved >= limit - D('1e-12'), text(achieved - limit)", ['R35']),
+    ('the record checker\'s refusal not asked', 'verify/verify_tools.py', "        if not rederive(card, result, design):\n            return result", "        if True:\n            return result", ['R35']),
+    ('the implausible reason writes the number in full', 'verify/baseline.py', "{c[\"id\"]} = {_shown(value)} {c[\"units\"]}", "{c[\"id\"]} = {text(value)} {c[\"units\"]}", ['R35']),
     ('a move not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)                                # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding)                                # written first", ['F38']),
 ]
 
