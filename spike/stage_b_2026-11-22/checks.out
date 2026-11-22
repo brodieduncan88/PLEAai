@@ -1,0 +1,73 @@
+== py_compile
+ok   admission.py
+ok   config.py
+ok   fclib.py
+ok   fetch.py
+ok   prereq.py
+ok   recover.py
+ok   selftest.py
+ok   setup_host.py
+ok   tests/common.py
+ok   tests/scenarios.py
+ok   tests/sim_helper.py
+ok   tests/t01_start.py
+ok   tests/t02_unpriv.py
+ok   tests/t03_workload.py
+ok   tests/t04_latency.py
+ok   tests/t05_limits.py
+ok   tests/t06_host_avail.py
+ok   tests/t07_high_fd.py
+ok   tests/t08_console.py
+ok   tests/t09_delivery.py
+ok   tests/t10_concurrent.py
+ok   tests/t11_kill.py
+ok   tests/t12_post.py
+ok   tests/t12_pre.py
+ok   tests/t13_missing_prereq.py
+ok   tests/t14_admission.py
+ok   tests/t15_toctou.py
+ok   util.py
+ok   workloads/w_cpu.py
+ok   workloads/w_echo.py
+ok   workloads/w_fd.py
+ok   workloads/w_flood.py
+ok   workloads/w_fork.py
+ok   workloads/w_mem.py
+ok   workloads/w_sleep.py
+ok   workloads/w_verify.py
+== bash -n
+ok   checks.sh
+ok   collect.sh
+ok   declare.sh
+ok   guest/plea-init
+ok   lib.sh
+ok   run_stage.sh
+ok   stage0_host.sh
+ok   stage1_fetch.sh
+ok   stage2_setup.sh
+== declare/verify cycle in a temp copy
+ok   declare.sh wrote 50 hashes
+ok   verify_declared passes on the untouched copy
+ok   declare.sh re-run on unchanged bundle just verifies
+./DECLARATION.md: FAILED
+ok   tampered DECLARATION.md -> verify refuses
+ok   declare.sh refuses to overwrite a differing declaration
+ok   undeclared extra file (json.py) -> verify refuses
+ok   restored copy verifies again
+ok   run_stage.sh T01 refuses before stage2 (state gating), exit 2
+ok   run_stage.sh stage0 refuses on a tampered bundle, exit 2
+== KVM ioctl/capability numbers in prereq.py vs /usr/include/linux/kvm.h (if installed)
+ok   KVM_CAP_IRQCHIP 0 header: 0
+ok   KVM_CAP_USER_MEMORY 3 header: 3
+ok   KVM_CAP_SET_TSS_ADDR 4 header: 4
+ok   KVM_CAP_EXT_CPUID 7 header: 7
+ok   KVM_CAP_NR_VCPUS 9 header: 9
+ok   KVM_CAP_NR_MEMSLOTS 10 header: 10
+ok   KVM_CAP_MP_STATE 14 header: 14
+ok   KVM_CAP_IRQFD 32 header: 32
+ok   KVM_CAP_PIT2 33 header: 33
+ok   KVM_CAP_IOEVENTFD 36 header: 36
+ok   KVM_GET_API_VERSION 0 header: 0x00
+ok   KVM_CREATE_VM 1 header: 0x01
+ok   KVM_CHECK_EXTENSION 3 header: 0x03
+== result: ALL OK

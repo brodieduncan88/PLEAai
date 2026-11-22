@@ -1,0 +1,161 @@
+#!/bin/bash
+# /plea-init - PID 1 inside the Stage B microVM. Trusted guest component, pinned inside rootfs.ext4.
+# The payload on /dev/vdb is untrusted: it runs as uid 10001 under `timeout`, never as root.
+# Wire format: /dev/vdb = 8-byte big-endian length N (1..pcap) + N payload bytes.
+#              /dev/vdc = 8-byte big-endian length L + L bytes; body = one JSON header line + stdout + stderr.
+# Console: "PLEA_READY <nonce>" before the payload runs; "PLEA_DONE <nonce> <STATUS>" after the result is
+# written. The nonce is drawn here from /dev/urandom after boot; the workload cannot read it (it is not in
+# the kernel cmdline or the environment, and the workload has no read access to the console).
+
+# BEGIN-LIB  (selftest.py sources this section on the build host; it has no side effects)
+be64() {  # print an unsigned integer as 8 big-endian bytes
+	local n=$1 i s=""
+	for i in 56 48 40 32 24 16 8 0; do s+=$(printf '\\%03o' $(( (n >> i) & 255 ))); done
+	printf "$s"
+}
+read_be64() {  # file -> echo the 8-byte big-endian prefix; fail if short or top bit set
+	local b
+	b=$(dd if="$1" bs=8 count=1 2>/dev/null | od -An -v -tu1) || return 1
+	set -- $b
+	[ $# -eq 8 ] || return 1
+	[ "$1" -lt 128 ] || return 1
+	local n=0 x
+	for x in "$@"; do n=$(( (n << 8) | x )); done
+	echo "$n"
+}
+extract_payload() {  # in_dev in_size pcap out_file -> sets PLEN; returns 2 on any malformed prefix
+	local in=$1 insz=$2 pcap=$3 out=$4 n
+	n=$(read_be64 "$in") || return 2
+	[ "$n" -ge 1 ] && [ "$n" -le "$pcap" ] && [ $(( n + 8 )) -le "$insz" ] || return 2
+	dd if="$in" of="$out" iflag=skip_bytes,count_bytes skip=8 count="$n" bs=65536 2>/dev/null || return 2
+	[ "$(stat -c %s "$out")" = "$n" ] || return 2
+	PLEN=$n
+}
+write_result() {  # out_dev out_size header_json stdout_file stderr_file work_dir
+	local dev=$1 outsz=$2 hdr=$3 so=$4 se=$5 w=$6 blen
+	{ printf '%s\n' "$hdr"; cat "$so" "$se"; } > "$w/body" || return 1
+	blen=$(stat -c %s "$w/body")
+	[ $(( blen + 8 )) -le "$outsz" ] || return 1
+	{ be64 "$blen"; cat "$w/body"; } > "$w/result" || return 1
+	dd if="$w/result" of="$dev" bs=65536 conv=notrunc,fsync 2>/dev/null
+}
+mkhdr() {  # nonce status exit plen psha solen trunc selen probe prw pro devs guid t_ms
+	printf '{"v":1,"nonce":"%s","status":"%s","exit":%d,"payload_len":%d,"payload_sha256":"%s","stdout_len":%d,"stdout_truncated":%s,"stderr_len":%d,"probe":"%s","probe_rw_rc":%d,"probe_rootfs_rc":%d,"devs":"%s","guest_uid":%d,"t_ms":%d}' "$@"
+}
+# END-LIB
+
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+umask 022
+GUID=10001
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev 2>/dev/null  # may already be mounted by CONFIG_DEVTMPFS_MOUNT
+[ -c /dev/console ] && exec </dev/null >/dev/console 2>&1
+cs() { local u; u=$(cut -d' ' -f1 /proc/uptime); echo $(( ${u%.*} * 100 + 10#${u#*.} )); }
+T0=$(cs)
+NONCE=$(od -An -N8 -tx1 /dev/urandom | tr -d ' \n')
+
+# name default max
+DEFS="TMO 20 3600 PCAP 1048576 16777216 OUTCAP 65536 16777216 ERRCAP 4096 1048576 NOFILE 1024 1048576
+NPROC 256 1000000 FILEMAX 0 4000000 TMPMIB 16 1024"
+unset TMO PCAP OUTCAP ERRCAP NOFILE NPROC FILEMAX TMPMIB
+MODE=normal PROBE=none SHA= BAD=
+read -ra ARGS < /proc/cmdline
+for kv in "${ARGS[@]}"; do
+	case "$kv" in
+		plea.mode=*) MODE=${kv#*=} ;;      plea.probe=*) PROBE=${kv#*=} ;;
+		plea.sha256=*) SHA=${kv#*=} ;;     plea.timeout=*) TMO=${kv#*=} ;;
+		plea.pcap=*) PCAP=${kv#*=} ;;      plea.outcap=*) OUTCAP=${kv#*=} ;;
+		plea.errcap=*) ERRCAP=${kv#*=} ;;  plea.nofile=*) NOFILE=${kv#*=} ;;
+		plea.nproc=*) NPROC=${kv#*=} ;;    plea.filemax=*) FILEMAX=${kv#*=} ;;
+		plea.tmpmib=*) TMPMIB=${kv#*=} ;;
+	esac
+done
+set -- $DEFS
+while [ $# -ge 3 ]; do
+	v=${!1}
+	if [ -z "$v" ]; then printf -v "$1" '%s' "$2"
+	elif ! [[ $v =~ ^[0-9]{1,10}$ ]] || [ "$v" -gt "$3" ]; then BAD+="$1,"; printf -v "$1" '%s' "$2"; fi
+	shift 3
+done
+[[ $MODE =~ ^(normal|console)$ ]] || { BAD+=mode,; MODE=normal; }
+[[ $PROBE =~ ^(none|rw|fill)$ ]] || { BAD+=probe,; PROBE=none; }
+[[ $SHA =~ ^[0-9a-f]{64}$ ]] || BAD+=sha,
+
+mount -t tmpfs -o size=$(( PCAP + 4 * (OUTCAP + ERRCAP) + 4194304 )),mode=0755 tmpfs /run
+mount -t tmpfs -o size=${TMPMIB}m,mode=1777 tmpfs /tmp
+W=/run/plea
+mkdir -m 0755 "$W"
+: > "$W/stdout"; : > "$W/stderr"
+STATUS=OK RC=-1 PSHA= PLEN=0 TRUNC=false PRW=-1 PRO=-1
+DEVS=$(ls /sys/block 2>/dev/null | tr '\n' ','); DEVS=${DEVS%,}
+[[ $DEVS =~ ^[a-z0-9,]{0,64}$ ]] || DEVS=invalid
+OUTSZ=$(( $(cat /sys/block/vdc/size 2>/dev/null || echo 0) * 512 ))
+echo "PLEA_READY $NONCE"
+
+run_job() {
+	local sub=(timeout -s KILL "$TMO" setpriv --reuid=$GUID --regid=$GUID --clear-groups --no-new-privs
+		--inh-caps=-all --bounding-set=-all -- /usr/bin/python3 -I "$W/job.py")
+	# Backstop: after the timeout, kill everything except PID 1 so no escaped child keeps pipes open.
+	( sleep $(( TMO + 5 )); kill -KILL -1 ) & local wd=$!
+	cd /tmp || return
+	if [ "$MODE" = console ]; then
+		( ulimit -n "$NOFILE" && ulimit -u "$NPROC" && exec "${sub[@]}" ) </dev/null >/dev/console 2>&1
+		RC=$?
+	else
+		mkfifo -m 0600 "$W/errfifo"
+		head -c "$ERRCAP" < "$W/errfifo" > "$W/stderr" & local eh=$!
+		( ulimit -n "$NOFILE" && ulimit -u "$NPROC" && exec "${sub[@]}" ) </dev/null 2>"$W/errfifo" \
+			| head -c $(( OUTCAP + 1 )) > "$W/stdout.raw"
+		RC=${PIPESTATUS[0]}
+		wait "$eh" 2>/dev/null
+		if [ "$(stat -c %s "$W/stdout.raw")" -gt "$OUTCAP" ]; then
+			TRUNC=true; head -c "$OUTCAP" "$W/stdout.raw" > "$W/stdout"
+		else
+			mv "$W/stdout.raw" "$W/stdout"
+		fi
+	fi
+	kill "$wd" 2>/dev/null
+	cd /
+}
+
+if [ -n "$BAD" ]; then
+	STATUS=BAD_CMDLINE
+elif [ "$(cat /sys/block/vdb/ro 2>/dev/null)" != 1 ] || [ "$(cat /sys/block/vdc/ro 2>/dev/null)" != 0 ]; then
+	STATUS=REJECT_DEV
+elif ! extract_payload /dev/vdb $(( $(cat /sys/block/vdb/size) * 512 )) "$PCAP" "$W/job.py"; then
+	STATUS=REJECT_LEN; PLEN=0
+else
+	PSHA=$(sha256sum "$W/job.py" | cut -c1-64)
+	if [ "$PSHA" != "$SHA" ]; then
+		STATUS=REJECT_HASH
+	else
+		chmod 0444 "$W/job.py"
+		[ "$FILEMAX" -gt 0 ] && echo "$FILEMAX" > /proc/sys/fs/file-max
+		run_job
+	fi
+fi
+
+if [ "$PROBE" = rw ]; then  # as root: try to write the read-only input drive and the read-only rootfs
+	blockdev --setrw /dev/vdb 2>/dev/null
+	head -c 4096 /dev/urandom > "$W/pat"
+	dd if="$W/pat" of=/dev/vdb bs=4096 count=1 oflag=direct conv=fsync 2>/dev/null; PRW=$?
+	( : > /plea-probe-rootfs-write ) 2>/dev/null; PRO=$?
+elif [ "$PROBE" = fill ]; then  # as root: write random data over the whole output drive (fsize test)
+	dd if=/dev/urandom of=/dev/vdc bs=1048576 count=$(( OUTSZ / 1048576 )) oflag=direct conv=fsync 2>/dev/null; PRW=$?
+fi
+
+SOLEN=$(stat -c %s "$W/stdout"); SELEN=$(stat -c %s "$W/stderr")
+HDR=$(mkhdr "$NONCE" "$STATUS" "$RC" "$PLEN" "$PSHA" "$SOLEN" "$TRUNC" "$SELEN" "$PROBE" "$PRW" "$PRO" "$DEVS" "$GUID" $(( ($(cs) - T0) * 10 )))
+if ! write_result /dev/vdc "$OUTSZ" "$HDR" "$W/stdout" "$W/stderr" "$W"; then
+	STATUS=RESULT_WRITE_FAILED
+	: > "$W/stdout"; : > "$W/stderr"
+	HDR=$(mkhdr "$NONCE" "$STATUS" "$RC" "$PLEN" "$PSHA" 0 "$TRUNC" 0 "$PROBE" "$PRW" "$PRO" "$DEVS" "$GUID" 0)
+	write_result /dev/vdc "$OUTSZ" "$HDR" "$W/stdout" "$W/stderr" "$W"
+fi
+sync
+echo "PLEA_DONE $NONCE $STATUS"
+reboot -f 2>/dev/null
+/usr/bin/python3 -I -c 'import ctypes; ctypes.CDLL(None).reboot(0x01234567)' 2>/dev/null
+echo b > /proc/sysrq-trigger 2>/dev/null
+exit 0  # PID 1 exiting panics the kernel; panic=1 reboots; Firecracker exits on guest reboot

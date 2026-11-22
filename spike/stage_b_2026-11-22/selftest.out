@@ -1,0 +1,26 @@
+selftest on Linux 6.18.44-fc-v726, python 3.11.17, uid 0, /dev/kvm present: False
+PASS bounded_reader_head_tail_dropped: 1 MiB in random chunks: kept 65536+65536, dropped 917504
+PASS bounded_reader_markers_and_forgery: pre-READY DONE, second READY and wrong-nonce DONE ignored; DONE after a 5000-byte unterminated line found
+PASS lp_codec: round trip ok; short/over-cap/beyond-buffer/top-bit rejected
+PASS result_parser_validation: 6 malformed results rejected
+PASS guest_init_extract_payload: valid 70000-byte payload extracted byte-exact; 5 malformed prefixes -> rc=2 (REJECT_LEN)
+PASS guest_init_write_result_roundtrip: bash write_result -> Python read_result round trip exact; oversize result refused; be64 correct
+PASS guest_init_syntax: bash -n ok
+PASS prereq_on_fake_paths: fake host: KVM(regular file)/cgroup(not cgroup2)/parent(no pids) NOT MET, pinned files MET; tamper, missing jailer, low memory, swap on, writable pins each flip their check to NOT MET; prereq.main exit 1
+PASS prereq_on_this_build_host: real prereq here (no /dev/kvm): NOT MET -> P01:kvm_char_device, P02:kvm_ioctl_api12_caps_create_vm, P03:cgroup_v2_root_controllers, P04:cgroup_parent_cpu_memory_pids_enableable, P05:pins_file_and_release_constants, P06:firecracker_jailer_pinned, P07:kernel_pinned, P08:rootfs_pinned, P09:chroot_base_root_owned_path, P13:bundle_dir_root_owned_path
+PASS run_vm_refuses_when_prereq_not_met: run_vm refused before allocating a uid or chroot: prerequisites NOT MET: P01:kvm_char_device, P02:kvm_ioctl_api12_caps_create_vm, P03:cgroup_v2_root_controllers, P04:cgro
+PASS admission_503_rule: NOT MET -> 503 with budget bytes/mtime/inode unchanged; MET -> 200 and 5->4; 0 -> 429 unchanged; corrupt -> 500 unchanged
+PASS recover_temp_tree: dry-run found 5 items and changed nothing; --apply removed all; symlink target intact
+PASS place_file_post_copy_hash: sparse copy ok (1056768 of 3153920 bytes allocated); tampered source refused; O_EXCL enforced
+PASS safe_rmtree_refusals: outside path, symlink and the base itself refused; inner dir removed
+PASS pidfd_guarded_kill: pid outside the uid range untouched; in range killed via pidfd; reaped pid -> gone
+PASS flag_evaluation: missing --cgroup (with --cgroup-version present), missing --parent-cgroup, wrong version, no --config-file -> NOT MET
+PASS jailer_argv_and_boot_args: argv has every declared flag; boot args 318 chars
+PASS workloads_compile_and_verify_is_deterministic: all workloads compile; w_verify stdout identical across runs
+PASS declaration_covers_every_predicate_id: 127 predicate ids, all present in DECLARATION.md
+PASS tar_data_filter_rejects_traversal: tarfile filter='data' (used by fetch.py) rejects '../' members
+PASS resolve_in_tree_no_escape: relative and absolute symlinks resolved inside the tree; escaping link -> None
+PASS fetch_offline_pipeline: release verify+extract+install ok; TOFU mismatch NOT MET; real mkfs.ext4 -d image 134217728 bytes + e2fsck clean, pinned 0444; tampered image NOT MET; missing guest stdlib BLOCKED; inner mismatch NOT MET
+PASS pctl_nearest_rank: {'n': 20, 'min': 1, 'median': 10.5, 'p95': 19, 'max': 20}
+PASS evidence_writer_bounds: oversized evidence truncated to 298 bytes, predicates kept
+24/24 passed
