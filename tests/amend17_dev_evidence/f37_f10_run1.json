@@ -1,0 +1,171 @@
+{
+ "tests": {
+  "F37": {
+   "title": "Amendment 17 (D16).  The latest binding seen for each job, and its revocation, are kept in the database: a restart forgets nothing, a revocation is never undone, and a stale, conflicting or mismatched binding admits nobody.",
+   "ok": true,
+   "checks": {
+    "an enrolled job is admitted, and still admitted after the front door restarts": true,
+    "a revoked job is refused, and the earlier signed binding put back after a restart does not undo it": true,
+    "revocation is absorbing: a later binding signed by the engineer does not admit the revoked job": true,
+    "a second binding with the same number is refused; the one seen first, asked again, is answered": true,
+    "a binding naming this baseline and another's budget admits nobody, and nothing reaches the gate": true,
+    "when the record cannot be read, the front door answers 503 and runs nothing; then it answers again": true,
+    "the service's role cannot write the table, and a rolled-back call leaves nothing": true,
+    "concurrent observers end at the highest number, and a lower one is then stale": true,
+    "the service's role can deny a job with a made-up revocation, and cannot admit one (it fails closed)": true
+   },
+   "evidence": {
+    "first": 200,
+    "after_restart": 200,
+    "revoked": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "put_back_after_restart": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "unrevoked": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "conflict": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "same_again": [
+     200,
+     200,
+     200
+    ],
+    "ok_b": 200,
+    "mismatch": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "calls_mismatch": 0,
+    "unreadable": [
+     503,
+     "UNAVAILABLE"
+    ],
+    "calls_unreadable": 0,
+    "readable_again": 200,
+    "direct": {
+     "update": "InsufficientPrivilege",
+     "delete": "InsufficientPrivilege",
+     "insert": "InsufficientPrivilege"
+    },
+    "after_rollback": "CURRENT",
+    "race": {
+     "final": [
+      40,
+      false
+     ],
+     "current": 5,
+     "late": [
+      "STALE",
+      "STALE"
+     ]
+    },
+    "denied_by_role": "REVOKED",
+    "job_b_after": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "calls": [
+     2,
+     2,
+     2
+    ]
+   },
+   "seconds": 5.8
+  },
+  "F10": {
+   "title": "Only the certificate the engineer enrolled, for a job the engineer has not revoked, under a binding the engineer signed, is answered.",
+   "ok": true,
+   "checks": {
+    "a certificate from another authority gets no answer at all": true,
+    "a certificate of this authority that was not enrolled is refused (403), whatever its name": true,
+    "a binding pointed at another baseline, or re-signed by another key, or unreadable, admits nobody": true,
+    "after the engineer revokes the job its own certificate is refused, and the tool says so as an error": true,
+    "putting the earlier signed binding back in the file does not undo the revocation": true,
+    "nothing was run in any of this": true
+   },
+   "evidence": {
+    "submit": {
+     "the right name from another authority": [
+      null,
+      "SSLError"
+     ],
+     "this authority, a name never enrolled": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the enrolled name, another certificate": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the front door's own name": [
+      403,
+      "NOT_ENROLLED"
+     ]
+    },
+    "read": {
+     "the right name from another authority": [
+      null,
+      "SSLError"
+     ],
+     "this authority, a name never enrolled": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the enrolled name, another certificate": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the front door's own name": [
+      403,
+      "NOT_ENROLLED"
+     ]
+    },
+    "enrolled": 200,
+    "edited": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "resigned": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "broken": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "restored": 200,
+    "revoked": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "put_back": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "by_tool": [
+     true,
+     "REFUSED: this certificate is not enrolled for a job, or the job was re"
+    ],
+    "by_cli": 4,
+    "enrol_again": "job-a is already enrolled; a job name is used once",
+    "relaxed_copy_after_revoking": "REQ-SELFTEST-001 is already under baseline 3ce36872ca0c1694\u2026 on job jo",
+    "tool_calls": 0,
+    "audit_rows": 0,
+    "audit_rows_other": 0
+   },
+   "seconds": 3.6
+  }
+ },
+ "passed": 2,
+ "of": 2,
+ "seconds": 9.5,
+ "PASS": true
+}

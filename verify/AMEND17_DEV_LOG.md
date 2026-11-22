@@ -56,3 +56,25 @@ the owner's rules VP-1 to VP-6 (`plan/GOVERNANCE_NOTE_2026-11-22.md`). Nothing h
 - **Declared before the next run (VP-5).** The test file has SHA-256 `43881a0517760a8e6b513f2d0abe7ba6b14bc0b18ff0a8b14b49ed8d41667b5f`. Expected:
   - every test of the gate suite passes except those A4 retires or migrates (declared in entry 4);
   - R17 and R26 pass with the old client still in place.
+
+## Entry 4. A2 (D16): the record of bindings, and F37
+
+- **The first two attempts did not run F37's checks.** In the first, A2's code was not yet applied, and F37 stopped with an
+  error (`deploy_front` had no `OWNER_DSN`). In the second, a patch script stopped part-way: `front_door.py` named
+  `front_state` without importing it, so F10 failed as well, with errors, not with its checks. Both outputs were
+  overwritten by the next run and are not kept. That is a breach of VP-2/VP-3, recorded here: what was lost is two runs
+  that stopped with an exception before any check of F37 was judged.
+- **A design fault found before F37 ran.** The record was first keyed by job name alone. Every test deployment enrols a
+  job named `job-a` in one shared database, and one database can serve more than one front door. So one front door's
+  revocation would have refused another's job. The key is now the front door's certificate authority (the first 32 hex
+  digits of the SHA-256 of its certificate) and the job's name. F37's one direct call by job name was changed to that
+  name before F37's checks were first judged.
+- **Run 3** (F37 and F10): both pass. Kept in `tests/amend17_dev_evidence/f37_f10_run1.json`.
+- **What stays open (stated in `verify/front_state.py`).**
+  - The service's own role can call the function with a made-up number or revocation and so refuse a job for ever. It
+    fails closed: it can deny, never admit.
+  - A restore of the database, together with an earlier `jobs.json`, would undo a revocation. That needs the database's
+    owner or operator.
+  - A change of the front door's certificate authority starts a new record. The old jobs' certificates are then not
+    accepted anyway.
+  - Pacing counters and the per-job lock stay in memory.

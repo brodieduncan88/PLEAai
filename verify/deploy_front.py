@@ -22,9 +22,13 @@ sys.path.insert(0, str(HERE.parent)); sys.path.insert(0, str(HERE))
 from plea_gateway import tls as TLS                  # noqa: E402
 import deploy                                        # noqa: E402
 import front_ctl                                     # noqa: E402
+import front_state                                   # noqa: E402  (Amendment 17, D16)
+from plea_gateway import Store                       # noqa: E402  (Amendment 17)
+import os                                            # noqa: E402  (Amendment 17)
 from front_client import FrontClient                 # noqa: E402
 
 PY = sys.executable
+OWNER_DSN = os.environ.get('PLEA_ADMIN_DSN', 'postgresql://plea:plea@127.0.0.1:5432/plea')   # Amendment 17: to install the record of bindings only (B-1 stands)
 CLEAN_ENV = {'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8'}          # what the assistant's side is started with: no service address, no credential
 
 
@@ -46,7 +50,10 @@ class FrontServices(deploy.Services):
 
     def start_front(self, rate: int = 120, sweep_after: float = 3600.0, sweep_every: float = 30.0) -> None:
         """Amendment 9: the front door's look for runs left pending waits an hour here unless a test asks otherwise, so that tests
-        that leave a run pending on purpose see it as they left it.  The front door's own default is SWEEP_AFTER."""
+        that leave a run pending on purpose see it as they left it.  The front door's own default is SWEEP_AFTER.
+        Amendment 17 (D16): the front door's record of job bindings is installed first, with the database owner's credential, as
+        an operator installs the gateway's schema.  The front door itself holds plea_local only."""
+        front_state.install(Store(OWNER_DSN))
         cmd = [PY, '-B', str(HERE / 'front_door.py'), '--home', str(self.home), '--port', str(self.ports['front']), '--local-dsn', deploy.LOCAL_DSN,
                '--witness-url', f'https://127.0.0.1:{self.ports["witness"]}', '--witness-key', self.keys['witness'],
                '--gate-host', f'https://127.0.0.1:{self.ports["host"]}', '--gate-key', self.keys['gate'], '--engineer-key', self.keys['engineer'],

@@ -1784,7 +1784,98 @@ def f36():
     return checks, e
 
 
-TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35, 'F36': f36}
+# ====================================================================== Amendment 17 (22 November 2026): D16
+def f37():
+    """Amendment 17 (D16).  The latest binding seen for each job, and its revocation, are kept in the database: a restart forgets nothing, a revocation is never undone, and a stale, conflicting or mismatched binding admits nobody."""
+    import random
+    import front_state
+    import psycopg
+    r = Run('F37'); e = {}
+    try:
+        s = r.s; path = front_door.jobs_path(s.home); local = Store(deploy.LOCAL_DSN); owner = Store(deploy_front.OWNER_DSN)
+        sub = lambda d=GOOD: raw(r.job, 'POST', '/submit', json.dumps({'design': d}).encode())
+        refused = lambda x: x[0] == 403 and x[1].get('refused') == 'NOT_ENROLLED'
+        first = sub(BAD)
+        enrolled = path.read_text()                                                     # the ENROL binding, seq 1
+        s.stop_front(); s.start_front(); after_restart = sub(GOOD)                      # no attack: still admitted after a restart
+        calls_admitted = r.calls()
+        s.revoke('job-a'); revoked = sub()
+        after_revoke = path.read_text()
+        s.stop_front(); s.start_front()
+        path.write_text(enrolled); put_back_after_restart = sub()                       # the earlier signed binding put back, after a restart
+        path.write_text(after_revoke)
+        # a later binding signed by the engineer for the revoked job: revocation is absorbing
+        jobs = json.loads(after_revoke); rv = jobs['jobs']['job-a']
+        later = {k: rv[k] for k in front_door.BINDING_FIELDS}; later.update(event='REBIND', seq=rv['seq'] + 1, previous=rv['baseline_sha256'], note=None)
+        later = dict(later, signer=s.engineer.public_hex, signature=s.engineer.sign(front_door.binding_message(later)))
+        jobs['jobs']['job-a'] = later; path.write_text(json.dumps(jobs)); unrevoked = sub(); path.write_text(after_revoke)
+        calls_after_revoke = r.calls()
+        # a second job: a conflicting binding (another one, signed by the engineer, with the same number)
+        job_b = s.enrol('job-b', r.h); ok_b = raw(job_b, 'POST', '/submit', json.dumps({'design': BAD}).encode())
+        jobs = json.loads(path.read_text()); kb = jobs['jobs']['job-b']; held_b = path.read_text()
+        twin = {k: kb[k] for k in front_door.BINDING_FIELDS}; twin.update(note='another binding with the same number')
+        twin = dict(twin, signer=s.engineer.public_hex, signature=s.engineer.sign(front_door.binding_message(twin)))
+        jobs['jobs']['job-b'] = twin; path.write_text(json.dumps(jobs)); conflict = raw(job_b, 'GET', '/requirement')
+        path.write_text(held_b); same_again = [raw(job_b, 'GET', '/requirement')[0] for _ in range(3)]  # retries of the binding seen first
+        # a binding signed by the engineer that names this baseline and another baseline's budget
+        other = s.baseline(case_b('F37'), relaxed(), alongside_reason='a relaxed copy baselined as new, as the test needs')
+        jobs = json.loads(held_b); mm = {k: jobs['jobs']['job-b'][k] for k in front_door.BINDING_FIELDS}; mm.update(event='REBIND', seq=mm['seq'] + 1, root=B.root_for(other['card']))
+        mm = dict(mm, signer=s.engineer.public_hex, signature=s.engineer.sign(front_door.binding_message(mm)))
+        jobs['jobs']['job-b'] = mm; path.write_text(json.dumps(jobs)); calls0 = r.calls(); mismatch = raw(job_b, 'POST', '/submit', json.dumps({'design': GOOD}).encode())
+        calls_mismatch = r.calls() - calls0; path.write_text(held_b)
+        # the record cannot be read: nobody is admitted, and it comes back when it can
+        with owner.connect() as c:
+            c.execute('REVOKE EXECUTE ON FUNCTION public.verify_front_observe(text, bigint, text, boolean) FROM plea_local')
+        calls1 = r.calls(); unreadable = raw(job_b, 'POST', '/submit', json.dumps({'design': GOOD}).encode()); calls_unreadable = r.calls() - calls1
+        with owner.connect() as c:
+            c.execute('GRANT EXECUTE ON FUNCTION public.verify_front_observe(text, bigint, text, boolean) TO plea_local')
+        readable_again = raw(job_b, 'GET', '/requirement')
+        # what the service's own role can do to the record: only move it forward; it cannot write the table
+        direct = {}
+        for what, sql in (('update', "UPDATE public.verify_front_binding SET revoked = false WHERE job = 'job-a'"), ('delete', "DELETE FROM public.verify_front_binding WHERE job = 'job-a'"),
+                          ('insert', "INSERT INTO public.verify_front_binding VALUES ('job-z', 1, repeat('0', 64), false, now())")):
+            try:
+                with local.connect() as c:
+                    c.execute(sql)
+                direct[what] = 'done'
+            except psycopg.Error as exc:
+                direct[what] = type(exc).__name__
+        rolled = 'job-t-' + uuid.uuid4().hex[:8]
+        with local.connect() as c:                                                      # a transaction that fails leaves nothing behind
+            c.execute('SELECT public.verify_front_observe(%s, 99, %s, true)', (rolled, '1' * 64)); c.rollback()
+        after_rollback = front_state.observe(local, rolled, 2, '2' * 64, False)
+        # concurrent observers: the highest number wins, and nothing lower is current after it
+        racer = 'job-r-' + uuid.uuid4().hex[:8]; seqs = list(range(1, 41)); random.shuffle(seqs); answers = {}
+        def go(n):
+            answers[n] = front_state.observe(Store(deploy.LOCAL_DSN), racer, n, format(n, '064x'), False)
+        threads = [threading.Thread(target=go, args=(n,)) for n in seqs]
+        [t.start() for t in threads]; [t.join() for t in threads]
+        with owner.connect() as c:
+            final = c.execute('SELECT seq, revoked FROM public.verify_front_binding WHERE job = %s', (racer,)).fetchone()
+        late = [front_state.observe(local, racer, n, format(n, '064x'), False) for n in (1, 39)]
+        # the service's own role can deny a job, never admit one: a made-up revocation, then a made-up lower number
+        realm = hashlib.sha256(pathlib.Path(s.pki['ca']).read_bytes()).hexdigest()[:32]
+        denied_by_role = front_state.observe(local, f'{realm}:job-b', 10 ** 6, '3' * 64, True); job_b_after = raw(job_b, 'GET', '/requirement')
+        e.update(first=first[0], after_restart=after_restart[0], revoked=(revoked[0], revoked[1].get('refused')), put_back_after_restart=(put_back_after_restart[0], put_back_after_restart[1].get('refused')),
+                 unrevoked=(unrevoked[0], unrevoked[1].get('refused')), conflict=(conflict[0], conflict[1].get('refused')), same_again=same_again, ok_b=ok_b[0],
+                 mismatch=(mismatch[0], mismatch[1].get('refused')), calls_mismatch=calls_mismatch, unreadable=(unreadable[0], unreadable[1].get('refused')), calls_unreadable=calls_unreadable,
+                 readable_again=readable_again[0], direct=direct, after_rollback=after_rollback, race=dict(final=final, current=sum(a == 'CURRENT' for a in answers.values()), late=late),
+                 denied_by_role=denied_by_role, job_b_after=(job_b_after[0], job_b_after[1].get('refused')), calls=(calls_admitted, calls_after_revoke, r.calls()))
+        checks = {'an enrolled job is admitted, and still admitted after the front door restarts': first[0] == 200 and after_restart[0] == 200,
+                  'a revoked job is refused, and the earlier signed binding put back after a restart does not undo it': refused(revoked) and refused(put_back_after_restart),
+                  'revocation is absorbing: a later binding signed by the engineer does not admit the revoked job': refused(unrevoked) and calls_after_revoke == calls_admitted,
+                  'a second binding with the same number is refused; the one seen first, asked again, is answered': refused(conflict) and same_again == [200, 200, 200],
+                  'a binding naming this baseline and another\'s budget admits nobody, and nothing reaches the gate': refused(mismatch) and calls_mismatch == 0,
+                  'when the record cannot be read, the front door answers 503 and runs nothing; then it answers again': unreadable[0] == 503 and unreadable[1].get('refused') == 'UNAVAILABLE' and calls_unreadable == 0 and readable_again[0] == 200,
+                  'the service\'s role cannot write the table, and a rolled-back call leaves nothing': all(v == 'InsufficientPrivilege' for v in direct.values()) and after_rollback == 'CURRENT',
+                  'concurrent observers end at the highest number, and a lower one is then stale': final == (40, False) and late == ['STALE', 'STALE'],
+                  'the service\'s role can deny a job with a made-up revocation, and cannot admit one (it fails closed)': denied_by_role == 'REVOKED' and job_b_after[0] == 403}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'F1': f1, 'F2': f2, 'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35, 'F36': f36, 'F37': f37}
 
 
 def main():

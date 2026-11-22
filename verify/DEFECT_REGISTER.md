@@ -442,3 +442,11 @@ copy on the diagnostic branch is not changed.
   identified from their source records, not inferred (Stage D).
 - **Process violation (VP-6).** The version 6 model's SAF-10 predicate was changed after a failed run without its source
   being kept (governance note, section 3).
+
+### G2. 22 November 2026: Amendment 17 in development (not declared; no official run)
+
+| Id | Status now | Commit | Evidence | Reviewed by | What remains |
+|---|---|---|---|---|---|
+| D5 | implemented; development runs pass (R30) | `d187172` | `tests/amend17_dev_evidence/r30_r31_run2.json` | separate-agent internal review requested | the binder compares the 128-bit hash prefix the budget's name carries; official runs not made |
+| D21 | implemented; development runs pass (R31) | `d187172` | as above; the gateway chain 22 of 22 | as above | records made before keep 64-bit identities; a 64-bit collision before the change still refuses its second design |
+| D16 | implemented; development runs pass (F37, F10) | A2 commit | `tests/amend17_dev_evidence/f37_f10_run1.json` | not yet | rollback of the database with the bindings file; a role-made revocation denies a job; pacing in memory |

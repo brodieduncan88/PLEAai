@@ -70,6 +70,7 @@ from baseline import HEADLINE, canonical, design_hash, design_lines, face, root_
 from verify_client import Client, alongside_lines                    # noqa: E402
 from verify_record import PENDING_PHASES, arguments_for, load_envelope, request_key, request_keys, signed_by   # noqa: E402  (request_keys: Amendment 17)
 import notices                                                       # noqa: E402  (Amendment 7: a notice the inbox cannot take is kept, not lost)
+import front_state                                                   # noqa: E402  (Amendment 17, D16)
 
 JOB_NAME = re.compile(r'^[a-z0-9][a-z0-9-]{1,40}$')
 RESERVED = ('frontdoor', 'front', 'witness', 'host', 'governor', 'engineer')
@@ -397,14 +398,22 @@ class Front:
     def __init__(self, home, store: Store, cfg: dict, engineer_keys, rate: int = 120):
         self.home, self.store, self.cfg, self.engineer_keys, self.rate = pathlib.Path(home), store, cfg, tuple(engineer_keys), rate
         self._guard = threading.Lock()
-        self._locks, self._hits, self._seen = {}, collections.defaultdict(collections.deque), {}
+        self._locks, self._hits = {}, collections.defaultdict(collections.deque)     # Amendment 17 (D16): no binding sequence is kept here any more
         self._journaled = set()                  # the request keys this process has journaled: a design journaled once adds no line again (Amendment 7, D1)
         self._shares, self._counted = None, None   # bytes of the journal taken by each baseline's designs, and the size of the journal they were counted from (Amendment 8, D1)
         self._pending = {}                       # the look's runs to act on: (baseline, attempt, PENDING or INTERRUPTED) -> {'next', 'wait'} (Amendment 9)
         self._journal_lock = threading.Lock()    # the journal has a lock of its own, so that counting it does not hold up every other request (Amendment 8)
         (self.home / 'front').mkdir(parents=True, exist_ok=True)
+        # Amendment 17 (D16): the names this front door's jobs have in the database's record of bindings.  Job names are unique
+        # within one front door, whose jobs' certificates one authority issues; the record is keyed by that authority's
+        # certificate as well, so two front doors on one database never share a job's record.
+        self.realm = hashlib.sha256(pathlib.Path(cfg['tls']['ca']).read_bytes()).hexdigest()[:32]
 
     # ------------------------------------------------------------------ who is asking
+    def state_name(self, job: str) -> str:
+        """The job's name in the database's record of bindings (Amendment 17, D16)."""
+        return f'{self.realm}:{job}'
+
     def admit(self, name, der) -> dict | None:
         """The job's binding, if this certificate is the one enrolled for this name, the job is not revoked, and a
         pinned engineer key signed the binding.  The file is read on every request, so a revocation or a move to a
@@ -414,11 +423,16 @@ class Front:
         b = read_jobs(self.home).get(name)
         if not binding_valid(b, self.engineer_keys) or b['job'] != name:
             return None
-        with self._guard:
-            if b['seq'] < self._seen.get(name, 0):           # an earlier signed binding put back in the file: a revocation or a move undone
-                return None
-            self._seen[name] = b['seq']
-        if b['event'] == 'REVOKE' or b['cert_sha256'] != hashlib.sha256(der).hexdigest():
+        if b['root'].rsplit('/', 1)[-1] != b['baseline_sha256'][:32] or '/' not in b['root']:
+            # Amendment 17 (D16): a binding naming one baseline and another baseline's budget admits nobody.  Before, it was
+            # noticed (the stored card was not shown) and its designs were still sent on.
+            return None
+        # Amendment 17 (D16): the latest binding seen for each job is kept in the database, not in this process's memory, so a
+        # restart forgets nothing.  An earlier signed binding put back (STALE), a second binding with the same number
+        # (CONFLICT) and any binding of a revoked job (REVOKED: absorbing) admit nobody.  If the record cannot be read, this
+        # raises StateUnavailable, and the caller is answered 503: nobody is admitted.
+        answer = front_state.observe(self.store, self.state_name(name), b['seq'], hashlib.sha256(canonical(b).encode()).hexdigest(), b['event'] == 'REVOKE')
+        if answer != 'CURRENT' or b['cert_sha256'] != hashlib.sha256(der).hexdigest():
             return None
         return b
 
@@ -779,9 +793,8 @@ class Front:
             try:
                 if not binding_valid(b, self.engineer_keys) or b['job'] != name or b['event'] == 'REVOKE':
                     continue
-                with self._guard:
-                    if b['seq'] < self._seen.get(name, 0):        # an earlier signed binding put back: as admit() refuses it
-                        continue
+                if front_state.observe(self.store, self.state_name(name), b['seq'], hashlib.sha256(canonical(b).encode()).hexdigest(), False) != 'CURRENT':
+                    continue                                   # Amendment 17 (D16): as admit() refuses it; unreadable state raises, and the job is passed over
                 h, root = b['baseline_sha256'], b['root']
                 obs = self.store.observe(root)                   # one reading of the store; the journal is not read here
                 found = []
@@ -884,7 +897,11 @@ def make_handler(front: Front):
         def _who(self):
             """The caller's binding, or None after answering 403 or 429."""
             der = self.connection.getpeercert(binary_form=True) if isinstance(self.connection, ssl.SSLSocket) else None
-            b = front.admit(self.peer_name, der)
+            try:
+                b = front.admit(self.peer_name, der)
+            except front_state.StateUnavailable as exc:      # Amendment 17 (D16): the record of bindings cannot be read: nobody is admitted
+                print(f'front door: the record of job bindings could not be read ({exc})', file=sys.stderr, flush=True)
+                self._send(503, refusal('UNAVAILABLE', 'The verification service cannot read its record of job bindings, so it admits nobody.  Nothing was run.  NOT VERIFIED.')); return None
             if b is None:
                 self._send(403, refusal('NOT_ENROLLED', 'REFUSED: this certificate is not enrolled for a job, or the job was revoked.')); return None
             if not front.within_rate(b['job']):
