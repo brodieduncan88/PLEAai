@@ -28,6 +28,9 @@ After the seventh review: 'a job with no usable entry not revoked by name' is re
 PLANTED), and three are added: revocation by name done without being asked for, a name not checked whole, and the mode of
 jobs.json not kept.
 
+Amendment 18 (22 November 2026, the single engineer key): three are added.  They are named in the declaration of
+Amendment 18 and run alone (by name) against its candidate; the 51 earlier entries were run against 203bdca.
+
     amend17_mutants.py COMMIT WORKDIR PYTHON OUT.json [NAME ...]
 """
 import json, pathlib, shutil, subprocess, sys, time
@@ -104,6 +107,10 @@ MUTANTS = [
     ('revocation by name done without being asked for', 'verify/front_ctl.py', "    except Refused as no_entry:\n        if not by_name:", "    except Refused as no_entry:\n        if False:", ['F38']),
     ('a name revoked by name not checked whole', 'verify/front_ctl.py', "not JOB_NAME.fullmatch(job) or job in RESERVED:\n            raise Refused(f'{job!r} is not a job name", "not JOB_NAME.match(job) or job in RESERVED:\n            raise Refused(f'{job!r} is not a job name", ['F38']),
     ('the mode of jobs.json not kept', 'verify/front_ctl.py', "                os.fchmod(tfd, mode)", "                pass", ['F38']),
+    # Amendment 18
+    ('more than one engineer key accepted', 'verify/front_door.py', "    if len(keys) != 1:\n        raise EngineerKeys(", "    if len(keys) < 1:\n        raise EngineerKeys(", ['F39']),
+    ('an engineer key of another form accepted', 'verify/front_door.py', "    if not isinstance(keys[0], str) or not HEX64.fullmatch(keys[0]):", "    if not isinstance(keys[0], str):", ['F39']),
+    ('the front door\'s start does not check its keys', 'verify/front_door.py', "    try:\n        single_engineer_key(a.engineer_key)              # Amendment 18", "    try:\n        pass              # Amendment 18", ['F39']),
     ('a move not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)                                # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding)                                # written first", ['F38']),
 ]
 

@@ -2146,7 +2146,59 @@ def f38():
         r.stop()
     return checks, e
 
-TESTS = {'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35, 'F36': f36, 'F37': f37, 'F38': f38}
+def f39():
+    """Amendment 18 (D16; the owner's decision of 22 November 2026).  A front door pins exactly one engineer key: with none, two, the same key twice, or one that is not 64 lower-case hex digits, it is not made in process and does not start as a process, binding no port; with one it is made, and a binding signed by another key admits nobody."""
+    r = Run('F39'); e = {}
+    try:
+        s = r.s; k = s.keys['engineer']; other = Key(); path = front_door.jobs_path(s.home)
+        refused = lambda x: x[0] == 403 and x[1].get('refused') == 'NOT_ENROLLED'
+        # 1. in process
+        cfg = {'journal': str(front_ctl.journal(s.home))}
+        cases = {'one': (k,), 'none': (), 'two': (k, other.public_hex), 'the same twice': (k, k), 'upper case': (k.upper(),), 'short': (k[:63],), 'not text': (None,)}
+        made = {}
+        for label, keys in cases.items():
+            try:
+                door = front_door.Front(s.home, Store(deploy.LOCAL_DSN), cfg, keys); made[label] = ('made', door.engineer_keys == (k,))
+            except front_door.EngineerKeys as exc:
+                made[label] = ('refused', 'not started' in str(exc))
+        # 2. as a process, with the deployment's own arguments and another port; the option is repeated as before (no new configuration)
+        port = 8979
+        base = [sys.executable, '-B', str(GATEWAY / 'verify' / 'front_door.py'), '--home', str(s.home), '--port', str(port), '--local-dsn', deploy.LOCAL_DSN,
+                '--witness-url', f'https://127.0.0.1:{s.ports["witness"]}', '--witness-key', s.keys['witness'], '--gate-host', f'https://127.0.0.1:{s.ports["host"]}',
+                '--gate-key', s.keys['gate'], '--tls-cert', s.pki['front'][0], '--tls-key', s.pki['front'][1], '--tls-ca', s.pki['ca'],
+                '--upstream-cert', s.pki['frontdoor'][0], '--upstream-key', s.pki['frontdoor'][1]]
+        started = {}
+        for label, keys in (('none', ()), ('two', (k, other.public_hex)), ('the same twice', (k, k)), ('upper case', (k.upper(),))):
+            args = [a for key in keys for a in ('--engineer-key', key)]
+            try:
+                run = subprocess.run(base + args, capture_output=True, text=True, timeout=60)
+                code, err = run.returncode, run.stderr
+            except subprocess.TimeoutExpired:
+                code, err = 'still running after 60 s', ''
+            try:
+                socket.create_connection(('127.0.0.1', port), timeout=1).close(); bound = True
+            except OSError:
+                bound = False
+            started[label] = (code, ('required' in err) if label == 'none' else ('not started' in err and 'Traceback' not in err), bound)
+        # 3. the running front door, started with its one key: the job is answered; a binding re-signed by another key admits nobody
+        before = raw(r.job, 'GET', '/requirement'); held = path.read_text(); jobs = json.loads(held); b = jobs['jobs']['job-a']
+        forged = {kk: b[kk] for kk in front_door.BINDING_FIELDS}; forged = dict(forged, signer=other.public_hex, signature=other.sign(front_door.binding_message(forged)))
+        jobs['jobs']['job-a'] = forged; path.write_text(json.dumps(jobs)); other_signed = raw(r.job, 'GET', '/requirement')
+        path.write_text(held); after = raw(r.job, 'GET', '/requirement')
+        e.update(made=made, started=started, before=before[0], other_signed=(other_signed[0], other_signed[1].get('refused')), after=after[0])
+        checks = {'in process, a front door is made with exactly one engineer key of 64 lower-case hex digits, and refused, saying it is not started, with none, two, the same key twice, or one of another form':
+                      made.get('one') == ('made', True) and len(made) == 7 and all(v == ('refused', True) for kk, v in made.items() if kk != 'one'),
+                  'as a process, a front door given no engineer key, two, the same key twice, or one of another form does not start, says why, and binds no port':
+                      len(started) == 4 and started['none'][0] == 2 and started['none'][1] and all(v[0] == 1 and v[1] for kk, v in started.items() if kk != 'none')
+                      and not any(v[2] for v in started.values()),
+                  'the running front door, started with its one key, answers the enrolled job; a binding of that job signed by another key admits nobody; the honest binding put back is answered again':
+                      before[0] == 200 and refused(other_signed) and after[0] == 200}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35, 'F36': f36, 'F37': f37, 'F38': f38, 'F39': f39}
 
 
 def main():

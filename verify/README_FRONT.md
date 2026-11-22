@@ -139,10 +139,14 @@ The service side, once (the witness service and the gate host as in `deploy.py`,
 Before the first start, install the database's record of job bindings (Amendment 17) once, as the database's owner
 (`front_state.install`, which `deploy_front.py` does). A job is named in it by what the engineer signs, the engineer's
 key and the job's name, so the front door is given no name or setting for it, and a job name is used once by each engineer
-key. Pin one engineer key for a front door: with several, or during a change of key, a name revoked under one key does not
-cover another key's enrolment of the same name. Before a key is changed, revoke its jobs under it, from a list of its job names
-kept outside HOME (jobs.json and the log can be changed by whoever can write HOME); then unpin it, and enrol new names under
-the new key. The front door does not enforce one pin, and does not warn of several.
+key. Since Amendment 18 a front door pins exactly one engineer key: `--engineer-key` given more than once (the same key
+twice included), not at all, or not as 64 lower-case hex digits, and the front door does not start. With several keys, a name
+revoked under one would not cover another key's enrolment of the same name.
+
+**Rotation of the engineer key is not supported in this assessment profile.** A front door started with a different key
+does not read the bindings or baselines signed by the earlier one, so its jobs are refused; nothing moves a job to a new
+key. Should a key have to be replaced, revoke its jobs under it first, from a list of its job names kept outside HOME
+(jobs.json and the log can be changed by whoever can write HOME), and enrol new names under the new key.
 
 The engineer, for each job, after baselining with `verify_ctl.py baseline`:
 
@@ -194,8 +198,8 @@ call is one request and nothing retries. Sending the same design again returns t
   for good, across restarts. Not met: a revocation neither the console nor the front door has yet recorded (the
   database could not be reached, and the front door had not read it) is undone by putting the earlier binding back
   before either does; a restore of the database to an earlier state, together with the file, undoes later ones; with
-  more than one engineer key pinned, a name revoked under one key does not cover another key's enrolment of the same
-  name; and an enrolment of a name already used by the same key is issued and then refused at its first request, with
+  more than one engineer key pinned, a name revoked under one key would not cover another key's enrolment of the same
+  name, which is why only one may be pinned (Amendment 18); and an enrolment of a name already used by the same key is issued and then refused at its first request, with
   nothing said at the console.
 - **A job certificate is a bearer of the job.** Whoever holds the folder can spend the job's runs and cause notices.
   It cannot change what is verified against.

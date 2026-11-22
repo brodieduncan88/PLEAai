@@ -110,6 +110,25 @@ def read_jobs(home) -> dict:
         return {}
 
 
+class EngineerKeys(ValueError):
+    """The front door is not configured with exactly one engineer key of the right form (Amendment 18)."""
+
+
+def single_engineer_key(keys) -> tuple:
+    """Amendment 18 (22 November 2026, D16; the owner's decision of that day): this assessment profile pins exactly one
+    responsible engineer's key for a front door.  The record of bindings names a job by the key that signed it and the job's
+    name, so with two keys pinned a name revoked under one is not revoked under the other (the sixth review, M-1); rotation of
+    the key is not supported in this profile.  Returns the one key as a tuple; raises EngineerKeys, and the front door does not
+    start, if none is given, more than one is given (the same key twice included), or the one given is not 64 lower-case hex
+    digits.  Bindings and baselines signed by any other key are refused as before (binding_valid, load_envelope)."""
+    keys = tuple(keys) if isinstance(keys, (list, tuple)) else ()
+    if len(keys) != 1:
+        raise EngineerKeys(f'exactly one engineer key is pinned for a front door in this profile; {len(keys)} were given, so it is not started')
+    if not isinstance(keys[0], str) or not HEX64.fullmatch(keys[0]):
+        raise EngineerKeys('the engineer key given is not 64 lower-case hex digits, so the front door is not started')
+    return keys
+
+
 def binding_valid(b, engineer_keys) -> bool:
     """A binding counts only if a pinned engineer key signed exactly these fields."""
     if not isinstance(b, dict) or b.get('event') not in EVENTS or b.get('signer') not in engineer_keys:
@@ -397,7 +416,8 @@ class ServiceClient(Client):
 
 class Front:
     def __init__(self, home, store: Store, cfg: dict, engineer_keys, rate: int = 120):
-        self.home, self.store, self.cfg, self.engineer_keys, self.rate = pathlib.Path(home), store, cfg, tuple(engineer_keys), rate
+        self.home, self.store, self.cfg, self.rate = pathlib.Path(home), store, cfg, rate
+        self.engineer_keys = single_engineer_key(engineer_keys)      # Amendment 18: exactly one, or this front door is not made
         self._guard = threading.Lock()
         self._locks, self._hits = {}, collections.defaultdict(collections.deque)     # Amendment 17 (D16): no binding sequence is kept here any more
         self._journaled = set()                  # the request keys this process has journaled: a design journaled once adds no line again (Amendment 7, D1)
@@ -1017,7 +1037,8 @@ def main():
     ap.add_argument('--local-dsn', default=os.environ.get('PLEA_LOCAL_DSN', 'postgresql://plea_local:local@127.0.0.1:5432/plea'))
     ap.add_argument('--witness-url', required=True); ap.add_argument('--witness-key', action='append', required=True, help='a witness public key to pin (hex); repeatable')
     ap.add_argument('--gate-host', required=True); ap.add_argument('--gate-key', required=True, help='the gate host\'s public key to pin (hex)')
-    ap.add_argument('--engineer-key', action='append', required=True, help='a responsible engineer\'s public key to pin (hex); repeatable')
+    ap.add_argument('--engineer-key', action='append', required=True, help='the responsible engineer\'s public key to pin (64 hex digits): exactly one; '
+                    'given twice or more, the front door does not start (Amendment 18: rotation of the key is not supported in this profile)')
     ap.add_argument('--upstream-cert', required=True, help='this service\'s client certificate for the witness and the gate host'); ap.add_argument('--upstream-key', required=True)
     ap.add_argument('--rate', type=int, default=120, help='requests a job may make in a minute')
     ap.add_argument('--journal-max-bytes', type=int, default=JOURNAL_MAX, help='size the journal of submissions may reach before new runs are refused (Amendment 7)')
@@ -1027,6 +1048,10 @@ def main():
     ap.add_argument('--sweep-every', type=float, default=SWEEP_EVERY, help='seconds between the front door\'s looks for runs left pending (Amendment 9)')
     add_server_args(ap)
     a = ap.parse_args()
+    try:
+        single_engineer_key(a.engineer_key)              # Amendment 18: before anything is opened or bound
+    except EngineerKeys as exc:
+        raise SystemExit(f'front door: not started: {exc}')
     tls = server_from_args(a)
     if tls is None:
         raise SystemExit('the front door serves mutual TLS only: give --tls-cert, --tls-key and --tls-ca')
