@@ -1,0 +1,16 @@
+# T8b_no_side_effects
+# started 2026-11-21T23:43:25Z
+# cmd: bash -c ls -d /run/plea-spike 2>&1; ls /sys/fs/cgroup | head
+ls: cannot access '/run/plea-spike': No such file or directory
+blkio
+cpu
+cpuacct
+cpuset
+devices
+freezer
+memory
+pids
+systemd
+unified
+# exit code: 0
+# finished 2026-11-21T23:43:25Z

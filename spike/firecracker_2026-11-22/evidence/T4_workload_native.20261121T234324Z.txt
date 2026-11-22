@@ -1,0 +1,6 @@
+# T4_workload_native
+# started 2026-11-21T23:43:24Z
+# cmd: python3 -I -B guest_image/jobs/workload.py
+SPIKE_RESULT {"job": "workload", "decimal": "0.99995000249987500624968751562421878906", "digest": "fc6d3565b88ff10486483352d1e96f05da6cd8e7ec4210ffdd84c812410f816f", "elapsed_s": 0.04162937000000966}
+# exit code: 0
+# finished 2026-11-21T23:43:24Z

@@ -1,0 +1,24 @@
+# T7b_vmm_socket_no_kvm
+# started 2026-11-21T23:44:34Z
+# cmd: python3 -I - downloads/fc-candidate/x/release-v1.12.1-x86_64/firecracker-v1.12.1-x86_64
+socket exists: True process alive: True
+GET / -> 200 {"id":"anonymous-instance","state":"Not started","vmm_version":"1.12.1","app_name":"Firecracker"}
+PUT /boot-source -> 204 
+PUT /drives/rootfs -> 204 
+PUT /machine-config -> 204 
+PUT /actions -> 400 {"fault_message":"Start microvm error: Internal error while starting microVM: Kvm error: Error creating KVM object: No such file or directory (os error 2) Make sure the user launching the firecracker process is \\\nconfigured on the /dev/kvm file's ACL."}
+process alive after: True returncode: None
+--- VMM stdout/stderr:
+2026-11-21T23:44:34.570764433 [anonymous-instance:main] Running Firecracker v1.12.1
+2026-11-21T23:44:34.570909865 [anonymous-instance:main] Listening on API socket ("/tmp/fcprobe-axo9s4zm/api.sock").
+2026-11-21T23:44:34.571135902 [anonymous-instance:fc_api] API server started.
+2026-11-21T23:44:34.620862851 [anonymous-instance:fc_api] The API server received a Get request on "/".
+2026-11-21T23:44:34.620943895 [anonymous-instance:fc_api] The request was executed successfully. Status code: 200 OK.
+2026-11-21T23:44:34.621231177 [anonymous-instance:fc_api] The API server received a Put request on "/boot-source" with body "{\"kernel_image_path\": \"/tmp/fcprobe-axo9s4zm/kernel\", \"boot_args\": \"console=ttyS0\"}".
+2026-11-21T23:44:34.621307269 [anonymous-instance:fc_api] The request was executed successfully. Status code: 204 No Content.
+2026-11-21T23:44:34.621463575 [anonymous-instance:fc_api] The API server received a Put request on "/drives/rootfs" with body "{\"drive_id\": \"rootfs\", \"path_on_host\": \"/tmp/fcprobe-axo9s4zm/rootfs\", \"is_root_device\": true, \"is_read_only\": true}".
+2026-11-21T23:44:34.621528426 [anonymous-instance:fc_api] The request was executed successfully. Status code: 204 No Content.
+2026-11-21T23:44:34.621663660 [anonymous-instance:fc_api] The API server received a Put request on "/machine-config" with body "{\"vcpu_count\": 1, \"mem_size_mib\": 128}".
+2026-11-21T23:44:34.621699942 [anonymous-instance:fc_api] The request was executed successfully. S
+# exit code: 0
+# finished 2026-11-21T23:44:35Z

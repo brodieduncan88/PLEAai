@@ -1,0 +1,6 @@
+# T7_vmm_socket_no_kvm
+# started 2026-11-21T23:43:24Z
+# cmd: bash -c test -x downloads/firecracker && { timeout 10 downloads/firecracker --api-sock /tmp/spike_fc_probe.sock & sleep 2; ls -la /tmp/spike_fc_probe.sock; wait; } || echo "NOT RUN: no firecracker binary"
+NOT RUN: no firecracker binary
+# exit code: 0
+# finished 2026-11-21T23:43:24Z

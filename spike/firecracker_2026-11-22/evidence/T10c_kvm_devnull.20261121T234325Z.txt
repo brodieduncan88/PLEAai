@@ -1,0 +1,55 @@
+# T10c_kvm_devnull
+# started 2026-11-21T23:43:25Z
+# cmd: python3 -I prereq.py --kvm /dev/null
+{
+  "tool": "prereq.py",
+  "timestamp_utc": "2026-11-21T23:43:25Z",
+  "all_met": false,
+  "checks": [
+    {
+      "id": "kvm_device",
+      "met": true,
+      "reason": "/dev/null is a character device and opens read-write as uid 0"
+    },
+    {
+      "id": "kvm_api_version",
+      "met": false,
+      "reason": "OSError: [Errno 25] Inappropriate ioctl for device"
+    },
+    {
+      "id": "cgroup_v2",
+      "met": false,
+      "reason": "/sys/fs/cgroup filesystem type is 'tmpfs', not cgroup2 (unified hierarchy required)"
+    },
+    {
+      "id": "cgroup_controllers",
+      "met": false,
+      "reason": "FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/cgroup.controllers'"
+    },
+    {
+      "id": "firecracker_binary",
+      "met": false,
+      "reason": "firecracker binary pin is empty in pins file (empty pin means NOT MET)"
+    },
+    {
+      "id": "guest_kernel",
+      "met": false,
+      "reason": "guest kernel pin is empty in pins file (empty pin means NOT MET)"
+    },
+    {
+      "id": "guest_rootfs",
+      "met": false,
+      "reason": "guest rootfs pin is empty in pins file (empty pin means NOT MET)"
+    }
+  ]
+}
+MET       kvm_device           /dev/null is a character device and opens read-write as uid 0
+NOT MET   kvm_api_version      OSError: [Errno 25] Inappropriate ioctl for device
+NOT MET   cgroup_v2            /sys/fs/cgroup filesystem type is 'tmpfs', not cgroup2 (unified hierarchy required)
+NOT MET   cgroup_controllers   FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/cgroup.controllers'
+NOT MET   firecracker_binary   firecracker binary pin is empty in pins file (empty pin means NOT MET)
+NOT MET   guest_kernel         guest kernel pin is empty in pins file (empty pin means NOT MET)
+NOT MET   guest_rootfs         guest rootfs pin is empty in pins file (empty pin means NOT MET)
+RESULT: NOT MET - isolation unavailable, refuse
+# exit code: 1
+# finished 2026-11-21T23:43:25Z

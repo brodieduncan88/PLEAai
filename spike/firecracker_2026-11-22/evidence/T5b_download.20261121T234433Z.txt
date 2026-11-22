@@ -1,0 +1,18 @@
+# T5b_download
+# started 2026-11-21T23:44:33Z
+# cmd: bash -c cd downloads/fc-candidate && curl -sS -L --max-redirs 3 -m 120 -o firecracker-v1.12.1-x86_64.tgz -w 'tgz http_code=%{http_code} size=%{size_download} url_effective=%{url_effective}\n' https://github.com/firecracker-microvm/firecracker/releases/download/v1.12.1/firecracker-v1.12.1-x86_64.tgz; curl -sS -L --max-redirs 3 -m 60 -o firecracker-v1.12.1-x86_64.tgz.sha256.txt -w 'sha http_code=%{http_code} size=%{size_download}\n' https://github.com/firecracker-microvm/firecracker/releases/download/v1.12.1/firecracker-v1.12.1-x86_64.tgz.sha256.txt; ls -la; echo '--- published checksum file:'; cat firecracker-v1.12.1-x86_64.tgz.sha256.txt | head -5; echo '--- verify:'; sha256sum -c firecracker-v1.12.1-x86_64.tgz.sha256.txt; echo '--- local sha256:'; sha256sum firecracker-v1.12.1-x86_64.tgz
+tgz http_code=200 size=7311887 url_effective=https://release-assets.githubusercontent.com/github-production-release-asset/107505869/1df78248-c599-4a67-89af-edfa51313711?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-11-22T00%3A25%3A39Z&rscd=attachment%3B+filename%3Dfirecracker-v1.12.1-x86_64.tgz&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-11-21T23%3A24%3A48Z&ske=2026-11-22T00%3A25%3A39Z&sks=b&skv=2018-11-09&sig=KQQx85bB%2BhBF9a0Wg%2BozQfH48lco%2Btp4kHpttenFfjE%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc5NTMwNDk3MywibmJmIjoxNzk1MzA0NjczLCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.Nq0BVrDOCBO1ofZg97FC_63YhZXGKvuSePG9u4efXK4&response-content-disposition=attachment%3B%20filename%3Dfirecracker-v1.12.1-x86_64.tgz&response-content-type=application%2Foctet-stream
+sha http_code=200 size=97
+total 7156
+drwxr-xr-x 2 root root    4096 Nov 21 23:44 .
+drwxr-xr-x 3 root root    4096 Nov 21 23:44 ..
+-rw-r--r-- 1 root root 7311887 Nov 21 23:44 firecracker-v1.12.1-x86_64.tgz
+-rw-r--r-- 1 root root      97 Nov 21 23:44 firecracker-v1.12.1-x86_64.tgz.sha256.txt
+--- published checksum file:
+0a75e67ef6e4c540a2cf248b06822b0be9820cbba9fe19f9e0321200fe76ff6b  firecracker-v1.12.1-x86_64.tgz
+--- verify:
+firecracker-v1.12.1-x86_64.tgz: OK
+--- local sha256:
+0a75e67ef6e4c540a2cf248b06822b0be9820cbba9fe19f9e0321200fe76ff6b  firecracker-v1.12.1-x86_64.tgz
+# exit code: 0
+# finished 2026-11-21T23:44:34Z

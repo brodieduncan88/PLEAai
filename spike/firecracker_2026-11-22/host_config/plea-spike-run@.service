@@ -1,0 +1,23 @@
+# /etc/systemd/system/plea-spike-run@.service
+# Usage: systemctl start plea-spike-run@bench_latency.py   (argument = harness script name; options via env file)
+# Delegate=yes hands this unit's cgroup subtree to the service user so it can create spike-* children with
+# memory/pids/cpu limits. Survives reboot because it is a unit file, not a runtime change.
+[Unit]
+Description=PLEA Firecracker spike harness %i
+After=local-fs.target
+
+[Service]
+Type=oneshot
+User=plea-spike
+Group=plea-spike
+SupplementaryGroups=kvm
+Delegate=yes
+DelegateSubgroup=
+RuntimeDirectory=plea-spike
+RuntimeDirectoryMode=0700
+StateDirectory=plea-spike
+WorkingDirectory=/var/lib/plea-spike
+Environment=PLEA_SPIKE_HOME=/opt/plea-spike PLEA_SPIKE_WORKDIR=/run/plea-spike
+EnvironmentFile=-/etc/plea-spike/env
+ExecStart=/usr/bin/python3 /opt/plea-spike/harness/%i
+NoNewPrivileges=yes

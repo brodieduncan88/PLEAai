@@ -1,0 +1,2 @@
+# /etc/udev/rules.d/99-plea-spike-kvm.rules : /dev/kvm accessible to group kvm only (persists across reboots)
+KERNEL=="kvm", GROUP="kvm", MODE="0660"

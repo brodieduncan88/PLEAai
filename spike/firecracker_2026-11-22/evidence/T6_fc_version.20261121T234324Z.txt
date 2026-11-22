@@ -1,0 +1,7 @@
+# T6_fc_version
+# started 2026-11-21T23:43:24Z
+# cmd: bash -c ls downloads/firecracker && downloads/firecracker --version || echo "NOT RUN: no firecracker binary"
+ls: cannot access 'downloads/firecracker': No such file or directory
+NOT RUN: no firecracker binary
+# exit code: 0
+# finished 2026-11-21T23:43:24Z

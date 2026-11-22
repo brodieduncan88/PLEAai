@@ -1,0 +1,12 @@
+# T5_download
+# started 2026-11-21T23:43:24Z
+# cmd: bash -c cd downloads && curl -sS -m 60 -o fc.tgz -w 'http_code=%{http_code}\n' https://github.com/firecracker-microvm/firecracker/releases/download/v1.12.1/firecracker-v1.12.1-x86_64.tgz; ls -la; curl -sS -m 60 -w '\nhttp_code=%{http_code}\n' https://github.com/firecracker-microvm/firecracker/releases/download/v1.12.1/firecracker-v1.12.1-x86_64.tgz.sha256.txt
+http_code=302
+total 8
+drwxr-xr-x 2 root root 4096 Nov 21 23:43 .
+drwxr-xr-x 8 root root 4096 Nov 21 23:43 ..
+-rw-r--r-- 1 root root    0 Nov 21 23:43 fc.tgz
+
+http_code=302
+# exit code: 0
+# finished 2026-11-21T23:43:24Z

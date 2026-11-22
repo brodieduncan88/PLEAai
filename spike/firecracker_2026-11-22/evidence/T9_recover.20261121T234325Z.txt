@@ -1,0 +1,16 @@
+# T9_recover
+# started 2026-11-21T23:43:25Z
+# cmd: bash -c W=$(mktemp -d); mkdir -p $W/spike-deadbeef $W/keepme; touch $W/spike-deadbeef/api.sock $W/keepme/f; echo 999999 >$W/spike-deadbeef/pid
+python3 harness/recover_orphans.py --workdir $W; echo "--- after dry run:"; ls $W
+python3 harness/recover_orphans.py --workdir $W --apply; echo "--- after apply:"; ls $W; rm -rf $W
+WOULD REMOVE vm dir /tmp/tmp.nLWW6jq9n9/spike-deadbeef (api.sock,pid)
+found 1 orphan item(s); apply=False
+--- after dry run:
+keepme
+spike-deadbeef
+REMOVE vm dir /tmp/tmp.nLWW6jq9n9/spike-deadbeef (api.sock,pid)
+found 1 orphan item(s); apply=True
+--- after apply:
+keepme
+# exit code: 0
+# finished 2026-11-21T23:43:25Z

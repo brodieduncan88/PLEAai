@@ -1,0 +1,29 @@
+# T3b_syntax
+# started 2026-11-21T23:44:33Z
+# cmd: bash -c rc=0; for f in *.py harness/*.py guest_image/jobs/*.py; do python3 -c "import ast,sys; ast.parse(open(sys.argv[1]).read())" $f && echo "py ok $f" || rc=1; done
+for f in guest_image/*.sh host_config/*.sh run_declared.sh run_declared_2.sh; do bash -n $f && echo "sh ok $f" || rc=1; done; exit $rc
+py ok admission_demo.py
+py ok prereq.py
+py ok harness/bench_latency.py
+py ok harness/concurrency.py
+py ok harness/crash_cleanup.py
+py ok harness/fc_lib.py
+py ok harness/host_exhaustion.py
+py ok harness/limits_test.py
+py ok harness/recover_orphans.py
+py ok guest_image/jobs/fdexhaust.py
+py ok guest_image/jobs/fdmmap.py
+py ok guest_image/jobs/forkbomb.py
+py ok guest_image/jobs/membloat.py
+py ok guest_image/jobs/mmapexhaust.py
+py ok guest_image/jobs/sleep.py
+py ok guest_image/jobs/workload.py
+sh ok guest_image/build_rootfs.sh
+sh ok guest_image/fetch_artifacts.sh
+sh ok guest_image/init.sh
+sh ok host_config/check_after_reboot.sh
+sh ok host_config/install.sh
+sh ok run_declared.sh
+sh ok run_declared_2.sh
+# exit code: 0
+# finished 2026-11-21T23:44:33Z

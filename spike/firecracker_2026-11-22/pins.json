@@ -1,0 +1,8 @@
+{
+  "_comment": "Empty value means NOT MET (fail closed). Fill only after verifying on the KVM host. firecracker_sha256 is the SHA-256 of the extracted firecracker binary (not the tarball).",
+  "firecracker_version": "",
+  "firecracker_sha256": "",
+  "firecracker_release_tgz_sha256": "",
+  "kernel_sha256": "",
+  "rootfs_sha256": ""
+}

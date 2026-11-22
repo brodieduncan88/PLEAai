@@ -1,0 +1,20 @@
+# T3_syntax
+# started 2026-11-21T23:43:24Z
+# cmd: bash -c python3 - <<PY
+import py_compile,glob
+for f in glob.glob("*.py")+glob.glob("harness/*.py")+glob.glob("guest_image/jobs/*.py"): py_compile.compile(f,cfile="/dev/null",doraise=True); print("py ok",f)
+PY
+for f in guest_image/*.sh host_config/*.sh run_declared.sh; do bash -n $f && echo "sh ok $f"; done
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/lib/python3.11/py_compile.py", line 140, in compile
+    raise FileExistsError(msg.format(cfile))
+FileExistsError: /dev/null is a non-regular file and will be changed into a regular one if import writes a byte-compiled file to it
+sh ok guest_image/build_rootfs.sh
+sh ok guest_image/fetch_artifacts.sh
+sh ok guest_image/init.sh
+sh ok host_config/check_after_reboot.sh
+sh ok host_config/install.sh
+sh ok run_declared.sh
+# exit code: 0
+# finished 2026-11-21T23:43:24Z

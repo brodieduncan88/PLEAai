@@ -1,0 +1,13 @@
+# T8_refuse_host_exhaustion
+# started 2026-11-21T23:43:25Z
+# cmd: python3 harness/host_exhaustion.py
+REFUSED: isolation unavailable (fail closed, no fallback):
+  NOT MET kvm_device: FileNotFoundError: [Errno 2] No such file or directory: '/dev/kvm'
+  NOT MET kvm_api_version: FileNotFoundError: [Errno 2] No such file or directory: '/dev/kvm'
+  NOT MET cgroup_v2: /sys/fs/cgroup filesystem type is 'tmpfs', not cgroup2 (unified hierarchy required)
+  NOT MET cgroup_controllers: FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/cgroup.controllers'
+  NOT MET firecracker_binary: firecracker binary pin is empty in pins file (empty pin means NOT MET)
+  NOT MET guest_kernel: guest kernel pin is empty in pins file (empty pin means NOT MET)
+  NOT MET guest_rootfs: guest rootfs pin is empty in pins file (empty pin means NOT MET)
+# exit code: 2
+# finished 2026-11-21T23:43:25Z

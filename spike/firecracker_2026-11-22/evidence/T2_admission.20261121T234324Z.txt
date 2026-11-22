@@ -1,0 +1,16 @@
+# T2_admission
+# started 2026-11-21T23:43:24Z
+# cmd: python3 -I admission_demo.py
+test_all_met_admits_and_touches_budget_once (__main__.AdmissionTests.test_all_met_admits_and_touches_budget_once) ... ok
+test_each_single_failure_refuses_without_budget (__main__.AdmissionTests.test_each_single_failure_refuses_without_budget) ... ok
+test_kvm_missing_gives_503_and_zero_budget_ops (__main__.AdmissionTests.test_kvm_missing_gives_503_and_zero_budget_ops) ... ok
+test_malformed_inputs_fail_closed (__main__.AdmissionTests.test_malformed_inputs_fail_closed) ... ok
+test_real_prereq_output_on_this_machine_is_refused (__main__.AdmissionTests.test_real_prereq_output_on_this_machine_is_refused) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.026s
+
+OK
+PROTOTYPE - not PLEA code; budget is a counting stub
+# exit code: 0
+# finished 2026-11-21T23:43:24Z

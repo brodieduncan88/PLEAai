@@ -1,0 +1,55 @@
+# T10a_bad_pins
+# started 2026-11-21T23:43:25Z
+# cmd: python3 -I prereq.py --pins /tmp/spike_bad_pins.json
+{
+  "tool": "prereq.py",
+  "timestamp_utc": "2026-11-21T23:43:25Z",
+  "all_met": false,
+  "checks": [
+    {
+      "id": "kvm_device",
+      "met": false,
+      "reason": "FileNotFoundError: [Errno 2] No such file or directory: '/dev/kvm'"
+    },
+    {
+      "id": "kvm_api_version",
+      "met": false,
+      "reason": "FileNotFoundError: [Errno 2] No such file or directory: '/dev/kvm'"
+    },
+    {
+      "id": "cgroup_v2",
+      "met": false,
+      "reason": "/sys/fs/cgroup filesystem type is 'tmpfs', not cgroup2 (unified hierarchy required)"
+    },
+    {
+      "id": "cgroup_controllers",
+      "met": false,
+      "reason": "FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/cgroup.controllers'"
+    },
+    {
+      "id": "firecracker_binary",
+      "met": false,
+      "reason": "cannot read pins file: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)"
+    },
+    {
+      "id": "guest_kernel",
+      "met": false,
+      "reason": "cannot read pins file: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)"
+    },
+    {
+      "id": "guest_rootfs",
+      "met": false,
+      "reason": "cannot read pins file: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)"
+    }
+  ]
+}
+NOT MET   kvm_device           FileNotFoundError: [Errno 2] No such file or directory: '/dev/kvm'
+NOT MET   kvm_api_version      FileNotFoundError: [Errno 2] No such file or directory: '/dev/kvm'
+NOT MET   cgroup_v2            /sys/fs/cgroup filesystem type is 'tmpfs', not cgroup2 (unified hierarchy required)
+NOT MET   cgroup_controllers   FileNotFoundError: [Errno 2] No such file or directory: '/sys/fs/cgroup/cgroup.controllers'
+NOT MET   firecracker_binary   cannot read pins file: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+NOT MET   guest_kernel         cannot read pins file: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+NOT MET   guest_rootfs         cannot read pins file: JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+RESULT: NOT MET - isolation unavailable, refuse
+# exit code: 1
+# finished 2026-11-21T23:43:25Z

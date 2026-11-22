@@ -1,0 +1,10 @@
+# T6b_fc_version
+# started 2026-11-21T23:44:34Z
+# cmd: bash -c ls -la downloads/fc-candidate/x/release-v1.12.1-x86_64/firecracker-v1.12.1-x86_64; sha256sum downloads/fc-candidate/x/release-v1.12.1-x86_64/firecracker-v1.12.1-x86_64; downloads/fc-candidate/x/release-v1.12.1-x86_64/firecracker-v1.12.1-x86_64 --version
+-rwxr-xr-x 1 504 staff 2892072 Jun 24  2025 downloads/fc-candidate/x/release-v1.12.1-x86_64/firecracker-v1.12.1-x86_64
+b99ea49b8d8b7bfa307d3845585d6a97f7642aa17a985749900370070d8ca930  downloads/fc-candidate/x/release-v1.12.1-x86_64/firecracker-v1.12.1-x86_64
+Firecracker v1.12.1
+
+2026-11-21T23:44:34.534830062 [anonymous-instance:main] Firecracker exiting successfully. exit_code=0
+# exit code: 0
+# finished 2026-11-21T23:44:34Z
