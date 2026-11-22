@@ -1,0 +1,20 @@
+p2ab = {"fb544a0": ["0o600", ""], "fb544a0_nobody_open": "PermissionError", "c5c9832": ["0o644", ""], "c5c9832_nobody_open": "opened"}
+p2c_first = true
+p2c_cli = ["TIMEOUT", "", ""]
+p2c_row = [1, false]
+p2c_admit_blocked = true
+p2c_admit_after_release = true
+p2d_revoke = ["ok", "REVOKE"]
+p2d_outside_unchanged = true
+p2d_jobs_is_link = false
+p2d_row = [2, true]
+p2e_cli = [1, 0.6, "                ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/pathlib.py\", line 1059, in read_text\n    return f.read()\n           ^^^^^^^^\nMemoryError"]
+p2e_row = [1, false]
+p2f_write = ["OSError", "replace refused (probe)"]
+p2f_leftover = []
+p2f_jobs_unchanged = true
+p2f_log_unchanged = true
+p2g_write = ["ok", null]
+p2g_outside_lines = 2
+protected_hardlinks = "1"
+ALL PREDICTIONS HELD []

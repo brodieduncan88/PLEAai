@@ -24,6 +24,10 @@ kept and restated.
 After the sixth review: four are added, for a job revoked by name, the temporary file, the log, and the message of a
 revocation neither recorded nor written.
 
+After the seventh review: 'a job with no usable entry not revoked by name' is restated (its earlier entry is kept, NOT
+PLANTED), and three are added: revocation by name done without being asked for, a name not checked whole, and the mode of
+jobs.json not kept.
+
     amend17_mutants.py COMMIT WORKDIR PYTHON OUT.json [NAME ...]
 """
 import json, pathlib, shutil, subprocess, sys, time
@@ -94,6 +98,12 @@ MUTANTS = [
     ('the log opened through a link or a pipe', 'verify/front_ctl.py', "    fd = os.open(p, flags | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC, 0o644)\n    if not stat.S_ISREG(os.fstat(fd).st_mode):",
      "    fd = os.open(p, flags | os.O_NONBLOCK | os.O_CLOEXEC, 0o644)\n    if False:", ['F38']),
     ('a revocation neither recorded nor written not said', 'verify/front_ctl.py', "        raise Refused(f'{why}, and it could not be written to jobs.json ({exc}): {job} is NOT revoked; give revoke again') from None", "        raise", ['F38']),
+    # after the seventh review
+    ('a job with no usable entry not revoked by name (restated)', 'verify/front_ctl.py', "        if not isinstance(job, str) or not JOB_NAME.fullmatch(job) or job in RESERVED:\n            raise Refused(f'{job!r} is not a job name; nothing was revoked') from None",
+     "        raise\n        if not isinstance(job, str) or not JOB_NAME.fullmatch(job) or job in RESERVED:\n            raise Refused(f'{job!r} is not a job name; nothing was revoked') from None", ['F38']),
+    ('revocation by name done without being asked for', 'verify/front_ctl.py', "    except Refused as no_entry:\n        if not by_name:", "    except Refused as no_entry:\n        if False:", ['F38']),
+    ('a name revoked by name not checked whole', 'verify/front_ctl.py', "not JOB_NAME.fullmatch(job) or job in RESERVED:\n            raise Refused(f'{job!r} is not a job name", "not JOB_NAME.match(job) or job in RESERVED:\n            raise Refused(f'{job!r} is not a job name", ['F38']),
+    ('the mode of jobs.json not kept', 'verify/front_ctl.py', "                os.fchmod(tfd, mode)", "                pass", ['F38']),
     ('a move not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)                                # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding)                                # written first", ['F38']),
 ]
 

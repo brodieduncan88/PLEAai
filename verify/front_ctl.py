@@ -12,7 +12,7 @@ neither.
 
 enrol binds a job name to one baseline and issues the job's client certificate.  It writes DIR for the assistant's
 side: the front door's address, the authority's certificate, and the job's certificate and key.  Nothing else is in
-it: no database credential, no signing key, no copy of the check.  A job name is used once, and its certificate lasts
+it: no database credential, no signing key, no copy of the check.  A job name is used once for each engineer key, and its certificate lasts
 --days (90 unless given); renewing one is not built, so a job that outlives its certificate is enrolled again under a
 new name, with a reason.
 
@@ -39,8 +39,8 @@ of bindings (through PLEA_CONTROL_DSN), where a job is named by what the enginee
 An entry of jobs.json for another job than the one named is refused (after the fifth review, N-H1).
 No realm, file or setting is needed for that.  A revocation is recorded first if it can be, and is always written to
 jobs.json unless the entry changed while it ran or the lock is held by another, which is said.  A job with no usable entry
-(none, one not this engineer's, or one for another job) has its name revoked in the database, and the console ends with
-status 4, saying nothing was written (after the sixth review, M-2).  If it was not recorded, the console says so and ends with status 3; revoke given again for that job records the
+(none, one not this engineer's, or one for another job) is refused; with --by-name its name is revoked in the database under
+the key given, nothing is written, and the console ends with status 5 (after the sixth and seventh reviews).  If it was not recorded, the console says so and ends with status 3; revoke given again for that job records the
 same revocation (it is not refused as already revoked), and the front door records it when it next reads the file (at its
 start, and on its look every 30 seconds).  If it was recorded and could not be written, the console says so and ends with
 status 4: the front door refuses the job already, and revoke given again writes it.  A move is written to jobs.json first,
@@ -88,6 +88,11 @@ class Unwritten(Exception):
     L6).  The front door refuses the job already.  Carries the binding."""
     def __init__(self, binding: dict, why: str):
         super().__init__(why); self.binding = binding
+
+
+class RevokedByName(Unwritten):
+    """revoke --by-name: the job's name was revoked in the database under this engineer's key, and nothing was written, since
+    jobs.json held no usable entry for it (Amendment 17, after the seventh review, N7-M1).  Status 5."""
 
 
 def _envelope(home, baseline_hash: str, key: Key) -> dict:
@@ -192,6 +197,13 @@ def _write(home, binding: dict, start) -> None:
             import tempfile                              # a name of its own, made new (after the sixth review, M-3: jobs.tmp was opened by name)
             tfd, tname = tempfile.mkstemp(dir=path.parent, prefix='.jobs-', suffix='.tmp')
             try:
+                try:                                     # jobs.json keeps its mode (after the seventh review, N7-M2: mkstemp's 0600 shut out a
+                    st = os.stat(path, follow_symlinks=False)    # front door under another account)
+                    import stat as _stat
+                    mode = _stat.S_IMODE(st.st_mode) if _stat.S_ISREG(st.st_mode) else 0o644
+                except FileNotFoundError:
+                    mode = 0o644
+                os.fchmod(tfd, mode)
                 with os.fdopen(tfd, 'w') as f:
                     f.write(json.dumps({'jobs': jobs}, indent=1) + '\n')
                 os.replace(tname, path)                  # rename: a link at jobs.json is replaced, not followed
@@ -298,23 +310,28 @@ def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0, control_
     return binding
 
 
-def revoke(home, job: str, key: Key, control_dsn: str = verify_ctl.CONTROL_DSN) -> dict:
+def revoke(home, job: str, key: Key, control_dsn: str = verify_ctl.CONTROL_DSN, by_name: bool = False) -> dict:
     """Revoke a job.  Amendment 17: the revocation is recorded in the database if it can be, and is always written to jobs.json
     (after the third review, M-a: it was once refused when it could not be recorded, and so left a leaked job admitted).  If it
     was not recorded, Unrecorded is raised after the write.  A job whose binding in jobs.json is already its revocation has that
     revocation recorded again (after the fourth review, M1: it was refused as already revoked, so one that could not be recorded
     could never be).  If it was recorded and cannot be written, Unwritten is raised (after the fourth review, L6).
 
-    With no usable entry for the job in jobs.json (none, one not signed by this engineer, or one signed for another job), the
-    job's name is revoked in the database all the same, and Unwritten is raised: the record names a job by the engineer's key
-    and its name, which the console knows without the entry (after the sixth review, M-2: such a job could not be revoked at
-    all, and the entry put back was admitted).  A revocation neither recorded nor written raises Refused, saying the job is
+    With no usable entry for the job in jobs.json (none, one not signed by this engineer, or one signed for another job), revoke
+    is refused, and says that --by-name revokes the job's name in the database; with by_name, it does, and RevokedByName is raised:
+    the record names a job by the engineer's key and its name, which the console knows without the entry (after the sixth review,
+    M-2: such a job could not be revoked at all, and the entry put back was admitted).  It is asked for, not done on any refusal
+    (after the seventh review, N7-M1: a mistyped name, or another key, was revoked in place of the job meant, and said so as a
+    success).  A revocation neither recorded nor written raises Refused, saying the job is
     not revoked (after the sixth review, L-1)."""
     try:
         cur = _current(home, job, key)
     except Refused as no_entry:
-        if not isinstance(job, str) or not JOB_NAME.match(job) or job in RESERVED:
-            raise
+        if not by_name:
+            raise Refused(f'{no_entry}  If its entry was removed, spoiled or replaced, check the job\'s name and the key, then give revoke again with '
+                          f'--by-name: that revokes the name {job!r} in the database under the key {key.public_hex[:16]}…, and writes nothing.') from None
+        if not isinstance(job, str) or not JOB_NAME.fullmatch(job) or job in RESERVED:
+            raise Refused(f'{job!r} is not a job name; nothing was revoked') from None
         b = {'event': 'REVOKE', 'seq': 1, 'job': job, 'baseline_sha256': None, 'root': None, 'cert_sha256': None, 'previous': None, 'time': now(),
              'note': f'revoked by name: {no_entry}'}
         stmt = dict(b, signer=key.public_hex, signature=key.sign(binding_message(b)))
@@ -324,8 +341,9 @@ def revoke(home, job: str, key: Key, control_dsn: str = verify_ctl.CONTROL_DSN) 
             raise Refused(f'{no_entry}  The job\'s name could not be revoked in the database either ({type(exc).__name__}): {job} is NOT revoked.') from None
         if answer != 'REVOKED':
             raise Refused(f'{no_entry}  The database\'s record of bindings answers {answer}: {job} is NOT revoked.')
-        raise Unwritten(stmt, f'{no_entry}  The job\'s name is revoked in the database, so the front door refuses {job} under any binding of this '
-                              f'engineer\'s; nothing was written to jobs.json.')
+        raise RevokedByName(stmt, f'{no_entry}  The name {job!r} is revoked in the database under the key {key.public_hex[:16]}…, so the front door '
+                                  f'refuses it under any binding signed by that key; nothing was written to jobs.json.  A binding of the name '
+                                  f'signed by another key is not covered.')
     if cur['event'] == 'REVOKE':
         try:
             answer = _record(cur, control_dsn)
@@ -379,6 +397,8 @@ def main():
     ap.add_argument('--witness-url', help='record: ask the witness for a checkpoint and put it in the record (Amendment 10)')
     ap.add_argument('--tls-ca'); ap.add_argument('--tls-cert'); ap.add_argument('--tls-key')
     ap.add_argument('--wait', type=float, default=15.0, help='seconds enrol and rebind wait for the gate to show it can write the inbox (Amendment 8)')
+    ap.add_argument('--by-name', action='store_true', help='revoke: with no usable entry in jobs.json, revoke the job\'s name in the database under '
+                    'this key; nothing is written (Amendment 17)')
     a = ap.parse_args()
     try:
         if a.action == 'jobs':
@@ -392,7 +412,7 @@ def main():
         elif a.action == 'rebind':
             b = rebind(a.home, a.rest[0], a.rest[1], key, a.wait)
         elif a.action == 'revoke':
-            b = revoke(a.home, a.rest[0], key)
+            b = revoke(a.home, a.rest[0], key, by_name=a.by_name)
         else:
             rec = record(a.home, a.rest[0], key, a.witness_key, a.gate_key,
                          checkpointer=verify_ctl.witness_checkpointer(a.witness_url, a.tls_ca, a.tls_cert, a.tls_key) if a.witness_url else None)
@@ -401,6 +421,9 @@ def main():
     except Unrecorded as exc:                            # written, and not recorded (Amendment 17, after the third review)
         print(json.dumps({k: exc.binding[k] for k in ('event', 'seq', 'job', 'baseline_sha256', 'root', 'previous', 'time', 'note')}))
         print(f'written, not recorded: {exc}', file=sys.stderr); sys.exit(3)
+    except RevokedByName as exc:                         # the name revoked, nothing written (Amendment 17, after the seventh review, N7-M1)
+        print(json.dumps({k: exc.binding.get(k) for k in ('event', 'seq', 'job', 'time', 'note', 'signer')}))
+        print(f'revoked by name, nothing written: {exc}', file=sys.stderr); sys.exit(5)
     except Unwritten as exc:                             # recorded, and not written (Amendment 17, after the fourth review, L6)
         print(json.dumps({k: exc.binding.get(k) for k in ('event', 'seq', 'job', 'baseline_sha256', 'root', 'previous', 'time', 'note', 'signer')}))
         print(f'recorded, not written: {exc}', file=sys.stderr); sys.exit(4)

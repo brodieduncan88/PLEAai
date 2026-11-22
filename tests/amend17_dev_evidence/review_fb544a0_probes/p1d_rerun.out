@@ -1,0 +1,8 @@
+first_admit = true
+match = true
+revoke_nl = "Unwritten"
+row_nl = [1, true]
+row_n = [1, false]
+cli_nl = 4
+admitted = true
+ALL PREDICTIONS HELD

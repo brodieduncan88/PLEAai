@@ -558,3 +558,25 @@ copy on the diagnostic branch is not changed.
   the console overwrite a file of its account's choosing. Corrected in development.
 - **Status of D16:** implemented; development runs pass. Official runs not made. What remains: as in G7, with the rule
   for more pinned keys above.
+
+### G10. 22 November 2026: the seventh review; G9 corrected
+
+- **G9's status line was premature.** G9 says of D16 "implemented; development runs pass". It was written in `7b2066a`
+  before any run of that code. The first two runs at that code failed (kept in `tests/amend17_dev_evidence/review6_run1_FAILED/`
+  and `review6_run2_FAILED/`). The third, at `fb544a0`, passed. G9 is not edited; this entry corrects it.
+- **The seventh review** (of `7b2066a` and `fb544a0`) is kept in `verify/reviews/AMEND17_REVIEW_FB544A0_2026-11-22.md`.
+  It found two medium regressions of those commits:
+  - a revocation by name made on any refusal;
+  - `jobs.json` left at mode 0600.
+  Both are corrected in development in the commit that adds this entry.
+- **Recorded, not changed (low).** These fail closed or tell the engineer, except the first, which hangs.
+  - `jobs.json` is read by name: a pipe there stops the console and the front door, and a link to `/dev/zero` exhausts
+    memory.
+  - A hard link at the log.
+  - A write misreported when the log fails after the replace.
+  - No fsync.
+  - A revocation by name leaves no trace in HOME.
+  - The listing shows an unchecked signer.
+- **The planted-defect runner, at `c5c9832`:** 30 of 30 caught; 13 not planted, as declared.
+- **Status of D16:** implemented in development; official runs not made. What remains is as in G7 and G9, with the
+  items above.

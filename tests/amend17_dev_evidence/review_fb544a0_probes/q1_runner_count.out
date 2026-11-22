@@ -1,0 +1,51 @@
+entries 47 planted 34 not planted 13
+NOT PLANTED:
+   no form kept per budget
+   a binding for another budget admitted
+   revocations recorded only when the job calls
+   realm from the authority's file
+   a binding for another budget admitted (restated)
+   the console does not read the front door's realm
+   the front door started under another realm
+   a revocation not written when it cannot be recorded
+   a revocation not written when it cannot be recorded (restated)
+   the record keyed by the job name alone
+   the front door records no revocation at its start
+   jobs.json written without a lock
+   a move not written when it cannot be recorded
+planted with no change: []
+planted:
+   binder removed
+   binder always binds
+   identity back to 64 bits
+   request key back to 96 bits
+   front door does not check the design of a verdict
+   checker allows mixed forms
+   front door ignores the budget's form
+   record of bindings not consulted
+   revocation not absorbing
+   a stale binding accepted
+   controls not put to the checker
+   the first client not retired
+   a revocation at a number already seen not kept
+   mixed forms not refused
+   controls not put to rederive
+   no form kept per budget (restated)
+   revocations recorded only when the job calls (restated)
+   a binding for another budget admitted (restated again)
+   an unrecorded revocation not recorded again
+   the look records no revocation
+   a revocation recorded and not written said to be refused
+   the record keyed by the job name alone (restated)
+   the record keyed by the certificate's hash
+   the console does not match the entry to its job
+   a changed entry written over
+   the lock followed through a link, and a pipe taken
+   a revocation not written when it cannot be recorded (restated again)
+   the front door records no revocation at its start (restated)
+   a move not written when it cannot be recorded (restated)
+   jobs.json written without a lock (restated)
+   a job with no usable entry not revoked by name
+   the temporary file opened by name
+   the log opened through a link or a pipe
+   a revocation neither recorded nor written not said

@@ -1957,17 +1957,18 @@ def f38():
         job_x = s.enrol('job-x', r.h, reason=why); seen_x = req(job_x); held_x = path.read_text(); enrol_x = json.loads(held_x)['jobs']['job-x']
         other_enrol, other_revoke = json.loads(held_x)['jobs']['job-i'], json.loads(held_x)['jobs']['job-k']   # job-i's ENROL (put back in 4) and job-k's REVOKE (6)
         assert other_enrol['event'] == 'ENROL' and other_revoke['event'] == 'REVOKE', 'the test\'s own setting up'
-        subst, rows_subst = {}, {}
+        subst, rows_subst, mentions = {}, {}, {}            # (after the seventh review, N7-M1: revocation by name is asked for with --by-name)
         for label, sub_b, act in (('rebind, another ENROL', other_enrol, lambda: front_ctl.rebind(s.home, 'job-x', 'f' * 64, s.engineer, wait=0)),
                                   ('revoke, another ENROL', other_enrol, lambda: front_ctl.revoke(s.home, 'job-x', s.engineer)),
-                                  ('revoke, another REVOKE', other_revoke, lambda: front_ctl.revoke(s.home, 'job-x', s.engineer))):
+                                  ('revoke --by-name, another ENROL', other_enrol, lambda: front_ctl.revoke(s.home, 'job-x', s.engineer, by_name=True)),
+                                  ('revoke --by-name, another REVOKE', other_revoke, lambda: front_ctl.revoke(s.home, 'job-x', s.engineer, by_name=True))):
             jobs_x = json.loads(held_x); jobs_x['jobs']['job-x'] = sub_b; path.write_text(json.dumps(jobs_x)); before_act = path.read_text()
             try:
                 act(); subst[label] = 'done'
             except front_ctl.Unwritten as exc:
                 subst[label] = ('Unwritten', 'for another job' in str(exc) and 'revoked in the database' in str(exc), path.read_text() == before_act)
             except front_ctl.Refused as exc:
-                subst[label] = ('Refused', 'for another job' in str(exc), path.read_text() == before_act)
+                subst[label] = ('Refused', 'for another job' in str(exc), path.read_text() == before_act); mentions[label] = '--by-name' in str(exc)
             rows_subst[label] = row(enrol_x)
         path.write_text(held_x); row_x_untouched = rows_subst['rebind, another ENROL']; still_x = req(job_x)
         front_ctl.revoke(s.home, 'job-x', s.engineer); path.write_text(held_x); put_back_x = req(job_x); row_x = row(enrol_x)
@@ -2019,7 +2020,7 @@ def f38():
                 jobs_w['jobs'][jn] = jobs_w['jobs']['job-i']
             path.write_text(json.dumps(jobs_w)); before_w = path.read_text()
             try:
-                front_ctl.revoke(s.home, jn, s.engineer); out_w = 'no warning'
+                front_ctl.revoke(s.home, jn, s.engineer, by_name=True); out_w = 'no warning'
             except front_ctl.Unwritten as exc:
                 out_w = str(exc)
             except front_ctl.Refused as exc:
@@ -2029,7 +2030,7 @@ def f38():
             nameless[label] = (seen_w[0], 'revoked in the database' in out_w, unchanged_w, row(enrol_w), put_w[0], put_w[1].get('refused'))
         jd = s.enrol('job-wd', r.h, reason=why); held_wd = path.read_text(); jobs_wd = json.loads(held_wd); del jobs_wd['jobs']['job-wd']; path.write_text(json.dumps(jobs_wd))
         try:
-            front_ctl.revoke(s.home, 'job-wd', s.engineer, control_dsn=bad_dsn); down_w = 'no refusal'
+            front_ctl.revoke(s.home, 'job-wd', s.engineer, control_dsn=bad_dsn, by_name=True); down_w = 'no refusal'
         except front_ctl.Refused as exc:
             down_w = str(exc)
         except front_ctl.Unwritten as exc:
@@ -2065,6 +2066,26 @@ def f38():
             front_ctl.LOCK_WAIT = wait0; os.close(held_fd)
         listing = subprocess.run([sys.executable, '-B', str(GATEWAY / 'verify' / 'front_ctl.py'), 'jobs', str(s.home)], capture_output=True, text=True, timeout=60).stdout
         listed_v = [l for l in listing.splitlines() if l.startswith('job-v ')]
+        # 15. (seventh review, N7-M1, N7-M2) a mistyped name is refused and nothing is revoked; a name that is not a job name is refused even
+        #     with --by-name; at the command, no usable entry is status 1 and --by-name status 5; jobs.json keeps its mode when replaced
+        name_row = lambda job: row({'signer': s.engineer.public_hex, 'job': job})
+        try:
+            front_ctl.revoke(s.home, 'job-typo', s.engineer); typo = 'no refusal'
+        except front_ctl.Refused as exc:
+            typo = str(exc)
+        try:
+            front_ctl.revoke(s.home, 'job-n\n', s.engineer, by_name=True); newline = 'no refusal'
+        except front_ctl.Refused as exc:
+            newline = str(exc)
+        except front_ctl.Unwritten as exc:
+            newline = 'revoked: ' + str(exc)
+        job_m = s.enrol('job-wm', r.h, reason=why); held_m = path.read_text(); jobs_m = json.loads(held_m); del jobs_m['jobs']['job-wm']; path.write_text(json.dumps(jobs_m))
+        ctl = lambda *extra: subprocess.run([sys.executable, '-B', str(GATEWAY / 'verify' / 'front_ctl.py'), 'revoke', str(s.home), 'job-wm', '--key', str(s.dir / 'engineer.key'), *extra],
+                                            capture_output=True, text=True, timeout=120)
+        plain_cli, by_name_cli = ctl(), ctl('--by-name'); path.write_text(held_m); put_back_m = req(job_m)
+        os.chmod(path, 0o640); s.enrol('job-wn', r.h, reason=why); mode_kept = oct(os.stat(path).st_mode & 0o777); os.chmod(path, 0o644)
+        home_n = OUT / 'F38' / 'mode-new'; shutil.rmtree(home_n, ignore_errors=True); front_ctl._write(home_n, enrol_g, None)
+        mode_new = oct(os.stat(front_door.jobs_path(home_n)).st_mode & 0o777)
         e.update(seen=(seen_f[0], seen_g[0], seen_h[0], seen_i[0], seen_j[0], seen_k[0]), revoked_f=b_f.get('event'), put_back_f=(put_back_f[0], put_back_f[1].get('refused')),
                  named=named, row_g=row_g, put_back_g=(put_back_g[0], put_back_g[1].get('refused')),
                  unrec_h=unrec_h, written_h=written_h, rows_h=(row_h_before, row_h_after), again_h=again_h.get('event'), put_back_h=(put_back_h[0], put_back_h[1].get('refused')),
@@ -2076,7 +2097,9 @@ def f38():
                  concurrent=dict(kept=len(kept), all=kept == names, logged=logged, errors=errors),
                  substituted=subst, rows_substituted=rows_subst, seen_x=seen_x[0], row_x_untouched=row_x_untouched, still_x=still_x[0], put_back_x=(put_back_x[0], put_back_x[1].get('refused')), row_x=row_x,
                  reenrol=dict(seen_first=seen_r1[0], second=(second_r[0], second_r[1].get('refused')), row=row_r, first_put_back=(first_r_put_back[0], first_r_put_back[1].get('refused'))),
-                 lockcases=lockcases, nameless=nameless, down_w=down_w[:300], files=files, neither=neither[:300], listed_v=listed_v)
+                 lockcases=lockcases, mentions=mentions, typo=typo[:300], typo_row=name_row('job-typo'), newline=newline[:200], newline_row=name_row('job-n\n'),
+                 cli_m=((plain_cli.returncode, '--by-name' in plain_cli.stderr), (by_name_cli.returncode, 'revoked by name' in by_name_cli.stderr)),
+                 put_back_m=(put_back_m[0], put_back_m[1].get('refused')), mode_kept=mode_kept, mode_new=mode_new, nameless=nameless, down_w=down_w[:300], files=files, neither=neither[:300], listed_v=listed_v)
         checks = {'a revocation made by the console while the front door is stopped is recorded: the earlier binding put back before the front door starts admits nobody':
                       e['seen'][0] == 200 and b_f.get('event') == 'REVOKE' and refused(put_back_f),
                   'a job is named in the record by the engineer\'s key and its name, as signed, the same for every binding of the job; the earlier binding put back after its revocation admits nobody':
@@ -2096,10 +2119,12 @@ def f38():
                       'could not be recorded' in unrec_a and e['written_a'] == ('REBIND', True) and e['on_b'] == (200, True),
                   'two consoles at once lose neither\'s binding: forty written at once are all kept, and all logged':
                       not errors and kept == names and logged == 40,
-                  'an entry for another job, put in place of this job\'s: rebind refuses it and writes nothing; revoke writes nothing and revokes the job\'s name in the database; the earlier binding put back admits nobody, before and after an honest revocation':
+                  'an entry for another job, put in place of this job\'s: rebind and revoke refuse it and write nothing, revoke naming --by-name; revoke --by-name writes nothing and revokes the job\'s name in the database; the earlier binding put back admits nobody, before and after an honest revocation':
                       e['seen_x'] == 200 and subst.get('rebind, another ENROL') == ('Refused', True, True) and row_x_untouched == (1, False)
-                      and subst.get('revoke, another ENROL') == ('Unwritten', True, True) and subst.get('revoke, another REVOKE') == ('Unwritten', True, True)
-                      and rows_subst.get('revoke, another ENROL') == (1, True) and refused(still_x) and refused(put_back_x) and row_x == (2, True),
+                      and subst.get('revoke, another ENROL') == ('Refused', True, True) and mentions.get('revoke, another ENROL') is True
+                      and rows_subst.get('revoke, another ENROL') == (1, False)
+                      and subst.get('revoke --by-name, another ENROL') == ('Unwritten', True, True) and subst.get('revoke --by-name, another REVOKE') == ('Unwritten', True, True)
+                      and rows_subst.get('revoke --by-name, another ENROL') == (1, True) and refused(still_x) and refused(put_back_x) and row_x == (2, True),
                   'a job name enrolled again after its entry is removed admits nobody under the second enrolment, and its revocation covers the first: the first put back admits nobody':
                       seen_r1[0] == 200 and refused(second_r) and row_r == (2, True) and refused(first_r_put_back),
                   'a write over an entry that changed meanwhile is refused; a lock that is a pipe or a link is refused, and the link is not followed; a lock held by another is given up after the wait; nothing is written in any':
@@ -2113,7 +2138,10 @@ def f38():
                       and all(files.get(k, ('',))[0] == 'OSError' and files[k][4] == 1 for k in ('log-link', 'log-fifo'))
                       and all(v[1] < 5 and v[2] and not v[3] for v in files.values()) and len(files) == 3,
                   'a revocation neither recorded nor written says the job is not revoked, and the console\'s list of jobs shows each entry\'s signer':
-                      'is NOT revoked' in neither and len(listed_v) == 1 and ('signer ' + s.engineer.public_hex[:16]) in listed_v[0]}
+                      'is NOT revoked' in neither and len(listed_v) == 1 and ('signer ' + s.engineer.public_hex[:16]) in listed_v[0],
+                  'a mistyped name is refused and nothing is revoked; a name that is not a job name is refused with --by-name; at the command no usable entry is status 1, naming --by-name, and --by-name is status 5; jobs.json keeps its mode':
+                      '--by-name' in typo and e['typo_row'] is None and 'not a job name' in newline and e['newline_row'] is None
+                      and e['cli_m'] == ((1, True), (5, True)) and refused(put_back_m) and mode_kept == '0o640' and mode_new == '0o644'}
     finally:
         r.stop()
     return checks, e

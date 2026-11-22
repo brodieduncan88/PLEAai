@@ -1,0 +1,4 @@
+a_listing = ["job-ok                   ENROL   abababababababab\u2026  2026-11-22T02:15:14Z  signer 0d64f89901b53ae5\u2026", "job-sp                   ENROL   abababababababab\u2026  2026-11-22T02:15:14Z  signer 0d64f89901b53ae5\u2026  note: changed after it was signed"]
+a_valid_sp = False
+b_listing = [1, "job-ok                   ENROL   abababababababab\u2026  2026-11-22T02:15:14Z  signer 0d64f89901b53ae5\u2026\njob-sp                   ENROL   abababababababab\u2026  2026-11-22T02:15:14Z  signer 0d64f89901b53ae5\u2026  note: changed after it was signed\n", ")[:16]}\u2026\"   # signer: sixth review, L-3\n                       ^^^^^\nAttributeError: 'str' object has no attribute 'get'"]
+PREDICTIONS FAILED True False

@@ -588,3 +588,71 @@ recorded below when they end.
 - **Declared before the next run (VP-5).** `tests/verify_front_tests.py` has SHA-256
   `a78f57eb344c2ab9f333af258d9df4e4c197ed0d88d5890693314c83e7d93df1`. Expected: F38 14 of 14; F37 11 of 11; F10, F12
   and F28 pass.
+
+**Entry 17's third run, and runs not reported before (after the seventh review, L7-7).**
+- **At fb544a0** (the tree of the previous paragraph): F38, F37, F10, F12 and F28 passed, 5 of 5. F38 had 14 of 14
+  checks and F37 11 of 11. Kept in `tests/amend17_dev_evidence/review6_run3_front.json`.
+- **The full runs at c5c9832** (entry 16's declaration) matched it:
+  - the gate suite, 34 of 34 (252 of 252 checks);
+  - the front suite, 36 of 36 (207 of 207);
+  - the runner, 43 in all: 30 planted and 30 caught, 13 NOT PLANTED.
+  - Kept in `predecl_run4_c5c9832/`. This was not reported in the log before.
+- **The full runs at fb544a0:**
+  - the gate suite, 34 of 34;
+  - the front suite, 36 of 36;
+  - the runner is recorded in entry 18 when it ends.
+
+## Entry 18. The seventh review (of 7b2066a and fb544a0), what it changed, and when this stops
+
+- The review is kept as returned in `verify/reviews/AMEND17_REVIEW_FB544A0_2026-11-22.md`. Its probes are in
+  `tests/amend17_dev_evidence/review_fb544a0_probes/`. It found nothing critical or high.
+- **N7-M1, accepted.** This is a regression of entry 17. Revocation by name was done on any refusal, so a mistyped job
+  name, or another key, was revoked in place of the job meant, and the console said so as a success (status 4).
+  - Now `revoke` with no usable entry is refused (status 1), and the refusal names `--by-name`.
+  - `revoke --by-name` revokes the name under the key given, writes nothing, and ends with status 5 (`RevokedByName`).
+    Its message says which key, and that a binding of the name signed by another key is not covered.
+  - A name revoked by name is checked whole (`fullmatch`), so a name with a newline is refused.
+- **N7-M2, accepted.** This is a regression of entry 17. `mkstemp` made `jobs.json` mode 0600, and a front door under
+  another account could not read it. The replaced file now keeps the mode `jobs.json` had, or 0644 for a new file.
+- **M-1's statement, completed as the review asks.** The readme says to:
+  - revoke from a list of the old key's job names kept outside HOME;
+  - unpin the old key after;
+  - and that the front door neither enforces one pin nor warns of several.
+- **L7-1 to L7-6, recorded, not changed.**
+  - L7-1: `jobs.json` is still read by name, so a pipe or a link to `/dev/zero` there stops the console before it
+    records.
+  - L7-2: a link at `jobs.json` is followed for reading.
+  - L7-3: a hard link at the log.
+  - L7-4: writes misreported when the log cannot be written after the replace; no fsync.
+  - L7-5: a revocation by name leaves no trace in HOME.
+  - L7-6: the listing shows a signer it has not checked.
+  - Each fails closed or tells the engineer, except L7-1's hang. All but L7-5 and L7-6 predate entry 17. They are in
+    the register.
+- **L7-7, accepted.**
+  - Register entry G9 said "development runs pass" before any run of its code. G10 corrects that; G9 is not edited.
+  - The runs not reported are given in the paragraph above.
+- **F38.**
+  - Checks 9 and 12 now ask for `--by-name` where they mean it. Check 9 also requires plain `revoke` to refuse and to
+    name `--by-name`.
+  - Check 15 is new: a mistyped name; a name with a newline; the command's statuses 1 and 5; the mode kept.
+  - F38's form before these changes is the committed one at fb544a0 (`a78f57eb…`). No predicate was changed after a
+    failure: checks 9 and 12 follow the change to `revoke` this entry makes.
+- **The runner.** 'a job with no usable entry not revoked by name' is restated, and three defects are added. That makes
+  51 in all: 37 planted, 14 NOT PLANTED.
+- **When this stops.** Every round of review since the third has found that the previous round's corrections brought in
+  a defect of their own. So:
+  - this entry's corrections get one review, narrowed to this entry's diff;
+  - if it finds nothing critical, high or medium that this entry brought in, the declaration is written and the
+    official runs made, with what remains recorded as open;
+  - if it does find something, the work stops and is reported to the owner as it stands, without a further round.
+- **Declared before the next run (VP-5).** SHA-256 of the test files:
+  - `tests/verify_tests.py`: `c4ab616416c4a85405bb4ebd1a4e079ccbf3f7da9c009979222a1932ba473cb1`;
+  - `tests/verify_front_tests.py`: `1f2385ab5ea43a1181b3fcfb28a9e2f38613d5e106d2625782ed544f968f48a3`;
+  - `tests/amend17_mutants.py`: `91d1278d01534fde93c3fa4220451de63bf50f96b91ade1b9a0c8d2c7e62aa16`.
+
+  Expected:
+  - F38: 15 of 15 checks;
+  - F37: 11 of 11 checks;
+  - F10, F12 and F28 pass;
+  - then the full suites: the gate 34 of 34, the front 36 of 36;
+  - then the runner on the commit that holds these changes: 51 in all, 37 planted and 37 caught, 14 NOT PLANTED.

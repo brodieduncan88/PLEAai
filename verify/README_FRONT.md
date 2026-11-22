@@ -140,8 +140,9 @@ Before the first start, install the database's record of job bindings (Amendment
 (`front_state.install`, which `deploy_front.py` does). A job is named in it by what the engineer signs, the engineer's
 key and the job's name, so the front door is given no name or setting for it, and a job name is used once by each engineer
 key. Pin one engineer key for a front door: with several, or during a change of key, a name revoked under one key does not
-cover another key's enrolment of the same name. Before a key is changed, revoke its jobs under it, and enrol new names under
-the new key.
+cover another key's enrolment of the same name. Before a key is changed, revoke its jobs under it, from a list of its job names
+kept outside HOME (jobs.json and the log can be changed by whoever can write HOME); then unpin it, and enrol new names under
+the new key. The front door does not enforce one pin, and does not warn of several.
 
 The engineer, for each job, after baselining with `verify_ctl.py baseline`:
 
@@ -159,12 +160,14 @@ engineer.key`. The record is built with `front_ctl.py record` and checked with `
 
 A revocation, `front_ctl.py revoke HOME JOB --key engineer.key`, is recorded in the database first if it can be (through
 `PLEA_CONTROL_DSN`), and written to `HOME/front/jobs.json` unless the job's entry changed while the console ran or another
-holds the file's lock for 30 seconds, which is said. If the job has no usable entry (removed, spoiled, or another job's),
-its name is revoked in the database and nothing is written, with status 4; if that cannot be recorded either, the console
-says the job is not revoked. A move is written first and then recorded. If either is not
+holds the file's lock for 30 seconds, which is said. If the job has no usable entry (removed, spoiled, another job's, or
+signed by another key), `revoke` is refused and says so; check the name and the key, then `revoke --by-name` revokes the
+job's name in the database under that key and writes nothing, with status 5. A binding of the name signed by another key is
+not covered. If that cannot be recorded either, the console says the job is not revoked. A move is written first and then recorded. If either is not
 recorded, the console says so and ends with status 3; give `revoke` again to record a revocation, and the front door records
 the file when it next reads it, at its start and on its look every 30 seconds. A revocation recorded and not written ends
-with status 4; the front door refuses the job already, and `revoke` given again writes it. Nothing checks that
+with status 4; the front door refuses the job already, and `revoke` given again writes it. `jobs.json` keeps its mode when
+the console replaces it, so a front door under another account can still read it. Nothing checks that
 `PLEA_CONTROL_DSN` names the front door's database.
 
 ## What the tools return
