@@ -1,0 +1,73 @@
+{
+ "a": {
+  "printed": "199.99999999999999999999999999999",
+  "exact_at_or_above": false,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "margin": "0",
+  "rederive_problems": [],
+  "P1_side_or_unknown": false
+ },
+ "b": {
+  "printed": "200.00000000000000000000000000001",
+  "exact_at_or_above": true,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "margin": "0",
+  "rederive_problems": [],
+  "P1_side_or_unknown": true
+ },
+ "c": {
+  "printed": "250.000000000000000000000000000001",
+  "exact_at_or_above": true,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "250",
+  "margin": "50",
+  "rederive_problems": [],
+  "P1_side_or_unknown": true
+ },
+ "d": {
+  "printed": "150.000000000000000000000000000001",
+  "exact_at_or_above": false,
+  "verdict": "FAIL",
+  "reason": "LIMIT_NOT_MET",
+  "achieved": "150",
+  "margin": "-50",
+  "rederive_problems": [],
+  "P1_side_or_unknown": true
+ },
+ "e": {
+  "printed": "200",
+  "exact_at_or_above": true,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "margin": "0",
+  "rederive_problems": [],
+  "P1_side_or_unknown": true
+ },
+ "f": {
+  "printed": "199.9999999999999999999999999",
+  "exact_at_or_above": false,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "margin": "0",
+  "rederive_problems": [],
+  "P1_side_or_unknown": false
+ },
+ "g": {
+  "printed": "200.0000000000000000000000001",
+  "exact_at_or_above": true,
+  "verdict": "PASS",
+  "reason": "MET",
+  "achieved": "200",
+  "margin": "0",
+  "rederive_problems": [],
+  "P1_side_or_unknown": true
+ }
+}
+PREDICTIONS FAILED: ['P1 a', 'P2 a', 'P2 b', 'P1 f', 'P2 f']

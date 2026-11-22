@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/wt_a18/tests/amend18_dev_evidence/d20/d20_rounding_probe.py", line 21, in <module>
+    import baseline, verify_tools, check_record
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/wt_a18/verify/verify_tools.py", line 48, in <module>
+    HOME = pathlib.Path(os.environ['VERIFY_HOME'])
+                        ~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<frozen os>", line 679, in __getitem__
+KeyError: 'VERIFY_HOME'
