@@ -1,0 +1,136 @@
+{
+ "all_same": true,
+ "cases": {
+  "as shipped": {
+   "old": [
+    true,
+    []
+   ],
+   "new": [
+    true,
+    []
+   ],
+   "same": true
+  },
+  "controls dropped": {
+   "old": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; a control case did not give its expected verdict at baselining, or the controls run are not the controls declared; the controls do not include both a design that failed and one that passed"
+    ]
+   ],
+   "new": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; a control case did not give its expected verdict at baselining, or the controls run are not the controls declared; the controls do not include both a design that failed and one that passed"
+    ]
+   ],
+   "same": true
+  },
+  "controls None": {
+   "old": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; a control case did not give its expected verdict at baselining, or the controls run are not the controls declared; the controls do not include both a design that failed and one that passed"
+    ]
+   ],
+   "new": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; a control case did not give its expected verdict at baselining, or the controls run are not the controls declared; the controls do not include both a design that failed and one that passed"
+    ]
+   ],
+   "same": true
+  },
+  "verdict flipped": {
+   "old": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; a control case did not give its expected verdict at baselining, or the controls run are not the controls declared; control \"50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)\": its recorded verdict does not follow from its recorded numbers"
+    ]
+   ],
+   "new": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; a control case did not give its expected verdict at baselining, or the controls run are not the controls declared; control \"50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)\": its recorded verdict does not follow from its recorded numbers"
+    ]
+   ],
+   "same": true
+  },
+  "met flipped": {
+   "old": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; control \"50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)\": its recorded verdict does not follow from its recorded numbers"
+    ]
+   ],
+   "new": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; control \"50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)\": its recorded verdict does not follow from its recorded numbers"
+    ]
+   ],
+   "same": true
+  },
+  "achieved None": {
+   "old": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; control \"50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)\": no achieved value, but it is not recorded as UNKNOWN"
+    ]
+   ],
+   "new": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; control \"50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)\": no achieved value, but it is not recorded as UNKNOWN"
+    ]
+   ],
+   "same": true
+  },
+  "limit changed": {
+   "old": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; control \"50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)\": its criteria are not the card's"
+    ]
+   ],
+   "new": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; control \"50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)\": its criteria are not the card's"
+    ]
+   ],
+   "same": true
+  },
+  "criteria empty": {
+   "old": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; control \"50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)\": its criteria are not the card's"
+    ]
+   ],
+   "new": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; control \"50 mm2 on ladder, 125 A: voltage drop must fail (about double the limit)\": its criteria are not the card's"
+    ]
+   ],
+   "same": true
+  },
+  "reason code": {
+   "old": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; control \"150 mm2 buried, 100 A breaker: coordination must fail (Ib 120 A above In 100 A)\": its recorded verdict does not follow from its recorded numbers"
+    ]
+   ],
+   "new": [
+    false,
+    [
+     "the engineer's signature on the baseline does not verify; control \"150 mm2 buried, 100 A breaker: coordination must fail (Ib 120 A above In 100 A)\": its recorded verdict does not follow from its recorded numbers"
+    ]
+   ],
+   "same": true
+  }
+ }
+}

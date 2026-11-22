@@ -1,0 +1,12 @@
+{
+ "new": [
+  "raised out of handle()",
+  "ConnectionError",
+  "database unreachable (stub)"
+ ],
+ "old": [
+  "answered",
+  true,
+  "tool error: database unreachable (stub)"
+ ]
+}

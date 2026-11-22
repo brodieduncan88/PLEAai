@@ -1074,7 +1074,7 @@ def front_cfg(r, **extra) -> dict:
     s = r.s
     cfg = {'witness_url': f'https://127.0.0.1:{s.ports["witness"]}', 'witness_keys': [s.keys['witness']], 'gate_url': f'https://127.0.0.1:{s.ports["host"]}',
            'gate_key': s.keys['gate'], 'tls': {'ca': s.pki['ca'], 'cert': s.pki['frontdoor'][0], 'key': s.pki['frontdoor'][1]},
-           'journal': str(front_ctl.journal(s.home))}
+           'journal': str(front_ctl.journal(s.home)), 'realm': s.realm}           # realm: Amendment 17, as the running front door is given it
     cfg.update(extra)
     return cfg
 
@@ -1637,7 +1637,7 @@ def f35():
         r.s.stop_host(); r.s.start_host(); state = proven(r.s, r.h); calls = r.calls()
         cfg = {'witness_url': f"https://127.0.0.1:{r.s.ports['witness']}", 'witness_keys': [r.s.keys['witness']], 'gate_url': f"https://127.0.0.1:{r.s.ports['host']}",
                'gate_key': r.s.keys['gate'], 'tls': {'ca': r.s.pki['ca'], 'cert': r.s.pki['frontdoor'][0], 'key': r.s.pki['frontdoor'][1]},
-               'journal': str(r.s.home / 'front' / 'submissions.jsonl')}
+               'journal': str(r.s.home / 'front' / 'submissions.jsonl'), 'realm': r.s.realm}   # realm: Amendment 17
         door = lambda: front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), cfg, [r.s.keys['engineer']])   # another front door, in this process, on the same service
         journal = pathlib.Path(cfg['journal']); aside = journal.with_name(journal.name + '.aside')
 
@@ -1815,9 +1815,29 @@ def f37():
         with owner.connect() as c:
             final = c.execute('SELECT seq, revoked FROM public.verify_front_binding WHERE job = %s', (racer,)).fetchone()
         late = [front_state.observe(local, racer, n, format(n, '064x'), False) for n in (1, 39)]
+        # after the second review (H1, H2, M1): a revocation the revoked job never sees; one written by a console given no realm; the
+        # authority's file changed; and a revocation signed at a number the record has already seen
+        jobs_now = json.loads(path.read_text())
+        job_c = s.enrol('job-c', r.h, reason='another job of the same requirement, as the test needs'); seen_c = raw(job_c, 'GET', '/requirement')
+        before_c = path.read_text(); s.revoke('job-c')                                   # recorded by the console (it is given the realm)
+        job_d = s.enrol('job-d', r.h, reason='another job of the same requirement, as the test needs'); seen_d = raw(job_d, 'GET', '/requirement')
+        before_d = path.read_text(); front_ctl.revoke(s.home, 'job-d', s.engineer)       # no realm: only the file says so, until the front door reads it
+        s.stop_front(); s.start_front()                                                  # it reads every revocation at start
+        cleaned = json.loads(path.read_text()); held_cd = path.read_text()
+        put = json.loads(before_d); put['jobs']['job-c'] = json.loads(before_c)['jobs']['job-c']; path.write_text(json.dumps(put))   # both earlier bindings put back
+        s.stop_front(); ca = pathlib.Path(s.pki['ca']); ca_bytes = ca.read_bytes(); ca.write_bytes(ca_bytes + b'\n'); s.start_front()   # the authority's file changed
+        unseen_c = raw(job_c, 'GET', '/requirement'); unseen_d = raw(job_d, 'GET', '/requirement')
+        ca.write_bytes(ca_bytes); path.write_text(held_cd); s.stop_front(); s.start_front()
+        job_e = s.enrol('job-e', r.h, reason='another job of the same requirement, as the test needs'); seen_e = raw(job_e, 'GET', '/requirement')
+        be = json.loads(path.read_text())['jobs']['job-e']; before_e = path.read_text()
+        same_n = {k: be[k] for k in front_door.BINDING_FIELDS}; same_n.update(event='REVOKE', note='a revocation signed at the number already seen')
+        same_n = dict(same_n, signer=s.engineer.public_hex, signature=s.engineer.sign(front_door.binding_message(same_n)))
+        jobs_e = json.loads(before_e); jobs_e['jobs']['job-e'] = same_n; path.write_text(json.dumps(jobs_e)); revoked_e = raw(job_e, 'GET', '/requirement')
+        path.write_text(before_e); put_back_e = raw(job_e, 'GET', '/requirement')
+        e.update(unobserved=dict(seen=(seen_c[0], seen_d[0], seen_e[0]), after_put_back_and_ca_change=(unseen_c[0], unseen_c[1].get('refused'), unseen_d[0], unseen_d[1].get('refused')),
+                                 same_number=(revoked_e[0], put_back_e[0], put_back_e[1].get('refused'))))
         # the service's own role can deny a job, never admit one: a made-up revocation, then a made-up lower number
-        realm = hashlib.sha256(pathlib.Path(s.pki['ca']).read_bytes()).hexdigest()[:32]
-        denied_by_role = front_state.observe(local, f'{realm}:job-b', 10 ** 6, '3' * 64, True); job_b_after = raw(job_b, 'GET', '/requirement')
+        denied_by_role = front_state.observe(local, front_state.state_name(s.realm, 'job-b'), 10 ** 6, '3' * 64, True); job_b_after = raw(job_b, 'GET', '/requirement')
         e.update(first=first[0], after_restart=after_restart[0], revoked=(revoked[0], revoked[1].get('refused')), put_back_after_restart=(put_back_after_restart[0], put_back_after_restart[1].get('refused')),
                  unrevoked=(unrevoked[0], unrevoked[1].get('refused')), conflict=(conflict[0], conflict[1].get('refused')), same_again=same_again, ok_b=ok_b[0],
                  mismatch=(mismatch[0], mismatch[1].get('refused')), calls_mismatch=calls_mismatch, unreadable=(unreadable[0], unreadable[1].get('refused')), calls_unreadable=calls_unreadable,
@@ -1831,7 +1851,11 @@ def f37():
                   'when the record cannot be read, the front door answers 503 and runs nothing; then it answers again': unreadable[0] == 503 and unreadable[1].get('refused') == 'UNAVAILABLE' and calls_unreadable == 0 and readable_again[0] == 200,
                   'the service\'s role cannot write the table, and a rolled-back call leaves nothing': all(v == 'InsufficientPrivilege' for v in direct.values()) and after_rollback == 'CURRENT',
                   'concurrent observers end at the highest number, and a lower one is then stale': final == (40, False) and late == ['STALE', 'STALE'],
-                  'the service\'s role can deny a job with a made-up revocation, and cannot admit one (it fails closed)': denied_by_role == 'REVOKED' and job_b_after[0] == 403}
+                  'the service\'s role can deny a job with a made-up revocation, and cannot admit one (it fails closed)': denied_by_role == 'REVOKED' and job_b_after[0] == 403,
+                  'a revocation the revoked job never sees, whether the console recorded it or only the file holds it, is not undone by putting the earlier bindings back, by a restart or by a change to the authority\'s file':
+                      e['unobserved']['seen'] == (200, 200, 200) and e['unobserved']['after_put_back_and_ca_change'] == (403, 'NOT_ENROLLED', 403, 'NOT_ENROLLED'),
+                  'a revocation signed at a number the record has already seen is kept: the earlier binding put back after it admits nobody':
+                      e['unobserved']['same_number'][0] == 403 and e['unobserved']['same_number'][1:] == (403, 'NOT_ENROLLED')}
     finally:
         r.stop()
     return checks, e

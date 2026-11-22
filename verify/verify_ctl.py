@@ -127,14 +127,15 @@ def make_baseline(home, source, draft: dict, key: Key, runs: int = 1000, superse
             card['alongside'] = {'reason': alongside_reason.strip(), 'baselines': others}
     card['baselined_at'] = at or now()
     validate_card(card)
-    controls_run = []
+    controls_run, rederived = [], []
     for c in card['controls']:
         v = evaluate(source, card, c['design'], control=True)
+        rederived += [f'control "{c["name"]}": {p}' for p in check_record.rederive(card, v, c['design'], control=True)]   # Amendment 17 (second review, M4)
         controls_run.append({'name': c['name'], 'expect': c['expect'], 'verdict': v['verdict'], 'reason_code': v['reason_code'],
                              'criteria': [{'id': k['id'], 'achieved': k['achieved'], 'limit': k['limit'], 'met': k['met']} for k in v['criteria']]})
         if v['verdict'] != c['expect']:
             raise BaselineInvalid(f"control case \"{c['name']}\" was expected to {c['expect']} and gave {v['verdict']} ({v['reason_code']}): not baselined")
-    problems = check_record.control_problems(card, controls_run)   # Amendment 17 (D20): the controls as the record's checker reads them
+    problems = check_record.control_problems(card, controls_run) + rederived   # Amendment 17 (D20): the controls as the record's checker reads them, and as it reads every run
     if problems:
         raise BaselineInvalid('the controls as run would not verify in a record of this baseline, by the record\'s checker: '
                               + '; '.join(problems) + '.  A value the check gives to more than 28 significant digits is written rounded, '

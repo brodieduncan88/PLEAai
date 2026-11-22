@@ -1,0 +1,12 @@
+{
+ "p1_admit_enrol": true,
+ "p1_sweep": [],
+ "p1_revoked_refused_if_asked_now": null,
+ "p1_put_back_admitted": true,
+ "p1b_admit": true,
+ "p1b_revoked_seen": true,
+ "p1b_put_back_after_ca_reencoded_admitted": true,
+ "p1c_admit": true,
+ "p1c_revoke_same_seq_refused": true,
+ "p1c_put_back_admitted": true
+}

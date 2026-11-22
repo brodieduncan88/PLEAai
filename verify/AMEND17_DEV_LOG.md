@@ -224,3 +224,65 @@ the owner's rules VP-1 to VP-6 (`plan/GOVERNANCE_NOTE_2026-11-22.md`). Nothing h
 - **The gap.** No test showed that the first client now refuses, or that no deployment gives an assistant's side a
   database credential. R34 is added for that.
 - **Declared before its first run.** `tests/verify_tests.py` has SHA-256 `1ae5adf5e2eba3ae324c90954b338f2b464f6533dff15dd15fd1834d60ea6e3e`. Expected: R34 passes, 3 of 3.
+
+## Entry 13. The second review (A2, A3, A4 and the A1 correction), and what it changed
+
+- **The review.** A separate agent, instructed by the author, read the four commits, started no deployment, and probed in its
+  own database. That is internal review, not independent validation. Kept as returned in
+  `verify/reviews/AMEND17_REVIEW_A2_A4_2026-11-22.md`, with its probes in `tests/amend17_dev_evidence/review_a2a4_probes/`.
+  The planted-defect run at `da79aa1` (14 of 14 caught) was made before the review was read.
+- **H1 (HIGH), accepted.** A revocation reached the database's record only when the revoked job itself called while the
+  revocation was in the file. So a revocation the job never saw, followed by the earlier file put back and a restart,
+  admitted the job again: D16's own scenario. Corrected in three ways:
+  - the engineer's console records a revocation (and a move) in the database before it writes the file, when it is given
+    the front door's realm;
+  - the front door records every revocation in the file at start;
+  - it does so again on every look.
+- **H2 (HIGH), accepted.** The record was keyed by the hash of the certificate authority's file. Changing that file
+  (rotation with a bundle, as `README.md` advises, or only re-encoding it) emptied the record of revocations, and entry 4
+  was wrong to say the old certificates would then not be accepted. Now the key is a realm the operator gives the front
+  door (`--realm`) and its console (`--realm`).
+- **M1, accepted.** A revocation signed at a number the record had already seen was answered CONFLICT or STALE and not
+  kept. A revocation of any number is now kept.
+- **M2, accepted.** The look for pending runs did not ask admit's rule that a binding's budget names its baseline. Both now
+  ask one rule (`Front.usable`). Not tested end to end: argued.
+- **M3, accepted.** The service's role could turn a budget of the current form to the earlier one by adding one attempt of
+  that form. A budget whose attempts are of both forms now makes no further attempt (`IdentityFormsMixed`; the front door
+  answers 409). What that role can still do is stated in `governor.identity_form`.
+- **M4, accepted.** Baselining put controls to check 2's rule but not to `rederive`, the rule every run is put to. So a
+  control given to 29 significant digits far from its limit was baselined, and every run on it would then be UNKNOWN: D20's
+  first half. Controls are now put to `rederive` as well, with only the design-space test set aside.
+- **M5, accepted.** The kept evidence did not show the committed trees passing whole. The full suites are run again before
+  the declaration.
+- **M6 and M7, recorded, not changed.**
+  - M6: some checks of R14, R17 and R18 test answers made by the test-only service route; their gate-side checks test the
+    product.
+  - M7: Finding 2 (one design that breaks a record) is closed only at the front door. A holder of the service's role can
+    still do it, since nothing in the gateway refuses a NUL or a number that is not finite.
+- **L1, accepted.** The gateway's MCP server looked up a budget's form outside its error handling. It is now inside.
+- **L2, accepted.** R33's second and third checks now count the check's runs around the repeat, and require the pending
+  design to be finished under the attempt it had before.
+- **L3, accepted.** The readme and a docstring are corrected. Entry 9 gave `tests/service_route.py` as "exactly as at
+  1b132e2" with SHA-256 1cbfc5c0…; that is the hash of the harness, whose header and one path line differ from
+  `verify/verify_client.py` at `1b132e2` (SHA-256 5a272be4…).
+- **L4 and L5, noted.** `demo.py` and `verify/experiment/` used the first client and cannot run as they stand.
+  `mcp/plea_mcp.py --tools verify_tools` is not a supported route for verification. Two front doors given one realm and
+  one database share their jobs' records, which fails closed.
+- **Process, as the review states.**
+  - Entry 4 did not say that F37's call by job name was changed after two runs that stopped with errors, or that no
+    expectation was declared before its third run.
+  - Entry 10 declared "7 of 7" for a test of six checks.
+  - The SHA256SUMS of `a1b_run1` cites paths outside the repository.
+  - Each of these is a breach of VP-2 to VP-5, recorded here.
+- **Before these test changes.** The test files as they stood are kept in `tests/amend17_dev_evidence/before_review2/`.
+  `verify_tests.py` there has SHA-256 `749a71cedd4afd810b808a0bbe8a083e782c4036623fc5854f8ef4e9de957be5`. No predicate was changed after a failure: these are checks added after the
+  review.
+- **Declared before the next run (VP-5).** `tests/verify_tests.py` has SHA-256 `86bf43b6b1bdcb8fb71647ebeb58a7f49888060e3dd93afd5ae4c67e34809b44`; `tests/verify_front_tests.py` has
+  `18018da52216f2347ff9b3f013a9261ec3a472f2a690d808e8f3bce2228bca1f`. Expected:
+  - F37: 12 of 12;
+  - R32: 5 of 5;
+  - R33: 6 of 6;
+  - R30, R31, R34, F10 and F12 pass.
+- **Run after entry 13** (F37, F10, F12; then R30 to R34): all passed, and the new checks' evidence is not vacuous. Entry 13
+  declared "F37: 12 of 12". F37 has eleven checks (nine, and two added), so that count was wrong, as in entry 11, and all
+  eleven passed. Kept in `tests/amend17_dev_evidence/review2_run1_front.json` and `review2_run1_gate.json`.

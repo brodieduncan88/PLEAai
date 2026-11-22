@@ -1,0 +1,362 @@
+{
+ "tests": {
+  "R30": {
+   "title": "Amendment 17 (D5).  An attempt admitted under one baseline's budget is never decided against another baseline: the gate host refuses it before it is claimed, runs nothing and signs nothing.",
+   "ok": true,
+   "checks": {
+    "sent honestly through the front door, the design fails against A (exit status 2)": true,
+    "naming baseline B on A's budget, the caller is refused by the gate host, twice, and is told no verdict": true,
+    "the check was not run for it, and no report was signed for it": true,
+    "B shows no run and no notice; A's record verifies and shows no pass": true,
+    "the same caller naming A on A's budget is still run and decided: only a mismatch is refused": true,
+    "the refused attempt is counted and not silent: a courier pass tells the engineer it was admitted and has no outcome": true
+   },
+   "evidence": {
+    "courier": [
+     0,
+     [
+      "NO_OUTCOME"
+     ]
+    ],
+    "honest": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "told": {
+     "refused": "GateRefusedRun",
+     "detail": "403: {\"error\": \"BASELINE_NOT_ADMITTED_BUDGET: the budget this attempt was admitted under is not the one its arguments would be decided against; nothing was run and nothing was signed\"}"
+    },
+    "again": {
+     "refused": "GateRefusedRun",
+     "detail": "403: {\"error\": \"BASELINE_NOT_ADMITTED_BUDGET: the budget this attempt was admitted under is not the one its arguments would be decided against; nothing was run and nothing was signed\"}"
+    },
+    "tool_calls": [
+     1,
+     1,
+     2
+    ],
+    "attempt": {
+     "phase": "CONSUMED",
+     "outcome": "PENDING",
+     "evidence": 0
+    },
+    "record_a": {
+     "verifies": true,
+     "why": [],
+     "status": "NOT VERIFIED",
+     "outcomes": [
+      "FAIL",
+      "PENDING"
+     ]
+    },
+    "record_b": {
+     "verifies": true,
+     "runs": 0
+    },
+    "notices_b": 0,
+    "matched": "PASS"
+   },
+   "seconds": 4.5
+  },
+  "R31": {
+   "title": "Amendment 17 (D21).  Request keys and attempt identities are the whole hash; where two designs share a narrower key, the second is refused, and is never given the first one's verdict.",
+   "ok": true,
+   "checks": {
+    "a run made now carries a 256-bit attempt identity and request key, and its record verifies as of that form": true,
+    "a record made before, with 64-bit identities, still verifies, and says which form it is": true,
+    "a record whose runs, each with its design, are of both forms fails at check 5 only, for that reason": true,
+    "with a 16-bit request key, the second design shares the first one's key; the governor's nonce refuses it (a property from before this amendment): it is not run, and it is not told the first one's pass": true,
+    "with a 16-bit attempt identity, the governor's nonce refuses the second design in the same way (a property from before this amendment): not run, no verdict": true,
+    "with the governor's replay guard taken out as well, the front door refuses the first design's verdict for the second design": true
+   },
+   "evidence": {
+    "full": {
+     "exit": 2,
+     "aid": "a2-315965f960bfe392431a04e6689946903d18cc742225e683a8f05ae420879238",
+     "key": "verify:55dc6b97ab4f0622bceb97f88ee86b9922c41cddf3a8b40f7b16db15eed1d20b",
+     "verifies": true,
+     "identities": "current",
+     "mixed_verifies": false,
+     "mixed_fails": [
+      5
+     ],
+     "mixed_words": [
+      "the runs' request keys and attempt identities are not all of one form (the whole hash, or the 64-bit form made before 22 November 2026); a-6612f67a6f1b4886: the request key or attempt id does not recompute from the baseline and design"
+     ],
+     "mixed_forms": [
+      "a-6",
+      "a2-"
+     ]
+    },
+    "legacy_sample": {
+     "verifies": true,
+     "identities": "legacy",
+     "says": [
+      "Its runs carry 64-bit attempt identities and 96-bit request keys, the form made before 22 November 2026."
+     ]
+    },
+    "request_key": {
+     "designs": [
+      {
+       "material": "PPS-GF40",
+       "wall_mm": 2.1731,
+       "mode": "normal"
+      },
+      {
+       "material": "PA66-GF30",
+       "wall_mm": 2.0055,
+       "mode": "normal"
+      }
+     ],
+     "first": [
+      200,
+      "PASS",
+      null
+     ],
+     "second": [
+      502,
+      null,
+      null,
+      "REFUSED by the verification service (RequestKeyReused).  NOT VERIFIED."
+     ],
+     "code2": null,
+     "tool_calls": 1,
+     "runs": [
+      "141b131e10c4"
+     ]
+    },
+    "attempt_id": {
+     "designs": [
+      {
+       "material": "PPS-GF40",
+       "wall_mm": 2.0361,
+       "mode": "normal"
+      },
+      {
+       "material": "PA66-GF30",
+       "wall_mm": 2.0029,
+       "mode": "normal"
+      }
+     ],
+     "first": [
+      200,
+      "PASS",
+      null
+     ],
+     "second": [
+      502,
+      null,
+      null,
+      "REFUSED by the verification service (RequestKeyReused).  NOT VERIFIED."
+     ],
+     "code2": null,
+     "tool_calls": 1,
+     "runs": [
+      "834c3c674bcb"
+     ]
+    },
+    "front_door_check": {
+     "designs": [
+      {
+       "material": "PPS-GF40",
+       "wall_mm": 2.0631,
+       "mode": "normal"
+      },
+      {
+       "material": "PA66-GF30",
+       "wall_mm": 2.0023,
+       "mode": "normal"
+      }
+     ],
+     "first": [
+      200,
+      "PASS",
+      null
+     ],
+     "second": [
+      502,
+      null,
+      null,
+      "REFUSED by the verification service: the verdict returned is not for this design.  NOT VERIFIED."
+     ],
+     "code2": null,
+     "tool_calls": 1,
+     "runs": [
+      "3ae6476dea9c"
+     ]
+    }
+   },
+   "seconds": 14.1
+  },
+  "R32": {
+   "title": "Amendment 17 (D20).  A baseline whose controls, as the record's checker reads them, do not give their verdicts is refused when it is made, not found later in a record that cannot verify.",
+   "ok": true,
+   "checks": {
+    "a control whose value, written rounded, falls on its limit is refused at baselining, in the record checker's words, and nothing is stored": true,
+    "a control given to 33 significant digits that does not cross its limit is baselined; a run on it fails as it should, and the record verifies": true,
+    "a run (not a control) whose value would be written across its limit is still UNKNOWN, and its record verifies, as before": true,
+    "the fixture as written is baselined as before": true,
+    "a control given to 29 significant digits far from its limit, whose margin a run would not recompute, is refused at baselining as every run on it would be UNKNOWN": true
+   },
+   "evidence": {
+    "many": {
+     "controls": [
+      [
+       "FAIL",
+       [
+        "180"
+       ]
+      ],
+      [
+       "PASS",
+       [
+        "250"
+       ]
+      ]
+     ],
+     "run": [
+      2,
+      "FAIL: REQUIREMENT NOT MET"
+     ],
+     "verifies": true,
+     "why": []
+    },
+    "run": {
+     "answer": [
+      3,
+      "UNKNOWN: THE CHECK GAVE NO USABLE RESULT"
+     ],
+     "outcomes": [
+      [
+       "UNKNOWN",
+       "CHECK_OUTPUT_INVALID"
+      ]
+     ],
+     "verifies": true,
+     "why": []
+    },
+    "far": "the controls as run would not verify in a record of this baseline, by the record's checker: control \"PA66 must fail at 200 C\": service_temperature: the margin does not recompute.  A value the check gives to more than 28 significant digits is written rounded, and a rounded value can fall on the other side of its limit.  Nothing was baselined",
+    "refused": "the controls as run would not verify in a record of this baseline, by the record's checker: control \"PA66 must fail at 200 C\": its recorded verdict does not follow from its recorded numbers; control \"PA66 must fail at 200 C\": service_temperature: recorded as not met, but 200 >= 200 is True; control \"PA66 must fail at 200 C\": service_temperature: the margin does not recompute; control \"PA66 must fail at 200 C\": reason LIMIT_NOT_MET does not follow from the comparisons.  A value the check gives to more than 28 significant digits is written rounded, and a rounded value can fall on the other side of its limit.  Nothing was baselined",
+    "stored": [
+     0,
+     0
+    ],
+    "accepted": true,
+    "run_baselined": true,
+    "plain": true
+   },
+   "seconds": 6.3
+  },
+  "R33": {
+   "title": "Amendment 17, after its first review (H1).  A budget with runs made before the change keeps their form: a design sent before is not run or charged again after, a run left pending then is finished as the same attempt, and its record still verifies; a new budget takes the current form.",
+   "ok": true,
+   "checks": {
+    "before the change, a failure is decided and a passing design is left pending, both as 64-bit attempts": true,
+    "after it, the failure sent again is the same attempt: the same FAIL, not run or charged again": true,
+    "the pending design sent again is finished as the same attempt: run once, and it meets the check": true,
+    "a new design on that budget is made in its form, and the record verifies: three runs, all 64-bit, said to be of the earlier form": true,
+    "a budget made after the change takes the current form": true,
+    "an attempt of the earlier form added to a budget of the current form, by the service's own role, stops its runs: refused, nothing run (it fails closed)": true
+   },
+   "evidence": {
+    "before": [
+     [
+      200,
+      "FAIL"
+     ],
+     [
+      503,
+      "UNAVAILABLE"
+     ]
+    ],
+    "before_calls": 1,
+    "again_bad": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "again_good": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "new_design": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "calls": 3,
+    "good_runs": 1,
+    "aids": [
+     "a-6a1e90d3fa377136",
+     "a-82b84dac4bab4d44",
+     "a-c1635c243fec9bcc"
+    ],
+    "record_verifies": true,
+    "why": [],
+    "identities": "legacy",
+    "official_runs": 3,
+    "fresh": [
+     2,
+     [
+      "a2-"
+     ],
+     true,
+     "current"
+    ],
+    "calls_around_again_bad": [
+     1,
+     1
+    ],
+    "pending_aid": "a-c1635c243fec9bcc",
+    "good_aid": "a-c1635c243fec9bcc",
+    "mixed": [
+     4,
+     "REFUSED: this baseline's budget holds runs of two forms of identity, which the service does not make; no further run is made on it.  Tell the responsible engineer.  Nothing was run.",
+     0
+    ]
+   },
+   "seconds": 6.6
+  },
+  "R34": {
+   "title": "Amendment 17 (D6).  The first client, which held the gateway's database credential in an assistant's workspace, refuses to run, and no deployment writes such a workspace; an enrolled job's folder holds no database credential.",
+   "ok": true,
+   "checks": {
+    "the first client refuses to run, ends with status 4, and names the front door's route": true,
+    "the deployment's two helpers for it refuse, and write no workspace": true,
+    "an enrolled job's folder, all the assistant's side is given, holds no database address and no role's password": true
+   },
+   "evidence": {
+    "client": [
+     4,
+     "verify_client.py is retired (Amendment 17, 22 November 2026): it held the gateway's database credential in the assistant's workspace.  Use front_client.py with the job folder the responsible engineer "
+    ],
+    "deploy": {
+     "client_config": "refused",
+     "submit": "refused"
+    },
+    "workspace_written": false,
+    "job_folder": {
+     "job.key": {
+      "dsn": false,
+      "password": false
+     },
+     "ca.crt": {
+      "dsn": false,
+      "password": false
+     },
+     "job.json": {
+      "dsn": false,
+      "password": false
+     },
+     "job.crt": {
+      "dsn": false,
+      "password": false
+     }
+    }
+   },
+   "seconds": 2.9
+  }
+ },
+ "passed": 5,
+ "of": 5,
+ "seconds": 34.3,
+ "PASS": true
+}

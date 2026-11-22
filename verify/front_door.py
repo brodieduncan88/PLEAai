@@ -67,7 +67,7 @@ from plea_gateway import (BudgetExhausted, GateRefusedRun, GovernedError, Held, 
                           RequestKeyReused, Store, Stopped, TransportError, UnknownRoot, WitnessUnavailable)
 from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args, wrap_server   # noqa: E402
 from baseline import HEADLINE, canonical, design_hash, design_lines, face, root_for   # noqa: E402  (design_hash: Amendment 17)
-from plea_gateway.governor import identity_form             # noqa: E402  (Amendment 17)
+from plea_gateway.governor import IdentityFormsMixed, identity_form   # noqa: E402  (Amendment 17)
 from service_client import Client, alongside_lines                   # noqa: E402  (Amendment 17: moved from verify_client, which is retired)
 from verify_record import PENDING_PHASES, arguments_for, load_envelope, request_key, request_keys, signed_by   # noqa: E402  (request_keys: Amendment 17)
 import notices                                                       # noqa: E402  (Amendment 7: a notice the inbox cannot take is kept, not lost)
@@ -405,21 +405,36 @@ class Front:
         self._pending = {}                       # the look's runs to act on: (baseline, attempt, PENDING or INTERRUPTED) -> {'next', 'wait'} (Amendment 9)
         self._journal_lock = threading.Lock()    # the journal has a lock of its own, so that counting it does not hold up every other request (Amendment 8)
         (self.home / 'front').mkdir(parents=True, exist_ok=True)
-        # Amendment 17 (D16): the names this front door's jobs have in the database's record of bindings.  Job names are unique
-        # within one front door, whose jobs' certificates one authority issues; the record is keyed by that authority's
-        # certificate as well, so two front doors on one database never share a job's record.
-        self._realm = None
 
     # ------------------------------------------------------------------ who is asking
     def state_name(self, job: str) -> str:
-        """The job's name in the database's record of bindings (Amendment 17, D16).  Without the authority's certificate in the
-        configuration no job can be named in the record, and nobody is admitted (StateUnavailable)."""
-        if self._realm is None:
-            try:
-                self._realm = hashlib.sha256(pathlib.Path(self.cfg['tls']['ca']).read_bytes()).hexdigest()[:32]
-            except (KeyError, TypeError, OSError) as exc:
-                raise front_state.StateUnavailable(f'no certificate authority to key the record by ({type(exc).__name__})') from None
-        return f'{self._realm}:{job}'
+        """The job's name in the database's record of bindings (Amendment 17, D16): the front door's realm and the job's name.
+        The realm is a name the operator gives this front door (--realm), and the engineer's console the same one; it does not
+        change when the certificate authority's file does (after the second review, H2: it was once the hash of that file).
+        Without one, no job can be named in the record and nobody is admitted (StateUnavailable)."""
+        realm = self.cfg.get('realm')
+        if not isinstance(realm, str) or not front_state.REALM.fullmatch(realm):
+            raise front_state.StateUnavailable('this front door has no realm to key its record of bindings by') from None
+        return front_state.state_name(realm, job)
+
+    def usable(self, name, b) -> bool:
+        """A binding a pinned engineer signed, for this job, naming a budget of the baseline it names (Amendment 17, D16).  Asked
+        by admit() and by the look for pending runs alike (after the second review, M2: the look did not ask the last)."""
+        return (binding_valid(b, self.engineer_keys) and b['job'] == name and '/' in b['root']
+                and b['root'].rsplit('/', 1)[-1] == b['baseline_sha256'][:32])
+
+    def observe(self, name, b) -> str:
+        """Put one usable binding to the record, and return its answer (front_state.observe)."""
+        return front_state.observe(self.store, self.state_name(name), b['seq'], hashlib.sha256(canonical(b).encode()).hexdigest(), b['event'] == 'REVOKE')
+
+    def record_revocations(self) -> int:
+        """Every revocation in jobs.json, put to the record, whether or not its job ever calls again (after the second review, H1).
+        Asked at start and on every look.  Returns how many were put; raises StateUnavailable if the record cannot be written."""
+        n = 0
+        for name, b in sorted(read_jobs(self.home).items()):
+            if self.usable(name, b) and b['event'] == 'REVOKE':
+                self.observe(name, b); n += 1
+        return n
 
     def admit(self, name, der) -> dict | None:
         """The job's binding, if this certificate is the one enrolled for this name, the job is not revoked, and a
@@ -428,17 +443,15 @@ class Front:
         if not name or not JOB_NAME.match(name) or name in RESERVED or not der:
             return None
         b = read_jobs(self.home).get(name)
-        if not binding_valid(b, self.engineer_keys) or b['job'] != name:
-            return None
-        if b['root'].rsplit('/', 1)[-1] != b['baseline_sha256'][:32] or '/' not in b['root']:
-            # Amendment 17 (D16): a binding naming one baseline and another baseline's budget admits nobody.  Before, it was
-            # noticed (the stored card was not shown) and its designs were still sent on.
+        if not self.usable(name, b):
+            # Amendment 17 (D16): among others, a binding naming one baseline and another baseline's budget admits nobody.  Before,
+            # it was noticed (the stored card was not shown) and its designs were still sent on.
             return None
         # Amendment 17 (D16): the latest binding seen for each job is kept in the database, not in this process's memory, so a
         # restart forgets nothing.  An earlier signed binding put back (STALE), a second binding with the same number
         # (CONFLICT) and any binding of a revoked job (REVOKED: absorbing) admit nobody.  If the record cannot be read, this
         # raises StateUnavailable, and the caller is answered 503: nobody is admitted.
-        answer = front_state.observe(self.store, self.state_name(name), b['seq'], hashlib.sha256(canonical(b).encode()).hexdigest(), b['event'] == 'REVOKE')
+        answer = self.observe(name, b)
         if answer != 'CURRENT' or b['cert_sha256'] != hashlib.sha256(der).hexdigest():
             return None
         return b
@@ -692,6 +705,9 @@ class Front:
             legacy = identity_form(self.store, c.root) == 'legacy'
         except UnknownRoot:
             return 403, dict(self._head(binding, c), **refusal('NO_BUDGET', 'REFUSED: this baseline has no budget at the control plane.  It was not provisioned by the responsible engineer.'))
+        except IdentityFormsMixed:                           # Amendment 17 (second review, M3): fail closed
+            return 409, dict(self._head(binding, c), **refusal('IDENTITY_FORMS_MIXED', 'REFUSED: this baseline\'s budget holds runs of two forms of identity, '
+                                                                 'which the service does not make; no further run is made on it.  Tell the responsible engineer.  Nothing was run.'))
         key = request_key(args, legacy=legacy)
         head = self._head(binding, c)
         unproven = self._delivery(c, key)                  # Amendment 8 (D3): no new run while a failure might not reach the engineer
@@ -800,12 +816,16 @@ class Front:
             jobs = read_jobs(self.home)
         except Exception:
             return done
+        try:                                             # Amendment 17 (second review, H1): every revocation read is recorded
+            self.record_revocations()
+        except Exception:
+            pass
         for name, b in sorted(jobs.items()):
             try:
-                if not binding_valid(b, self.engineer_keys) or b['job'] != name or b['event'] == 'REVOKE':
+                if not self.usable(name, b):                   # Amendment 17: as admit() refuses it (second review, M2)
                     continue
-                if front_state.observe(self.store, self.state_name(name), b['seq'], hashlib.sha256(canonical(b).encode()).hexdigest(), False) != 'CURRENT':
-                    continue                                   # Amendment 17 (D16): as admit() refuses it; unreadable state raises, and the job is passed over
+                if self.observe(name, b) != 'CURRENT':         # Amendment 17 (D16): a revocation is recorded here too (second review, H1)
+                    continue                                   # unreadable state raises, and the job is passed over
                 h, root = b['baseline_sha256'], b['root']
                 obs = self.store.observe(root)                   # one reading of the store; the journal is not read here
                 found = []
@@ -1011,6 +1031,8 @@ def main():
     ap.add_argument('--journal-share-bytes', type=int, default=JOURNAL_SHARE, help='bytes of the journal one baseline\'s designs may take before new runs for it are refused (Amendment 8)')
     ap.add_argument('--sweep-after', type=float, default=SWEEP_AFTER, help='seconds a run is seen pending before the front door asks the gate for it itself (Amendment 9)')
     ap.add_argument('--sweep-every', type=float, default=SWEEP_EVERY, help='seconds between the front door\'s looks for runs left pending (Amendment 9)')
+    ap.add_argument('--realm', required=True, help='this front door\'s name in the database\'s record of job bindings: the same one its engineer\'s console '
+                    'is given, kept when the certificate authority changes (Amendment 17); 8 to 64 letters, digits or hyphens')
     add_server_args(ap)
     a = ap.parse_args()
     tls = server_from_args(a)
@@ -1020,8 +1042,12 @@ def main():
     cfg = {'witness_url': a.witness_url, 'witness_keys': a.witness_key, 'gate_url': a.gate_host, 'gate_key': a.gate_key,
            'tls': {'ca': a.tls_ca, 'cert': a.upstream_cert, 'key': a.upstream_key}, 'journal': str(home / 'front' / 'submissions.jsonl'),
            'journal_max_bytes': a.journal_max_bytes, 'disk_reserve_bytes': a.disk_reserve_bytes,
-           'journal_share_bytes': a.journal_share_bytes}
+           'journal_share_bytes': a.journal_share_bytes, 'realm': a.realm}
     front = Front(home, Store(a.local_dsn), cfg, a.engineer_key, a.rate)
+    try:                                                 # Amendment 17 (second review, H1): every revocation in jobs.json is recorded before anyone is admitted
+        front.record_revocations()
+    except front_state.StateUnavailable as exc:          # then nobody is admitted until the record can be written (admit raises, 503)
+        print(f'front door: the record of job bindings could not be written at start ({exc})', file=sys.stderr, flush=True)
     server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(front)), tls)
     threading.Thread(target=sweeper, args=(front, max(SWEEP_MIN_WAIT, a.sweep_after), min(600.0, max(0.1, a.sweep_every))), name='front-door-sweep', daemon=True).start()
     print(json.dumps({'listening': a.port, 'home': str(home), 'witness_keys': a.witness_key, 'gate_key': a.gate_key, 'engineer_keys': a.engineer_key, 'tls': True}), flush=True)

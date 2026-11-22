@@ -6,13 +6,17 @@ before a REVOKE) admitted the job again.  Now each binding the front door reads 
 for each job, the highest sequence number seen, the digest of that binding and whether it revoked the job, and answers:
 
     CURRENT   the binding is the latest seen, and does not revoke the job: the front door may admit it
-    REVOKED   the job has been revoked, by this binding or by an earlier one: revocation is absorbing, no later binding undoes it
+    REVOKED   the job has been revoked, by this binding or by an earlier one: revocation is absorbing, no later binding undoes it.
+              A revoking binding is kept whatever its number (after the second review, M1)
     STALE     a later binding has been seen: this one was put back, or is out of date
     CONFLICT  another binding with the same sequence number has been seen: two signed bindings disagree
     INVALID   the arguments are not a binding's
 
 Only CURRENT admits.  The function is the only way to the table: it is SECURITY DEFINER, owned by the database owner, and
-EXECUTE on it is granted to the service's role, `plea_local`, which has no privilege on the table itself.  It only moves
+EXECUTE on it is granted to the service's role, `plea_local`, and to the engineer's console's role, `plea_control` (which
+records each revocation before it is written to `jobs.json`, so that a revocation does not wait for the front door to see it);
+neither has any privilege on the table itself.  A job's name in the record is the front door's realm (a name the operator
+gives it, which does not change when its certificate authority does) and the job's name, at most 200 characters.  It only moves
 forward: a sequence number is raised and never lowered, and a revocation is never cleared.  It takes the row's lock
 (SELECT ... FOR UPDATE, and an INSERT that loses a race reads the winner's row), so concurrent front doors agree.
 
@@ -28,7 +32,7 @@ What it does not do.
 
 SCHEMA = r"""
 CREATE TABLE IF NOT EXISTS public.verify_front_binding (
-    job             text        PRIMARY KEY,
+    job             text        PRIMARY KEY CHECK (length(job) <= 200),
     seq             bigint      NOT NULL CHECK (seq >= 1),
     binding_sha256  text        NOT NULL CHECK (binding_sha256 ~ '^[0-9a-f]{64}$'),
     revoked         boolean     NOT NULL,
@@ -41,8 +45,13 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
     r public.verify_front_binding%ROWTYPE;
 BEGIN
-    IF p_job IS NULL OR p_seq IS NULL OR p_seq < 1 OR p_sha IS NULL OR p_sha !~ '^[0-9a-f]{64}$' OR p_revoked IS NULL THEN
+    IF p_job IS NULL OR length(p_job) > 200 OR p_seq IS NULL OR p_seq < 1 OR p_sha IS NULL OR p_sha !~ '^[0-9a-f]{64}$' OR p_revoked IS NULL THEN
         RETURN 'INVALID';
+    END IF;
+    IF p_revoked THEN                                    -- Amendment 17, after its second review (M1): a revocation of any number is kept
+        INSERT INTO public.verify_front_binding AS b (job, seq, binding_sha256, revoked) VALUES (p_job, p_seq, p_sha, true)
+            ON CONFLICT (job) DO UPDATE SET revoked = true, seq = GREATEST(b.seq, EXCLUDED.seq), seen_at = now();
+        RETURN 'REVOKED';
     END IF;
     SELECT * INTO r FROM public.verify_front_binding WHERE job = p_job FOR UPDATE;
     IF NOT FOUND THEN
@@ -70,9 +79,18 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.verify_front_observe(text, bigint, text, boolean) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.verify_front_observe(text, bigint, text, boolean) TO plea_local;
+GRANT EXECUTE ON FUNCTION public.verify_front_observe(text, bigint, text, boolean) TO plea_control;   -- the engineer's console (after review H1)
 """
 
+import re
+
 ANSWERS = ('CURRENT', 'REVOKED', 'STALE', 'CONFLICT', 'INVALID')
+REALM = re.compile(r'[A-Za-z0-9-]{8,64}')
+
+
+def state_name(realm: str, job: str) -> str:
+    """A job's name in the record: the front door's realm and the job's name.  The front door and the engineer's console use it."""
+    return f'{realm}:{job}'
 
 
 class StateUnavailable(Exception):

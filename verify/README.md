@@ -38,7 +38,7 @@ evidence: nobody outside has reviewed or attacked it.
 | `deploy.py` | One service on one machine, for the demo, the tests and the trials. Since Amendment 17 it writes no assistant workspace. |
 | `cases/pump-station-submain/` | The worked case: a 400 V sub-main that no allowed cable can make comply. |
 | `experiment/` | The trial of what assistants do with that job, with and without the service. It was run with the first client, which is retired; its results are kept as they were, and it cannot be run again as it stands. |
-| `../tests/verify_tests.py` | Tests R1 to R32 of the gate and the service (R1 to R13 as declared first, R14 to R29 by Amendments 2 to 15, R30 to R32 by Amendment 17). Since Amendment 17 every test acts as the assistant through the front door, not the first client. |
+| `../tests/verify_tests.py` | Tests R1 to R34 of the gate and the service (R1 to R13 as declared first, R14 to R29 by Amendments 2 to 15, R30 to R34 by Amendment 17). Since Amendment 17 the tests act as the assistant through the front door, not the first client, except R14, R17, R18, R25 and R26, which test the gate under the plain deployment and reach it as the service's own caller (`../tests/service_route.py`, a test harness only). `demo.py` used the first client and is not runnable as it stands. |
 
 ## Is this the latest record? (Amendment 10, 19 November 2026)
 

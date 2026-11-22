@@ -26,6 +26,13 @@ MUTANTS = [
     ('a binding for another budget admitted', 'verify/front_door.py', "        if b['root'].rsplit('/', 1)[-1] != b['baseline_sha256'][:32] or '/' not in b['root']:", "        if False:", ['F37']),
     ('controls not put to the checker', 'verify/verify_ctl.py', "    problems = check_record.control_problems(card, controls_run)", "    problems = []", ['R32']),
     ('the first client not retired', 'verify/verify_client.py', None, 'git:1b132e2:verify/verify_client.py', ['R34']),
+    # after the second review
+    ('revocations recorded only when the job calls', [('verify/front_door.py', "                self.observe(name, b); n += 1", "                n += 1"),
+                                                       ('verify/front_ctl.py', "    if realm is None:\n        return None\n    import front_state", "    if True:\n        return None\n    import front_state")], None, ['F37']),
+    ('realm from the authority\'s file', 'verify/front_door.py', "        realm = self.cfg.get('realm')", "        realm = hashlib.sha256(pathlib.Path(self.cfg['tls']['ca']).read_bytes()).hexdigest()[:32]", ['F37']),
+    ('a revocation at a number already seen not kept', 'verify/front_state.py', "    IF p_revoked THEN", "    IF false THEN", ['F37']),
+    ('mixed forms not refused', 'plea_gateway/governor.py', "    if len(forms) > 1:", "    if False:", ['R33']),
+    ('controls not put to rederive', 'verify/verify_ctl.py', "control_problems(card, controls_run) + rederived", "control_problems(card, controls_run) + []", ['R32']),
 ]
 
 
@@ -41,13 +48,18 @@ results = {}
 for name, path, old, new, tests in MUTANTS:
     if ONLY and name not in ONLY:
         continue
-    dest = WORK / 'tree'; tree(dest); f = dest / path
-    if new.startswith('git:'):
-        _, rev, src = new.split(':', 2)
-        f.write_bytes(subprocess.run(['git', '-C', str(REPO), 'show', f'{rev}:{src}'], capture_output=True, check=True).stdout); planted = True
-    else:
-        text = f.read_text(); planted = text.count(old) == 1
-        f.write_text(text.replace(old, new))
+    dest = WORK / 'tree'; tree(dest)
+    edits = path if isinstance(path, list) else [(path, old, new)]
+    planted = True
+    for pth, o, n in edits:
+        f = dest / pth
+        if n is not None and n.startswith('git:'):
+            _, rev, src = n.split(':', 2)
+            f.write_bytes(subprocess.run(['git', '-C', str(REPO), 'show', f'{rev}:{src}'], capture_output=True, check=True).stdout)
+        else:
+            text = f.read_text(); planted = planted and text.count(o) == 1
+            f.write_text(text.replace(o, n))
+    path = path if isinstance(path, str) else ', '.join(p for p, _, _ in path)
     if not planted:
         results[name] = {'planted': False, 'caught': None}; print(f'{name}: NOT PLANTED (the text was not found once)', flush=True); continue
     got = {}

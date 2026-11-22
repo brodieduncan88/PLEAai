@@ -1,0 +1,16 @@
+{
+ "reserve_current": [
+  "APPLIED",
+  "RESERVATION_COMMITTED"
+ ],
+ "form_before": "current",
+ "reserve_planted": [
+  "APPLIED",
+  "RESERVATION_COMMITTED"
+ ],
+ "form_after": "legacy",
+ "attempts": [
+  "a-0000000000000000",
+  "a2-d22a422cbde835d262fd4a5cb77116455e40c345044b7a68e6c390655762cad2"
+ ]
+}

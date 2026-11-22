@@ -43,7 +43,8 @@ class FrontServices(deploy.Services):
             (pki / f'{name}.key').write_bytes(key); (pki / f'{name}.key').chmod(0o600); (pki / f'{name}.crt').write_bytes(cert)
             self.pki[name] = (str(pki / f'{name}.crt'), str(pki / f'{name}.key'))
         self.url = f'https://127.0.0.1:{front_port}'
-        (self.dir / 'state.json').write_text(json.dumps({'ports': self.ports, 'pki': self.pki, 'keys': self.keys}, indent=1) + '\n')
+        self.realm = 'deploy-' + os.urandom(8).hex()     # Amendment 17: this front door's name in the record of bindings
+        (self.dir / 'state.json').write_text(json.dumps({'ports': self.ports, 'pki': self.pki, 'keys': self.keys, 'realm': self.realm}, indent=1) + '\n')
 
     def _tls(self, name) -> list:
         return ['--tls-cert', self.pki[name][0], '--tls-key', self.pki[name][1], '--tls-ca', self.pki['ca'], '--tls-allow', 'frontdoor']
@@ -59,7 +60,7 @@ class FrontServices(deploy.Services):
                '--gate-host', f'https://127.0.0.1:{self.ports["host"]}', '--gate-key', self.keys['gate'], '--engineer-key', self.keys['engineer'],
                '--tls-cert', self.pki['front'][0], '--tls-key', self.pki['front'][1], '--tls-ca', self.pki['ca'],
                '--upstream-cert', self.pki['frontdoor'][0], '--upstream-key', self.pki['frontdoor'][1], '--rate', str(rate),
-               '--sweep-after', str(sweep_after), '--sweep-every', str(sweep_every)]
+               '--sweep-after', str(sweep_after), '--sweep-every', str(sweep_every), '--realm', self.realm]
         self.procs['front'] = subprocess.Popen(cmd, stdout=open(self.dir / 'front.log', 'a'), stderr=subprocess.STDOUT)
         self._await('front')
 
@@ -79,10 +80,10 @@ class FrontServices(deploy.Services):
         return out
 
     def rebind(self, job: str, new_hash: str) -> dict:
-        return front_ctl.rebind(self.home, job, new_hash, self.engineer)
+        return front_ctl.rebind(self.home, job, new_hash, self.engineer, realm=self.realm)
 
     def revoke(self, job: str) -> dict:
-        return front_ctl.revoke(self.home, job, self.engineer)
+        return front_ctl.revoke(self.home, job, self.engineer, realm=self.realm)
 
     def record(self, baseline_hash: str, journals=(), checkpoint: bool = True) -> dict:
         return front_ctl.record(self.home, baseline_hash, self.engineer, self.keys['witness'], self.keys['gate'], journals,

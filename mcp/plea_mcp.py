@@ -113,7 +113,7 @@ class GovernedServer:
         if name == 'plea_status':
             return {'content': [{'type': 'text', 'text': json.dumps(self.gov.status())}], 'isError': False}
         arguments = dict(arguments or {})
-        key = arguments.pop('_plea_request_key', None) or request_key(name, arguments, legacy=identity_form(self.gov.store, self.gov.root) == 'legacy')
+        given = arguments.pop('_plea_request_key', None)
         if self.host:
             run = name                                  # host mode: the governor sends the tool name to the gate host
         elif name in self.tools:
@@ -122,7 +122,8 @@ class GovernedServer:
             run = lambda: self.upstream.call(name, arguments)
         else:
             return {'content': [{'type': 'text', 'text': f'unknown tool {name}'}], 'isError': True}
-        try:
+        try:                                            # Amendment 17: the key in the budget's form, asked inside the try (second review, L1)
+            key = given or request_key(name, arguments, legacy=identity_form(self.gov.store, self.gov.root) == 'legacy')
             value = self.gov.attempt(key, run, **arguments) if self.host else self.gov.attempt(key, run)
         except BudgetExhausted:
             return self._refused(f'PLEA: budget exhausted for run {self.gov.root!r}; the call did not run')

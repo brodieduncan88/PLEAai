@@ -1,0 +1,42 @@
+{
+ "controls_run": [
+  {
+   "name": "PA66 must fail at 200 C",
+   "expect": "FAIL",
+   "verdict": "FAIL",
+   "reason_code": "LIMIT_NOT_MET",
+   "criteria": [
+    {
+     "id": "service_temperature",
+     "achieved": "123.4567890123456789012345679",
+     "limit": "200",
+     "met": false
+    }
+   ]
+  },
+  {
+   "name": "PEEK must pass at 200 C (outside the design space on purpose)",
+   "expect": "PASS",
+   "verdict": "PASS",
+   "reason_code": "MET",
+   "criteria": [
+    {
+     "id": "service_temperature",
+     "achieved": "345.678901234567890123456789",
+     "limit": "200",
+     "met": true
+    }
+   ]
+  }
+ ],
+ "control_problems": [],
+ "rederive_control_PA66": [
+  "service_temperature: the margin does not recompute"
+ ],
+ "run_PPS": {
+  "verdict": "PASS",
+  "margin": "145.678901234567890123456789",
+  "achieved": "345.678901234567890123456789"
+ },
+ "rederive_run_PPS": []
+}

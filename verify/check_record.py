@@ -521,8 +521,10 @@ def control_problems(card: dict, runs) -> list:
     return out
 
 
-def rederive(card, result, design) -> list:
-    """Problems with a signed verdict, re-deriving it from the card.  Empty when the verdict is exactly what the card implies."""
+def rederive(card, result, design, control: bool = False) -> list:
+    """Problems with a signed verdict, re-deriving it from the card.  Empty when the verdict is exactly what the card implies.
+    control=True (Amendment 17, after the second review, M4) is for a control case at baselining, which may lie outside the
+    design space on purpose (as baseline.evaluate's own control=True): the design-space test alone is set aside."""
     out = []
     reason, verdict, crit = result.get('reason_code'), result.get('verdict'), result.get('criteria')
     if reason not in REASONS or REASONS[reason] != verdict:
@@ -532,7 +534,7 @@ def rederive(card, result, design) -> list:
     for c, base in zip(crit, card['criteria']):
         if any(c.get(k) != base[k] for k in ('quantity', 'comparison', 'limit', 'units')):
             out.append(f'{base["id"]}: the limit, comparison, quantity or units differ from the baseline')
-    inside = in_design_space(card, design)
+    inside = True if control else in_design_space(card, design)
     if reason == 'DESIGN_OUTSIDE_BASELINE':
         if inside:
             out.append('says the design is outside the baseline, but it is inside')

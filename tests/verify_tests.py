@@ -3296,7 +3296,7 @@ def in_process_front(s):
     cfg = {'witness_url': f"https://127.0.0.1:{s.ports['witness']}", 'witness_keys': [s.keys['witness']], 'gate_url': f"https://127.0.0.1:{s.ports['host']}",
            'gate_key': s.keys['gate'], 'tls': {'ca': s.pki['ca'], 'cert': s.pki['frontdoor'][0], 'key': s.pki['frontdoor'][1]},
            'journal': str(s.home / 'front' / 'submissions.jsonl'), 'journal_max_bytes': front_door.JOURNAL_MAX, 'disk_reserve_bytes': front_door.DISK_RESERVE,
-           'journal_share_bytes': front_door.JOURNAL_SHARE}
+           'journal_share_bytes': front_door.JOURNAL_SHARE, 'realm': s.realm}       # realm: Amendment 17, as the running front door is given it
     return front_door.Front(s.home, Store(deploy.LOCAL_DSN), cfg, [s.keys['engineer']])
 
 
@@ -3430,7 +3430,9 @@ def r32():
             job = s.enrol('job-r32r', run_across['baseline_sha256'], reason='another job of the same requirement, as the test needs'); got = s.cli(job, 'submit', GOOD)
             ok_run, ch_run, sr = check_record.verify(s.record(run_across['baseline_sha256']), s.keys)
             e['run'] = dict(answer=(got[0], head(got[1])), outcomes=[(x['outcome'], x['reason_code']) for x in sr.get('runs', [])], verifies=ok_run, why=[f'{n} {t}: {d}' for n, t, g, d in ch_run if not g])
+        far = attempt(precise_case('R32-far', {'PA66-GF30': '123.45678901234567890123456789', 'PPS-GF40': '220', 'PEEK': '250'}), draft())   # after the second review, M4
         plain = attempt(CASE, draft())
+        e.update(far=far if isinstance(far, str) else 'baselined')
         e.update(refused=refused if isinstance(refused, str) else 'baselined', stored=(stored0, stored1), accepted=isinstance(accepted, dict), run_baselined=run_across if isinstance(run_across, str) else True,
                  plain=plain if isinstance(plain, str) else True)
         checks = {'a control whose value, written rounded, falls on its limit is refused at baselining, in the record checker\'s words, and nothing is stored':
@@ -3439,7 +3441,9 @@ def r32():
                       isinstance(accepted, dict) and e['many']['run'] == (2, 'FAIL: REQUIREMENT NOT MET') and ok_many is True,
                   'a run (not a control) whose value would be written across its limit is still UNKNOWN, and its record verifies, as before':
                       isinstance(run_across, dict) and e['run']['answer'][0] == 3 and e['run']['outcomes'] == [('UNKNOWN', 'CHECK_OUTPUT_INVALID')] and ok_run is True,
-                  'the fixture as written is baselined as before': isinstance(plain, dict)}
+                  'the fixture as written is baselined as before': isinstance(plain, dict),
+                  'a control given to 29 significant digits far from its limit, whose margin a run would not recompute, is refused at baselining as every run on it would be UNKNOWN':
+                      isinstance(far, str) and 'would not verify in a record' in far and 'margin does not recompute' in far}
     finally:
         s.stop()
     return checks, e
@@ -3463,27 +3467,38 @@ def r33():
             raise ConnectionError('the gate host could not be reached (made so by the test)')
         governor_module.Governor._call_host = lost
         st2, b2 = front.submit(binding, GOOD)                                          # admitted and crossed, then left pending, before
+        pending_aid = next((str(a[0]) for a in Store(deploy.LOCAL_DSN).observe(root)['attempts'] if str(a[2]) != 'EFFECT'), None)
         front_door.request_key, front_door.identity_form, governor_module.attempt_id, governor_module.Governor._call_host = saved
         before_calls = [x.get('design') for x in s.ledger('called')]
         # after: the front door as it is now, in its own process
         s.start_front()
-        again_bad = s.cli(job, 'submit', BAD); again_good = s.cli(job, 'submit', GOOD); new_design = s.cli(job, 'submit', dict(BAD, wall_mm=3.5))
+        calls_0 = len(s.ledger('called')); again_bad = s.cli(job, 'submit', BAD); calls_1 = len(s.ledger('called'))
+        again_good = s.cli(job, 'submit', GOOD); new_design = s.cli(job, 'submit', dict(BAD, wall_mm=3.5))
+        good_aid = next((str(a['aid']) for a in s.record(h).get('attempts', []) if (a.get('arguments') or {}).get('design') == GOOD), None)
         calls = [x.get('design') for x in s.ledger('called')]
         ok, checks_, summ = check_record.verify(s.record(h), s.keys)
         rec = s.record(h); aids = sorted(str(a.get('aid')) for a in rec.get('attempts', []))
         env2 = s.baseline(CASE, draft(), alongside_reason='a new baseline after the change, as the test needs'); job2 = s.enrol('job-r33-new', env2['baseline_sha256'], reason='a new job after the change, as the test needs')
         fresh = s.cli(job2, 'submit', BAD); rec2 = s.record(env2['baseline_sha256']); ok2, _, summ2 = check_record.verify(rec2, s.keys)
+        root2 = B.root_for(env2['card'])                                               # the service's own role adds an attempt of the earlier form (second review, M3)
+        Store(deploy.LOCAL_DSN).apply(root2, ('RESERVE', 'a-' + '0' * 16, 'verify:' + '0' * 24))
+        calls_m = len(s.ledger('called')); mixed_after = s.cli(job2, 'submit', GOOD); calls_m2 = len(s.ledger('called'))
         e.update(before=[(st1, b1.get('outcome')), (st2, b2.get('refused'))], before_calls=len(before_calls), again_bad=(again_bad[0], head(again_bad[1])), again_good=(again_good[0], head(again_good[1])),
                  new_design=(new_design[0], head(new_design[1])), calls=len(calls), good_runs=sum(d == GOOD for d in calls), aids=aids, record_verifies=ok,
                  why=[f'{n} {t_}: {d}' for n, t_, g, d in checks_ if not g], identities=summ.get('identities'), official_runs=summ.get('official_runs'),
-                 fresh=(fresh[0], [str(a.get('aid'))[:3] for a in rec2.get('attempts', [])], ok2, summ2.get('identities')))
+                 fresh=(fresh[0], [str(a.get('aid'))[:3] for a in rec2.get('attempts', [])], ok2, summ2.get('identities')),
+                 calls_around_again_bad=(calls_0, calls_1), pending_aid=pending_aid, good_aid=good_aid, mixed=(mixed_after[0], head(mixed_after[1]), calls_m2 - calls_m))
         legacy = lambda a: re.fullmatch(r'a-[0-9a-f]{16}', a) is not None
         checks = {'before the change, a failure is decided and a passing design is left pending, both as 64-bit attempts': st1 == 200 and b1.get('outcome') == 'FAIL' and st2 == 503 and len(before_calls) == 1,
-                  'after it, the failure sent again is the same attempt: the same FAIL, not run or charged again': again_bad[0] == 2 and head(again_bad[1]) == 'FAIL: REQUIREMENT NOT MET',
-                  'the pending design sent again is finished as the same attempt: run once, and it meets the check': again_good[0] == 0 and sum(d == GOOD for d in calls) == 1,
+                  'after it, the failure sent again is the same attempt: the same FAIL, not run or charged again': again_bad[0] == 2 and head(again_bad[1]) == 'FAIL: REQUIREMENT NOT MET'
+                      and calls_1 == calls_0,
+                  'the pending design sent again is finished as the same attempt: run once, and it meets the check': again_good[0] == 0 and sum(d == GOOD for d in calls) == 1
+                      and pending_aid is not None and good_aid == pending_aid,
                   'a new design on that budget is made in its form, and the record verifies: three runs, all 64-bit, said to be of the earlier form':
                       new_design[0] == 2 and len(aids) == 3 and all(legacy(a) for a in aids) and ok and summ.get('identities') == 'legacy' and summ.get('official_runs') == 3,
-                  'a budget made after the change takes the current form': fresh[0] == 2 and e['fresh'][1] == ['a2-'] and ok2 and summ2.get('identities') == 'current'}
+                  'a budget made after the change takes the current form': fresh[0] == 2 and e['fresh'][1] == ['a2-'] and ok2 and summ2.get('identities') == 'current',
+                  'an attempt of the earlier form added to a budget of the current form, by the service\'s own role, stops its runs: refused, nothing run (it fails closed)':
+                      mixed_after[0] == 4 and 'two forms of identity' in mixed_after[1] and calls_m2 == calls_m}
     finally:
         front_door.request_key, front_door.identity_form, governor_module.attempt_id, governor_module.Governor._call_host = saved
         s.stop()

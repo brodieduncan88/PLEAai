@@ -97,7 +97,8 @@ def request_key(arguments: dict, legacy: bool = False) -> str:
     """The same rule plea_mcp.py uses: the tool name and a hash of its canonical arguments.  Never chosen by the caller.
     Amendment 17 (22 November 2026, D21): the whole hash.  At 96 bits two designs met after about 2^48 hashes, and the
     second was then a repeat of the first: same request key, same attempt, the first design's stored verdict.  legacy=True
-    gives the earlier 96-bit form, only to find the designs of runs made before; no new run is made under it."""
+    gives the earlier 96-bit form: to find the designs of runs made before, and for every run on a budget that already holds
+    runs of that form (plea_gateway.governor.identity_form), which keeps it."""
     h = hashlib.sha256(canonical(arguments).encode()).hexdigest()
     return f'{TOOL}:' + (h[:24] if legacy else h)
 

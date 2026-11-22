@@ -470,3 +470,18 @@ copy on the diagnostic branch is not changed.
 | D6 | implemented; development runs pass (R1 to R13 through the front door; gate 27 of 32 then the other five on their route; front 34 of 35 then F12) | the A4 commit (named in a later entry) | `tests/amend17_dev_evidence/a4_run1/`, `a4_run2_gate5.json`, `a4_run2_f12.json` | not yet | five gate tests (R14, R17, R18, R25, R26) still reach the service through a copy of the first client's transport, kept in `tests/` as the service's own caller (CAP-DB); `verify/experiment/` cannot be run again as it stands |
 | D35 | implemented (the readmes' lines corrected) | the A4 commit | `verify/README.md`, `verify/README_FRONT.md` | not yet | the register's own D35 row cites a file not in this tree (G-1) |
 | F1, F2 (front-door tests) | retired with the first client; their properties carried by R30 and F7 | the A4 commit | comment at the head of the front suite | not yet | their results before Amendment 17 stand as they were |
+
+### G6. 22 November 2026: the second review; the A4 commit named; what F2's retirement leaves
+
+- The A4 commit of G5 is `e1f1082`. G5's words "R1 to R13 pass there" rest on a run made before a change to the front door
+  in that same commit (the second review, M5). The full suites are run again before the declaration.
+- **D16:** two HIGH findings of the second review are corrected in development, not yet declared.
+  - A revocation the revoked job never saw could be undone by putting back the file and restarting.
+  - Changing the authority's certificate file emptied the record of revocations.
+- **D20:** a control of 29 significant digits far from its limit was still baselined, with every run on it UNKNOWN (the
+  second review, M4). Corrected in development.
+- **D21 / the identity:** the service's role could turn a budget to the earlier form (M3). Corrected in development: a
+  budget of mixed forms makes no further run.
+- **Finding 2 (D6), stated rather than "carried":** one design that leaves a record unable to verify is refused at the front
+  door (F7). A holder of the service's own role can still send one, since nothing in the gateway refuses a NUL or a
+  number that is not finite (the second review, M7). Open.

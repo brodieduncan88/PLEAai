@@ -51,7 +51,7 @@ from cryptography.hazmat.primitives import serialization
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from plea_gateway import tls as TLS                                   # noqa: E402
-from baseline import BaselineInvalid, root_for                        # noqa: E402
+from baseline import BaselineInvalid, canonical, root_for             # noqa: E402  (canonical: Amendment 17)
 from front_door import JOB_NAME, RESERVED, binding_message, binding_valid, jobs_path, read_jobs   # noqa: E402
 from verify_record import Key, load_envelope, now                     # noqa: E402
 import verify_ctl                                                     # noqa: E402
@@ -103,6 +103,18 @@ def _deliverable(home, baseline_hash: str, wait: float) -> None:
         time.sleep(0.1)
     raise Refused(f'{notices.DELIVERY_WORDS[state]} ({baseline_hash[:16]}…), so a failure might not reach its engineer.  Start the gate if it is not '
                   f'running, make the inbox writable by the gate\'s account, and try again.  Nothing was changed.')
+
+
+def _record(binding: dict, realm, control_dsn) -> str | None:
+    """Amendment 17 (after the second review, H1): put the binding to the database's record of bindings before jobs.json is
+    replaced, so that a revocation is recorded whether or not the front door, or the revoked job, ever reads it.  With no realm
+    nothing is recorded here, and the front door records it when it reads the file.  Returns the record's answer."""
+    if realm is None:
+        return None
+    import front_state
+    from plea_gateway import Store
+    return front_state.observe(Store(control_dsn), front_state.state_name(realm, binding['job']), binding['seq'],
+                               hashlib.sha256(canonical(binding).encode()).hexdigest(), binding['event'] == 'REVOKE')
 
 
 def _write(home, binding: dict) -> None:
@@ -167,7 +179,7 @@ def enrol(home, job: str, baseline_hash: str, key: Key, ca_cert_pem: bytes, ca_k
     return binding
 
 
-def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0) -> dict:
+def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0, realm: str | None = None, control_dsn: str = verify_ctl.CONTROL_DSN) -> dict:
     """Move a job to a revision of its baseline.  Refused unless the new baseline says it supersedes the one in force."""
     cur = _current(home, job, key)
     if cur['event'] == 'REVOKE':
@@ -181,17 +193,29 @@ def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0) -> dict:
                       f'own baseline (verify_ctl.py revise), so that the change and what had failed are on the record.')
     _deliverable(home, new_hash, wait)                   # Amendment 8 (D3): the same check is needed for the revision
     binding = _signed('REBIND', cur['seq'] + 1, job, env, cur['cert_sha256'], cur['baseline_sha256'], None, key)
+    try:
+        answer = _record(binding, realm, control_dsn)
+    except Exception as exc:
+        raise Refused(f'the move could not be recorded in the database ({type(exc).__name__}); nothing was written') from None
+    if answer not in (None, 'CURRENT'):
+        raise Refused(f'{job}: the database\'s record of bindings answers {answer}; nothing was written')
     _write(home, binding)
     return binding
 
 
-def revoke(home, job: str, key: Key) -> dict:
+def revoke(home, job: str, key: Key, realm: str | None = None, control_dsn: str = verify_ctl.CONTROL_DSN) -> dict:
+    """Revoke a job.  Amendment 17: with the front door's realm, the revocation is recorded in the database first; if that
+    cannot be done it is refused, and nothing is written (the engineer is told, and can give the realm again or not at all)."""
     cur = _current(home, job, key)
     if cur['event'] == 'REVOKE':
         raise Refused(f'{job} is already revoked')
     b = {'event': 'REVOKE', 'seq': cur['seq'] + 1, 'job': job, 'baseline_sha256': cur['baseline_sha256'], 'root': cur['root'], 'cert_sha256': cur['cert_sha256'],
          'previous': cur['baseline_sha256'], 'time': now(), 'note': None}
     binding = dict(b, signer=key.public_hex, signature=key.sign(binding_message(b)))
+    try:
+        _record(binding, realm, control_dsn)
+    except Exception as exc:
+        raise Refused(f'the revocation could not be recorded in the database ({type(exc).__name__}); nothing was written') from None
     _write(home, binding)
     return binding
 
@@ -218,6 +242,7 @@ def main():
     ap.add_argument('--witness-url', help='record: ask the witness for a checkpoint and put it in the record (Amendment 10)')
     ap.add_argument('--tls-ca'); ap.add_argument('--tls-cert'); ap.add_argument('--tls-key')
     ap.add_argument('--wait', type=float, default=15.0, help='seconds enrol and rebind wait for the gate to show it can write the inbox (Amendment 8)')
+    ap.add_argument('--realm', help='the front door\'s realm: rebind and revoke are recorded in the database first (Amendment 17); needs PLEA_CONTROL_DSN')
     a = ap.parse_args()
     try:
         if a.action == 'jobs':
@@ -228,9 +253,9 @@ def main():
         if a.action == 'enrol':
             b = enrol(a.home, a.rest[0], a.rest[1], key, pathlib.Path(a.ca).read_bytes(), pathlib.Path(a.ca_key).read_bytes(), a.url, a.out, a.reason, a.days, a.wait)
         elif a.action == 'rebind':
-            b = rebind(a.home, a.rest[0], a.rest[1], key, a.wait)
+            b = rebind(a.home, a.rest[0], a.rest[1], key, a.wait, realm=a.realm)
         elif a.action == 'revoke':
-            b = revoke(a.home, a.rest[0], key)
+            b = revoke(a.home, a.rest[0], key, realm=a.realm)
         else:
             rec = record(a.home, a.rest[0], key, a.witness_key, a.gate_key,
                          checkpointer=verify_ctl.witness_checkpointer(a.witness_url, a.tls_ca, a.tls_cert, a.tls_key) if a.witness_url else None)

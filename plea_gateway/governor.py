@@ -104,6 +104,11 @@ def _raise_for(decision: Decision, observation: dict, stage: str):
 
 
 LEGACY_AID = re.compile(r'a-[0-9a-f]{16}')
+CURRENT_AID = re.compile(r'a2-[0-9a-f]{64}')
+
+
+class IdentityFormsMixed(Exception):
+    """A budget holds attempts of both forms of identity: no further attempt is made on it (Amendment 17, second review M3)."""
 
 
 def attempt_id(request_key: str, legacy: bool = False) -> str:
@@ -122,11 +127,20 @@ def identity_form(store, root: str) -> str:
     Without this, a budget with runs from before the change got attempts of the new form for the same request keys: a call
     made before and retried after was run a second time, a design sent again was charged again, a pending run was left for
     ever, and the budget's record mixed two forms and could not verify.  A budget of the earlier form keeps 64-bit identities;
-    the engineer moves to the current form by baselining again.  A caller holding the service's database role can make a new
-    budget's first attempt one of the earlier form and so keep that budget at 64 bits; that role can already refuse runs on a
-    budget in other ways.  UnknownRoot is raised for a budget that does not exist, as the attempt itself would raise it."""
+    the engineer moves to the current form by baselining again.
+
+    A budget whose attempts are of both forms makes no further attempt: IdentityFormsMixed is raised, and nothing is run (after
+    the second review, M3: the rule was once "any attempt of the earlier form", so a caller holding the service's database role
+    could add one to a budget of the current form and turn it to 64 bits, after which a design decided before was run again).
+    That role can still make a new budget's first attempt one of the earlier form, and so keep that budget at 64 bits, or add
+    one to a budget of the current form and so stop all its runs; it can already refuse runs on a budget in other ways.  Names
+    of neither form (made by that role) do not count.  UnknownRoot is raised for a budget that does not exist, as the attempt
+    itself would raise it."""
     obs = store.observe(root)
-    return 'legacy' if any(LEGACY_AID.fullmatch(str(a[0])) for a in obs.get('attempts', ())) else 'current'
+    forms = {'legacy' if LEGACY_AID.fullmatch(str(a[0])) else 'current' if CURRENT_AID.fullmatch(str(a[0])) else None for a in obs.get('attempts', ())} - {None}
+    if len(forms) > 1:
+        raise IdentityFormsMixed(f'{root}: its attempts are of both forms of identity; no further attempt is made on it')
+    return 'legacy' if forms == {'legacy'} else 'current'
 
 
 def _phase_in(observation: dict, aid: str):
