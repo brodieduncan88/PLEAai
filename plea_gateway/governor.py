@@ -38,6 +38,7 @@ What v0.6 changed, after the v0.4 review:
 The local store holds the plea_local credential, so even this code cannot apply an acceptance itself (W1).
 """
 import hashlib
+import re
 
 from .binding import nonce_for
 from .evidence import GateSigner, OutcomeInvalid, verify_effect_report
@@ -102,12 +103,30 @@ def _raise_for(decision: Decision, observation: dict, stage: str):
     raise GovernedError(decision, stage)
 
 
-def attempt_id(request_key: str) -> str:
+LEGACY_AID = re.compile(r'a-[0-9a-f]{16}')
+
+
+def attempt_id(request_key: str, legacy: bool = False) -> str:
     """Amendment 17 (22 November 2026, D21): the whole SHA-256 of the request key, 256 bits, marked 'a2-'.  Before it the
     identity was 'a-' and 64 bits, so two request keys met after about 2^32 hashes and the second was refused for ever
-    (the store's ATTEMPT_BOUND_TO_OTHER_REQUEST).  Records made before keep their 'a-' identities; check_record.py
-    reads both forms, never mixed within one record."""
-    return 'a2-' + hashlib.sha256(request_key.encode()).hexdigest()
+    (the store's ATTEMPT_BOUND_TO_OTHER_REQUEST).  legacy=True gives that earlier form, for a budget that already holds it
+    (identity_form): such a budget keeps it, so that a call made before the change, retried after it, is the same attempt."""
+    h = hashlib.sha256(request_key.encode()).hexdigest()
+    return 'a-' + h[:16] if legacy else 'a2-' + h
+
+
+def identity_form(store, root: str) -> str:
+    """The form of attempt identity, and of request key, a budget uses for every attempt: 'legacy' when it already holds an
+    attempt of the 64-bit form made before Amendment 17, else 'current'.  (Amendment 17, after its first review, H1.)
+
+    Without this, a budget with runs from before the change got attempts of the new form for the same request keys: a call
+    made before and retried after was run a second time, a design sent again was charged again, a pending run was left for
+    ever, and the budget's record mixed two forms and could not verify.  A budget of the earlier form keeps 64-bit identities;
+    the engineer moves to the current form by baselining again.  A caller holding the service's database role can make a new
+    budget's first attempt one of the earlier form and so keep that budget at 64 bits; that role can already refuse runs on a
+    budget in other ways.  UnknownRoot is raised for a budget that does not exist, as the attempt itself would raise it."""
+    obs = store.observe(root)
+    return 'legacy' if any(LEGACY_AID.fullmatch(str(a[0])) for a in obs.get('attempts', ())) else 'current'
 
 
 def _phase_in(observation: dict, aid: str):
@@ -276,7 +295,7 @@ class Governor:
         return self._settle(aid, nonce, out)
 
     def attempt(self, request_key: str, fn_or_tool, *args, **kwargs):
-        aid = attempt_id(request_key)
+        aid = attempt_id(request_key, identity_form(self.store, self.root) == 'legacy')     # Amendment 17: the budget's own form
         tool, arguments = self._action(fn_or_tool, args, kwargs)
         nonce = nonce_for(self.root, aid, self.executor, tool, arguments)
         stored = self.store.get_result(self.root, aid)

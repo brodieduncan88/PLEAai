@@ -165,3 +165,56 @@ the owner's rules VP-1 to VP-6 (`plan/GOVERNANCE_NOTE_2026-11-22.md`). Nothing h
   read when a binding is first put to the record. Without it, nobody is admitted (StateUnavailable, then 503).
 - **Declared before run 2 (VP-5).** `tests/verify_tests.py` has SHA-256 `b028a3631da5074f5253235fc982da7226fb975568776668e8e5afea3baedbeb`. Expected: R14, R17, R18, R25, R26 and F12
   pass.
+
+## Entry 10. The first review of A1, and what it changed
+
+- **The review.** A separate agent, instructed by the author, reviewed `d187172` read-only and started no deployment. That
+  is internal review, not independent validation. Its report is kept as returned in
+  `verify/reviews/AMEND17_REVIEW_A1_2026-11-22.md`, and its probes and their outputs in
+  `tests/amend17_dev_evidence/review_a1_probes/`.
+- **H1 (HIGH), accepted.** The change of identity had no path for a budget with runs from before it. A design sent before
+  and again after was run and charged again, a pending run was left for ever, a call in flight across the change was run
+  twice, and such a budget's record mixed two forms and could not verify. Corrected:
+  - `governor.identity_form(store, root)`: a budget that already holds an attempt of the 64-bit form keeps that form,
+    for its identities (governor) and its request keys (front door, the gateway's MCP server). A new budget takes the
+    current form.
+  - What stays (stated in the code): such a budget keeps 64-bit identities until the engineer baselines again; and a
+    holder of the service's role can make a new budget's first attempt one of the earlier form.
+- **M1 (MEDIUM), accepted.** R31's check of a mixed record was vacuous: the record it edited failed check 5 for other
+  reasons. Now R31 makes a real record with one run of each form, each with its design (the governor's rule taken out in
+  the test's process), and requires check 5 alone to fail, for that reason.
+- **M2 (MEDIUM), accepted.** R31's cases b and c show the governor's nonce, a property from before this amendment; they do
+  not test the widening. Their checks now say so. The widening is shown by case a, and the front door's own check by
+  case d.
+- **M3 (MEDIUM), answered in part.** A D5 refusal is made after the attempt has crossed. The unit is spent, and nothing is
+  signed. The review said it is not noticed. The courier does notice it ("admitted and has no outcome", Amendment 11).
+  R30 now checks that. That the unit is not refunded stays, as a limitation: only a holder of the service's role can make
+  such an attempt, and it can spend units in other ways too.
+- **L1, accepted.** The gateway's MCP servers' list of tools failed on a tool entry with a binder (four fields). Corrected
+  in `mcp/plea_mcp.py` and `mcp/vanilla_mcp.py`. In-process mode never asks the binder; that mode holds the gate's key,
+  so it is outside D5.
+- **L2:** moot; the first client is retired (A4).
+- **L3, accepted.** The record's label of its form now comes from the identities alone when no run gives its design. It
+  decides no check.
+- **L4:** met by H1's correction: within one budget the keys are of one form.
+- **L5:** cosmetic; noted.
+- **R33 (new):** the change itself. Runs are made by the earlier code, emulated in the test's process by its two rules,
+  then the same budget is served by the code as it is now.
+- **Declared before the run (VP-5).** `tests/verify_tests.py` has SHA-256 `477b4478c30f55e69d4130843da5a47dce49aa9bae64dfd417294079872f16f2`. Expected:
+  - R30: 6 of 6;
+  - R31: 7 of 7;
+  - R33: 5 of 5;
+  - the gateway's chain: 22 of 22;
+  - and, when the full suites are next run, every test passes.
+
+## Entry 11. R31 stopped with an error; R30 and R33 passed
+
+- **Run** (R30, R31, R33, as declared in entry 10): R30 and R33 passed. R31 stopped with an error before its checks were
+  judged. In case c it puts a 16-bit stand-in for `attempt_id` into the governor, and the stand-in took one argument,
+  where the governor now passes two (the form of the budget).
+- **Kept, and changed.** Kept in `tests/amend17_dev_evidence/a1b_run1/`. The stand-in now takes the second argument and
+  ignores it, as the earlier stand-in of case b does. No check is changed.
+- **Declared before the next run.** The test file has SHA-256 `36dd6c5382f967bb2a3acd0923aa5a376def7f5353b0b93715a1564ec4f51cc3`. Expected: R31, 7 of 7.
+- **Run 2 of R31:** passed. Entry 10 declared "R31: 7 of 7". R31 has six checks, so that count was wrong: an error in the
+  declaration, recorded here, not a seventh check that went missing. All six passed. Kept in
+  `tests/amend17_dev_evidence/a1b_run2_r31.json`.

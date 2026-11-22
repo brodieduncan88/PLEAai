@@ -419,6 +419,15 @@ def identity_form(attempts) -> str | None:
     return 'current' if not forms else forms.pop() if len(forms) == 1 else None
 
 
+def identity_label(attempts) -> str | None:
+    """What the record's print says of its form (Amendment 17, after review L3): the form its runs with a design carry, or, when
+    none has one, the form of the identities alone.  It decides no check."""
+    if any(isinstance(a.get('arguments'), dict) for a in attempts):
+        return identity_form(attempts)
+    aids = {('current' if re.fullmatch(r'a2-[0-9a-f]{64}', str(a.get('aid'))) else 'legacy' if re.fullmatch(r'a-[0-9a-f]{16}', str(a.get('aid'))) else None) for a in attempts}
+    return 'current' if not aids else aids.pop() if len(aids) == 1 else None
+
+
 def nonce_for(root, aid, executor, tool, arguments) -> str:
     return 'n-' + sha(canonical({'root': root, 'aid': aid, 'executor': executor, 'tool': tool, 'arguments': arguments}))[:40]
 
@@ -798,7 +807,7 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
                'unknown': sum(r['outcome'] not in ('PASS', 'FAIL') for r in rows_out), 'open': sum(1 for r in rows_out if r['outcome'] != 'PASS' and not r['acknowledged']),
                'status': 'DECLARED CHECK MET' if ok and met else 'NOT VERIFIED', 'met_designs': [r['design_sha256'] for r in met], 'released': released,
                'as_of': as_of, 'keys_pinned': pinned, 'receipts': n_receipts, 'audit_rows': len(audit),
-               'identities': ident,          # Amendment 17 (D21): 'current', 'legacy' (64-bit, before 22 November 2026) or None (mixed)
+               'identities': identity_label(attempts),   # Amendment 17 (D21): 'current', 'legacy' (64-bit, before 22 November 2026) or None (mixed)
                'checkpoint': ({k: cp.get(k) for k in ('seq', 'time', 'business', 'witness', 'at')} if isinstance(cp, dict) and not problems[9] else None),
                'delivery': None if deliveries is None or problems[10] else {'unchecked': unchecked, 'notices': len(deliveries) if isinstance(deliveries, list) else 0} if unchecked else {
                    'due': [{'aid': r['aid'], 'outcome': r['outcome'], 'delivered': r['outcome'] in delivered.get(r['aid'], ())} for r in rows_out if r['outcome'] in DUE],

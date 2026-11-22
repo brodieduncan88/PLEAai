@@ -1,0 +1,11 @@
+--- tests/amend17_dev_evidence/a1b_run1/verify_tests.py.as_run	2026-11-22 00:25:30.757986102 +0000
++++ tests/verify_tests.py	2026-11-22 00:25:30.762808450 +0000
+@@ -3367,7 +3367,7 @@
+                 if case == 'front_door_check':           # the governor's nonce and signed-report checks on a stored outcome, taken out
+                     governor_module.Governor._replay = lambda self, outcome, nonce, aid=None, tool=None, arguments=None: outcome['value']
+             else:
+-                narrow = lambda key: 'a2-' + sha(key)[:width]
++                narrow = lambda key, legacy=False: 'a2-' + sha(key)[:width]
+                 good, bad = meeting(lambda d: sha(request_key(arguments_for(h, d))), width)
+                 governor_module.attempt_id = narrow
+             calls0 = len(s.ledger('called'))

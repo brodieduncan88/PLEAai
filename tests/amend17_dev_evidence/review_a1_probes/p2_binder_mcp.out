@@ -1,0 +1,15 @@
+E1 ok                           -> True
+E1 req id with slash            -> True
+E1 upper h                      -> False
+E1 upper root only              -> False
+E1 32-hex h                     -> False
+E1 missing                      -> False
+E1 non-str                      -> False
+E1 fullwidth digits             -> False
+E1 no slash                     -> False
+E1 trailing slash               -> False
+E1 root full hash               -> False
+E1 root None                    -> False
+E1 args list                    -> False
+E1 other baseline same root     -> False
+E2 list_tools raised ValueError too many values to unpack (expected 3)

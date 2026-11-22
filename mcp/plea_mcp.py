@@ -39,6 +39,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from plea_gateway import (BudgetExhausted, GateHostClient, GateRefusedRun, GateSigner, Governor, Held, InProgress,  # noqa: E402
                           NoEffect, OutcomeInvalid, RemoteWitness, RequestKeyReused, Store, Stopped, VerdictRefused)
 from plea_gateway.tls import add_client_args, client_from_args    # noqa: E402
+from plea_gateway.governor import identity_form                   # noqa: E402  (Amendment 17)
 
 PROTOCOL = '2024-11-05'
 
@@ -47,8 +48,10 @@ def canonical(value) -> str:
     return json.dumps(value, sort_keys=True, separators=(',', ':'))
 
 
-def request_key(name: str, arguments: dict) -> str:
-    return f'{name}:' + hashlib.sha256(canonical(arguments).encode()).hexdigest()       # Amendment 17 (D21): the whole hash, not 96 bits
+def request_key(name: str, arguments: dict, legacy: bool = False) -> str:
+    """Amendment 17 (D21): the whole hash, not 96 bits; legacy=True for a budget that already holds the earlier form."""
+    h = hashlib.sha256(canonical(arguments).encode()).hexdigest()
+    return f'{name}:' + (h[:24] if legacy else h)
 
 
 class UpstreamStdio:
@@ -97,7 +100,7 @@ class GovernedServer:
 
     # ------------------------------------------------------------------ tools
     def list_tools(self) -> list:
-        listed = [{'name': n, 'description': d, 'inputSchema': schema} for n, (d, schema, _) in self.tools.items()]
+        listed = [{'name': n, 'description': d, 'inputSchema': schema} for n, (d, schema, *_) in self.tools.items()]   # Amendment 17: an entry may carry a binder
         if self.upstream:
             listed += self.upstream.tools()
         if self.host:
@@ -110,7 +113,7 @@ class GovernedServer:
         if name == 'plea_status':
             return {'content': [{'type': 'text', 'text': json.dumps(self.gov.status())}], 'isError': False}
         arguments = dict(arguments or {})
-        key = arguments.pop('_plea_request_key', None) or request_key(name, arguments)
+        key = arguments.pop('_plea_request_key', None) or request_key(name, arguments, legacy=identity_form(self.gov.store, self.gov.root) == 'legacy')
         if self.host:
             run = name                                  # host mode: the governor sends the tool name to the gate host
         elif name in self.tools:

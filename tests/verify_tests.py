@@ -3273,6 +3273,9 @@ def r30():
             v = service_governor(s, root_a).attempt(own_key, 'verify', **own); matched = v.get('verdict') if isinstance(v, dict) else repr(v)[:80]
         except Exception as exc:
             matched = f'refused: {type(exc).__name__}: {str(exc)[:160]}'
+        c_code, c_sum = s.courier([root_a], 0)                                        # Amendment 17, after review M3: the refused attempt is not silent
+        noticed = sorted(x.get('outcome') for x in (c_sum.get('made') or []) if x.get('aid') == aid) if isinstance(c_sum, dict) else c_sum
+        e.update(courier=(c_code, noticed))
         e.update(honest=(honest[0], head(honest[1])), told=told, again=again, tool_calls=(before, after, len(s.ledger('called'))), attempt=dict(phase=mine.get('phase'), outcome=mine.get('outcome'),
                  evidence=len(mine.get('evidence') or [])), record_a=dict(verifies=ok_a, why=[f'{n} {t}: {d}' for n, t, good, d in checks_a if not good], status=s_a.get('status'),
                  outcomes=sorted(x['outcome'] for x in s_a.get('runs', []))), record_b=dict(verifies=ok_b, runs=s_b.get('official_runs')), notices_b=len(s.inbox(hb)), matched=matched)
@@ -3281,7 +3284,8 @@ def r30():
                   'naming baseline B on A\'s budget, the caller is refused by the gate host, twice, and is told no verdict': refused(told) and refused(again),
                   'the check was not run for it, and no report was signed for it': after == before and mine.get('outcome') != 'PASS' and e['attempt']['evidence'] == 0,
                   'B shows no run and no notice; A\'s record verifies and shows no pass': ok_b and s_b.get('official_runs') == 0 and e['notices_b'] == 0 and ok_a and s_a.get('met') == 0,
-                  'the same caller naming A on A\'s budget is still run and decided: only a mismatch is refused': matched == 'PASS'}
+                  'the same caller naming A on A\'s budget is still run and decided: only a mismatch is refused': matched == 'PASS',
+                  'the refused attempt is counted and not silent: a courier pass tells the engineer it was admitted and has no outcome': c_code == 0 and noticed == ['NO_OUTCOME']}
     finally:
         s.stop()
     return checks, e
@@ -3321,11 +3325,20 @@ def r31():
         rec = r.record(h); ok, checks_, summ = check_record.verify(rec, r.keys)
         a = rec['attempts'][0] if rec.get('attempts') else {}
         text = check_record.render(ok, checks_, summ)
-        mixed = json.loads(json.dumps(rec)); mixed['attempts'][0]['aid'] = 'a-' + sha(mixed['attempts'][0]['request_key'])[:16]
-        body = {k: v for k, v in mixed.items() if k != 'signature'}; mixed = dict(body, signature={'signer': r.engineer.public_hex, 'signature': r.engineer.sign(canonical(body).encode())})
+        # a record that really holds runs of both forms, each with its design: a second run made, with the service's own role, by a
+        # writer that ignores the budget's form (the governor's rule taken out in this process), with the earlier 96-bit key
+        saved_form = governor_module.identity_form
+        try:
+            governor_module.identity_form = lambda store, root: 'legacy'
+            old_args = arguments_for(h, GOOD); service_governor(r, B.root_for(env['card'])).attempt(request_key(old_args, legacy=True), 'verify', **old_args)
+        finally:
+            governor_module.identity_form = saved_form
+        mixed = r.record(h)
         ok_mixed, checks_mixed, _ = check_record.verify(mixed, r.keys)
+        mixed_words = [d for n, t_, g, d in checks_mixed if not g and n == 5]
         e['full'] = dict(exit=code, aid=a.get('aid'), key=a.get('request_key'), verifies=ok, identities=summ.get('identities'), mixed_verifies=ok_mixed,
-                         mixed_fails=[n for n, _, good, _ in checks_mixed if not good])
+                         mixed_fails=[n for n, _, good, _ in checks_mixed if not good], mixed_words=mixed_words,
+                         mixed_forms=sorted(str(x.get('aid'))[:3] for x in mixed.get('attempts', [])))
     finally:
         r.stop()
     sample = json.loads((GATEWAY / 'verify' / 'sample' / 'record_revA.json').read_text()); skeys = json.loads((GATEWAY / 'verify' / 'sample' / 'keys.json').read_text())
@@ -3335,7 +3348,9 @@ def r31():
         e['full']['exit'] == 2 and re.fullmatch(r'a2-[0-9a-f]{64}', str(e['full']['aid'])) is not None and re.fullmatch(r'verify:[0-9a-f]{64}', str(e['full']['key'])) is not None
         and e['full']['verifies'] and e['full']['identities'] == 'current')
     checks['a record made before, with 64-bit identities, still verifies, and says which form it is'] = ok_s and sum_s.get('identities') == 'legacy' and len(e['legacy_sample']['says']) == 1
-    checks['a record whose runs mix the two forms fails at check 5'] = not e['full']['mixed_verifies'] and 5 in e['full']['mixed_fails']
+    checks['a record whose runs, each with its design, are of both forms fails at check 5 only, for that reason'] = (
+        not e['full']['mixed_verifies'] and e['full']['mixed_fails'] == [5] and sorted(f[:2] for f in e['full']['mixed_forms']) == ['a-', 'a2']
+        and any('not all of one form' in w for w in e['full']['mixed_words']))
     # (b), (c) and (d): a front door in this process, given a 16-bit key, then a 16-bit attempt identity, then the 16-bit key with the
     # governor's own replay guard taken out (in this process only), so that the front door's check of the design is reached
     for case, width in (('request_key', 4), ('attempt_id', 4), ('front_door_check', 4)):
@@ -3352,7 +3367,7 @@ def r31():
                 if case == 'front_door_check':           # the governor's nonce and signed-report checks on a stored outcome, taken out
                     governor_module.Governor._replay = lambda self, outcome, nonce, aid=None, tool=None, arguments=None: outcome['value']
             else:
-                narrow = lambda key: 'a2-' + sha(key)[:width]
+                narrow = lambda key, legacy=False: 'a2-' + sha(key)[:width]
                 good, bad = meeting(lambda d: sha(request_key(arguments_for(h, d))), width)
                 governor_module.attempt_id = narrow
             calls0 = len(s.ledger('called'))
@@ -3368,8 +3383,10 @@ def r31():
     # that the governor's own nonce check refuses the second design (RequestKeyReused) before the store or the front door's new
     # check is reached.  The kept source and output are in tests/amend17_dev_evidence/r31_run1/.
     refused_by_governor = lambda x: x['first'][:2] == (200, 'PASS') and x['second'][0] == 502 and x['second'][2] is not True and 'RequestKeyReused' in x['second'][3] and x['tool_calls'] == 1
-    checks['with a 16-bit request key, the second design shares the first one\'s key; the governor refuses it, it is not run, and it is not told the first one\'s pass'] = refused_by_governor(k)
-    checks['with a 16-bit attempt identity, the second design is refused in the same way: not run, no verdict'] = refused_by_governor(i)
+    # Restated after the first review (M2): cases b and c show a property from before Amendment 17, the governor's nonce, at 16 bits.
+    # They do not depend on the widening; the widening is shown by case a, and the front door's own check by case d.
+    checks['with a 16-bit request key, the second design shares the first one\'s key; the governor\'s nonce refuses it (a property from before this amendment): it is not run, and it is not told the first one\'s pass'] = refused_by_governor(k)
+    checks['with a 16-bit attempt identity, the governor\'s nonce refuses the second design in the same way (a property from before this amendment): not run, no verdict'] = refused_by_governor(i)
     checks['with the governor\'s replay guard taken out as well, the front door refuses the first design\'s verdict for the second design'] = (
         f['first'][:2] == (200, 'PASS') and f['second'][0] == 502 and f['second'][2] is not True and 'not for this design' in f['second'][3] and f['tool_calls'] == 1)
     return checks, e
@@ -3428,7 +3445,52 @@ def r32():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31, 'R32': r32}
+def r33():
+    """Amendment 17, after its first review (H1).  A budget with runs made before the change keeps their form: a design sent before is not run or charged again after, a run left pending then is finished as the same attempt, and its record still verifies; a new budget takes the current form."""
+    import hashlib
+    sha = lambda x: hashlib.sha256(x.encode()).hexdigest()
+    s = deploy_front.FrontServices(OUT / 'R33').start(); e = {}
+    saved = (front_door.request_key, front_door.identity_form, governor_module.attempt_id, governor_module.Governor._call_host)
+    try:
+        env = s.baseline(CASE, draft()); h = env['baseline_sha256']; root = B.root_for(env['card']); job = s.enrol('job-r33', h)
+        # before: the code as it was at 1b132e2, in this process (its two rules: a 96-bit request key and a 64-bit identity)
+        s.stop_front(); front = in_process_front(s); binding = front_door.read_jobs(s.home)['job-r33']
+        front_door.request_key = lambda args, legacy=False: 'verify:' + sha(canonical(args))[:24]
+        front_door.identity_form = lambda store, root: 'current'
+        governor_module.attempt_id = lambda key, legacy=False: 'a-' + sha(key)[:16]
+        st1, b1 = front.submit(binding, BAD)                                           # a failure, before
+        def lost(self, *a, **k):
+            raise ConnectionError('the gate host could not be reached (made so by the test)')
+        governor_module.Governor._call_host = lost
+        st2, b2 = front.submit(binding, GOOD)                                          # admitted and crossed, then left pending, before
+        front_door.request_key, front_door.identity_form, governor_module.attempt_id, governor_module.Governor._call_host = saved
+        before_calls = [x.get('design') for x in s.ledger('called')]
+        # after: the front door as it is now, in its own process
+        s.start_front()
+        again_bad = s.cli(job, 'submit', BAD); again_good = s.cli(job, 'submit', GOOD); new_design = s.cli(job, 'submit', dict(BAD, wall_mm=3.5))
+        calls = [x.get('design') for x in s.ledger('called')]
+        ok, checks_, summ = check_record.verify(s.record(h), s.keys)
+        rec = s.record(h); aids = sorted(str(a.get('aid')) for a in rec.get('attempts', []))
+        env2 = s.baseline(CASE, draft(), alongside_reason='a new baseline after the change, as the test needs'); job2 = s.enrol('job-r33-new', env2['baseline_sha256'], reason='a new job after the change, as the test needs')
+        fresh = s.cli(job2, 'submit', BAD); rec2 = s.record(env2['baseline_sha256']); ok2, _, summ2 = check_record.verify(rec2, s.keys)
+        e.update(before=[(st1, b1.get('outcome')), (st2, b2.get('refused'))], before_calls=len(before_calls), again_bad=(again_bad[0], head(again_bad[1])), again_good=(again_good[0], head(again_good[1])),
+                 new_design=(new_design[0], head(new_design[1])), calls=len(calls), good_runs=sum(d == GOOD for d in calls), aids=aids, record_verifies=ok,
+                 why=[f'{n} {t_}: {d}' for n, t_, g, d in checks_ if not g], identities=summ.get('identities'), official_runs=summ.get('official_runs'),
+                 fresh=(fresh[0], [str(a.get('aid'))[:3] for a in rec2.get('attempts', [])], ok2, summ2.get('identities')))
+        legacy = lambda a: re.fullmatch(r'a-[0-9a-f]{16}', a) is not None
+        checks = {'before the change, a failure is decided and a passing design is left pending, both as 64-bit attempts': st1 == 200 and b1.get('outcome') == 'FAIL' and st2 == 503 and len(before_calls) == 1,
+                  'after it, the failure sent again is the same attempt: the same FAIL, not run or charged again': again_bad[0] == 2 and head(again_bad[1]) == 'FAIL: REQUIREMENT NOT MET',
+                  'the pending design sent again is finished as the same attempt: run once, and it meets the check': again_good[0] == 0 and sum(d == GOOD for d in calls) == 1,
+                  'a new design on that budget is made in its form, and the record verifies: three runs, all 64-bit, said to be of the earlier form':
+                      new_design[0] == 2 and len(aids) == 3 and all(legacy(a) for a in aids) and ok and summ.get('identities') == 'legacy' and summ.get('official_runs') == 3,
+                  'a budget made after the change takes the current form': fresh[0] == 2 and e['fresh'][1] == ['a2-'] and ok2 and summ2.get('identities') == 'current'}
+    finally:
+        front_door.request_key, front_door.identity_form, governor_module.attempt_id, governor_module.Governor._call_host = saved
+        s.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31, 'R32': r32, 'R33': r33}
 
 
 def main():

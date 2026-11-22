@@ -1,0 +1,129 @@
+{
+ "tests": {
+  "R30": {
+   "title": "Amendment 17 (D5).  An attempt admitted under one baseline's budget is never decided against another baseline: the gate host refuses it before it is claimed, runs nothing and signs nothing.",
+   "ok": true,
+   "checks": {
+    "sent honestly through the front door, the design fails against A (exit status 2)": true,
+    "naming baseline B on A's budget, the caller is refused by the gate host, twice, and is told no verdict": true,
+    "the check was not run for it, and no report was signed for it": true,
+    "B shows no run and no notice; A's record verifies and shows no pass": true,
+    "the same caller naming A on A's budget is still run and decided: only a mismatch is refused": true,
+    "the refused attempt is counted and not silent: a courier pass tells the engineer it was admitted and has no outcome": true
+   },
+   "evidence": {
+    "courier": [
+     0,
+     [
+      "NO_OUTCOME"
+     ]
+    ],
+    "honest": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "told": {
+     "refused": "GateRefusedRun",
+     "detail": "403: {\"error\": \"BASELINE_NOT_ADMITTED_BUDGET: the budget this attempt was admitted under is not the one its arguments would be decided against; nothing was run and nothing was signed\"}"
+    },
+    "again": {
+     "refused": "GateRefusedRun",
+     "detail": "403: {\"error\": \"BASELINE_NOT_ADMITTED_BUDGET: the budget this attempt was admitted under is not the one its arguments would be decided against; nothing was run and nothing was signed\"}"
+    },
+    "tool_calls": [
+     1,
+     1,
+     2
+    ],
+    "attempt": {
+     "phase": "CONSUMED",
+     "outcome": "PENDING",
+     "evidence": 0
+    },
+    "record_a": {
+     "verifies": true,
+     "why": [],
+     "status": "NOT VERIFIED",
+     "outcomes": [
+      "FAIL",
+      "PENDING"
+     ]
+    },
+    "record_b": {
+     "verifies": true,
+     "runs": 0
+    },
+    "notices_b": 0,
+    "matched": "PASS"
+   },
+   "seconds": 4.6
+  },
+  "R31": {
+   "title": "Amendment 17 (D21).  Request keys and attempt identities are the whole hash; where two designs share a narrower key, the second is refused, and is never given the first one's verdict.",
+   "ok": false,
+   "checks": {},
+   "error": "TypeError: r31.<locals>.<lambda>() takes 1 positional argument but 2 were given",
+   "seconds": 10.1
+  },
+  "R33": {
+   "title": "Amendment 17, after its first review (H1).  A budget with runs made before the change keeps their form: a design sent before is not run or charged again after, a run left pending then is finished as the same attempt, and its record still verifies; a new budget takes the current form.",
+   "ok": true,
+   "checks": {
+    "before the change, a failure is decided and a passing design is left pending, both as 64-bit attempts": true,
+    "after it, the failure sent again is the same attempt: the same FAIL, not run or charged again": true,
+    "the pending design sent again is finished as the same attempt: run once, and it meets the check": true,
+    "a new design on that budget is made in its form, and the record verifies: three runs, all 64-bit, said to be of the earlier form": true,
+    "a budget made after the change takes the current form": true
+   },
+   "evidence": {
+    "before": [
+     [
+      200,
+      "FAIL"
+     ],
+     [
+      503,
+      "UNAVAILABLE"
+     ]
+    ],
+    "before_calls": 1,
+    "again_bad": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "again_good": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "new_design": [
+     2,
+     "FAIL: REQUIREMENT NOT MET"
+    ],
+    "calls": 3,
+    "good_runs": 1,
+    "aids": [
+     "a-2223c5a11cb82eeb",
+     "a-955259151b2d8601",
+     "a-d54015ce7a0370d3"
+    ],
+    "record_verifies": true,
+    "why": [],
+    "identities": "legacy",
+    "official_runs": 3,
+    "fresh": [
+     2,
+     [
+      "a2-"
+     ],
+     true,
+     "current"
+    ]
+   },
+   "seconds": 7.4
+  }
+ },
+ "passed": 2,
+ "of": 3,
+ "seconds": 22.1,
+ "PASS": false
+}

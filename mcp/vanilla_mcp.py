@@ -18,7 +18,7 @@ def handle(msg):
     if method == 'ping':
         return {'jsonrpc': '2.0', 'id': rid, 'result': {}}
     if method == 'tools/list':
-        return {'jsonrpc': '2.0', 'id': rid, 'result': {'tools': [{'name': n, 'description': d, 'inputSchema': s} for n, (d, s, _) in TOOLS.items()]}}
+        return {'jsonrpc': '2.0', 'id': rid, 'result': {'tools': [{'name': n, 'description': d, 'inputSchema': s} for n, (d, s, *_) in TOOLS.items()]}}
     if method == 'tools/call':
         name, args = params.get('name'), params.get('arguments') or {}
         if name not in TOOLS:

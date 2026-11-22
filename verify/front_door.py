@@ -67,6 +67,7 @@ from plea_gateway import (BudgetExhausted, GateRefusedRun, GovernedError, Held, 
                           RequestKeyReused, Store, Stopped, TransportError, UnknownRoot, WitnessUnavailable)
 from plea_gateway.tls import TLSHandlerMixin, add_server_args, server_from_args, wrap_server   # noqa: E402
 from baseline import HEADLINE, canonical, design_hash, design_lines, face, root_for   # noqa: E402  (design_hash: Amendment 17)
+from plea_gateway.governor import identity_form             # noqa: E402  (Amendment 17)
 from service_client import Client, alongside_lines                   # noqa: E402  (Amendment 17: moved from verify_client, which is retired)
 from verify_record import PENDING_PHASES, arguments_for, load_envelope, request_key, request_keys, signed_by   # noqa: E402  (request_keys: Amendment 17)
 import notices                                                       # noqa: E402  (Amendment 7: a notice the inbox cannot take is kept, not lost)
@@ -687,7 +688,11 @@ class Front:
     def _submit(self, binding, design):
         c = self.client(binding)
         args = arguments_for(c.baseline, design)             # the baseline is the job's, never the caller's
-        key = request_key(args)
+        try:                                                 # Amendment 17: the request key in the form the budget already uses
+            legacy = identity_form(self.store, c.root) == 'legacy'
+        except UnknownRoot:
+            return 403, dict(self._head(binding, c), **refusal('NO_BUDGET', 'REFUSED: this baseline has no budget at the control plane.  It was not provisioned by the responsible engineer.'))
+        key = request_key(args, legacy=legacy)
         head = self._head(binding, c)
         unproven = self._delivery(c, key)                  # Amendment 8 (D3): no new run while a failure might not reach the engineer
         if unproven is not None:

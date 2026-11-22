@@ -1,0 +1,4 @@
+E1 verify:8694d7f2ea215d5ab6e35109 a-bb7027900ff196c9 | verify:8694d7f2ea215... a2-903faf7be... same attempt? False
+E2 [('a-bb70', True, 'PENDING'), ('a2-903', True, 'INVALID')]
+E3 identity_form None
+E4 current
