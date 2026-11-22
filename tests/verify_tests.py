@@ -3490,7 +3490,37 @@ def r33():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31, 'R32': r32, 'R33': r33}
+def r34():
+    """Amendment 17 (D6).  The first client, which held the gateway's database credential in an assistant's workspace, refuses to run, and no deployment writes such a workspace; an enrolled job's folder holds no database credential."""
+    e = {}
+    out = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'verify_client.py'), '--config', '/nonexistent/config.json', 'submit', '/nonexistent/design.json'],
+                         capture_output=True, text=True, timeout=60)
+    s = deploy.Services(OUT / 'R34')
+    tried = {}
+    for name, call in (('client_config', lambda: s.client_config(OUT / 'R34' / 'workspace', '0' * 64)), ('submit', lambda: s.submit(OUT / 'R34' / 'config.json', GOOD))):
+        try:
+            call(); tried[name] = 'returned'
+        except RuntimeError as exc:
+            tried[name] = 'refused' if 'retired by Amendment 17' in str(exc) else f'raised {exc!r}'[:120]
+        except Exception as exc:
+            tried[name] = f'raised {type(exc).__name__}'
+    wrote = (OUT / 'R34' / 'workspace').exists()
+    r = Run('R34'); held = {}
+    try:
+        for p in pathlib.Path(r.ws).rglob('*'):
+            if p.is_file():
+                text = p.read_text(errors='replace')
+                held[p.name] = {'dsn': 'postgresql://' in text or 'local_dsn' in text, 'password': any(w in text for w in (':local@', ':witness@', ':control@', ':plea@'))}
+    finally:
+        r.stop()
+    e.update(client=(out.returncode, (out.stdout + out.stderr).strip()[:200]), deploy=tried, workspace_written=wrote, job_folder=held)
+    checks = {'the first client refuses to run, ends with status 4, and names the front door\'s route': out.returncode == 4 and 'retired' in out.stderr and 'front_client.py' in out.stderr,
+              'the deployment\'s two helpers for it refuse, and write no workspace': tried == {'client_config': 'refused', 'submit': 'refused'} and not wrote,
+              'an enrolled job\'s folder, all the assistant\'s side is given, holds no database address and no role\'s password': bool(held) and not any(v['dsn'] or v['password'] for v in held.values())}
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31, 'R32': r32, 'R33': r33, 'R34': r34}
 
 
 def main():

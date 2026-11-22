@@ -218,3 +218,9 @@ the owner's rules VP-1 to VP-6 (`plan/GOVERNANCE_NOTE_2026-11-22.md`). Nothing h
 - **Run 2 of R31:** passed. Entry 10 declared "R31: 7 of 7". R31 has six checks, so that count was wrong: an error in the
   declaration, recorded here, not a seventh check that went missing. All six passed. Kept in
   `tests/amend17_dev_evidence/a1b_run2_r31.json`.
+
+## Entry 12. R34, added for a gap
+
+- **The gap.** No test showed that the first client now refuses, or that no deployment gives an assistant's side a
+  database credential. R34 is added for that.
+- **Declared before its first run.** `tests/verify_tests.py` has SHA-256 `1ae5adf5e2eba3ae324c90954b338f2b464f6533dff15dd15fd1834d60ea6e3e`. Expected: R34 passes, 3 of 3.

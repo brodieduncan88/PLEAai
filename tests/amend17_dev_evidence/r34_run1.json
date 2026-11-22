@@ -1,0 +1,47 @@
+{
+ "tests": {
+  "R34": {
+   "title": "Amendment 17 (D6).  The first client, which held the gateway's database credential in an assistant's workspace, refuses to run, and no deployment writes such a workspace; an enrolled job's folder holds no database credential.",
+   "ok": true,
+   "checks": {
+    "the first client refuses to run, ends with status 4, and names the front door's route": true,
+    "the deployment's two helpers for it refuse, and write no workspace": true,
+    "an enrolled job's folder, all the assistant's side is given, holds no database address and no role's password": true
+   },
+   "evidence": {
+    "client": [
+     4,
+     "verify_client.py is retired (Amendment 17, 22 November 2026): it held the gateway's database credential in the assistant's workspace.  Use front_client.py with the job folder the responsible engineer "
+    ],
+    "deploy": {
+     "client_config": "refused",
+     "submit": "refused"
+    },
+    "workspace_written": false,
+    "job_folder": {
+     "job.key": {
+      "dsn": false,
+      "password": false
+     },
+     "ca.crt": {
+      "dsn": false,
+      "password": false
+     },
+     "job.json": {
+      "dsn": false,
+      "password": false
+     },
+     "job.crt": {
+      "dsn": false,
+      "password": false
+     }
+    }
+   },
+   "seconds": 2.9
+  }
+ },
+ "passed": 1,
+ "of": 1,
+ "seconds": 2.9,
+ "PASS": true
+}
