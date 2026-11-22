@@ -1,0 +1,47 @@
+Q1 ok   counterexample A: CONSUMED->DISCARDED forged as plea_local is refused (CheckViolation)
+Q1 ok   counterexample A: the consumed budget of one stays exhausted (extra RESERVE denied)
+Q1 ok   counterexample B: forged RECOVER mode flip as plea_local is refused (InsufficientPrivilege)
+Q1 ok   counterexample B: the witness stays HELD
+Q1 ok   every illegal transition is refused as check_violation and changes nothing (12 pairs)
+Q1 ok   inserting a new attempt straight at CONSUMED is refused (CheckViolation)
+Q1 ok   inserting a new attempt straight at RESERVED is refused (CheckViolation)
+Q1 ok   inserting a new attempt straight at TOKEN is refused (CheckViolation)
+Q1 ok   inserting a new attempt straight at DISCARDED is refused (CheckViolation)
+Q1 ok   every legal transition applies through its proper credential and reaches the new phase (12 pairs)
+Q1 ok   a new attempt carrying crossed=true is refused (CheckViolation)
+Q1 ok   a new attempt carrying receipt=true is refused (CheckViolation)
+Q1 ok   clearing receipt (true->false) is refused (CheckViolation)
+Q1 ok   resetting crossed (true->false, T7) is refused (CheckViolation)
+Q1 ok   setting crossed on a non-consumption phase (RESERVED) is refused (CheckViolation)
+Q1 ok   setting receipt on a non-consumption phase (RESERVED) is refused (CheckViolation)
+Q1 ok   replay lockstep on a governed root through the proper credentials
+Q2 ok   plea_local cannot apply HOLD (AuthorityError); state unchanged
+Q2 ok   plea_local cannot apply STOP (AuthorityError); state unchanged
+Q2 ok   plea_local cannot apply TERMINALISE (AuthorityError); state unchanged
+Q2 ok   plea_local cannot apply TERMINAL (AuthorityError); state unchanged
+Q2 ok   plea_local cannot apply REREGISTER (AuthorityError); state unchanged
+Q2 ok   plea_local cannot apply RECOVER (AuthorityError); state unchanged
+Q2 ok   plea_local forging witness HELD->ACTIVE via plea_write is refused (InsufficientPrivilege)
+Q2 ok   the witness stays HELD after the forged flip
+Q2 ok   plea_local forging business OPEN->STOPPING via plea_write is refused (InsufficientPrivilege)
+Q2 ok   business stays OPEN after the forged flip
+Q2 ok   plea_local raw UPDATE of the witness mode is refused; it stays HELD
+Q2 ok   plea_control applies HOLD then RECOVER: HELD then ACTIVE
+Q2 ok   plea_control applies REREGISTER: business STOPPING, reregistered
+Q2 ok   plea_control cannot forge an accepted phase (RESERVING->RESERVED is the witness's) (InsufficientPrivilege)
+Q2 ok   plea_control has no direct DML on the authoritative tables
+Q2 ok   plea_control applied op leaves the chain valid
+{
+ "seconds": 3.9,
+ "Q1_ok": true,
+ "Q2_ok": true,
+ "PASS": true,
+ "Q1_count": 17,
+ "Q2_count": 16
+}
+Q RESULT: PASS
+
+real	0m4.167s
+user	0m1.504s
+sys	0m0.122s
+exit=0

@@ -1,0 +1,194 @@
+{
+ "R1": [
+  [
+   "HOLD accepted before the crossing: the call is refused (Held)",
+   true
+  ],
+  [
+   "HOLD before the crossing: the tool did not run; the attempt is CONSUMED and not crossed",
+   true
+  ],
+  [
+   "after recovery the retry runs it once",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ],
+  [
+   "STOP accepted before the crossing: the call is refused (Stopped)",
+   true
+  ],
+  [
+   "STOP before the crossing: the tool did not run; the attempt is CONSUMED and not crossed",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ],
+  [
+   "HOLD accepted after the crossing: the verdict is refused while held (Held)",
+   true
+  ],
+  [
+   "admitted work ran once; the attempt is crossed, not yet reconciled",
+   true
+  ],
+  [
+   "after recovery the retry returns the stored outcome without a second execution",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "R2": [
+  [
+   "the witness's intent receipt carries the nonce it accepted",
+   true
+  ],
+  [
+   "a genuine receipt under another nonce (403)",
+   true
+  ],
+  [
+   "the bound nonce with another tool (403)",
+   true
+  ],
+  [
+   "the bound nonce with other arguments (403)",
+   true
+  ],
+  [
+   "the bound action at a host under another key (403)",
+   true
+  ],
+  [
+   "nothing ran",
+   true
+  ],
+  [
+   "the bound action at the bound host runs once",
+   true
+  ],
+  [
+   "the request key reused with other arguments (RequestKeyReused)",
+   true
+  ]
+ ],
+ "R3": [
+  [
+   "a result altered beside the genuine report is refused (OutcomeInvalid)",
+   true
+  ],
+  [
+   "nothing stored; the tool ran once",
+   true
+  ],
+  [
+   "the retry fetches the signed result without a second execution",
+   true
+  ],
+  [
+   "the stored evidence's digest matches the stored result",
+   true
+  ],
+  [
+   "a report with an altered claim is refused (OutcomeInvalid)",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "R4": [
+  [
+   "the reply is lost after the host ran (ConnectionError)",
+   true
+  ],
+  [
+   "lost reply: the retry returns the result without a second execution",
+   true
+  ],
+  [
+   "a completed no-effect replays as NoEffect; credit 1; nothing ran twice",
+   true
+  ],
+  [
+   "the caller dies after the intent was accepted, before the crossing (ConnectionError)",
+   true
+  ],
+  [
+   "the retry resumes and runs once",
+   true
+  ],
+  [
+   "the caller dies after the verdict, before storing (ConnectionError)",
+   true
+  ],
+  [
+   "the retry stores the outcome without a second execution",
+   true
+  ],
+  [
+   "the host restarts with the attempt marked interrupted",
+   true
+  ],
+  [
+   "after the restart the retry gets a signed UNKNOWN verdict (RuntimeError)",
+   true
+  ],
+  [
+   "no second execution; the attempt stays charged (CONSUMED, crossed); the UNKNOWN verdict is recorded; the outcome is stored",
+   true
+  ],
+  [
+   "the outcome replays as unknown without contacting the host (RuntimeError)",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "R5": [
+  [
+   "one receipt at a host under another key (403)",
+   true
+  ],
+  [
+   "the bound host runs it once; a second host under the same key with separate state runs it again: a stated limit",
+   true
+  ]
+ ],
+ "R6": [
+  [
+   "a crash after the audit row loses the decision and the evidence together",
+   true
+  ],
+  [
+   "the verdict then commits with its evidence, at the same sequence number",
+   true
+  ],
+  [
+   "the client takes the decision from the signed receipt, not the outer fields",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "seconds": 9.2,
+ "R1_ok": true,
+ "R2_ok": true,
+ "R3_ok": true,
+ "R4_ok": true,
+ "R5_ok": true,
+ "R6_ok": true,
+ "PASS": true
+}

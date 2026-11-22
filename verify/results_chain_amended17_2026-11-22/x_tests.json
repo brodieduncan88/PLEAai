@@ -1,0 +1,323 @@
+{
+ "X1": [
+  [
+   "provisioning by the control plane appends a record naming the root, k, m, the issuer (plea_control), the contract, the release and the database time",
+   true
+  ],
+  [
+   "the root's chain starts at the record's hash (its anchor, never the fixed genesis), and the hash recomputes from the record outside the database",
+   true
+  ],
+  [
+   "the first decision links to the anchor; after a full lifecycle verify_chain and replay lockstep hold",
+   true
+  ],
+  [
+   "the reviewer's probe B: a caller-chosen starting hash (the 4-argument call) is refused to the control plane and to the owner, and no root exists",
+   true
+  ],
+  [
+   "the gateway and the witness credentials cannot provision",
+   true
+  ],
+  [
+   "no login role can insert, update or delete a provisioning record directly (insufficient privilege)",
+   true
+  ],
+  [
+   "the owner cannot rewrite, remove or truncate a provisioning record (the log is append-only)",
+   true
+  ],
+  [
+   "the owner cannot change a provisioned root's budget k or allowance m",
+   true
+  ],
+  [
+   "verify_chain detects a budget that differs from its provisioning record (the owner bypassing the trigger), and holds again once restored",
+   true
+  ],
+  [
+   "verify_chain detects a root whose chain no longer starts at its anchor",
+   true
+  ],
+  [
+   "a root with no provisioning record (as a pre-v1.2 root would be) is not written to, and verify_chain refuses it",
+   true
+  ],
+  [
+   "a root identity provisioned again after the owner removed the root gets a new record; the earlier one stays and the whole log verifies",
+   true
+  ],
+  [
+   "16 concurrent provisioning calls leave a contiguous, linked log",
+   true
+  ],
+  [
+   "the 4-argument signature no longer exists; plea_new_root(text,int,int) is the owner's and the control plane's only; login roles may read the log and not write it",
+   true
+  ],
+  [
+   "plea_ctl provision prints the anchor, and plea_ctl provenance prints the record and verifies the chain",
+   true
+  ]
+ ],
+ "X1_seconds": 1.3,
+ "X2": [
+  [
+   "the reviewer's probe C: a RESERVE logged for one attempt while another is inserted is refused, as plea_local, and leaves no trace",
+   true
+  ],
+  [
+   "the reviewer's probe D: two reservations under one RESERVE record are refused and leave no trace",
+   true
+  ],
+  [
+   "each single-attempt operation recorded over the wrong operands (another attempt, request, nonce, verdict or evidence label) is refused, by the credential that performs it, with nothing changed (14 forgeries, every v1.1 rule satisfied)",
+   true
+  ],
+  [
+   "each genuine record those forgeries imitate is accepted (9 operations, all APPLIED)",
+   true
+  ],
+  [
+   "batch semantics: a RECOVER that discards one of two reservations, an incomplete RECOVER that reactivates the witness, a REREGISTER that freezes part of the unresolved attempts, and one ACCEPT_RESERVATION accepting two are refused; the genuine batches apply",
+   true
+  ],
+  [
+   "a transition of the right shape that the mode forbids is refused: TOKEN, RESERVE and ACCEPT_INTENT while HELD, START while STOPPING, CROSS while HELD, TERMINAL with an unresolved attempt (6 records)",
+   true
+  ],
+  [
+   "a record of a malformed operation (wrong arity, a non-string or empty identity, an unknown label, a non-boolean flag) is refused (7 records)",
+   true
+  ],
+  [
+   "an evidence row belongs to its decision: the gateway cannot attach one (it could take the witness's next sequence slot and make the witness's RELEASE fail), and the witness's must name the decision's attempt, sequence number and label, on a RELEASE or RECONCILE only; the genuine RELEASE records its evidence",
+   true
+  ],
+  [
+   "mutation sweep: over 720 genuine decisions on 6 random walks, 3246 mutated records (operands, operation name, a row added or dropped); the database accepted a mutated record exactly when it is the contract's own decision (994 were, 2252 were not)",
+   true
+  ],
+  [
+   "every genuine decision of the walks was accepted as the reference decided it; every walked chain verifies and replays in lockstep through the oracle",
+   true
+  ],
+  [
+   "second mutation sweep (v1.2.1; another seed, budgets up to k=5 and m=3): over 720 genuine decisions on 6 random walks, 3141 mutated records; the database accepted a mutated record exactly when it is the contract's own decision (1136 were, 2005 were not), every genuine decision was accepted, and every chain verifies and replays",
+   true
+  ]
+ ],
+ "X2_seconds": 190.2,
+ "X3": [
+  [
+   "the reviewer's probe E: STOP recorded as DENIED on an OPEN run (the contract applies it) is refused, as plea_local, and leaves no trace",
+   true
+  ],
+  [
+   "the same false refusal is refused to the control plane, which may apply STOP",
+   true
+  ],
+  [
+   "a refusal the contract gives, under an invented code, is refused; the contract's own refusal (STOP on a STOPPING run: DENIED NOT_OPEN) is recorded",
+   true
+  ],
+  [
+   "a refusal of a control-plane operation, exactly as the contract gives it, cannot be recorded by the gateway (STOP, RECOVER, HOLD, TERMINAL: insufficient privilege)",
+   true
+  ],
+  [
+   "a refusal of a witness operation cannot be recorded by the gateway (the v0.7 rule, unchanged)",
+   true
+  ],
+  [
+   "a no-change record the contract does not give is refused: a DUPLICATE RESERVE of an absent attempt, a NOOP TIMEOUT of an unknown one, a NOOP HOLD on an ACTIVE run",
+   true
+  ],
+  [
+   "the declared limit: a refusal the contract gives for the current state (RESERVE on an exhausted budget, DENIED BUDGET_EXHAUSTED) can be recorded for a request that never reached the gateway; it changes no state and replays clean -- the database proves a refusal is the contract's, not that it was requested",
+   true
+  ]
+ ],
+ "X3_seconds": 0.8,
+ "X4": [
+  [
+   "over two complete bounded explorations (k=1 m=0 and k=2 m=1; two attempts, two requests, two nonces; every operation and label), the database's plea_step gives the reference engine's kind, code and observation and the independent oracle's kind and observation on every state and operation",
+   true
+  ],
+  [
+   "plea_step rejects exactly the operations the reference parser rejects (45 malformed: arity, types, empty identities, unknown names and labels, non-boolean flags; 10 well-formed edge cases accepted)",
+   true
+  ],
+  [
+   "beyond the exhaustive bound (v1.2.1): over 3,000 seeded random walks of 40 operations each, on budgets up to k=5 and m=3 with six attempt identities, plea_step gives the reference engine's kind, code and observation and the oracle's kind and observation at every one of 120,000 steps, with more than 10,000 of them applying",
+   true
+  ],
+  [
+   "the engine and its helper are the owner's: PUBLIC holds no EXECUTE and no login role can call them",
+   true
+  ]
+ ],
+ "X4_seconds": 97.6,
+ "seconds": 289.8,
+ "X1_ok": true,
+ "X1_count": 15,
+ "X1_passed": 15,
+ "X2_ok": true,
+ "X2_count": 11,
+ "X2_passed": 11,
+ "X3_ok": true,
+ "X3_count": 7,
+ "X3_passed": 7,
+ "X4_ok": true,
+ "X4_count": 4,
+ "X4_passed": 4,
+ "meta": {
+  "X2_sweep_b": {
+   "genuine": 720,
+   "mutations": 3141,
+   "truthful": 1136,
+   "untruthful": 2005,
+   "mismatch": 0,
+   "accepted_untruthful": 0,
+   "refused_truthful": 0,
+   "genuine_ok": true,
+   "chains": [
+    [
+     "x2b-walk-0",
+     true,
+     true,
+     120
+    ],
+    [
+     "x2b-walk-1",
+     true,
+     true,
+     120
+    ],
+    [
+     "x2b-walk-2",
+     true,
+     true,
+     120
+    ],
+    [
+     "x2b-walk-3",
+     true,
+     true,
+     120
+    ],
+    [
+     "x2b-walk-4",
+     true,
+     true,
+     120
+    ],
+    [
+     "x2b-walk-5",
+     true,
+     true,
+     120
+    ]
+   ],
+   "chains_ok": true,
+   "refusals_by_rule": {
+    "v1.2 record is not the contract's decision (kind or code)": 1585,
+    "v0.7/v0.9 witness authority": 256,
+    "v1.2 rows or modes are not the named operation's transition": 38,
+    "v1.1 operation name bound to the mode change": 105,
+    "v0.8 invariants": 3,
+    "v1.1 operation name bound to the transition": 18
+   },
+   "examples": []
+  },
+  "X2_sweep": {
+   "genuine": 720,
+   "mutations": 3246,
+   "truthful": 994,
+   "untruthful": 2252,
+   "mismatch": 0,
+   "accepted_untruthful": 0,
+   "refused_truthful": 0,
+   "genuine_ok": true,
+   "chains": [
+    [
+     "x2-walk-0",
+     true,
+     true,
+     120
+    ],
+    [
+     "x2-walk-1",
+     true,
+     true,
+     120
+    ],
+    [
+     "x2-walk-2",
+     true,
+     true,
+     120
+    ],
+    [
+     "x2-walk-3",
+     true,
+     true,
+     120
+    ],
+    [
+     "x2-walk-4",
+     true,
+     true,
+     120
+    ],
+    [
+     "x2-walk-5",
+     true,
+     true,
+     120
+    ]
+   ],
+   "chains_ok": true,
+   "refusals_by_rule": {
+    "v1.2 rows or modes are not the named operation's transition": 41,
+    "v1.2 record is not the contract's decision (kind or code)": 1835,
+    "v0.8 invariants": 3,
+    "v1.1 operation name bound to the mode change": 86,
+    "v0.7/v0.9 witness authority": 249,
+    "v1.1 operation name bound to the transition": 38
+   },
+   "examples": []
+  },
+  "X4": {
+   "k1m0": {
+    "states": 3550,
+    "operations": 56,
+    "pairs": 198800
+   },
+   "k2m1": {
+    "states": 10174,
+    "operations": 56,
+    "pairs": 569744
+   },
+   "pairs": 768544,
+   "mismatches": 0,
+   "examples": [],
+   "malformed": 45,
+   "wellformed": 10,
+   "random_differential": {
+    "walks": 3000,
+    "steps": 120000,
+    "by_kind": {
+     "APPLIED": 15681,
+     "DENIED": 98440,
+     "NOOP": 2186,
+     "DUPLICATE": 3693
+    },
+    "mismatches": 0,
+    "examples": []
+   }
+  }
+ },
+ "PASS": true
+}

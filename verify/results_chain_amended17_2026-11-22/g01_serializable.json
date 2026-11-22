@@ -1,0 +1,23 @@
+{
+ "mode": "serializable",
+ "rounds": 300,
+ "workers": 16,
+ "k": 3,
+ "seconds": 241.5,
+ "reserve_ops": 9600,
+ "worker_errors": 0,
+ "wave1_exact": 300,
+ "wave2_exact": 300,
+ "recoveries": 300,
+ "discarded": 450,
+ "lockstep_ok": 300,
+ "chain_ok": 300,
+ "decisions_replayed": 10650,
+ "reader_reads": 12778,
+ "reader_violations": [],
+ "reader_violation_count": 0,
+ "reader_errors": 0,
+ "failures": [],
+ "failure_count": 0,
+ "PASS": true
+}

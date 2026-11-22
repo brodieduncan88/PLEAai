@@ -1,0 +1,22 @@
+{
+ "seconds": 11.4,
+ "kills": 18,
+ "ok": 18,
+ "by_point": {
+  "after_lock": 3,
+  "after_decide": 3,
+  "after_attempts": 3,
+  "after_audit": 3,
+  "before_commit": 3,
+  "after_commit": 3
+ },
+ "retries_applied": 15,
+ "retries_duplicate": 3,
+ "PASS": true
+}
+W4 RESULT: PASS
+
+real	0m11.619s
+user	0m7.062s
+sys	0m1.065s
+exit=0

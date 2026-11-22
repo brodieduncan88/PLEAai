@@ -1,0 +1,250 @@
+{
+ "seconds": 8.5,
+ "T1": [
+  [
+   "witness: plain HTTP to the TLS port: the connection is closed without a response (WitnessUnavailable)",
+   true
+  ],
+  [
+   "witness: HTTPS with the authority pinned but no client certificate (TransportError)",
+   true
+  ],
+  [
+   "witness: a client certificate from the impostor authority (TransportError)",
+   true
+  ],
+  [
+   "witness: a server certificate (the host's own) as a client certificate (TransportError)",
+   true
+  ],
+  [
+   "witness: a 'stranger' certificate the allow-list does not name (PermissionError)",
+   true
+  ],
+  [
+   "witness: the audit log is unchanged by the refusals",
+   true
+  ],
+  [
+   "witness: the governor's certificate is admitted",
+   true
+  ],
+  [
+   "witness: names the peer 'governor' over TLS",
+   true
+  ],
+  [
+   "host: plain HTTP to the TLS port: the connection is closed without a response (ConnectionError)",
+   true
+  ],
+  [
+   "host: HTTPS with the authority pinned but no client certificate (TransportError)",
+   true
+  ],
+  [
+   "host: a client certificate from the impostor authority (TransportError)",
+   true
+  ],
+  [
+   "host: a server certificate (the host's own) as a client certificate (TransportError)",
+   true
+  ],
+  [
+   "host: a 'stranger' certificate the allow-list does not name (403)",
+   true
+  ],
+  [
+   "host: the ledger is unchanged by the refusals",
+   true
+  ],
+  [
+   "host: the governor's certificate is admitted and the tool runs once",
+   true
+  ]
+ ],
+ "T2": [
+  [
+   "an impostor witness (certificate from another authority) (TransportError)",
+   true
+  ],
+  [
+   "the impostor witness applied nothing",
+   true
+  ],
+  [
+   "an impostor host (TransportError)",
+   true
+  ],
+  [
+   "the impostor host ran nothing",
+   true
+  ],
+  [
+   "a genuine certificate issued for another name (TransportError)",
+   true
+  ],
+  [
+   "the wrongly named witness applied nothing",
+   true
+  ],
+  [
+   "the genuine witness is accepted",
+   true
+  ]
+ ],
+ "T3": [
+  [
+   "four roots through the API in host mode over mutual TLS",
+   true
+  ],
+  [
+   "MCP over TLS lists the host's tools",
+   true
+  ],
+  [
+   "MCP over TLS: a retried charge runs once",
+   true
+  ],
+  [
+   "MCP over TLS: beyond the budget is refused and never runs",
+   true
+  ],
+  [
+   "MCP root replay lockstep",
+   true
+  ],
+  [
+   "MCP without TLS against the TLS services does not start and applies nothing",
+   true
+  ]
+ ],
+ "T4": [
+  [
+   "a new server certificate from the same authority: the unchanged client keeps working",
+   true
+  ],
+  [
+   "a new client certificate from the same authority: the unchanged service admits it",
+   true
+  ],
+  [
+   "overlap: a client pinning both authorities with the old certificate works",
+   true
+  ],
+  [
+   "overlap: a client pinning only the old authority is refused (the server is under the new) (TransportError)",
+   true
+  ],
+  [
+   "cut-over: the old client certificate is refused (TransportError)",
+   true
+  ],
+  [
+   "cut-over: the new client certificate is admitted",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "t3_rows": [
+  {
+   "root": "t3-0",
+   "ran": 4,
+   "no_effect": 1,
+   "denied": 1,
+   "other": 0,
+   "gate_key_in_governor": false,
+   "credit": 1,
+   "labels": [
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED"
+   ],
+   "phases": [
+    "EFFECT",
+    "EFFECT",
+    "EFFECT",
+    "NO_EFFECT"
+   ],
+   "lockstep": true,
+   "ok": true
+  },
+  {
+   "root": "t3-1",
+   "ran": 4,
+   "no_effect": 1,
+   "denied": 1,
+   "other": 0,
+   "gate_key_in_governor": false,
+   "credit": 1,
+   "labels": [
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED"
+   ],
+   "phases": [
+    "EFFECT",
+    "EFFECT",
+    "EFFECT",
+    "NO_EFFECT"
+   ],
+   "lockstep": true,
+   "ok": true
+  },
+  {
+   "root": "t3-2",
+   "ran": 4,
+   "no_effect": 1,
+   "denied": 1,
+   "other": 0,
+   "gate_key_in_governor": false,
+   "credit": 1,
+   "labels": [
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED"
+   ],
+   "phases": [
+    "EFFECT",
+    "EFFECT",
+    "EFFECT",
+    "NO_EFFECT"
+   ],
+   "lockstep": true,
+   "ok": true
+  },
+  {
+   "root": "t3-3",
+   "ran": 4,
+   "no_effect": 1,
+   "denied": 1,
+   "other": 0,
+   "gate_key_in_governor": false,
+   "credit": 1,
+   "labels": [
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED"
+   ],
+   "phases": [
+    "EFFECT",
+    "EFFECT",
+    "EFFECT",
+    "NO_EFFECT"
+   ],
+   "lockstep": true,
+   "ok": true
+  }
+ ],
+ "T1_ok": true,
+ "T2_ok": true,
+ "T3_ok": true,
+ "T4_ok": true,
+ "PASS": true
+}

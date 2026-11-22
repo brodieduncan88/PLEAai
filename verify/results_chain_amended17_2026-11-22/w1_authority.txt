@@ -1,0 +1,14 @@
+{
+ "seconds": 2.8,
+ "raw_state_unchanged": true,
+ "reserved_refused_to_local": 11,
+ "raw_statements_refused": 16,
+ "local_operations_ok": 7,
+ "PASS": true
+}
+W1 RESULT: PASS
+
+real	0m3.036s
+user	0m1.072s
+sys	0m0.118s
+exit=0

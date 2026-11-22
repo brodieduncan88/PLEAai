@@ -1,0 +1,60 @@
+H1 ok   no receipt (400)
+H1 ok   receipt signed by an unknown key (403)
+H1 ok   reservation receipt where an intent receipt is required (403)
+H1 ok   another attempt's genuine intent receipt (403)
+H1 ok   kind edited on a copy of the genuine receipt (403)
+H1 ok   ledger unchanged by the refusals
+H1 ok   the genuine receipt then runs, once
+H2 ok   first run executes
+H2 ok   same run again is a repeat with the same report
+H2 ok   a retry with other arguments is refused (403); the first result stands
+H2 ok   eight concurrent runs: exactly one execution
+H2 ok   after a host restart the run is still a repeat
+H3 ok   fence at the host returns a signed fence report
+H3 ok   fenced attempt cannot run (409)
+H3 ok   the witness denies releasing an attempt whose intent it accepted (5.8/4)
+H3 ok   a fence report for a reservation that never started releases it
+H3 ok   a3 runs
+H3 ok   an attempt that ran cannot be fenced (409)
+H3 ok   replay lockstep
+H4 ok   four roots through the API in host mode
+H4 ok   MCP host mode lists the host's tools
+H4 ok   MCP host mode: a retried charge runs once
+H4 ok   MCP host mode: beyond the budget is refused and never runs
+H4 ok   MCP root replay lockstep
+H5 ok   client pinning [old, new] accepts receipts under the new key
+H5 ok   host pinning [old, new] runs on receipts under either witness key
+H5 ok   witness pinning [old gate, new gate] accepts the old host's report
+H5 ok   host pinning only the new witness key refuses an old receipt (403)
+H5 ok   a host under another gate key refuses an attempt bound to the old one (403): the executor is bound
+H5 ok   an attempt bound to the new host runs there
+H5 ok   witness accepts the new host's report
+H5 ok   witness pinning only the new gate key derives NONE for the old host's report
+H5 ok   replay lockstep
+{
+ "seconds": 9.7,
+ "h2_burst": {
+  "burst": [
+   "refused 409",
+   "ran",
+   "repeat",
+   "repeat",
+   "repeat",
+   "repeat",
+   "repeat",
+   "repeat"
+  ]
+ },
+ "H1_ok": true,
+ "H2_ok": true,
+ "H3_ok": true,
+ "H4_ok": true,
+ "H5_ok": true,
+ "PASS": true
+}
+H RESULT: PASS
+
+real	0m9.948s
+user	0m3.925s
+sys	0m0.430s
+exit=0

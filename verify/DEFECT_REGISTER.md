@@ -596,3 +596,26 @@ copy on the diagnostic branch is not changed.
   - F38 check 15 does not cover a link at `jobs.json` for the mode.
 - **Declared:** `verify/DECLARED_AMEND17.md`, at the commit that adds this entry. The code declared is that of
   `203bdca`. Status words change only after the official runs.
+
+### G12. 22 November 2026: the official runs of Amendment 17
+
+- **Declared:** `verify/DECLARED_AMEND17.md`, at `ed2ec76` (code of `203bdca`). **Runs:** once each, at 02:37 to 03:01
+  UTC. All came out as declared:
+  - the gate: 34 of 34 tests and 252 of 252 checks, with R1 to R13 through the front door;
+  - the front door: 36 of 36 tests and 211 of 211 checks;
+  - the gateway chain: 22 of 22 stages, on a new database.
+  The results are in `verify/results_*_amended17_2026-11-22*`. The amendment is `verify/AMENDMENT_17_2026-11-22.md`.
+- **Reviewed by:** eight internal reviews by AI agents at the author's instruction (`verify/reviews/AMEND17_REVIEW_*`).
+  None is independent.
+
+| Id | Status now | Commit | Evidence | What remains |
+|---|---|---|---|---|
+| D5 | internally tested | `203bdca` (A1 `d187172`, `abe044d`) | R30 in the official gate run | the binder compares the 128-bit prefix that the budget's name carries |
+| D21 | internally tested | `203bdca` | R31, R33; the chain 22 of 22 | 64-bit identities kept for budgets made before; a rolling upgrade stops a budget (fails closed) |
+| D16 | internally tested | `203bdca` | F37, F38 in the official front run | as in G7, G9, G10 and G11: a revocation unrecorded by both sides; restore; several pinned keys; `jobs.json` read by name; the lows listed |
+| D20 | internally tested | `203bdca` (A3 `0128d46`) | R32 | a value of more than 28 significant digits that does not cross its limit is written rounded |
+| D6 | internally tested | `203bdca` (A4 `e1f1082`) | R1 to R13 through the front door; R34 | five gate tests on a test-only copy of the first client; Finding 2 open for a holder of the service's role; `verify/experiment/` and `demo.py` cannot run |
+| D35 | internally tested (documents) | `203bdca` | the readmes | G-1 stands |
+| F1, F2 | retired; properties carried by R30 and F7 | `e1f1082` | the official front run | their earlier results stand |
+
+- No row is closed. Closing is the owner's act.

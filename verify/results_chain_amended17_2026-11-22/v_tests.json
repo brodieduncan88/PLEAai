@@ -1,0 +1,198 @@
+{
+ "V1": [
+  [
+   "HOLD: the witness's CROSS is DENIED and its receipt binds nothing",
+   true
+  ],
+  [
+   "HOLD: /run with the genuine intent receipt and no admission (403)",
+   true
+  ],
+  [
+   "HOLD: the DENIED crossing as admission (403)",
+   true
+  ],
+  [
+   "HOLD: a forged admission (unknown key) (403)",
+   true
+  ],
+  [
+   "HOLD: another attempt's admission (403)",
+   true
+  ],
+  [
+   "HOLD: the local credential cannot apply CROSS (AuthorityError)",
+   true
+  ],
+  [
+   "HOLD: the local credential cannot set crossed by SQL",
+   true
+  ],
+  [
+   "HOLD: nothing ran; a1 is CONSUMED and not crossed",
+   true
+  ],
+  [
+   "after recovery the witness records the crossing and the admission runs the tool once",
+   true
+  ],
+  [
+   "a resume presents DENIED/ALREADY_CROSSED and is answered with the stored result",
+   true
+  ],
+  [
+   "the earlier admission replayed for another nonce (403)",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ],
+  [
+   "STOP: the witness's CROSS is DENIED and its receipt binds nothing",
+   true
+  ],
+  [
+   "STOP: /run with the genuine intent receipt and no admission (403)",
+   true
+  ],
+  [
+   "STOP: the DENIED crossing as admission (403)",
+   true
+  ],
+  [
+   "STOP: a forged admission (unknown key) (403)",
+   true
+  ],
+  [
+   "STOP: another attempt's admission (403)",
+   true
+  ],
+  [
+   "STOP: the local credential cannot apply CROSS (AuthorityError)",
+   true
+  ],
+  [
+   "STOP: the local credential cannot set crossed by SQL",
+   true
+  ],
+  [
+   "STOP: nothing ran; a1 is CONSUMED and not crossed",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "V3": [
+  [
+   "a tool that fails while the run is held: the governor raises Held (Held)",
+   true
+  ],
+  [
+   "nothing is stored; the witness refused the reconciliation",
+   true
+  ],
+  [
+   "after recovery the retry asks the host again and gets the UNKNOWN verdict (RuntimeError)",
+   true
+  ],
+  [
+   "the witness records NOOP once; the outcome is stored as unknown",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "V4": [
+  [
+   "a receipt binds the evidence submitted (none here)",
+   true
+  ],
+  [
+   "the earlier receipt replayed for a later submission is refused by the client (ReceiptInvalid)",
+   true
+  ],
+  [
+   "the genuine later receipt binds the evidence",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "V5": [
+  [
+   "a witness client with TLS settings and an http:// URL (ValueError)",
+   true
+  ],
+  [
+   "a host client with TLS settings and an http:// URL (ValueError)",
+   true
+  ]
+ ],
+ "V2": [
+  [
+   "a second host on the same state file refuses to start while the first holds a live lease",
+   true
+  ],
+  [
+   "the first host keeps serving",
+   true
+  ],
+  [
+   "after the first host's lease expires the second takes over and marks the running row interrupted",
+   true
+  ],
+  [
+   "the retry at the second host gets a signed UNKNOWN verdict (RuntimeError)",
+   true
+  ],
+  [
+   "the frozen host completes the tool after all and records EFFECT over the UNKNOWN",
+   true
+  ],
+  [
+   "the governor's retry resolves the attempt to EFFECT with one execution",
+   true
+  ],
+  [
+   "the host that lost its lease refuses new work (Exception)",
+   true
+  ],
+  [
+   "and reports it",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "V6": [
+  [
+   "verify_chain under concurrent appends: 319 verifications, 0 false failures",
+   true
+  ],
+  [
+   "the final quiescent check passes",
+   true
+  ]
+ ],
+ "v6_stats": {
+  "verifications": 319,
+  "false_failures": 0
+ },
+ "seconds": 14.0,
+ "V1_ok": true,
+ "V2_ok": true,
+ "V3_ok": true,
+ "V4_ok": true,
+ "V5_ok": true,
+ "V6_ok": true,
+ "PASS": true
+}

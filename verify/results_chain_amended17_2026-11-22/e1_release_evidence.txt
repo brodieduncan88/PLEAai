@@ -1,0 +1,28 @@
+{
+ "seconds": 1.1,
+ "a1_released_only": true,
+ "live_R": 7,
+ "evidence_rows_recorded": 7,
+ "lockstep": true,
+ "chain": true,
+ "PASS": true
+}
+ok    {'case': 'genuine report for a1', 'aid': 'a1', 'kind': 'APPLIED', 'label': 'BOUND_FENCE', 'want': ('APPLIED', 'BOUND_FENCE'), 'ok': True}
+ok    {'case': 'no evidence', 'aid': 'a2', 'kind': 'DENIED', 'label': 'NONE', 'want': ('DENIED', 'NONE'), 'ok': True}
+ok    {'case': 'signed by an unpinned key', 'aid': 'a3', 'kind': 'DENIED', 'label': 'NONE', 'want': ('DENIED', 'NONE'), 'ok': True}
+ok    {'case': 'genuine report for another attempt', 'aid': 'a4', 'kind': 'DENIED', 'label': 'WRONG_BINDING', 'want': ('DENIED', 'WRONG_BINDING'), 'ok': True}
+ok    {'case': 'genuine report for another root', 'aid': 'a5', 'kind': 'DENIED', 'label': 'WRONG_BINDING', 'want': ('DENIED', 'WRONG_BINDING'), 'ok': True}
+ok    {'case': 'claim edited on a genuine report', 'aid': 'a6', 'kind': 'DENIED', 'label': 'NONE', 'want': ('DENIED', 'NONE'), 'ok': True}
+ok    {'case': 'genuine report claiming STARTED', 'aid': 'a7', 'kind': 'DENIED', 'label': 'NONE', 'want': ('DENIED', 'NONE'), 'ok': True}
+ok    {'case': 'label supplied by the caller', 'aid': 'a8', 'refused': True, 'unchanged': True, 'ok': True}
+ok    {'case': "a1's genuine report again after release", 'aid': 'a1', 'kind': 'DUPLICATE', 'ok': True}
+ok    {'aid': 'a1', 'kind': 'APPLIED', 'label': 'BOUND_FENCE', 'ok': True}
+ok    {'aid': 'a2', 'kind': 'DENIED', 'label': 'NONE', 'ok': True}
+ok    {'aid': 'a3', 'kind': 'DENIED', 'label': 'NONE', 'ok': True}
+ok    {'aid': 'a4', 'kind': 'DENIED', 'label': 'WRONG_BINDING', 'ok': True}
+E1 RESULT: PASS
+
+real	0m1.502s
+user	0m0.670s
+sys	0m0.077s
+exit=0

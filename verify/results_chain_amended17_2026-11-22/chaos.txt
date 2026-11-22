@@ -1,0 +1,21 @@
+{
+ "kills": 90,
+ "ok": 90,
+ "seconds": 34.3,
+ "by_point": {
+  "after_lock": 15,
+  "after_decide": 15,
+  "after_attempts": 15,
+  "after_audit": 15,
+  "before_commit": 15,
+  "after_commit": 15
+ },
+ "failure_count": 0,
+ "PASS": true
+}
+CHAOS RESULT: PASS
+
+real	0m34.499s
+user	0m20.407s
+sys	0m2.507s
+exit=0

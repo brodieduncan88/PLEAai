@@ -1,0 +1,23 @@
+x_tests exit=0
+u_tests exit=0
+s_tests exit=0
+q_tests exit=0
+p_tests exit=0
+v_tests exit=0
+r_tests exit=0
+h_tests exit=0
+t_tests exit=0
+mcp_tests exit=0
+e1_release_evidence exit=0
+e2_reconcile_evidence exit=0
+e3_lifecycle_evidence exit=0
+w1_authority exit=0
+w2_receipts exit=0
+w3_service_lockstep exit=0
+w4_service_crash exit=0
+conform_store exit=0
+chaos exit=0
+g02b exit=0
+g01_lock exit=0
+g01_serializable exit=0
+CHAIN PASSED: 22 of 22 stages exit 0

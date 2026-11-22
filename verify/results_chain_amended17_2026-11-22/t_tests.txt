@@ -1,0 +1,49 @@
+T1 ok   witness: plain HTTP to the TLS port: the connection is closed without a response (WitnessUnavailable)
+T1 ok   witness: HTTPS with the authority pinned but no client certificate (TransportError)
+T1 ok   witness: a client certificate from the impostor authority (TransportError)
+T1 ok   witness: a server certificate (the host's own) as a client certificate (TransportError)
+T1 ok   witness: a 'stranger' certificate the allow-list does not name (PermissionError)
+T1 ok   witness: the audit log is unchanged by the refusals
+T1 ok   witness: the governor's certificate is admitted
+T1 ok   witness: names the peer 'governor' over TLS
+T1 ok   host: plain HTTP to the TLS port: the connection is closed without a response (ConnectionError)
+T1 ok   host: HTTPS with the authority pinned but no client certificate (TransportError)
+T1 ok   host: a client certificate from the impostor authority (TransportError)
+T1 ok   host: a server certificate (the host's own) as a client certificate (TransportError)
+T1 ok   host: a 'stranger' certificate the allow-list does not name (403)
+T1 ok   host: the ledger is unchanged by the refusals
+T1 ok   host: the governor's certificate is admitted and the tool runs once
+T2 ok   an impostor witness (certificate from another authority) (TransportError)
+T2 ok   the impostor witness applied nothing
+T2 ok   an impostor host (TransportError)
+T2 ok   the impostor host ran nothing
+T2 ok   a genuine certificate issued for another name (TransportError)
+T2 ok   the wrongly named witness applied nothing
+T2 ok   the genuine witness is accepted
+T3 ok   four roots through the API in host mode over mutual TLS
+T3 ok   MCP over TLS lists the host's tools
+T3 ok   MCP over TLS: a retried charge runs once
+T3 ok   MCP over TLS: beyond the budget is refused and never runs
+T3 ok   MCP root replay lockstep
+T3 ok   MCP without TLS against the TLS services does not start and applies nothing
+T4 ok   a new server certificate from the same authority: the unchanged client keeps working
+T4 ok   a new client certificate from the same authority: the unchanged service admits it
+T4 ok   overlap: a client pinning both authorities with the old certificate works
+T4 ok   overlap: a client pinning only the old authority is refused (the server is under the new) (TransportError)
+T4 ok   cut-over: the old client certificate is refused (TransportError)
+T4 ok   cut-over: the new client certificate is admitted
+T4 ok   replay lockstep
+{
+ "seconds": 8.5,
+ "T1_ok": true,
+ "T2_ok": true,
+ "T3_ok": true,
+ "T4_ok": true,
+ "PASS": true
+}
+T RESULT: PASS
+
+real	0m8.700s
+user	0m4.451s
+sys	0m0.536s
+exit=0

@@ -1,0 +1,38 @@
+P1 ok   2 simultaneous acquirers of an expired-lease file: exactly one owner
+P1 ok   4 simultaneous acquirers of an expired-lease file: exactly one owner
+P1 ok   a 4-process stampede onto an expired lease, 6 trials: never more than one owner
+P1 ok   the generation increments on takeover
+P1 ok   a stale owner cannot claim new work after a takeover (StateLost)
+P1 ok   the stale new row was not written
+P1 ok   the new owner can claim
+P1 ok   trial 0: the frozen host, resumed after a takeover, refuses the /run (503) and runs nothing
+P1 ok   trial 1: the frozen host, resumed after a takeover, refuses the /run (503) and runs nothing
+P1 ok   trial 2: the frozen host, resumed after a takeover, refuses the /run (503) and runs nothing
+P1 ok   across 3 HTTP trials the stale host never ran the tool
+P2 ok   raw reset of HOLD is refused; the crossing stays denied and the tool does not run
+P2 ok   raw reset of STOP is refused; the crossing stays denied and the tool does not run
+P2 ok   deleting a consumed attempt to free budget is refused; the budget stays exhausted; one execution
+P2 ok   resetting crossed is refused; a second crossing is DENIED ALREADY_CROSSED; one execution
+P2 ok   raising the budget is refused; the second call is still exhausted; one execution
+P2 ok   inserting a reservation directly is refused; one execution
+P2 ok   editing or deleting the audit log is refused; the chain stays valid
+P2 ok   deleting or inserting a root directly is refused
+P2 ok   the witness credential cannot rewrite a root directly
+P2 ok   a forged write inserting an attempt straight at an accepted phase (CONSUMED) is refused (CheckViolation)
+P2 ok   a forged write injecting a reservation beyond the budget is refused (I2) (CheckViolation)
+P2 ok   a forged write with a non-sequential decision is refused (append-only) (CheckViolation)
+P2 ok   a forged write with a mis-chained decision is refused (CheckViolation)
+P2 ok   every legitimate operation still applies through the proper path (RESERVE, TOKEN, START via gateway; operator HOLD/RECOVER via control)
+P2 ok   replay lockstep on a governed root
+{
+ "seconds": 23.8,
+ "P1_ok": true,
+ "P2_ok": true,
+ "PASS": true
+}
+P RESULT: PASS
+
+real	0m24.012s
+user	0m26.396s
+sys	0m0.800s
+exit=0

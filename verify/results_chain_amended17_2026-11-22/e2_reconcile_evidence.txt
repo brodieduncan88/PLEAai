@@ -1,0 +1,34 @@
+{
+ "seconds": 1.0,
+ "phases": {
+  "a1": "EFFECT",
+  "a2": "NO_EFFECT",
+  "a3": "CONSUMED",
+  "a4": "CONSUMED",
+  "a5": "CONSUMED",
+  "a6": "CONSUMED",
+  "a7": "CONSUMED",
+  "a8": "CONSUMED"
+ },
+ "credit": 1,
+ "N": 1,
+ "credit_after_forgery_a4": 1,
+ "lockstep": true,
+ "chain": true,
+ "PASS": true
+}
+ok    {'case': 'genuine EFFECT bound to n1', 'aid': 'a1', 'kind': 'APPLIED', 'verdict_label': ['EFFECT', 'AUTHORISED'], 'credit_after': 0, 'ok': True}
+ok    {'case': 'genuine NO_EFFECT bound to n2', 'aid': 'a2', 'kind': 'APPLIED', 'verdict_label': ['NO_EFFECT', 'AUTHORISED'], 'credit_after': 1, 'ok': True}
+ok    {'case': 'no evidence', 'aid': 'a3', 'kind': 'DENIED', 'verdict_label': ['UNKNOWN', 'NONE'], 'credit_after': 1, 'ok': True}
+ok    {'case': 'forged NO_EFFECT by an unpinned key', 'aid': 'a4', 'kind': 'DENIED', 'verdict_label': ['UNKNOWN', 'NONE'], 'credit_after': 1, 'ok': True}
+ok    {'case': 'genuine NO_EFFECT, wrong nonce', 'aid': 'a5', 'kind': 'DENIED', 'verdict_label': ['NO_EFFECT', 'WRONG_BINDING'], 'credit_after': 1, 'ok': True}
+ok    {'case': 'genuine report for a1 used on a6', 'aid': 'a6', 'kind': 'DENIED', 'verdict_label': ['NO_EFFECT', 'WRONG_BINDING'], 'credit_after': 1, 'ok': True}
+ok    {'case': 'claim edited on a genuine report', 'aid': 'a7', 'kind': 'DENIED', 'verdict_label': ['UNKNOWN', 'NONE'], 'credit_after': 1, 'ok': True}
+ok    {'case': 'label supplied by the caller', 'aid': 'a8', 'refused': True, 'unchanged': True, 'ok': True}
+ok    {'case': 'genuine UNKNOWN bound to n8', 'aid': 'a8', 'kind': 'NOOP', 'phase': 'CONSUMED', 'ok': True}
+E2 RESULT: PASS
+
+real	0m1.461s
+user	0m0.665s
+sys	0m0.072s
+exit=0

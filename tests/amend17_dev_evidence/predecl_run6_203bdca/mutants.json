@@ -1,0 +1,646 @@
+{
+ "commit": "203bdca",
+ "results": {
+  "binder removed": {
+   "planted": true,
+   "file": "verify/verify_tools.py",
+   "tests": {
+    "R30": {
+     "ok": false,
+     "failed_checks": [
+      "naming baseline B on A's budget, the caller is refused by the gate host, twice, and is told no verdict",
+      "the check was not run for it, and no report was signed for it",
+      "B shows no run and no notice; A's record verifies and shows no pass",
+      "the refused attempt is counted and not silent: a courier pass tells the engineer it was admitted and has no outcome"
+     ],
+     "error": null,
+     "seconds": 5.3
+    }
+   },
+   "caught": true
+  },
+  "binder always binds": {
+   "planted": true,
+   "file": "verify/verify_tools.py",
+   "tests": {
+    "R30": {
+     "ok": false,
+     "failed_checks": [
+      "naming baseline B on A's budget, the caller is refused by the gate host, twice, and is told no verdict",
+      "the check was not run for it, and no report was signed for it",
+      "B shows no run and no notice; A's record verifies and shows no pass",
+      "the refused attempt is counted and not silent: a courier pass tells the engineer it was admitted and has no outcome"
+     ],
+     "error": null,
+     "seconds": 5.3
+    }
+   },
+   "caught": true
+  },
+  "identity back to 64 bits": {
+   "planted": true,
+   "file": "plea_gateway/governor.py",
+   "tests": {
+    "R31": {
+     "ok": false,
+     "failed_checks": [
+      "a run made now carries a 256-bit attempt identity and request key, and its record verifies as of that form"
+     ],
+     "error": null,
+     "seconds": 15.2
+    }
+   },
+   "caught": true
+  },
+  "request key back to 96 bits": {
+   "planted": true,
+   "file": "verify/verify_record.py",
+   "tests": {
+    "R31": {
+     "ok": false,
+     "failed_checks": [
+      "a run made now carries a 256-bit attempt identity and request key, and its record verifies as of that form"
+     ],
+     "error": null,
+     "seconds": 15.2
+    }
+   },
+   "caught": true
+  },
+  "front door does not check the design of a verdict": {
+   "planted": true,
+   "file": "verify/front_door.py",
+   "tests": {
+    "R31": {
+     "ok": false,
+     "failed_checks": [
+      "with the governor's replay guard taken out as well, the front door refuses the first design's verdict for the second design"
+     ],
+     "error": null,
+     "seconds": 15.0
+    }
+   },
+   "caught": true
+  },
+  "checker allows mixed forms": {
+   "planted": true,
+   "file": "verify/check_record.py",
+   "tests": {
+    "R31": {
+     "ok": false,
+     "failed_checks": [
+      "a record whose runs, each with its design, are of both forms fails at check 5 only, for that reason"
+     ],
+     "error": null,
+     "seconds": 15.1
+    }
+   },
+   "caught": true
+  },
+  "no form kept per budget": {
+   "planted": false,
+   "caught": null
+  },
+  "front door ignores the budget's form": {
+   "planted": true,
+   "file": "verify/front_door.py",
+   "tests": {
+    "R33": {
+     "ok": false,
+     "failed_checks": [
+      "after it, the failure sent again is the same attempt: the same FAIL, not run or charged again",
+      "the pending design sent again is finished as the same attempt: run once, and it meets the check",
+      "a new design on that budget is made in its form, and the record verifies: three runs, all 64-bit, said to be of the earlier form"
+     ],
+     "error": null,
+     "seconds": 8.0
+    }
+   },
+   "caught": true
+  },
+  "record of bindings not consulted": {
+   "planted": true,
+   "file": "verify/front_door.py",
+   "tests": {
+    "F37": {
+     "ok": false,
+     "failed_checks": [
+      "a revoked job is refused, and the earlier signed binding put back after a restart does not undo it",
+      "revocation is absorbing: a later binding signed by the engineer does not admit the revoked job",
+      "a second binding with the same number is refused; the one seen first, asked again, is answered",
+      "the service's role can deny a job with a made-up revocation, and cannot admit one (it fails closed)",
+      "a revocation the revoked job never sees, whether the console recorded it or only the file holds it, is not undone by putting the earlier bindings back, by a restart or by a change to the authority's file",
+      "a revocation signed at a number the record has already seen is kept: the earlier binding put back after it admits nobody"
+     ],
+     "error": null,
+     "seconds": 7.9
+    }
+   },
+   "caught": true
+  },
+  "revocation not absorbing": {
+   "planted": true,
+   "file": "verify/front_state.py",
+   "tests": {
+    "F37": {
+     "ok": false,
+     "failed_checks": [
+      "revocation is absorbing: a later binding signed by the engineer does not admit the revoked job",
+      "a revocation signed at a number the record has already seen is kept: the earlier binding put back after it admits nobody"
+     ],
+     "error": null,
+     "seconds": 7.8
+    }
+   },
+   "caught": true
+  },
+  "a stale binding accepted": {
+   "planted": true,
+   "file": "verify/front_state.py",
+   "tests": {
+    "F37": {
+     "ok": false,
+     "failed_checks": [
+      "concurrent observers end at the highest number, and a lower one is then stale"
+     ],
+     "error": null,
+     "seconds": 7.7
+    }
+   },
+   "caught": true
+  },
+  "a binding for another budget admitted": {
+   "planted": false,
+   "caught": null
+  },
+  "controls not put to the checker": {
+   "planted": true,
+   "file": "verify/verify_ctl.py",
+   "tests": {
+    "R32": {
+     "ok": false,
+     "failed_checks": [
+      "a control whose value, written rounded, falls on its limit is refused at baselining, in the record checker's words, and nothing is stored"
+     ],
+     "error": null,
+     "seconds": 6.8
+    }
+   },
+   "caught": true
+  },
+  "the first client not retired": {
+   "planted": true,
+   "file": "verify/verify_client.py",
+   "tests": {
+    "R34": {
+     "ok": false,
+     "failed_checks": [
+      "the first client refuses to run, ends with status 4, and names the front door's route"
+     ],
+     "error": null,
+     "seconds": 3.4
+    }
+   },
+   "caught": true
+  },
+  "revocations recorded only when the job calls": {
+   "planted": false,
+   "caught": null
+  },
+  "realm from the authority's file": {
+   "planted": false,
+   "caught": null
+  },
+  "a revocation at a number already seen not kept": {
+   "planted": true,
+   "file": "verify/front_state.py",
+   "tests": {
+    "F37": {
+     "ok": false,
+     "failed_checks": [
+      "a revocation signed at a number the record has already seen is kept: the earlier binding put back after it admits nobody"
+     ],
+     "error": null,
+     "seconds": 7.7
+    }
+   },
+   "caught": true
+  },
+  "mixed forms not refused": {
+   "planted": true,
+   "file": "plea_gateway/governor.py",
+   "tests": {
+    "R33": {
+     "ok": false,
+     "failed_checks": [
+      "an attempt of the earlier form added to a budget of the current form, by the service's own role, stops its runs: refused, nothing run (it fails closed)"
+     ],
+     "error": null,
+     "seconds": 8.3
+    }
+   },
+   "caught": true
+  },
+  "controls not put to rederive": {
+   "planted": true,
+   "file": "verify/verify_ctl.py",
+   "tests": {
+    "R32": {
+     "ok": false,
+     "failed_checks": [
+      "a control given to 29 significant digits far from its limit, whose margin a run would not recompute, is refused at baselining as every run on it would be UNKNOWN"
+     ],
+     "error": null,
+     "seconds": 7.0
+    }
+   },
+   "caught": true
+  },
+  "no form kept per budget (restated)": {
+   "planted": true,
+   "file": "plea_gateway/governor.py",
+   "tests": {
+    "R33": {
+     "ok": false,
+     "failed_checks": [
+      "after it, the failure sent again is the same attempt: the same FAIL, not run or charged again",
+      "the pending design sent again is finished as the same attempt: run once, and it meets the check",
+      "a new design on that budget is made in its form, and the record verifies: three runs, all 64-bit, said to be of the earlier form"
+     ],
+     "error": null,
+     "seconds": 6.9
+    }
+   },
+   "caught": true
+  },
+  "a binding for another budget admitted (restated)": {
+   "planted": false,
+   "caught": null
+  },
+  "revocations recorded only when the job calls (restated)": {
+   "planted": true,
+   "file": "verify/front_door.py, verify/front_ctl.py",
+   "tests": {
+    "F37": {
+     "ok": false,
+     "failed_checks": [
+      "a revocation the revoked job never sees, whether the console recorded it or only the file holds it, is not undone by putting the earlier bindings back, by a restart or by a change to the authority's file"
+     ],
+     "error": null,
+     "seconds": 7.6
+    },
+    "F38": {
+     "ok": false,
+     "failed_checks": [],
+     "error": "Unwritten: the revocation is recorded in the database, so the front door refuses job-v; it could not be written to jobs.json (OSError): give revoke again to write it",
+     "seconds": 11.8
+    }
+   },
+   "caught": true
+  },
+  "the console does not read the front door's realm": {
+   "planted": false,
+   "caught": null
+  },
+  "the front door started under another realm": {
+   "planted": false,
+   "caught": null
+  },
+  "a revocation not written when it cannot be recorded": {
+   "planted": false,
+   "caught": null
+  },
+  "a revocation not written when it cannot be recorded (restated)": {
+   "planted": false,
+   "caught": null
+  },
+  "a binding for another budget admitted (restated again)": {
+   "planted": true,
+   "file": "verify/front_door.py",
+   "tests": {
+    "F37": {
+     "ok": false,
+     "failed_checks": [
+      "a binding naming this baseline and another's budget admits nobody, and nothing reaches the gate",
+      "when the record cannot be read, the front door answers 503 and runs nothing; then it answers again"
+     ],
+     "error": null,
+     "seconds": 7.7
+    }
+   },
+   "caught": true
+  },
+  "the record keyed by the job name alone": {
+   "planted": false,
+   "caught": null
+  },
+  "an unrecorded revocation not recorded again": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [],
+     "error": "Refused: job-h is already revoked",
+     "seconds": 4.1
+    }
+   },
+   "caught": true
+  },
+  "the front door records no revocation at its start": {
+   "planted": false,
+   "caught": null
+  },
+  "the look records no revocation": {
+   "planted": true,
+   "file": "verify/front_door.py, verify/front_door.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "one left unrecorded while the front door runs is recorded by its look, with no request from the job: the earlier binding put back then admits nobody"
+     ],
+     "error": null,
+     "seconds": 30.6
+    }
+   },
+   "caught": true
+  },
+  "a revocation recorded and not written said to be refused": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [],
+     "error": "Refused: the revocation is recorded in the database, so the front door refuses job-k; it could not be written to jobs.json (IsADirectoryError): give revoke again to write it",
+     "seconds": 7.3
+    }
+   },
+   "caught": true
+  },
+  "jobs.json written without a lock": {
+   "planted": false,
+   "caught": null
+  },
+  "the record keyed by the job name alone (restated)": {
+   "planted": true,
+   "file": "verify/front_state.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "a revocation made by the console while the front door is stopped is recorded: the earlier binding put back before the front door starts admits nobody",
+      "a job is named in the record by the engineer's key and its name, as signed, the same for every binding of the job; the earlier binding put back after its revocation admits nobody",
+      "a revocation that could not be recorded is written and said so; revoke given again records it; the earlier binding put back then admits nobody",
+      "a revocation left unrecorded (the command ends with status 3) is recorded by the front door at its start, before any request: the earlier binding put back then admits nobody",
+      "one left unrecorded while the front door runs is recorded by its look, with no request from the job: the earlier binding put back then admits nobody",
+      "a revocation recorded and not written is said so (status 4 at the command); the front door refuses the job already; revoke given again writes it",
+      "a move the console cannot record is written first and said so: the job is then answered on the revision",
+      "an entry for another job, put in place of this job's: rebind and revoke refuse it and write nothing, revoke naming --by-name; revoke --by-name writes nothing and revokes the job's name in the database; the earlier binding put back admits nobody, before and after an honest revocation",
+      "a job name enrolled again after its entry is removed admits nobody under the second enrolment, and its revocation covers the first: the first put back admits nobody",
+      "a job whose entry is removed, spoiled or another job's has its name revoked in the database and nothing written, and the entry put back admits nobody; with the database unreachable too, the console says the job is not revoked"
+     ],
+     "error": null,
+     "seconds": 11.9
+    }
+   },
+   "caught": true
+  },
+  "the record keyed by the certificate's hash": {
+   "planted": true,
+   "file": "verify/front_state.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "a job is named in the record by the engineer's key and its name, as signed, the same for every binding of the job; the earlier binding put back after its revocation admits nobody",
+      "an entry for another job, put in place of this job's: rebind and revoke refuse it and write nothing, revoke naming --by-name; revoke --by-name writes nothing and revokes the job's name in the database; the earlier binding put back admits nobody, before and after an honest revocation",
+      "a job name enrolled again after its entry is removed admits nobody under the second enrolment, and its revocation covers the first: the first put back admits nobody",
+      "a job whose entry is removed, spoiled or another job's has its name revoked in the database and nothing written, and the entry put back admits nobody; with the database unreachable too, the console says the job is not revoked",
+      "a mistyped name is refused and nothing is revoked; a name that is not a job name is refused with --by-name; at the command no usable entry is status 1, naming --by-name, and --by-name is status 5; jobs.json keeps its mode"
+     ],
+     "error": null,
+     "seconds": 12.4
+    }
+   },
+   "caught": true
+  },
+  "the console does not match the entry to its job": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "an entry for another job, put in place of this job's: rebind and revoke refuse it and write nothing, revoke naming --by-name; revoke --by-name writes nothing and revokes the job's name in the database; the earlier binding put back admits nobody, before and after an honest revocation",
+      "a job whose entry is removed, spoiled or another job's has its name revoked in the database and nothing written, and the entry put back admits nobody; with the database unreachable too, the console says the job is not revoked"
+     ],
+     "error": null,
+     "seconds": 11.7
+    }
+   },
+   "caught": true
+  },
+  "a changed entry written over": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "a write over an entry that changed meanwhile is refused; a lock that is a pipe or a link is refused, and the link is not followed; a lock held by another is given up after the wait; nothing is written in any"
+     ],
+     "error": null,
+     "seconds": 11.7
+    }
+   },
+   "caught": true
+  },
+  "the lock followed through a link, and a pipe taken": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "a write over an entry that changed meanwhile is refused; a lock that is a pipe or a link is refused, and the link is not followed; a lock held by another is given up after the wait; nothing is written in any"
+     ],
+     "error": null,
+     "seconds": 12.7
+    }
+   },
+   "caught": true
+  },
+  "a revocation not written when it cannot be recorded (restated again)": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [],
+     "error": "Refused: it could not be recorded in the database (StateUnavailable)",
+     "seconds": 4.3
+    }
+   },
+   "caught": true
+  },
+  "the front door records no revocation at its start (restated)": {
+   "planted": true,
+   "file": "verify/front_door.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "a revocation left unrecorded (the command ends with status 3) is recorded by the front door at its start, before any request: the earlier binding put back then admits nobody"
+     ],
+     "error": null,
+     "seconds": 11.8
+    }
+   },
+   "caught": true
+  },
+  "a move not written when it cannot be recorded (restated)": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "a move the console cannot record is written first and said so: the job is then answered on the revision"
+     ],
+     "error": null,
+     "seconds": 11.5
+    }
+   },
+   "caught": true
+  },
+  "jobs.json written without a lock (restated)": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [],
+     "error": "Unrecorded: it could not be recorded in the database (StateUnavailable): the revocation is written to jobs.json; give revoke again to record it, and the front door records it when it next reads the file",
+     "seconds": 8.7
+    }
+   },
+   "caught": true
+  },
+  "a job with no usable entry not revoked by name": {
+   "planted": false,
+   "caught": null
+  },
+  "the temporary file opened by name": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "the console's files are not opened through a link or a pipe: a link at jobs.tmp is not followed, and a link or a pipe at the log is refused before anything is replaced; the file outside is untouched"
+     ],
+     "error": null,
+     "seconds": 11.7
+    }
+   },
+   "caught": true
+  },
+  "the log opened through a link or a pipe": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "the console's files are not opened through a link or a pipe: a link at jobs.tmp is not followed, and a link or a pipe at the log is refused before anything is replaced; the file outside is untouched"
+     ],
+     "error": null,
+     "seconds": 11.6
+    }
+   },
+   "caught": true
+  },
+  "a revocation neither recorded nor written not said": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [],
+     "error": "OSError: /tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/mutants6/tree/outputs/verify_front_tests/F38/home/front/jobs.lock is held by another process; nothing was written",
+     "seconds": 11.0
+    }
+   },
+   "caught": true
+  },
+  "a job with no usable entry not revoked by name (restated)": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "an entry for another job, put in place of this job's: rebind and revoke refuse it and write nothing, revoke naming --by-name; revoke --by-name writes nothing and revokes the job's name in the database; the earlier binding put back admits nobody, before and after an honest revocation",
+      "a job whose entry is removed, spoiled or another job's has its name revoked in the database and nothing written, and the entry put back admits nobody; with the database unreachable too, the console says the job is not revoked",
+      "a mistyped name is refused and nothing is revoked; a name that is not a job name is refused with --by-name; at the command no usable entry is status 1, naming --by-name, and --by-name is status 5; jobs.json keeps its mode"
+     ],
+     "error": null,
+     "seconds": 11.7
+    }
+   },
+   "caught": true
+  },
+  "revocation by name done without being asked for": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [],
+     "error": "RevokedByName: job-typo is not enrolled  The name 'job-typo' is revoked in the database under the key c7d27a07716e91c1\u2026, so the front door refuses it under any binding signed by that key; nothing was written to jobs.json.  A binding of the name signed by another key is not covered.",
+     "seconds": 11.1
+    }
+   },
+   "caught": true
+  },
+  "a name revoked by name not checked whole": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "a mistyped name is refused and nothing is revoked; a name that is not a job name is refused with --by-name; at the command no usable entry is status 1, naming --by-name, and --by-name is status 5; jobs.json keeps its mode"
+     ],
+     "error": null,
+     "seconds": 12.7
+    }
+   },
+   "caught": true
+  },
+  "the mode of jobs.json not kept": {
+   "planted": true,
+   "file": "verify/front_ctl.py",
+   "tests": {
+    "F38": {
+     "ok": false,
+     "failed_checks": [
+      "a mistyped name is refused and nothing is revoked; a name that is not a job name is refused with --by-name; at the command no usable entry is status 1, naming --by-name, and --by-name is status 5; jobs.json keeps its mode"
+     ],
+     "error": null,
+     "seconds": 11.7
+    }
+   },
+   "caught": true
+  },
+  "a move not written when it cannot be recorded": {
+   "planted": false,
+   "caught": null
+  }
+ },
+ "caught": 37,
+ "planted": 37,
+ "of": 51
+}

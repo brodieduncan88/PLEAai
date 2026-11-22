@@ -1,0 +1,164 @@
+{
+ "S1": [
+  [
+   "the reviewer's probe: same-phase CONSUMED write with a new nonce, as plea_local, is refused (CheckViolation)",
+   true
+  ],
+  [
+   "the attempt and the audit log are unchanged; the nonce is still n-old",
+   true
+  ],
+  [
+   "the witness's receipt after the refused rewrite still binds the original nonce",
+   true
+  ],
+  [
+   "the same rewrite as the owner is refused too (the rule is not an authority check) (CheckViolation)",
+   true
+  ],
+  [
+   "a same-phase write that changes the request binding (req) is refused (CheckViolation)",
+   true
+  ],
+  [
+   "CONSUMED->EFFECT carrying a different nonce is refused (CheckViolation)",
+   true
+  ],
+  [
+   "INTENT_PENDING->CONSUMED carrying a different nonce is refused (CheckViolation)",
+   true
+  ],
+  [
+   "CONSUMED->INDETERMINATE dropping the nonce is refused (CheckViolation)",
+   true
+  ],
+  [
+   "TOKEN->INTENT_PENDING when a nonce is already bound is refused (START binds a fresh nonce) (CheckViolation)",
+   true
+  ],
+  [
+   "TOKEN->INTENT_PENDING without a nonce is refused (CheckViolation)",
+   true
+  ],
+  [
+   "INTENT_PENDING->TOKEN keeping the nonce is refused (RECOVER clears it) (CheckViolation)",
+   true
+  ],
+  [
+   "set by START, carried unchanged through ACCEPT_INTENT, RECEIPT, CROSS and RECONCILE",
+   true
+  ],
+  [
+   "cleared by RECOVER (INTENT_PENDING->TOKEN) through the control credential",
+   true
+  ],
+  [
+   "carried by REREGISTER (CONSUMED->INDETERMINATE)",
+   true
+  ],
+  [
+   "replay lockstep on the lifecycle root",
+   true
+  ]
+ ],
+ "S2": [
+  [
+   "a genuine outcome runs once and replays the same value from the stored, signed outcome",
+   true
+  ],
+  [
+   "the stored outcome carries the nonce and the gate's signed effect report",
+   true
+  ],
+  [
+   "plea_local raw INSERT into results is refused",
+   true
+  ],
+  [
+   "plea_local storing an outcome for a reserved, never-admitted attempt is refused (CheckViolation)",
+   true
+  ],
+  [
+   "plea_local storing an outcome for an attempt that does not exist is refused (CheckViolation)",
+   true
+  ],
+  [
+   "a second store for a known outcome does not replace it (the first stands)",
+   true
+  ],
+  [
+   "an unknown outcome is replaced by a known one, once",
+   true
+  ],
+  [
+   "the reviewer's probe: a fabricated success with no attempt and no nonce is refused (RequestKeyReused); nothing ran, no attempt exists",
+   true
+  ],
+  [
+   "a fabricated success with the right nonce but no signed report is refused (OutcomeInvalid); nothing ran, no attempt exists",
+   true
+  ],
+  [
+   "a fabricated success with a report signed by an impostor's key is refused (OutcomeInvalid); nothing ran, no attempt exists",
+   true
+  ],
+  [
+   "a genuine-key report whose digest does not cover the stored value is refused (OutcomeInvalid); nothing ran, no attempt exists",
+   true
+  ],
+  [
+   "a report whose claim (NO_EFFECT) does not match the stored kind (value) is refused (OutcomeInvalid); nothing ran, no attempt exists",
+   true
+  ],
+  [
+   "replay lockstep on the genuine root",
+   true
+  ]
+ ],
+ "S3": [
+  [
+   "all three functions are SECURITY DEFINER with search_path pinned to pg_catalog, pg_temp",
+   true
+  ],
+  [
+   "PUBLIC holds no EXECUTE on any of the three functions",
+   true
+  ],
+  [
+   "the reviewer's probe: with a temporary 'roots' and 'provisions' in the session, plea_new_root writes public.roots and the public provisioning log; the temporary tables stay empty",
+   true
+  ],
+  [
+   "with temporary 'attempts' and 'results' in the session, plea_put_result reads public.attempts and writes public.results; the temporary tables stay empty",
+   true
+  ],
+  [
+   "neither the gateway nor the witness credential can create a root (v1.1: provisioning is the control plane's)",
+   true
+  ],
+  [
+   "the control credential cannot store an outcome",
+   true
+  ],
+  [
+   "the witness credential cannot store an outcome",
+   true
+  ],
+  [
+   "no login role can create objects in public",
+   true
+  ],
+  [
+   "no login role holds direct DML on results (INSERT/UPDATE/DELETE)",
+   true
+  ]
+ ],
+ "seconds": 2.5,
+ "S1_ok": true,
+ "S1_count": 15,
+ "S2_ok": true,
+ "S2_count": 13,
+ "S3_ok": true,
+ "S3_count": 9,
+ "PASS": true
+}

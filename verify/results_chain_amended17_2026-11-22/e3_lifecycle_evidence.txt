@@ -1,0 +1,18 @@
+{
+ "seconds": 5.8,
+ "part_a_ok": true,
+ "part_b_ok": true,
+ "PASS": true
+}
+{'root': 'e3a-0', 'ran': 4, 'no_effect': 1, 'denied': 1, 'verdict_refused': 0, 'other': 0, 'executions': 4, 'phases': ['EFFECT', 'EFFECT', 'EFFECT', 'NO_EFFECT'], 'credit': 1, 'reconcile_labels': ['AUTHORISED', 'AUTHORISED', 'AUTHORISED', 'AUTHORISED'], 'evidence_rows': 4, 'evidence_derived': ['AUTHORISED'], 'lockstep': True, 'chain': True}
+{'root': 'e3a-1', 'ran': 4, 'no_effect': 1, 'denied': 1, 'verdict_refused': 0, 'other': 0, 'executions': 4, 'phases': ['EFFECT', 'EFFECT', 'EFFECT', 'NO_EFFECT'], 'credit': 1, 'reconcile_labels': ['AUTHORISED', 'AUTHORISED', 'AUTHORISED', 'AUTHORISED'], 'evidence_rows': 4, 'evidence_derived': ['AUTHORISED'], 'lockstep': True, 'chain': True}
+{'root': 'e3a-2', 'ran': 4, 'no_effect': 1, 'denied': 1, 'verdict_refused': 0, 'other': 0, 'executions': 4, 'phases': ['EFFECT', 'EFFECT', 'EFFECT', 'NO_EFFECT'], 'credit': 1, 'reconcile_labels': ['AUTHORISED', 'AUTHORISED', 'AUTHORISED', 'AUTHORISED'], 'evidence_rows': 4, 'evidence_derived': ['AUTHORISED'], 'lockstep': True, 'chain': True}
+{'root': 'e3a-3', 'ran': 4, 'no_effect': 1, 'denied': 1, 'verdict_refused': 0, 'other': 0, 'executions': 4, 'phases': ['EFFECT', 'EFFECT', 'EFFECT', 'NO_EFFECT'], 'credit': 1, 'reconcile_labels': ['AUTHORISED', 'AUTHORISED', 'AUTHORISED', 'AUTHORISED'], 'evidence_rows': 4, 'evidence_derived': ['AUTHORISED'], 'lockstep': True, 'chain': True}
+{'root': 'e3b-0', 'ran': 0, 'no_effect': 0, 'denied': 2, 'verdict_refused': 3, 'other': 0, 'withheld': ['done 1', 'done 2', 'done 3'], 'executions': 3, 'phases': ['CONSUMED', 'CONSUMED', 'CONSUMED'], 'credit': 0, 'reconcile_labels': ['NONE', 'NONE', 'NONE'], 'evidence_rows': 3, 'evidence_derived': ['NONE'], 'lockstep': True, 'chain': True}
+{'root': 'e3b-1', 'ran': 0, 'no_effect': 0, 'denied': 2, 'verdict_refused': 3, 'other': 0, 'withheld': ['done 1', 'done 2', 'done 3'], 'executions': 3, 'phases': ['CONSUMED', 'CONSUMED', 'CONSUMED'], 'credit': 0, 'reconcile_labels': ['NONE', 'NONE', 'NONE'], 'evidence_rows': 3, 'evidence_derived': ['NONE'], 'lockstep': True, 'chain': True}
+E3 RESULT: PASS
+
+real	0m6.195s
+user	0m2.378s
+sys	0m0.221s
+exit=0

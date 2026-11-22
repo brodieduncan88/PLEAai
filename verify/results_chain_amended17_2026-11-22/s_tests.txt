@@ -1,0 +1,53 @@
+S1 ok   the reviewer's probe: same-phase CONSUMED write with a new nonce, as plea_local, is refused (CheckViolation)
+S1 ok   the attempt and the audit log are unchanged; the nonce is still n-old
+S1 ok   the witness's receipt after the refused rewrite still binds the original nonce
+S1 ok   the same rewrite as the owner is refused too (the rule is not an authority check) (CheckViolation)
+S1 ok   a same-phase write that changes the request binding (req) is refused (CheckViolation)
+S1 ok   CONSUMED->EFFECT carrying a different nonce is refused (CheckViolation)
+S1 ok   INTENT_PENDING->CONSUMED carrying a different nonce is refused (CheckViolation)
+S1 ok   CONSUMED->INDETERMINATE dropping the nonce is refused (CheckViolation)
+S1 ok   TOKEN->INTENT_PENDING when a nonce is already bound is refused (START binds a fresh nonce) (CheckViolation)
+S1 ok   TOKEN->INTENT_PENDING without a nonce is refused (CheckViolation)
+S1 ok   INTENT_PENDING->TOKEN keeping the nonce is refused (RECOVER clears it) (CheckViolation)
+S1 ok   set by START, carried unchanged through ACCEPT_INTENT, RECEIPT, CROSS and RECONCILE
+S1 ok   cleared by RECOVER (INTENT_PENDING->TOKEN) through the control credential
+S1 ok   carried by REREGISTER (CONSUMED->INDETERMINATE)
+S1 ok   replay lockstep on the lifecycle root
+S2 ok   a genuine outcome runs once and replays the same value from the stored, signed outcome
+S2 ok   the stored outcome carries the nonce and the gate's signed effect report
+S2 ok   plea_local raw INSERT into results is refused
+S2 ok   plea_local storing an outcome for a reserved, never-admitted attempt is refused (CheckViolation)
+S2 ok   plea_local storing an outcome for an attempt that does not exist is refused (CheckViolation)
+S2 ok   a second store for a known outcome does not replace it (the first stands)
+S2 ok   an unknown outcome is replaced by a known one, once
+S2 ok   the reviewer's probe: a fabricated success with no attempt and no nonce is refused (RequestKeyReused); nothing ran, no attempt exists
+S2 ok   a fabricated success with the right nonce but no signed report is refused (OutcomeInvalid); nothing ran, no attempt exists
+S2 ok   a fabricated success with a report signed by an impostor's key is refused (OutcomeInvalid); nothing ran, no attempt exists
+S2 ok   a genuine-key report whose digest does not cover the stored value is refused (OutcomeInvalid); nothing ran, no attempt exists
+S2 ok   a report whose claim (NO_EFFECT) does not match the stored kind (value) is refused (OutcomeInvalid); nothing ran, no attempt exists
+S2 ok   replay lockstep on the genuine root
+S3 ok   all three functions are SECURITY DEFINER with search_path pinned to pg_catalog, pg_temp
+S3 ok   PUBLIC holds no EXECUTE on any of the three functions
+S3 ok   the reviewer's probe: with a temporary 'roots' and 'provisions' in the session, plea_new_root writes public.roots and the public provisioning log; the temporary tables stay empty
+S3 ok   with temporary 'attempts' and 'results' in the session, plea_put_result reads public.attempts and writes public.results; the temporary tables stay empty
+S3 ok   neither the gateway nor the witness credential can create a root (v1.1: provisioning is the control plane's)
+S3 ok   the control credential cannot store an outcome
+S3 ok   the witness credential cannot store an outcome
+S3 ok   no login role can create objects in public
+S3 ok   no login role holds direct DML on results (INSERT/UPDATE/DELETE)
+{
+ "seconds": 2.5,
+ "S1_ok": true,
+ "S1_count": 15,
+ "S2_ok": true,
+ "S2_count": 13,
+ "S3_ok": true,
+ "S3_count": 9,
+ "PASS": true
+}
+S RESULT: PASS
+
+real	0m2.737s
+user	0m1.153s
+sys	0m0.140s
+exit=0

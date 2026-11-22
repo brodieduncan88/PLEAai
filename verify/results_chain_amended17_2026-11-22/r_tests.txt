@@ -1,0 +1,59 @@
+R1 ok   HOLD accepted before the crossing: the call is refused (Held)
+R1 ok   HOLD before the crossing: the tool did not run; the attempt is CONSUMED and not crossed
+R1 ok   after recovery the retry runs it once
+R1 ok   replay lockstep
+R1 ok   STOP accepted before the crossing: the call is refused (Stopped)
+R1 ok   STOP before the crossing: the tool did not run; the attempt is CONSUMED and not crossed
+R1 ok   replay lockstep
+R1 ok   HOLD accepted after the crossing: the verdict is refused while held (Held)
+R1 ok   admitted work ran once; the attempt is crossed, not yet reconciled
+R1 ok   after recovery the retry returns the stored outcome without a second execution
+R1 ok   replay lockstep
+R2 ok   the witness's intent receipt carries the nonce it accepted
+R2 ok   a genuine receipt under another nonce (403)
+R2 ok   the bound nonce with another tool (403)
+R2 ok   the bound nonce with other arguments (403)
+R2 ok   the bound action at a host under another key (403)
+R2 ok   nothing ran
+R2 ok   the bound action at the bound host runs once
+R2 ok   the request key reused with other arguments (RequestKeyReused)
+R3 ok   a result altered beside the genuine report is refused (OutcomeInvalid)
+R3 ok   nothing stored; the tool ran once
+R3 ok   the retry fetches the signed result without a second execution
+R3 ok   the stored evidence's digest matches the stored result
+R3 ok   a report with an altered claim is refused (OutcomeInvalid)
+R3 ok   replay lockstep
+R4 ok   the reply is lost after the host ran (ConnectionError)
+R4 ok   lost reply: the retry returns the result without a second execution
+R4 ok   a completed no-effect replays as NoEffect; credit 1; nothing ran twice
+R4 ok   the caller dies after the intent was accepted, before the crossing (ConnectionError)
+R4 ok   the retry resumes and runs once
+R4 ok   the caller dies after the verdict, before storing (ConnectionError)
+R4 ok   the retry stores the outcome without a second execution
+R4 ok   the host restarts with the attempt marked interrupted
+R4 ok   after the restart the retry gets a signed UNKNOWN verdict (RuntimeError)
+R4 ok   no second execution; the attempt stays charged (CONSUMED, crossed); the UNKNOWN verdict is recorded; the outcome is stored
+R4 ok   the outcome replays as unknown without contacting the host (RuntimeError)
+R4 ok   replay lockstep
+R5 ok   one receipt at a host under another key (403)
+R5 ok   the bound host runs it once; a second host under the same key with separate state runs it again: a stated limit
+R6 ok   a crash after the audit row loses the decision and the evidence together
+R6 ok   the verdict then commits with its evidence, at the same sequence number
+R6 ok   the client takes the decision from the signed receipt, not the outer fields
+R6 ok   replay lockstep
+{
+ "seconds": 9.2,
+ "R1_ok": true,
+ "R2_ok": true,
+ "R3_ok": true,
+ "R4_ok": true,
+ "R5_ok": true,
+ "R6_ok": true,
+ "PASS": true
+}
+R RESULT: PASS
+
+real	0m9.469s
+user	0m3.323s
+sys	0m0.353s
+exit=0

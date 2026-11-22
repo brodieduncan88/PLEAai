@@ -1,0 +1,72 @@
+{
+ "seconds": 0.5,
+ "honest_cross": "APPLIED",
+ "forgeries": [
+  {
+   "forgery": "signed by another key",
+   "rejected": true,
+   "reason": "receipt signed by an unknown key"
+  },
+  {
+   "forgery": "a1's receipt replayed for a2",
+   "rejected": true,
+   "reason": "receipt is for another root or attempt"
+  },
+  {
+   "forgery": "attempt field edited",
+   "rejected": true,
+   "reason": "receipt is for another root or attempt"
+  },
+  {
+   "forgery": "seq edited",
+   "rejected": true,
+   "reason": "bad signature"
+  },
+  {
+   "forgery": "kind edited on a non-APPLIED receipt",
+   "rejected": true,
+   "reason": "bad signature"
+  },
+  {
+   "forgery": "ACCEPT_RESERVATION receipt used as intent receipt",
+   "rejected": true,
+   "reason": "receipt is for another operation"
+  },
+  {
+   "forgery": "signature truncated",
+   "rejected": true,
+   "reason": "bad signature"
+  },
+  {
+   "forgery": "hash edited",
+   "rejected": true,
+   "reason": "bad signature"
+  },
+  {
+   "forgery": "another root's receipt, same attempt name",
+   "rejected": true,
+   "reason": "receipt is for another root or attempt"
+  }
+ ],
+ "forgeries_rejected": 9,
+ "forgeries_total": 9,
+ "a2_untouched_by_forgeries": true,
+ "a2_cross_with_own_receipt": "APPLIED",
+ "a2_final": [
+  "a2",
+  "q2",
+  "CONSUMED",
+  "n2",
+  true,
+  true
+ ],
+ "lockstep": true,
+ "chain": true,
+ "PASS": true
+}
+W2 RESULT: PASS
+
+real	0m0.936s
+user	0m0.521s
+sys	0m0.048s
+exit=0

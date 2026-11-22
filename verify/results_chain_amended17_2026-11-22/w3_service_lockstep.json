@@ -1,0 +1,131 @@
+{
+ "seconds": 30.1,
+ "part_a": {
+  "roots": 8,
+  "governed_calls": 80,
+  "rows": [
+   {
+    "root": "w3a-0",
+    "executed": 3,
+    "denied": 4,
+    "retry_served": 3,
+    "retry_executed_again": 0,
+    "other": 0,
+    "executions": 3,
+    "accepted_C": 3,
+    "lockstep": true,
+    "chain": true,
+    "ok": true
+   },
+   {
+    "root": "w3a-1",
+    "executed": 3,
+    "denied": 4,
+    "retry_served": 3,
+    "retry_executed_again": 0,
+    "other": 0,
+    "executions": 3,
+    "accepted_C": 3,
+    "lockstep": true,
+    "chain": true,
+    "ok": true
+   },
+   {
+    "root": "w3a-2",
+    "executed": 3,
+    "denied": 4,
+    "retry_served": 3,
+    "retry_executed_again": 0,
+    "other": 0,
+    "executions": 3,
+    "accepted_C": 3,
+    "lockstep": true,
+    "chain": true,
+    "ok": true
+   },
+   {
+    "root": "w3a-3",
+    "executed": 3,
+    "denied": 4,
+    "retry_served": 3,
+    "retry_executed_again": 0,
+    "other": 0,
+    "executions": 3,
+    "accepted_C": 3,
+    "lockstep": true,
+    "chain": true,
+    "ok": true
+   },
+   {
+    "root": "w3a-4",
+    "executed": 3,
+    "denied": 4,
+    "retry_served": 3,
+    "retry_executed_again": 0,
+    "other": 0,
+    "executions": 3,
+    "accepted_C": 3,
+    "lockstep": true,
+    "chain": true,
+    "ok": true
+   },
+   {
+    "root": "w3a-5",
+    "executed": 3,
+    "denied": 4,
+    "retry_served": 3,
+    "retry_executed_again": 0,
+    "other": 0,
+    "executions": 3,
+    "accepted_C": 3,
+    "lockstep": true,
+    "chain": true,
+    "ok": true
+   },
+   {
+    "root": "w3a-6",
+    "executed": 3,
+    "denied": 4,
+    "retry_served": 3,
+    "retry_executed_again": 0,
+    "other": 0,
+    "executions": 3,
+    "accepted_C": 3,
+    "lockstep": true,
+    "chain": true,
+    "ok": true
+   },
+   {
+    "root": "w3a-7",
+    "executed": 3,
+    "denied": 4,
+    "retry_served": 3,
+    "retry_executed_again": 0,
+    "other": 0,
+    "executions": 3,
+    "accepted_C": 3,
+    "lockstep": true,
+    "chain": true,
+    "ok": true
+   }
+  ],
+  "ok": true
+ },
+ "part_b": {
+  "rounds": 100,
+  "release_denied": 100,
+  "accept_applied": 100,
+  "probes": 500,
+  "probes_denied": 500,
+  "final_ok": 100,
+  "lockstep_ok": 100,
+  "chain_ok": 100,
+  "order": {
+   "accept_first": 75,
+   "release_first": 25
+  },
+  "failures": [],
+  "ok": true
+ },
+ "PASS": true
+}

@@ -1,0 +1,50 @@
+U1 ok   the reviewer's probe: STOP/APPLIED with a correct hash and no mode change, as plea_local, is refused (CheckViolation)
+U1 ok   atomic: no audit entry, no head advance, the run still OPEN
+U1 ok   the run still admits (the false STOP did not take): RESERVE APPLIED
+U1 ok   the same record as the owner is refused too (a rule, not an authority check) (CheckViolation)
+U1 ok   a real change recorded as DENIED is refused (the kind is bound to the change) (CheckViolation)
+U1 ok   an observation that misdescribes the state after the change is refused (CheckViolation)
+U1 ok   a correct record whose hash is computed over a different observation is refused (CheckViolation)
+U1 ok   an insert recorded under another operation (START) is refused (the operation is bound to the transition) (CheckViolation)
+U1 ok   an unknown decision kind is refused (CheckViolation)
+U1 ok   an unknown operation is refused (CheckViolation)
+U1 ok   none of those left a trace
+U1 ok   an APPLIED record whose attempt payload changes nothing is refused (no change, no APPLIED) (CheckViolation)
+U1 ok   a witness hold recorded as a STOP is refused, as the control plane (each mode change is bound to its operation) (CheckViolation)
+U1 ok   nothing changed and the chain still verifies
+U1 ok   plea_canonical equals the client canonical form on 300 random values with special characters (300/300)
+U1 ok   plea_decision_hash equals the client chain_hash on 100 random decision bodies (100/100)
+U1 ok   the database refuses a non-integer number in a canonical form (nothing to diverge on)
+U1 ok   a full lifecycle, a duplicate, a no-op, a release, hold/recover and stop/terminalise/terminal all apply through their credentials
+U1 ok   every stored observation is the database's own, equal to the client's, and APPLIED records are exactly the ones that change it
+U1 ok   verify_chain and replay lockstep hold on the lifecycle root
+U1 ok   REREGISTER (attempts to INDETERMINATE, witness ACTIVE, business STOPPING, reregistered) applies and lockstep holds
+U2 ok   the gateway credential cannot create a root (AuthorityError)
+U2 ok   the witness credential cannot create a root (AuthorityError)
+U2 ok   the control credential provisions a root with the budget given
+U2 ok   no root exists for the refused creations
+U2 ok   the reviewer's probe: after exhausting a budget-one root, plea_local creating a k=1000, m=999 root is refused (AuthorityError)
+U2 ok   the gateway stays exhausted on its root and has no other
+U2 ok   a governor holding only the gateway credential refuses an unprovisioned root, naming the provisioning step (UnknownRoot)
+U2 ok   a governor given the control credential provisions the root (k=2, m=1)
+U2 ok   a second governor on the provisioned root does not change its immutable budget
+U2 ok   a gateway-only governor then runs against the provisioned root
+U2 ok   plea_ctl provision creates the root through the control credential and reports an existing one
+U2 ok   PUBLIC holds no EXECUTE on plea_new_root nor on the four helpers; plea_new_root is granted to the owner and the control plane only
+U2 ok   no login role can call the helpers directly
+U2 ok   plea_mcp.py with only the gateway credential refuses to start against an unprovisioned root, naming the provisioning step
+U2 ok   plea_mcp.py with only the gateway credential starts against the provisioned root and answers initialize
+{
+ "seconds": 2.6,
+ "U1_ok": true,
+ "U1_count": 21,
+ "U2_ok": true,
+ "U2_count": 15,
+ "PASS": true
+}
+U RESULT: PASS
+
+real	0m2.849s
+user	0m1.637s
+sys	0m0.212s
+exit=0

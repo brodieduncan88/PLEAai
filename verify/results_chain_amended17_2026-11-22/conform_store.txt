@@ -1,0 +1,41 @@
+B01 zero budget admits nothing (m = 0, 1, 2)                                             PASS
+B02 admission boundary                                                                   PASS
+B03 reservation to intent opens no slot                                                  PASS
+B04 finality and receipts                                                                PASS
+B05 never-accepted suffix only through verified recovery                                 PASS
+B06 accepted consumption persists                                                        PASS
+B07 bounded replacement credit                                                           PASS
+B07b an EFFECT verdict earns no replacement credit (reviewer addition)                   PASS
+B08 evidence boundary                                                                    PASS
+B09 reservation release                                                                  PASS
+B09b release after a pending local intent is refused (reviewer addition)                 PASS
+B10 orthogonal modes                                                                     PASS
+B10b token release only in ACTIVE + OPEN (D2)                                            PASS
+B11 held operations (v3 wording: a stop is accepted while held and the run stays HELD)   PASS
+B12 recovery does not mint capacity                                                      PASS
+B13 conservative reconstruction                                                          PASS
+B14 re-registration lifecycle (v3.1: k = 3, so only the reduced state can deny)          PASS
+B15 dependent phases                                                                     PASS
+B16 replay and nonce                                                                     PASS
+B16b identical retries are DUPLICATE in any mode                                         PASS
+B18 invalid inputs                                                                       PASS
+B18b malformed input is InvalidInput before any rule (v3.1 E1, E10)                      PASS
+B19 a reservation is released only after acceptance (D3)                                 PASS
+B20 TERMINAL preconditions (D5)                                                          PASS
+B21 a discarded request is not retried under its key (D7)                                PASS
+B22 an EFFECT verdict needs authorised evidence (D8)                                     PASS
+B23 an INDETERMINATE attempt is frozen (D9)                                              PASS
+B24 releases and verdicts are accepted facts, applied only while ACTIVE (D4)             PASS
+B25 re-registration from TERMINALISING restarts in STOPPING (E6)                         PASS
+B26 an incomplete recovery that returns an intent is APPLIED; its repeat is a NOOP (E7)  PASS
+B27 a nonce freed by recovery may be bound to another attempt (E5)                       PASS
+B28 re-registration moves a never-accepted reservation into accepted C (E3)              PASS
+X01 cross-root isolation (contract v1)                                                   PASS
+X02 delegated callers share one root (contract v1)                                       PASS
+
+34/34 vector groups pass against conform_store
+
+real	0m15.224s
+user	0m5.486s
+sys	0m0.433s
+exit=0

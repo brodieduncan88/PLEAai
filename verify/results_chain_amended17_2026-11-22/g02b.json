@@ -1,0 +1,19 @@
+{
+ "rounds": 200,
+ "seconds": 46.1,
+ "release_denied": 200,
+ "accept_applied": 200,
+ "reserve_probes": 1000,
+ "reserve_denied": 1000,
+ "final_ok": 200,
+ "lockstep_ok": 200,
+ "chain_ok": 200,
+ "invariants_ok": 200,
+ "order": {
+  "accept_first": 134,
+  "release_first": 66
+ },
+ "failures": [],
+ "failure_count": 0,
+ "PASS": true
+}

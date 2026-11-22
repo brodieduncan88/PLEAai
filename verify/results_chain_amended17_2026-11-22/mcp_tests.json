@@ -1,0 +1,129 @@
+{
+ "seconds": 3.9,
+ "M1": [
+  [
+   "tools listed",
+   true
+  ],
+  [
+   "charge 1 runs",
+   true
+  ],
+  [
+   "charge 1 retry served, same text",
+   true
+  ],
+  [
+   "ledger has one charge for order 1",
+   true
+  ],
+  [
+   "zero refund is a no-effect",
+   true
+  ],
+  [
+   "charge 2 runs on the replacement",
+   true
+  ],
+  [
+   "charge 3 refused: budget",
+   true
+  ],
+  [
+   "ledger: order 3 never charged",
+   true
+  ],
+  [
+   "operator hold",
+   true
+  ],
+  [
+   "charge 4 refused: held",
+   true
+  ],
+  [
+   "operator recover",
+   true
+  ],
+  [
+   "charge 4 refused after recovery: budget",
+   true
+  ],
+  [
+   "status live (0,3,1) credit 1",
+   true
+  ],
+  [
+   "unknown tool is an error",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ],
+  [
+   "chain",
+   true
+  ]
+ ],
+ "M2": [
+  [
+   "ungoverned: the retry charges twice",
+   true
+  ],
+  [
+   "governed: the retry charges once",
+   true
+  ],
+  [
+   "a distinct request key is a new call",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "M3": [
+  [
+   "upstream tools listed through the proxy",
+   true
+  ],
+  [
+   "proxied charge 9 runs",
+   true
+  ],
+  [
+   "proxied retry served",
+   true
+  ],
+  [
+   "upstream ran order 9 once",
+   true
+  ],
+  [
+   "proxied charge 10 runs",
+   true
+  ],
+  [
+   "proxied charge 11 refused: budget",
+   true
+  ],
+  [
+   "upstream never saw order 11",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "demo": {
+  "ungoverned_charges_for_7": 2,
+  "governed_charges_for_8_after_retry": 1
+ },
+ "M1_ok": true,
+ "M2_ok": true,
+ "M3_ok": true,
+ "PASS": true
+}

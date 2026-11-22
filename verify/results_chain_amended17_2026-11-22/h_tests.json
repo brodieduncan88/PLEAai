@@ -1,0 +1,257 @@
+{
+ "seconds": 9.7,
+ "H1": [
+  [
+   "no receipt (400)",
+   true
+  ],
+  [
+   "receipt signed by an unknown key (403)",
+   true
+  ],
+  [
+   "reservation receipt where an intent receipt is required (403)",
+   true
+  ],
+  [
+   "another attempt's genuine intent receipt (403)",
+   true
+  ],
+  [
+   "kind edited on a copy of the genuine receipt (403)",
+   true
+  ],
+  [
+   "ledger unchanged by the refusals",
+   true
+  ],
+  [
+   "the genuine receipt then runs, once",
+   true
+  ]
+ ],
+ "H2": [
+  [
+   "first run executes",
+   true
+  ],
+  [
+   "same run again is a repeat with the same report",
+   true
+  ],
+  [
+   "a retry with other arguments is refused (403); the first result stands",
+   true
+  ],
+  [
+   "eight concurrent runs: exactly one execution",
+   true
+  ],
+  [
+   "after a host restart the run is still a repeat",
+   true
+  ]
+ ],
+ "H3": [
+  [
+   "fence at the host returns a signed fence report",
+   true
+  ],
+  [
+   "fenced attempt cannot run (409)",
+   true
+  ],
+  [
+   "the witness denies releasing an attempt whose intent it accepted (5.8/4)",
+   true
+  ],
+  [
+   "a fence report for a reservation that never started releases it",
+   true
+  ],
+  [
+   "a3 runs",
+   true
+  ],
+  [
+   "an attempt that ran cannot be fenced (409)",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "H4": [
+  [
+   "four roots through the API in host mode",
+   true
+  ],
+  [
+   "MCP host mode lists the host's tools",
+   true
+  ],
+  [
+   "MCP host mode: a retried charge runs once",
+   true
+  ],
+  [
+   "MCP host mode: beyond the budget is refused and never runs",
+   true
+  ],
+  [
+   "MCP root replay lockstep",
+   true
+  ]
+ ],
+ "H5": [
+  [
+   "client pinning [old, new] accepts receipts under the new key",
+   true
+  ],
+  [
+   "host pinning [old, new] runs on receipts under either witness key",
+   true
+  ],
+  [
+   "witness pinning [old gate, new gate] accepts the old host's report",
+   true
+  ],
+  [
+   "host pinning only the new witness key refuses an old receipt (403)",
+   true
+  ],
+  [
+   "a host under another gate key refuses an attempt bound to the old one (403): the executor is bound",
+   true
+  ],
+  [
+   "an attempt bound to the new host runs there",
+   true
+  ],
+  [
+   "witness accepts the new host's report",
+   true
+  ],
+  [
+   "witness pinning only the new gate key derives NONE for the old host's report",
+   true
+  ],
+  [
+   "replay lockstep",
+   true
+  ]
+ ],
+ "h2_burst": {
+  "burst": [
+   "refused 409",
+   "ran",
+   "repeat",
+   "repeat",
+   "repeat",
+   "repeat",
+   "repeat",
+   "repeat"
+  ]
+ },
+ "h4_rows": [
+  {
+   "root": "h4-0",
+   "ran": 4,
+   "no_effect": 1,
+   "denied": 1,
+   "other": 0,
+   "gate_key_in_governor": false,
+   "credit": 1,
+   "labels": [
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED"
+   ],
+   "phases": [
+    "EFFECT",
+    "EFFECT",
+    "EFFECT",
+    "NO_EFFECT"
+   ],
+   "lockstep": true,
+   "ok": true
+  },
+  {
+   "root": "h4-1",
+   "ran": 4,
+   "no_effect": 1,
+   "denied": 1,
+   "other": 0,
+   "gate_key_in_governor": false,
+   "credit": 1,
+   "labels": [
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED"
+   ],
+   "phases": [
+    "EFFECT",
+    "EFFECT",
+    "EFFECT",
+    "NO_EFFECT"
+   ],
+   "lockstep": true,
+   "ok": true
+  },
+  {
+   "root": "h4-2",
+   "ran": 4,
+   "no_effect": 1,
+   "denied": 1,
+   "other": 0,
+   "gate_key_in_governor": false,
+   "credit": 1,
+   "labels": [
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED"
+   ],
+   "phases": [
+    "EFFECT",
+    "EFFECT",
+    "EFFECT",
+    "NO_EFFECT"
+   ],
+   "lockstep": true,
+   "ok": true
+  },
+  {
+   "root": "h4-3",
+   "ran": 4,
+   "no_effect": 1,
+   "denied": 1,
+   "other": 0,
+   "gate_key_in_governor": false,
+   "credit": 1,
+   "labels": [
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED",
+    "AUTHORISED"
+   ],
+   "phases": [
+    "EFFECT",
+    "EFFECT",
+    "EFFECT",
+    "NO_EFFECT"
+   ],
+   "lockstep": true,
+   "ok": true
+  }
+ ],
+ "H1_ok": true,
+ "H2_ok": true,
+ "H3_ok": true,
+ "H4_ok": true,
+ "H5_ok": true,
+ "PASS": true
+}

@@ -1,0 +1,223 @@
+{
+ "seconds": 2.8,
+ "reserved_operations": [
+  {
+   "case": "ACCEPT_RESERVATION",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "witness",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "operation ACCEPT_RESERVATION is reserved to the witness (role plea_local)",
+   "ok": true
+  },
+  {
+   "case": "ACCEPT_INTENT",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "witness",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "operation ACCEPT_INTENT is reserved to the witness (role plea_local)",
+   "ok": true
+  },
+  {
+   "case": "RELEASE",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "witness",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "operation RELEASE is reserved to the witness (role plea_local)",
+   "ok": true
+  },
+  {
+   "case": "RECONCILE",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "witness",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "operation RECONCILE is reserved to the witness (role plea_local)",
+   "ok": true
+  },
+  {
+   "case": "CROSS",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "witness",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "operation CROSS is reserved to the witness (role plea_local)",
+   "ok": true
+  },
+  {
+   "case": "HOLD",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "control",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "a mode change is reserved to the control plane (role plea_local)",
+   "ok": true
+  },
+  {
+   "case": "STOP",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "control",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "a mode change is reserved to the control plane (role plea_local)",
+   "ok": true
+  },
+  {
+   "case": "TERMINALISE",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "control",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "a mode change is reserved to the control plane (role plea_local)",
+   "ok": true
+  },
+  {
+   "case": "TERMINAL",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "control",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "a mode change is reserved to the control plane (role plea_local)",
+   "ok": true
+  },
+  {
+   "case": "RECOVER",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "control",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "transition INTENT_PENDING->TOKEN is reserved to the control plane (role plea_loc",
+   "ok": true
+  },
+  {
+   "case": "REREGISTER",
+   "local_refused": true,
+   "state_unchanged": true,
+   "applied_by": "control",
+   "applied_kind": "APPLIED",
+   "lockstep": true,
+   "detail": "transition CONSUMED->INDETERMINATE is reserved to the control plane (role plea_l",
+   "ok": true
+  }
+ ],
+ "raw_sql": [
+  {
+   "stmt": "UPDATE phase RESERVED",
+   "refused": true
+  },
+  {
+   "stmt": "UPDATE phase CONSUMED",
+   "refused": true
+  },
+  {
+   "stmt": "UPDATE phase RELEASED",
+   "refused": true
+  },
+  {
+   "stmt": "UPDATE phase NO_EFFECT",
+   "refused": true
+  },
+  {
+   "stmt": "UPDATE phase EFFECT",
+   "refused": true
+  },
+  {
+   "stmt": "INSERT phase RESERVED",
+   "refused": true
+  },
+  {
+   "stmt": "INSERT phase CONSUMED",
+   "refused": true
+  },
+  {
+   "stmt": "INSERT phase RELEASED",
+   "refused": true
+  },
+  {
+   "stmt": "INSERT phase NO_EFFECT",
+   "refused": true
+  },
+  {
+   "stmt": "INSERT phase EFFECT",
+   "refused": true
+  },
+  {
+   "stmt": "UPDATE crossed = true",
+   "refused": true
+  },
+  {
+   "stmt": "INSERT decision ACCEPT_RESERVATION",
+   "refused": true
+  },
+  {
+   "stmt": "INSERT decision ACCEPT_INTENT",
+   "refused": true
+  },
+  {
+   "stmt": "INSERT decision RELEASE",
+   "refused": true
+  },
+  {
+   "stmt": "INSERT decision RECONCILE",
+   "refused": true
+  },
+  {
+   "stmt": "INSERT decision CROSS",
+   "refused": true
+  }
+ ],
+ "raw_state_unchanged": true,
+ "local_operations": [
+  {
+   "op": "RESERVE",
+   "kind": "APPLIED",
+   "ok": true
+  },
+  {
+   "op": "TOKEN",
+   "kind": "APPLIED",
+   "ok": true
+  },
+  {
+   "op": "START",
+   "kind": "APPLIED",
+   "ok": true
+  },
+  {
+   "op": "RECEIPT",
+   "kind": "APPLIED",
+   "ok": true
+  },
+  {
+   "op": "TIMEOUT",
+   "kind": "NOOP",
+   "ok": true
+  },
+  {
+   "op": "MISSING_RECEIPT",
+   "kind": "NOOP",
+   "ok": true
+  },
+  {
+   "op": "CRASH",
+   "kind": "NOOP",
+   "ok": true
+  }
+ ],
+ "reserved_refused_to_local": 11,
+ "raw_statements_refused": 16,
+ "local_operations_ok": 7,
+ "PASS": true
+}

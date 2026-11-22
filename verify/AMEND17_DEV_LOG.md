@@ -684,3 +684,8 @@ recorded below when they end.
   is written: `verify/DECLARED_AMEND17.md`. L7's evidence is committed with this entry.
 - The runner at 203bdca is still running as this is written. Its result is recorded after the declaration, and is not
   a condition of it.
+
+**After the declaration.**
+- The runner at 203bdca: 51 in all, 37 planted and 37 caught, 14 NOT PLANTED, as entry 18 declared. Kept in
+  `tests/amend17_dev_evidence/predecl_run6_203bdca/`.
+- The official runs followed, once each, and came out as declared: `verify/AMENDMENT_17_2026-11-22.md`.

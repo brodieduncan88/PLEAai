@@ -1,0 +1,45 @@
+M1 ok   tools listed
+M1 ok   charge 1 runs
+M1 ok   charge 1 retry served, same text
+M1 ok   ledger has one charge for order 1
+M1 ok   zero refund is a no-effect
+M1 ok   charge 2 runs on the replacement
+M1 ok   charge 3 refused: budget
+M1 ok   ledger: order 3 never charged
+M1 ok   operator hold
+M1 ok   charge 4 refused: held
+M1 ok   operator recover
+M1 ok   charge 4 refused after recovery: budget
+M1 ok   status live (0,3,1) credit 1
+M1 ok   unknown tool is an error
+M1 ok   replay lockstep
+M1 ok   chain
+M2 ok   ungoverned: the retry charges twice
+M2 ok   governed: the retry charges once
+M2 ok   a distinct request key is a new call
+M2 ok   replay lockstep
+M3 ok   upstream tools listed through the proxy
+M3 ok   proxied charge 9 runs
+M3 ok   proxied retry served
+M3 ok   upstream ran order 9 once
+M3 ok   proxied charge 10 runs
+M3 ok   proxied charge 11 refused: budget
+M3 ok   upstream never saw order 11
+M3 ok   replay lockstep
+{
+ "seconds": 3.9,
+ "demo": {
+  "ungoverned_charges_for_7": 2,
+  "governed_charges_for_8_after_retry": 1
+ },
+ "M1_ok": true,
+ "M2_ok": true,
+ "M3_ok": true,
+ "PASS": true
+}
+MCP RESULT: PASS
+
+real	0m4.118s
+user	0m2.292s
+sys	0m0.216s
+exit=0

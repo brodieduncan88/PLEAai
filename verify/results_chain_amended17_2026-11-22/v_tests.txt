@@ -1,0 +1,63 @@
+V1 ok   HOLD: the witness's CROSS is DENIED and its receipt binds nothing
+V1 ok   HOLD: /run with the genuine intent receipt and no admission (403)
+V1 ok   HOLD: the DENIED crossing as admission (403)
+V1 ok   HOLD: a forged admission (unknown key) (403)
+V1 ok   HOLD: another attempt's admission (403)
+V1 ok   HOLD: the local credential cannot apply CROSS (AuthorityError)
+V1 ok   HOLD: the local credential cannot set crossed by SQL
+V1 ok   HOLD: nothing ran; a1 is CONSUMED and not crossed
+V1 ok   after recovery the witness records the crossing and the admission runs the tool once
+V1 ok   a resume presents DENIED/ALREADY_CROSSED and is answered with the stored result
+V1 ok   the earlier admission replayed for another nonce (403)
+V1 ok   replay lockstep
+V1 ok   STOP: the witness's CROSS is DENIED and its receipt binds nothing
+V1 ok   STOP: /run with the genuine intent receipt and no admission (403)
+V1 ok   STOP: the DENIED crossing as admission (403)
+V1 ok   STOP: a forged admission (unknown key) (403)
+V1 ok   STOP: another attempt's admission (403)
+V1 ok   STOP: the local credential cannot apply CROSS (AuthorityError)
+V1 ok   STOP: the local credential cannot set crossed by SQL
+V1 ok   STOP: nothing ran; a1 is CONSUMED and not crossed
+V1 ok   replay lockstep
+V2 ok   a second host on the same state file refuses to start while the first holds a live lease
+V2 ok   the first host keeps serving
+V2 ok   after the first host's lease expires the second takes over and marks the running row interrupted
+V2 ok   the retry at the second host gets a signed UNKNOWN verdict (RuntimeError)
+V2 ok   the frozen host completes the tool after all and records EFFECT over the UNKNOWN
+V2 ok   the governor's retry resolves the attempt to EFFECT with one execution
+V2 ok   the host that lost its lease refuses new work (Exception)
+V2 ok   and reports it
+V2 ok   replay lockstep
+V3 ok   a tool that fails while the run is held: the governor raises Held (Held)
+V3 ok   nothing is stored; the witness refused the reconciliation
+V3 ok   after recovery the retry asks the host again and gets the UNKNOWN verdict (RuntimeError)
+V3 ok   the witness records NOOP once; the outcome is stored as unknown
+V3 ok   replay lockstep
+V4 ok   a receipt binds the evidence submitted (none here)
+V4 ok   the earlier receipt replayed for a later submission is refused by the client (ReceiptInvalid)
+V4 ok   the genuine later receipt binds the evidence
+V4 ok   replay lockstep
+V5 ok   a witness client with TLS settings and an http:// URL (ValueError)
+V5 ok   a host client with TLS settings and an http:// URL (ValueError)
+V6 ok   verify_chain under concurrent appends: 319 verifications, 0 false failures
+V6 ok   the final quiescent check passes
+{
+ "v6_stats": {
+  "verifications": 319,
+  "false_failures": 0
+ },
+ "seconds": 14.0,
+ "V1_ok": true,
+ "V2_ok": true,
+ "V3_ok": true,
+ "V4_ok": true,
+ "V5_ok": true,
+ "V6_ok": true,
+ "PASS": true
+}
+V RESULT: PASS
+
+real	0m14.178s
+user	0m6.415s
+sys	0m0.555s
+exit=0
