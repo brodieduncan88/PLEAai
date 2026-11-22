@@ -28,6 +28,17 @@ What it does not do.
     signed before a revocation, the revoked job would be admitted again.  Undoing that needs the database's owner or its
     operator (CAP-OWNER), not the service's role; it is stated as a limit, not met.
   - Pacing counters and the per-job lock are still in the front door's memory.
+
+The realm (after the third review, H1').  A front door's realm is fixed at its first start, in HOME/front/realm, and it does
+not start again with another (fix_realm): a revocation recorded under one realm is not lost by starting the front door
+under a new one.  The engineer's console reads the realm from the same file (read_realm), so it records under the front
+door's own realm without being told it, and refuses a realm given to it that differs.  The file is guarded only by the
+permissions of HOME/front: one who can both rewrite that folder and start the front door (its operator) can remove the file
+and start it under a new realm, and so forget the record; that is the operator's power over the front door's own code and
+configuration, stated as a limit, not met.  Nothing checks that the console's database and the front door's are the same
+one.  A row's lock held open by a caller holding plea_local stalls the console's revocation, and that job's admissions with
+it: nothing is admitted meanwhile.  CREATE TABLE IF NOT EXISTS does not add a CHECK to a table made before it; the
+function's own test of its arguments stands in.
 """
 
 SCHEMA = r"""
@@ -82,6 +93,8 @@ GRANT EXECUTE ON FUNCTION public.verify_front_observe(text, bigint, text, boolea
 GRANT EXECUTE ON FUNCTION public.verify_front_observe(text, bigint, text, boolean) TO plea_control;   -- the engineer's console (after review H1)
 """
 
+import os
+import pathlib
 import re
 
 ANSWERS = ('CURRENT', 'REVOKED', 'STALE', 'CONFLICT', 'INVALID')
@@ -91,6 +104,54 @@ REALM = re.compile(r'[A-Za-z0-9-]{8,64}')
 def state_name(realm: str, job: str) -> str:
     """A job's name in the record: the front door's realm and the job's name.  The front door and the engineer's console use it."""
     return f'{realm}:{job}'
+
+
+class RealmMismatch(Exception):
+    """The realm file is missing where it must be, unreadable, not a realm, or another realm than the one given."""
+
+
+def realm_path(home) -> pathlib.Path:
+    return pathlib.Path(home) / 'front' / 'realm'
+
+
+def read_realm(home) -> str | None:
+    """The realm this home's front door was first started with, or None if it has not been started with one.  Raises
+    RealmMismatch if the file is there and cannot be read, or does not hold a realm."""
+    p = realm_path(home)
+    try:
+        text = p.read_text()
+    except FileNotFoundError:
+        return None
+    except (OSError, UnicodeDecodeError) as exc:
+        raise RealmMismatch(f'the realm file {p} cannot be read ({type(exc).__name__})') from None
+    realm = text.strip()
+    if not REALM.fullmatch(realm):
+        raise RealmMismatch(f'the realm file {p} does not hold a realm')
+    return realm
+
+
+def fix_realm(home, realm: str | None) -> str:
+    """The front door's realm (after the third review, H1').  At the first start the realm given is written to HOME/front/realm;
+    at every later start the realm given, if any, must be the one written.  Raises RealmMismatch otherwise: the front door is not
+    started with another realm, so nothing recorded under its own is forgotten."""
+    stored = read_realm(home)
+    if stored is None:
+        if realm is None:
+            raise RealmMismatch('this front door has no realm yet: give --realm at its first start')
+        if not isinstance(realm, str) or not REALM.fullmatch(realm):
+            raise RealmMismatch('a realm is 8 to 64 letters, digits or hyphens')
+        p = realm_path(home); p.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+        except FileExistsError:                          # another start wrote it first: the same rule applies to that one
+            return fix_realm(home, realm)
+        with os.fdopen(fd, 'w') as f:
+            f.write(realm + '\n')
+        return realm
+    if realm is not None and realm != stored:
+        raise RealmMismatch(f'this front door\'s realm is {stored} (in {realm_path(home)}); it is not started with another ({realm}), '
+                            f'since everything recorded under its own would be forgotten')
+    return stored
 
 
 class StateUnavailable(Exception):

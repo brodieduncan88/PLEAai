@@ -134,7 +134,14 @@ The service side, once (the witness service and the gate host as in `deploy.py`,
 
     python verify/front_door.py --home HOME --port 8973 --witness-url https://... --witness-key HEX \
         --gate-host https://... --gate-key HEX --engineer-key HEX \
-        --tls-cert front.crt --tls-key front.key --tls-ca ca.crt --upstream-cert frontdoor.crt --upstream-key frontdoor.key
+        --tls-cert front.crt --tls-key front.key --tls-ca ca.crt --upstream-cert frontdoor.crt --upstream-key frontdoor.key \
+        --realm pump-station-front
+
+`--realm` names this front door in the database's record of job bindings (Amendment 17): 8 to 64 letters, digits or
+hyphens, given at the first start. It is then kept in `HOME/front/realm`; a later start may leave it out, and a start with
+another is refused, since everything recorded under the first would be forgotten. The engineer's console reads it from the
+same file. Before the first start, install the record's table and function once, as the database's owner
+(`front_state.install`, which `deploy_front.py` does).
 
 The engineer, for each job, after baselining with `verify_ctl.py baseline`:
 
@@ -149,6 +156,11 @@ The engineer, for each job, after baselining with `verify_ctl.py baseline`:
 
 After a revision (`verify_ctl.py revise`), move the job: `front_ctl.py rebind HOME pump-station-17 NEW_HASH --key
 engineer.key`. The record is built with `front_ctl.py record` and checked with `check_record.py`, as before.
+
+A revocation, `front_ctl.py revoke HOME JOB --key engineer.key`, is always written to `HOME/front/jobs.json`, and is recorded
+in the database first if it can be (through `PLEA_CONTROL_DSN`). A move is written first and then recorded. If either is not
+recorded, the console says so and ends with status 3; the front door records the file when it next reads it, at its start
+and on its look every 30 seconds. Nothing checks that `PLEA_CONTROL_DSN` names the front door's database.
 
 ## What the tools return
 

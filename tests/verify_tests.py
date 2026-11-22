@@ -3475,6 +3475,7 @@ def r33():
         calls_0 = len(s.ledger('called')); again_bad = s.cli(job, 'submit', BAD); calls_1 = len(s.ledger('called'))
         again_good = s.cli(job, 'submit', GOOD); new_design = s.cli(job, 'submit', dict(BAD, wall_mm=3.5))
         good_aid = next((str(a['aid']) for a in s.record(h).get('attempts', []) if (a.get('arguments') or {}).get('design') == GOOD), None)
+        good_attempts = [(str(a.get('aid')), a.get('phase')) for a in s.record(h).get('attempts', []) if (a.get('arguments') or {}).get('design') == GOOD]   # third review, L-a
         calls = [x.get('design') for x in s.ledger('called')]
         ok, checks_, summ = check_record.verify(s.record(h), s.keys)
         rec = s.record(h); aids = sorted(str(a.get('aid')) for a in rec.get('attempts', []))
@@ -3487,13 +3488,13 @@ def r33():
                  new_design=(new_design[0], head(new_design[1])), calls=len(calls), good_runs=sum(d == GOOD for d in calls), aids=aids, record_verifies=ok,
                  why=[f'{n} {t_}: {d}' for n, t_, g, d in checks_ if not g], identities=summ.get('identities'), official_runs=summ.get('official_runs'),
                  fresh=(fresh[0], [str(a.get('aid'))[:3] for a in rec2.get('attempts', [])], ok2, summ2.get('identities')),
-                 calls_around_again_bad=(calls_0, calls_1), pending_aid=pending_aid, good_aid=good_aid, mixed=(mixed_after[0], head(mixed_after[1]), calls_m2 - calls_m))
+                 calls_around_again_bad=(calls_0, calls_1), pending_aid=pending_aid, good_aid=good_aid, good_attempts=good_attempts, mixed=(mixed_after[0], head(mixed_after[1]), calls_m2 - calls_m))
         legacy = lambda a: re.fullmatch(r'a-[0-9a-f]{16}', a) is not None
         checks = {'before the change, a failure is decided and a passing design is left pending, both as 64-bit attempts': st1 == 200 and b1.get('outcome') == 'FAIL' and st2 == 503 and len(before_calls) == 1,
                   'after it, the failure sent again is the same attempt: the same FAIL, not run or charged again': again_bad[0] == 2 and head(again_bad[1]) == 'FAIL: REQUIREMENT NOT MET'
                       and calls_1 == calls_0,
                   'the pending design sent again is finished as the same attempt: run once, and it meets the check': again_good[0] == 0 and sum(d == GOOD for d in calls) == 1
-                      and pending_aid is not None and good_aid == pending_aid,
+                      and pending_aid is not None and good_aid == pending_aid and good_attempts == [(pending_aid, 'EFFECT')],
                   'a new design on that budget is made in its form, and the record verifies: three runs, all 64-bit, said to be of the earlier form':
                       new_design[0] == 2 and len(aids) == 3 and all(legacy(a) for a in aids) and ok and summ.get('identities') == 'legacy' and summ.get('official_runs') == 3,
                   'a budget made after the change takes the current form': fresh[0] == 2 and e['fresh'][1] == ['a2-'] and ok2 and summ2.get('identities') == 'current',

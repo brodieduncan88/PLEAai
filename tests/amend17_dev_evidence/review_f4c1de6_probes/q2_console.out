@@ -1,0 +1,65 @@
+{
+ "s1_first": true,
+ "s1_admitted": true,
+ "s2_first": true,
+ "s2_revoke_ok": true,
+ "s2_admitted": true,
+ "s3_first": true,
+ "s3_recorded": "REVOKED",
+ "s3_same_realm_admitted": false,
+ "s3_admitted": true,
+ "s4_first": true,
+ "s4_refused": true,
+ "s4_message": "the revocation could not be recorded in the database (StateUnavailable); nothing was written",
+ "s4_file_unchanged": true,
+ "s4_admitted": true,
+ "s5_first": true,
+ "s5_first_rebind": "OSError(28, 'No space left on device')",
+ "s5_after_fail_admitted": false,
+ "s5_retry": "ok",
+ "s5_retry2": "Refused('job-s5 is already bound to this baseline')",
+ "s5_jobs_seq": 2,
+ "s6_ok": true,
+ "rows": [
+  [
+   ":job-s6",
+   2,
+   true
+  ],
+  [
+   "realm-one-1:job-s1",
+   1,
+   false
+  ],
+  [
+   "realm-one-1:job-s2",
+   1,
+   false
+  ],
+  [
+   "realm-one-1:job-s3",
+   2,
+   true
+  ],
+  [
+   "realm-one-1:job-s4",
+   1,
+   false
+  ],
+  [
+   "realm-one-1:job-s5",
+   2,
+   false
+  ],
+  [
+   "realm-on\u0435-1:job-s2",
+   2,
+   true
+  ],
+  [
+   "realm-two-2:job-s3",
+   1,
+   false
+  ]
+ ]
+}

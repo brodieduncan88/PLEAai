@@ -1,0 +1,10 @@
+{
+ "first": true,
+ "rebind1": "OSError(28, 'No space left on device')",
+ "after_fail_admitted": false,
+ "retry_later": "Refused(\"job-q2b: the database's record of bindings answers CONFLICT; nothing was written\")",
+ "retry_later2": "Refused(\"job-q2b: the database's record of bindings answers CONFLICT; nothing was written\")",
+ "jobs_seq": 1,
+ "revoke": "ok",
+ "after_revoke_admitted": false
+}

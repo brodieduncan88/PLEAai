@@ -3,6 +3,7 @@
 
     front_door.py --home HOME --port 8973 --local-dsn DSN --witness-url URL --witness-key HEX --gate-host URL --gate-key HEX
                   --engineer-key HEX --tls-cert CERT --tls-key KEY --tls-ca CA --upstream-cert CERT --upstream-key KEY
+                  --realm NAME   (at the first start; then kept in HOME/front/realm: Amendment 17)
 
 Why it exists.  In the first plug-in (verify_client.py) the assistant-side process held the gateway's database
 credential and chose the `baseline_sha256` it sent.  The gate's tool cannot see which budget an attempt was admitted
@@ -405,12 +406,20 @@ class Front:
         self._pending = {}                       # the look's runs to act on: (baseline, attempt, PENDING or INTERRUPTED) -> {'next', 'wait'} (Amendment 9)
         self._journal_lock = threading.Lock()    # the journal has a lock of its own, so that counting it does not hold up every other request (Amendment 8)
         (self.home / 'front').mkdir(parents=True, exist_ok=True)
+        try:                                     # Amendment 17 (third review, H1'): the realm is fixed at the first start, and kept
+            self.cfg['realm'] = front_state.fix_realm(self.home, cfg.get('realm'))
+        except front_state.RealmMismatch:
+            if cfg.get('realm') is not None:
+                raise                            # another realm, or one that is not a realm: this front door is not started
+            self.cfg['realm'] = None             # no realm anywhere: no job can be named in the record, and nobody is admitted
 
     # ------------------------------------------------------------------ who is asking
     def state_name(self, job: str) -> str:
         """The job's name in the database's record of bindings (Amendment 17, D16): the front door's realm and the job's name.
-        The realm is a name the operator gives this front door (--realm), and the engineer's console the same one; it does not
-        change when the certificate authority's file does (after the second review, H2: it was once the hash of that file).
+        The realm is a name the operator gives this front door at its first start (--realm); it is kept in HOME/front/realm, the
+        front door does not start again with another, and the engineer's console reads it from there (after the third review,
+        H1').  It does not change when the certificate authority's file does (after the second review, H2: it was once the hash
+        of that file).
         Without one, no job can be named in the record and nobody is admitted (StateUnavailable)."""
         realm = self.cfg.get('realm')
         if not isinstance(realm, str) or not front_state.REALM.fullmatch(realm):
@@ -1031,8 +1040,8 @@ def main():
     ap.add_argument('--journal-share-bytes', type=int, default=JOURNAL_SHARE, help='bytes of the journal one baseline\'s designs may take before new runs for it are refused (Amendment 8)')
     ap.add_argument('--sweep-after', type=float, default=SWEEP_AFTER, help='seconds a run is seen pending before the front door asks the gate for it itself (Amendment 9)')
     ap.add_argument('--sweep-every', type=float, default=SWEEP_EVERY, help='seconds between the front door\'s looks for runs left pending (Amendment 9)')
-    ap.add_argument('--realm', required=True, help='this front door\'s name in the database\'s record of job bindings: the same one its engineer\'s console '
-                    'is given, kept when the certificate authority changes (Amendment 17); 8 to 64 letters, digits or hyphens')
+    ap.add_argument('--realm', help='this front door\'s name in the database\'s record of job bindings, 8 to 64 letters, digits or hyphens (Amendment 17): '
+                    'needed at the first start, then kept in HOME/front/realm, where the engineer\'s console reads it; a later start with another is refused')
     add_server_args(ap)
     a = ap.parse_args()
     tls = server_from_args(a)
@@ -1043,7 +1052,12 @@ def main():
            'tls': {'ca': a.tls_ca, 'cert': a.upstream_cert, 'key': a.upstream_key}, 'journal': str(home / 'front' / 'submissions.jsonl'),
            'journal_max_bytes': a.journal_max_bytes, 'disk_reserve_bytes': a.disk_reserve_bytes,
            'journal_share_bytes': a.journal_share_bytes, 'realm': a.realm}
-    front = Front(home, Store(a.local_dsn), cfg, a.engineer_key, a.rate)
+    try:
+        front = Front(home, Store(a.local_dsn), cfg, a.engineer_key, a.rate)
+    except front_state.RealmMismatch as exc:
+        raise SystemExit(f'front door: not started: {exc}')
+    if front.cfg['realm'] is None:
+        raise SystemExit('front door: not started: it has no realm yet; give --realm at its first start (Amendment 17)')
     try:                                                 # Amendment 17 (second review, H1): every revocation in jobs.json is recorded before anyone is admitted
         front.record_revocations()
     except front_state.StateUnavailable as exc:          # then nobody is admitted until the record can be written (admit raises, 503)

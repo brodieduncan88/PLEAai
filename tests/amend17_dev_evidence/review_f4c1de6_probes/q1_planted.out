@@ -1,0 +1,21 @@
+'binder removed': verify/verify_tools.py: count=1
+'binder always binds': verify/verify_tools.py: count=1
+'identity back to 64 bits': plea_gateway/governor.py: count=1
+'request key back to 96 bits': verify/verify_record.py: count=1
+'front door does not check the design of a verdict': verify/front_door.py: count=1
+'checker allows mixed forms': verify/check_record.py: count=1
+'no form kept per budget': plea_gateway/governor.py: count=0
+"front door ignores the budget's form": verify/front_door.py: count=1
+'record of bindings not consulted': verify/front_door.py: count=1
+'revocation not absorbing': verify/front_state.py: count=1
+'a stale binding accepted': verify/front_state.py: count=1
+'a binding for another budget admitted': verify/front_door.py: count=0
+'controls not put to the checker': verify/verify_ctl.py: count=1
+'the first client not retired': verify/verify_client.py: git replacement
+'revocations recorded only when the job calls': ENTRY HAS 4 FIELDS; the runner unpacks 5
+'revocations recorded only when the job calls': verify/front_door.py: count=1
+'revocations recorded only when the job calls': verify/front_ctl.py: count=1
+"realm from the authority's file": verify/front_door.py: count=1
+'a revocation at a number already seen not kept': verify/front_state.py: count=1
+'mixed forms not refused': plea_gateway/governor.py: count=1
+'controls not put to rederive': verify/verify_ctl.py: count=1

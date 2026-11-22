@@ -1,0 +1,9 @@
+VP-4 change record for Q2.  Run 1 output: q2_console.out (kept; q2_console.py unchanged).  S5's prediction failed: the
+retried rebind succeeded ('ok').  Reason found after: front_ctl._signed stamps time=now(), and the retry ran within the same
+second, so the retried binding was byte-identical (same digest) and the record answered CURRENT.  The S5 predicate is NOT
+changed and S5 run 1 is reported as a failed prediction.
+New probe Q2b (separate file, q2b_rebind_later.py): the same S5 sequence, with the retry stamped one minute later (front_ctl.now
+replaced by a later clock for the retry only), as an engineer retrying after freeing the disk would be.
+VP-5 expectation for Q2b, written before it runs: first rebind raises OSError; the job's binding in force is then refused
+(admit None); the retry one minute later is Refused with 'CONFLICT'; a second later retry is Refused with 'CONFLICT'; jobs.json
+still holds seq 1; a revoke still works (REVOKED recorded) afterwards.

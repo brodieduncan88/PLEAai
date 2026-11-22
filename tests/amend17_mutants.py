@@ -3,6 +3,13 @@
 a copy of the tree made from a commit, and runs the tests that should catch it.  A defect is caught when one of those tests
 fails.  Nothing in the branch is changed.
 
+An entry is (name, file, text, replacement, tests), or (name, [(file, text, replacement), ...], None, tests) for a defect of
+several edits.  After the third review (M-c, L-c): the loop takes both forms (it once raised ValueError at the first of the
+second); the results are written after each defect, not only at the end; and the record of bindings' SQL function is
+installed again from the commit at the end, since one defect changes it in the database the tests use.  The two entries
+whose text the second review's corrections rewrote, and the one whose text the third review's rewrote, are kept, and are NOT
+PLANTED; each has a restated entry after them.
+
     amend17_mutants.py COMMIT WORKDIR PYTHON OUT.json [NAME ...]
 """
 import json, pathlib, shutil, subprocess, sys, time
@@ -33,6 +40,16 @@ MUTANTS = [
     ('a revocation at a number already seen not kept', 'verify/front_state.py', "    IF p_revoked THEN", "    IF false THEN", ['F37']),
     ('mixed forms not refused', 'plea_gateway/governor.py', "    if len(forms) > 1:", "    if False:", ['R33']),
     ('controls not put to rederive', 'verify/verify_ctl.py', "control_problems(card, controls_run) + rederived", "control_problems(card, controls_run) + []", ['R32']),
+    # after the third review: the two entries above whose text was rewritten, restated; and the third review's corrections
+    ('no form kept per budget (restated)', 'plea_gateway/governor.py', "    return 'legacy' if forms == {'legacy'} else 'current'", "    return 'current'", ['R33']),
+    ('a binding for another budget admitted (restated)', 'verify/front_door.py', "                and b['root'].rsplit('/', 1)[-1] == b['baseline_sha256'][:32])", "                and True)", ['F37']),
+    ('revocations recorded only when the job calls (restated)', [('verify/front_door.py', "                self.observe(name, b); n += 1", "                n += 1"),
+                                                                  ('verify/front_ctl.py', "    import front_state\n    from plea_gateway import Store\n    return front_state.observe(",
+                                                                   "    return 'REVOKED' if binding['event'] == 'REVOKE' else 'CURRENT'\n    import front_state\n    from plea_gateway import Store\n    return front_state.observe(")], None, ['F37', 'F38']),
+    ('the console does not read the front door\'s realm', 'verify/front_ctl.py', "        stored = front_state.read_realm(home)\n", "        stored = given\n", ['F38']),
+    ('the front door started under another realm', 'verify/front_state.py', "    if realm is not None and realm != stored:", "    if False:", ['F38']),
+    ('a revocation not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)\n    if problem or why:", "    if problem or why:\n        raise Refused(why or problem)\n    _write(home, binding)\n    if problem or why:", ['F38']),
+    ('a move not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)                                # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding)                                # written first", ['F38']),
 ]
 
 
@@ -44,12 +61,19 @@ def tree(dest):
     subprocess.run(['tar', 'xf', '-', '-C', str(dest)], input=arc, check=True)
 
 
+def write_out():
+    OUT.write_text(json.dumps({'commit': COMMIT, 'results': results, 'caught': sum(1 for r in results.values() if r.get('caught')),
+                               'planted': sum(1 for r in results.values() if r.get('planted')), 'of': len(results)}, indent=1) + '\n')
+
+
 results = {}
-for name, path, old, new, tests in MUTANTS:
+for entry in MUTANTS:
+    name, tests = entry[0], entry[-1]
     if ONLY and name not in ONLY:
         continue
     dest = WORK / 'tree'; tree(dest)
-    edits = path if isinstance(path, list) else [(path, old, new)]
+    path = entry[1]
+    edits = path if isinstance(path, list) else [(path, entry[2], entry[3])]
     planted = True
     for pth, o, n in edits:
         f = dest / pth
@@ -61,7 +85,7 @@ for name, path, old, new, tests in MUTANTS:
             f.write_text(text.replace(o, n))
     path = path if isinstance(path, str) else ', '.join(p for p, _, _ in path)
     if not planted:
-        results[name] = {'planted': False, 'caught': None}; print(f'{name}: NOT PLANTED (the text was not found once)', flush=True); continue
+        results[name] = {'planted': False, 'caught': None}; print(f'{name}: NOT PLANTED (the text was not found once)', flush=True); write_out(); continue
     got = {}
     for t in tests:
         suite = 'verify_front_tests.py' if t.startswith('F') else 'verify_tests.py'
@@ -73,5 +97,10 @@ for name, path, old, new, tests in MUTANTS:
     caught = any(v['ok'] is False for v in got.values())
     results[name] = {'planted': True, 'file': path, 'tests': got, 'caught': caught}
     print(f"{name}: {'CAUGHT' if caught else 'NOT CAUGHT'} by {tests}", flush=True)
-OUT.write_text(json.dumps({'commit': COMMIT, 'results': results, 'caught': sum(1 for r in results.values() if r.get('caught')), 'of': len(results)}, indent=1) + '\n')
-print(f"caught {sum(1 for r in results.values() if r.get('caught'))} of {len(results)}")
+    write_out()
+dest = WORK / 'tree'; tree(dest)                         # the commit's own SQL function, installed again (third review, L-c)
+subprocess.run([PY, '-B', '-c', 'import os, sys; sys.path[:0] = ["verify", "."]; import front_state; from plea_gateway import Store; '
+                'front_state.install(Store(os.environ.get("PLEA_ADMIN_DSN", "postgresql://plea:plea@127.0.0.1:5432/plea")))'], cwd=dest, check=True)
+write_out()
+print(f"caught {sum(1 for r in results.values() if r.get('caught'))} of {sum(1 for r in results.values() if r.get('planted'))} planted; "
+      f"{sum(1 for r in results.values() if not r.get('planted'))} not planted; {len(results)} in all")

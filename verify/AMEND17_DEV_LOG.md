@@ -286,3 +286,79 @@ the owner's rules VP-1 to VP-6 (`plan/GOVERNANCE_NOTE_2026-11-22.md`). Nothing h
 - **Run after entry 13** (F37, F10, F12; then R30 to R34): all passed, and the new checks' evidence is not vacuous. Entry 13
   declared "F37: 12 of 12". F37 has eleven checks (nine, and two added), so that count was wrong, as in entry 11, and all
   eleven passed. Kept in `tests/amend17_dev_evidence/review2_run1_front.json` and `review2_run1_gate.json`.
+
+## Entry 14. The full runs before the declaration, the third review, and what it changed
+
+- **The full runs at f4c1de6** (before any change below), made once each in this order. Kept in
+  `tests/amend17_dev_evidence/predecl_run1/`.
+  - The gate suite: 34 of 34 passed. R1 to R13 ran through the front door.
+  - The front suite: 35 of 35 passed (F3 to F37; F1 and F2 were retired by entry 9).
+  - The planted-defect runner, on f4c1de6:
+    - It stopped with ValueError at the 15th of 19 defects.
+    - Of the 14 before that, 12 were planted, and all 12 were caught.
+    - Two were NOT PLANTED: 'no form kept per budget' and 'a binding for another budget admitted'. The text each one
+      looks for was rewritten by the second review's corrections (M3 and M2), so it was not found.
+    - The ValueError: the loop unpacks five fields, and the defects added after the second review use a four-field
+      form for several edits.
+    - These are faults of the runner. They were not caught before the run, because the runner was never run whole
+      after those defects were added. It is a breach of VP-3, recorded here.
+  - The gateway chain on database plea31: its outcome is recorded below when it ends. No file of `plea_gateway/`,
+    `mcp/` or the chain's tests is changed by this entry.
+- **The third review** (of f4c1de6) is kept as returned in `verify/reviews/AMEND17_REVIEW_F4C1DE6_2026-11-22.md`. Its
+  probes are in `tests/amend17_dev_evidence/review_f4c1de6_probes/`.
+- **H1', accepted.** The console was not required to have the front door's realm. It checked none and stored none, and
+  the documented commands gave none. So a revocation made by the console while the front door was stopped was not
+  recorded, and the earlier binding put back before the front door started admitted the job again. The same happened
+  with a realm one character off, and when the front door was restarted under another realm. Changes:
+  - The front door fixes its realm in `HOME/front/realm` at its first start (`front_state.fix_realm`).
+  - The front door refuses to start, as a process or in process, with another realm.
+  - `--realm` is needed only at the first start.
+  - The console reads the realm from that file (`front_state.read_realm`, `front_ctl._realm`). `--realm` is not
+    needed, and if given it must be that realm.
+  - What is still open is stated in `front_state`: one who can both rewrite `HOME/front` and start the front door can
+    remove the file. That is the operator's power over the front door, a limit not met.
+- **M-a, accepted.** A revocation the console could not record was refused, so a leaked job stayed admitted. Now:
+  - A revocation is always written to `jobs.json`, and is recorded first if it can be.
+  - If it was not recorded, or another realm was given, the console says so after the write (`Unrecorded`), and the
+    command ends with status 3.
+  - Not met, and stated in the readme: nothing checks that the console's database is the front door's.
+- **M-b, accepted.** A move was recorded before it was written, so a failure between the two left the job bound to a
+  binding the record had passed over, for good. A move is now written first, then recorded. A failure to record it,
+  or an answer other than CURRENT, is said, with status 3.
+- **M-c and L-c, accepted.** The runner's loop now takes both forms of entry, and writes its results after each
+  defect. At the end, the commit's own SQL function is installed again, because one defect changes it in the database
+  the tests use.
+  - The three entries whose text was rewritten are kept as they were, and are expected NOT PLANTED. The third is
+    'revocations recorded only when the job calls': its console edit named text that this entry rewrites.
+  - Each of the three has a restated entry after it.
+  - Five defects are added, for the third review's corrections and for the restatements.
+- **L-a, accepted.** R33's third check now also requires one attempt in the record with the passing design: the
+  pending one, with phase EFFECT.
+- **L-b, accepted.** F38 is new, and makes the console's own recording needed: the revocation is made while the front
+  door is stopped, and the earlier binding is put back before the front door starts.
+  - F37 is not changed. Its job-d case calls the console with no realm. That now records through the realm file, so
+    F37 no longer exercises the case where only the file holds a revocation.
+  - F38's fourth check exercises that case: the database cannot be reached from the console, and the front door
+    records the revocation itself.
+- **L-d and L-e.** L-d (a process of the earlier code, during a rolling upgrade, stops a budget's runs) is recorded in
+  the register, not in the code. `plea_gateway/` is left unchanged, so that the chain run above stands for it. L-e: the
+  console's realm is now validated, and the other two points are stated in `front_state`.
+- **Before these test changes.** The files as they stood at f4c1de6 are kept in
+  `tests/amend17_dev_evidence/before_review3/`:
+  - `verify_tests.py`, 86bf43b6…;
+  - `verify_front_tests.py`, 18018da5…;
+  - `amend17_mutants.py`, 39e8683f….
+  No predicate was changed after a failure: these are checks added after the review, and the runner's faults.
+- **Declared before the next run (VP-5).** SHA-256 of the test files:
+  - `tests/verify_tests.py`: `901085c3e938e44b3859e127c2bc17149d9e6419593dd2aab0713a726bff4b30`;
+  - `tests/verify_front_tests.py`: `96d80373a0608c7319e5d4765e930534f24b417ecccf6c6db20355c2f3265c04`;
+  - `tests/amend17_mutants.py`: `4af36dc05ee123f9101febe8a9984e724f299ac5457073b3e8316f4d379fe521`.
+
+  Expected:
+  - F38: 5 of 5 checks;
+  - F37 passes, with 11 checks;
+  - R33 passes, with 6 checks;
+  - F10 and F12 pass;
+  - then the full suites: the gate 34 of 34, the front 36 of 36;
+  - then the runner on the commit that holds these changes: 26 defects in all, 23 planted and caught, and 3 NOT
+    PLANTED (the three kept as they were).

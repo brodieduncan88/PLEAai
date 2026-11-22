@@ -1,0 +1,58 @@
+{
+ "across": {
+  "verdicts": [
+   "FAIL",
+   "PASS"
+  ],
+  "problems": [
+   "control \"PA66 must fail at 200 C\": its recorded verdict does not follow from its recorded numbers",
+   "control \"PA66 must fail at 200 C\": service_temperature: recorded as not met, but 200 >= 200 is True",
+   "control \"PA66 must fail at 200 C\": service_temperature: the margin does not recompute",
+   "control \"PA66 must fail at 200 C\": reason LIMIT_NOT_MET does not follow from the comparisons"
+  ]
+ },
+ "many": {
+  "verdicts": [
+   "FAIL",
+   "PASS"
+  ],
+  "problems": []
+ },
+ "run": {
+  "verdicts": [
+   "FAIL",
+   "PASS"
+  ],
+  "problems": []
+ },
+ "far": {
+  "verdicts": [
+   "FAIL",
+   "PASS"
+  ],
+  "problems": [
+   "control \"PA66 must fail at 200 C\": service_temperature: the margin does not recompute"
+  ]
+ },
+ "plain": {
+  "verdicts": [
+   "FAIL",
+   "PASS"
+  ],
+  "problems": []
+ },
+ "edge28": {
+  "verdicts": [
+   "FAIL",
+   "PASS"
+  ],
+  "problems": []
+ },
+ "peek29": {
+  "verdicts": [
+   "FAIL",
+   "PASS"
+  ],
+  "problems": []
+ }
+}

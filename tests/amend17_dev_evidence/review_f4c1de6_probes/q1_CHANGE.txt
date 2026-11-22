@@ -1,0 +1,6 @@
+VP-4 change record for Q1.  Run 1 (q1_planted_run1.py, output q1_planted_run1.out + .err) stopped with ValueError: the new
+mutant 'revocations recorded only when the job calls' is a 4-tuple, not the 5-tuple every other entry is.  That crash is itself
+a finding (the committed runner unpacks the same way).  Change: the probe now unpacks name, path, old, new, tests only for
+5-tuples and reports any other length, so the counts for the entries after it can be read.  The predicate is unchanged.
+VP-5 new expectation for run 2: entry 15 reports its length (4); 'no form kept per budget' and 'a binding for another budget
+admitted' count 0; all other text-mutants count 1, including the four after entry 15.

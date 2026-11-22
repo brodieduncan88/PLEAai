@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review3/q1_planted_run1.py", line 9, in <module>
+    for name, path, old, new, tests in ns['MUTANTS']:
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 5, got 4)
