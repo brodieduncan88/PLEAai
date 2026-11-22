@@ -138,7 +138,10 @@ The service side, once (the witness service and the gate host as in `deploy.py`,
 
 Before the first start, install the database's record of job bindings (Amendment 17) once, as the database's owner
 (`front_state.install`, which `deploy_front.py` does). A job is named in it by what the engineer signs, the engineer's
-key and the job's name, so the front door is given no name or setting for it, and a job name is used once.
+key and the job's name, so the front door is given no name or setting for it, and a job name is used once by each engineer
+key. Pin one engineer key for a front door: with several, or during a change of key, a name revoked under one key does not
+cover another key's enrolment of the same name. Before a key is changed, revoke its jobs under it, and enrol new names under
+the new key.
 
 The engineer, for each job, after baselining with `verify_ctl.py baseline`:
 
@@ -154,8 +157,11 @@ The engineer, for each job, after baselining with `verify_ctl.py baseline`:
 After a revision (`verify_ctl.py revise`), move the job: `front_ctl.py rebind HOME pump-station-17 NEW_HASH --key
 engineer.key`. The record is built with `front_ctl.py record` and checked with `check_record.py`, as before.
 
-A revocation, `front_ctl.py revoke HOME JOB --key engineer.key`, is always written to `HOME/front/jobs.json`, and is recorded
-in the database first if it can be (through `PLEA_CONTROL_DSN`). A move is written first and then recorded. If either is not
+A revocation, `front_ctl.py revoke HOME JOB --key engineer.key`, is recorded in the database first if it can be (through
+`PLEA_CONTROL_DSN`), and written to `HOME/front/jobs.json` unless the job's entry changed while the console ran or another
+holds the file's lock for 30 seconds, which is said. If the job has no usable entry (removed, spoiled, or another job's),
+its name is revoked in the database and nothing is written, with status 4; if that cannot be recorded either, the console
+says the job is not revoked. A move is written first and then recorded. If either is not
 recorded, the console says so and ends with status 3; give `revoke` again to record a revocation, and the front door records
 the file when it next reads it, at its start and on its look every 30 seconds. A revocation recorded and not written ends
 with status 4; the front door refuses the job already, and `revoke` given again writes it. Nothing checks that
@@ -184,7 +190,10 @@ call is one request and nothing retries. Sending the same design again returns t
   refuses one older than the latest it, or the engineer's console, has recorded in the database, and a revoked job
   for good, across restarts. Not met: a revocation neither the console nor the front door has yet recorded (the
   database could not be reached, and the front door had not read it) is undone by putting the earlier binding back
-  before either does; and a restore of the database to an earlier state, together with the file, undoes later ones.
+  before either does; a restore of the database to an earlier state, together with the file, undoes later ones; with
+  more than one engineer key pinned, a name revoked under one key does not cover another key's enrolment of the same
+  name; and an enrolment of a name already used by the same key is issued and then refused at its first request, with
+  nothing said at the console.
 - **A job certificate is a bearer of the job.** Whoever holds the folder can spend the job's runs and cause notices.
   It cannot change what is verified against.
 - **One machine does not show separation.** In the tests every party runs under one account. An assistant with a

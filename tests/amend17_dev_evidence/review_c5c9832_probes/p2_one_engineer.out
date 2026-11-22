@@ -1,0 +1,79 @@
+{
+ "p2a_R1": true,
+ "p2a_rebind_recorded": "CURRENT",
+ "p2a_R1_rebound": true,
+ "p2a_R2": false,
+ "p2a_revoke": [
+  "ok",
+  "REVOKE"
+ ],
+ "p2a_row": [
+  2,
+  true
+ ],
+ "p2a_R1_rebind_put_back": false,
+ "p2a_R1_enrol_put_back": false,
+ "p2b_Q2": true,
+ "p2b_Q1_put_back": false,
+ "p2b_answer_Q1": "CONFLICT",
+ "p2b_revoke": [
+  "ok",
+  "REVOKE"
+ ],
+ "p2b_Q1_after_revoke": false,
+ "p2c_P2": false,
+ "p2c_revoke_rerecord": [
+  "ok",
+  "REVOKE"
+ ],
+ "p2c_row": [
+  2,
+  true
+ ],
+ "p2c_P2_after": false,
+ "p2c_P1_after": false,
+ "p2d_admitted": true,
+ "p2d_revoke": [
+  "Unwritten",
+  "the revocation is recorded in the database, so the front door refuses job-c; it could not be written to jobs.json (Changed): give revoke again to write it"
+ ],
+ "p2d_row": [
+  2,
+  true
+ ],
+ "p2d_file_event": "ENROL",
+ "p2d_put_back": false,
+ "p2e_admitted": false,
+ "p2e_revoke": [
+  "Changed",
+  "the entry of job-c in jobs.json changed while this command ran; nothing was written to it"
+ ],
+ "p2e_row": [
+  2,
+  true
+ ],
+ "p2e_file_event": "ENROL",
+ "p2e_put_back": false,
+ "p2f_bad_revoke": [
+  "OSError",
+  "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review6/homes/p2f_bad-76d1d1/front/jobs.lock is held by another process; nothing"
+ ],
+ "p2f_bad_row": [
+  1,
+  false
+ ],
+ "p2f_bad_put_back": true,
+ "p2f_good_revoke": [
+  "Unwritten",
+  "the revocation is recorded in the database, so the front door refuses job-l; it could not be written to jobs.json (OSError): give revoke again to write it"
+ ],
+ "p2f_good_row": [
+  2,
+  true
+ ],
+ "p2f_good_put_back": false,
+ "p2g_capdb": "CURRENT",
+ "p2g_job_n": false,
+ "p2g_answer": "CONFLICT"
+}
+PREDICTIONS FAILED: ['p2e_admitted', 'p2e_row', 'p2e_put_back']

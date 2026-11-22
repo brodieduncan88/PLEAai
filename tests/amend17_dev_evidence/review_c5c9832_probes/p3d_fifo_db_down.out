@@ -1,0 +1,11 @@
+{
+ "blocked_after_5s": true,
+ "result_so_far": null,
+ "row": [
+  1,
+  false
+ ],
+ "file_event": "ENROL",
+ "admitted_meanwhile": true
+}
+PREDICTIONS FAILED: none

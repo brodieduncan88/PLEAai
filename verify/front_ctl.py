@@ -38,7 +38,9 @@ Amendment 17 (D16, after the third and fourth reviews).  rebind and revoke also 
 of bindings (through PLEA_CONTROL_DSN), where a job is named by what the engineer signs: the engineer's key and the job's name.
 An entry of jobs.json for another job than the one named is refused (after the fifth review, N-H1).
 No realm, file or setting is needed for that.  A revocation is recorded first if it can be, and is always written to
-jobs.json.  If it was not recorded, the console says so and ends with status 3; revoke given again for that job records the
+jobs.json unless the entry changed while it ran or the lock is held by another, which is said.  A job with no usable entry
+(none, one not this engineer's, or one for another job) has its name revoked in the database, and the console ends with
+status 4, saying nothing was written (after the sixth review, M-2).  If it was not recorded, the console says so and ends with status 3; revoke given again for that job records the
 same revocation (it is not refused as already revoked), and the front door records it when it next reads the file (at its
 start, and on its look every 30 seconds).  If it was recorded and could not be written, the console says so and ends with
 status 4: the front door refuses the job already, and revoke given again writes it.  A move is written to jobs.json first,
@@ -185,11 +187,35 @@ def _write(home, binding: dict, start) -> None:
         if jobs.get(binding['job']) != start:
             raise Changed(f'the entry of {binding["job"]} in jobs.json changed while this command ran; nothing was written to it')
         jobs[binding['job']] = binding
-        tmp = path.with_suffix('.tmp'); tmp.write_text(json.dumps({'jobs': jobs}, indent=1) + '\n'); os.replace(tmp, path)
-        with (path.parent / 'enrolment.jsonl').open('a') as f:
-            f.write(json.dumps(binding) + '\n')
+        log_fd = _plain(path.parent / 'enrolment.jsonl', os.O_WRONLY | os.O_APPEND | os.O_CREAT)   # looked at before anything is replaced
+        try:
+            import tempfile                              # a name of its own, made new (after the sixth review, M-3: jobs.tmp was opened by name)
+            tfd, tname = tempfile.mkstemp(dir=path.parent, prefix='.jobs-', suffix='.tmp')
+            try:
+                with os.fdopen(tfd, 'w') as f:
+                    f.write(json.dumps({'jobs': jobs}, indent=1) + '\n')
+                os.replace(tname, path)                  # rename: a link at jobs.json is replaced, not followed
+            except BaseException:
+                try:
+                    os.unlink(tname)
+                except OSError:
+                    pass
+                raise
+            os.write(log_fd, (json.dumps(binding) + '\n').encode())
+        finally:
+            os.close(log_fd)
     finally:
         os.close(fd)
+
+
+def _plain(p, flags: int) -> int:
+    """Open a file of HOME/front without following a link and without waiting on a pipe, and refuse one that is not a plain
+    file (after the sixth review, M-3).  Returns the descriptor."""
+    import stat
+    fd = os.open(p, flags | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC, 0o644)
+    if not stat.S_ISREG(os.fstat(fd).st_mode):
+        os.close(fd); raise OSError(f'{p} is not a plain file; nothing was written')
+    return fd
 
 
 def _signed(event: str, seq: int, job: str, env: dict, cert_sha256: str, previous, note, key: Key) -> dict:
@@ -277,8 +303,29 @@ def revoke(home, job: str, key: Key, control_dsn: str = verify_ctl.CONTROL_DSN) 
     (after the third review, M-a: it was once refused when it could not be recorded, and so left a leaked job admitted).  If it
     was not recorded, Unrecorded is raised after the write.  A job whose binding in jobs.json is already its revocation has that
     revocation recorded again (after the fourth review, M1: it was refused as already revoked, so one that could not be recorded
-    could never be).  If it was recorded and cannot be written, Unwritten is raised (after the fourth review, L6)."""
-    cur = _current(home, job, key)
+    could never be).  If it was recorded and cannot be written, Unwritten is raised (after the fourth review, L6).
+
+    With no usable entry for the job in jobs.json (none, one not signed by this engineer, or one signed for another job), the
+    job's name is revoked in the database all the same, and Unwritten is raised: the record names a job by the engineer's key
+    and its name, which the console knows without the entry (after the sixth review, M-2: such a job could not be revoked at
+    all, and the entry put back was admitted).  A revocation neither recorded nor written raises Refused, saying the job is
+    not revoked (after the sixth review, L-1)."""
+    try:
+        cur = _current(home, job, key)
+    except Refused as no_entry:
+        if not isinstance(job, str) or not JOB_NAME.match(job) or job in RESERVED:
+            raise
+        b = {'event': 'REVOKE', 'seq': 1, 'job': job, 'baseline_sha256': None, 'root': None, 'cert_sha256': None, 'previous': None, 'time': now(),
+             'note': f'revoked by name: {no_entry}'}
+        stmt = dict(b, signer=key.public_hex, signature=key.sign(binding_message(b)))
+        try:
+            answer = _record(stmt, control_dsn)
+        except Exception as exc:
+            raise Refused(f'{no_entry}  The job\'s name could not be revoked in the database either ({type(exc).__name__}): {job} is NOT revoked.') from None
+        if answer != 'REVOKED':
+            raise Refused(f'{no_entry}  The database\'s record of bindings answers {answer}: {job} is NOT revoked.')
+        raise Unwritten(stmt, f'{no_entry}  The job\'s name is revoked in the database, so the front door refuses {job} under any binding of this '
+                              f'engineer\'s; nothing was written to jobs.json.')
     if cur['event'] == 'REVOKE':
         try:
             answer = _record(cur, control_dsn)
@@ -304,7 +351,7 @@ def revoke(home, job: str, key: Key, control_dsn: str = verify_ctl.CONTROL_DSN) 
         if why is None:
             raise Unwritten(binding, f'the revocation is recorded in the database, so the front door refuses {job}; it could not be written to jobs.json '
                                      f'({type(exc).__name__}): give revoke again to write it') from None
-        raise
+        raise Refused(f'{why}, and it could not be written to jobs.json ({exc}): {job} is NOT revoked; give revoke again') from None
     if why:
         raise Unrecorded(binding, f'{why}: the revocation is written to jobs.json; give revoke again to record it, and the front door records it when it next reads the file')
     return binding
@@ -336,7 +383,8 @@ def main():
     try:
         if a.action == 'jobs':
             for job, b in sorted(read_jobs(a.home).items()):
-                print(f"{job:<24} {b.get('event'):<7} {str(b.get('baseline_sha256'))[:16]}…  {b.get('time')}" + (f"  note: {b['note']}" if b.get('note') else ''))
+                print(f"{job:<24} {b.get('event'):<7} {str(b.get('baseline_sha256'))[:16]}…  {b.get('time')}  signer {str(b.get('signer'))[:16]}…"   # signer: sixth review, L-3
+                      + (f"  note: {b['note']}" if b.get('note') else ''))
             return
         key = verify_ctl.load_key(a.key)
         if a.action == 'enrol':
@@ -354,7 +402,7 @@ def main():
         print(json.dumps({k: exc.binding[k] for k in ('event', 'seq', 'job', 'baseline_sha256', 'root', 'previous', 'time', 'note')}))
         print(f'written, not recorded: {exc}', file=sys.stderr); sys.exit(3)
     except Unwritten as exc:                             # recorded, and not written (Amendment 17, after the fourth review, L6)
-        print(json.dumps({k: exc.binding[k] for k in ('event', 'seq', 'job', 'baseline_sha256', 'root', 'previous', 'time', 'note')}))
+        print(json.dumps({k: exc.binding.get(k) for k in ('event', 'seq', 'job', 'baseline_sha256', 'root', 'previous', 'time', 'note', 'signer')}))
         print(f'recorded, not written: {exc}', file=sys.stderr); sys.exit(4)
     except (Refused, BaselineInvalid, ValueError, OSError, IndexError, TypeError) as exc:
         print(f'refused: {exc}', file=sys.stderr); sys.exit(1)

@@ -501,3 +501,54 @@ the owner's rules VP-1 to VP-6 (`plan/GOVERNANCE_NOTE_2026-11-22.md`). Nothing h
   - F10, F12 and F28 pass;
   - then the full suites: the gate 34 of 34, the front 36 of 36;
   - then the runner on the commit that holds these changes: 43 in all, 30 planted and 30 caught, 13 NOT PLANTED.
+
+**The first of entry 16's runs.** F38, F37, F10, F12 and F28 at c5c9832: 5 of 5 passed, as declared (F38 11 of 11
+checks, F37 11 of 11). Kept in `tests/amend17_dev_evidence/review5_run1_front.json`. The full runs at c5c9832 are
+recorded below when they end.
+
+## Entry 17. The sixth review (of c5c9832), and what it changed
+
+- The review is kept as returned in `verify/reviews/AMEND17_REVIEW_C5C9832_2026-11-22.md`. Its probes are in
+  `tests/amend17_dev_evidence/review_c5c9832_probes/`. It found nothing critical or high, and confirms N-H1 corrected.
+- **M-1, recorded, not changed.** With more than one engineer key pinned, or during a change of key, a name revoked
+  under one key does not cover another key's enrolment of the same name.
+  - Closing it needs a row common to all keys. That would bring back the collision of test deployments that share a
+    database (each enrols `job-a`). Choosing between them is a design decision for the owner.
+  - Now stated: in `README_FRONT.md` (pin one engineer key for a front door; revoke a key's jobs before changing it),
+    in `front_state`, and in the register.
+  - Entry 16's words "A revocation covers every enrolment of the name" hold only for one key. They are corrected here,
+    not edited there.
+- **M-2, accepted.** This predates Amendment 17. A job whose entry was removed, spoiled or replaced by another job's
+  could not be revoked: the console refused, and the entry put back was admitted. Now the job's name is revoked in the
+  database under the engineer's key, nothing is written, and the console ends with status 4. If the database cannot be
+  reached either, the console says the job is NOT revoked.
+- **M-3, accepted.** This predates Amendment 17. `jobs.tmp` and `enrolment.jsonl` were opened by name: a link was
+  followed, so a folder writer could have the console overwrite any file its account can write, and a pipe hung the
+  console. Now:
+  - the temporary file is made new, with a name of its own (`mkstemp`);
+  - the log is opened without following a link or waiting on a pipe, must be a plain file, and is opened before
+    anything is replaced.
+- **L-1, accepted.** A revocation neither recorded nor written (the database unreachable, and the entry changed or the
+  lock held) now says that the job is NOT revoked. The readme and the console no longer say a revocation "is always
+  written".
+- **L-2, recorded.** The record's names can be foreseen by CAP-DB, which can deny an enrolment ahead of it. That is a
+  denial only, and CAP-DB could already revoke any row.
+- **L-3, accepted in part.** The console's list of jobs shows each entry's signer. Enrol still does not consult the
+  record, so a re-used name is issued and then refused at its first request. This is stated in the readme.
+- **L-4, accepted.** `front_door.HEX64` is used with fullmatch, so the baseline's hash is checked strictly as well.
+  `usable()`'s check of the certificate hash still has no test of its own.
+- **F38 gains three checks** (12 to 14), for M-2, M-3, and L-1 with L-3.
+- **The runner gains four defects**, 47 in all. No earlier entry's text was rewritten by this entry.
+- **Before these test changes.** The files at c5c9832 are kept in `before_review6/`: `verify_front_tests.py` cef36de7…
+  and `amend17_mutants.py` 68851680…. `verify_tests.py` is not changed.
+- **Declared before the next run (VP-5).** SHA-256 of the test files:
+  - `tests/verify_tests.py`: `c4ab616416c4a85405bb4ebd1a4e079ccbf3f7da9c009979222a1932ba473cb1`;
+  - `tests/verify_front_tests.py`: `d3505acdcbcefa10083b474dd19250dbf305c13fbf494ef6264f5a3a86107a0c`;
+  - `tests/amend17_mutants.py`: `f7244227214f0fe371ff1d9967f1987537aad815e55f2ccb7e5c1412af90148e`.
+
+  Expected:
+  - F38: 14 of 14 checks;
+  - F37: 11 of 11 checks;
+  - F10, F12 and F28 pass;
+  - then the full suites: the gate 34 of 34, the front 36 of 36;
+  - then the runner on the commit that holds these changes: 47 in all, 34 planted and 34 caught, 13 NOT PLANTED.

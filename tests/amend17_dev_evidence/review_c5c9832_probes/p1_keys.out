@@ -1,0 +1,102 @@
+{
+ "p1a_C1_admitted": true,
+ "p1a_C2_admitted": true,
+ "p1a_A_revokes_with_B_entry": [
+  "Refused",
+  "the stored binding of job-x is not signed by this engineer; it is not used"
+ ],
+ "p1a_B_revokes": [
+  "ok",
+  "REVOKE"
+ ],
+ "p1a_C2_after_revoke": false,
+ "p1a_C1_after_put_back": true,
+ "p1a_rows": {
+  "A": [
+   1,
+   false
+  ],
+  "B": [
+   2,
+   true
+  ]
+ },
+ "p1b_C1_admitted": true,
+ "p1b_K2_revokes_K1_job": [
+  "Refused",
+  "the stored binding of job-y is not signed by this engineer; it is not used"
+ ],
+ "p1b_row_K1_after": [
+  1,
+  false
+ ],
+ "p1b_C2_admitted": true,
+ "p1b_K2_revokes": [
+  "ok",
+  "REVOKE"
+ ],
+ "p1b_C1_after_put_back": true,
+ "p1b_rows": {
+  "K1": [
+   1,
+   false
+  ],
+  "K2": [
+   2,
+   true
+  ]
+ },
+ "p1c_admitted": true,
+ "p1c_revoke": [
+  "ok",
+  "REVOKE"
+ ],
+ "p1c_signature_still_verifies": true,
+ "p1c_pins_lower": {
+  "upper": [
+   false,
+   false
+  ],
+  "first_char": [
+   false,
+   false
+  ]
+ },
+ "p1c_pins_both": {
+  "upper": [
+   false,
+   false
+  ],
+  "first_char": [
+   false,
+   false
+  ]
+ },
+ "p1c_upper_row": null,
+ "p1c_pins_upper_only_fresh_job": false,
+ "p1d_W1_admitted": true,
+ "p1d_i_revoke": [
+  "Refused",
+  "job-w is not enrolled"
+ ],
+ "p1d_i_row": [
+  1,
+  false
+ ],
+ "p1d_i_after_put_back": true,
+ "p1d_ii_revoke": [
+  "Refused",
+  "the stored binding of job-w is one signed for another job (job-v); it is not used.  Nothing was changed."
+ ],
+ "p1d_ii_after_put_back": true,
+ "p1d_iii_revoke": [
+  "Refused",
+  "the stored binding of job-w is not signed by this engineer; it is not used"
+ ],
+ "p1d_iii_after_put_back": true,
+ "p1d_row_end": [
+  1,
+  false
+ ]
+}
+PREDICTIONS FAILED: none

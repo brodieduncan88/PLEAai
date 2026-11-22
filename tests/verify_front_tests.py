@@ -1862,7 +1862,7 @@ def f37():
 
 
 def f38():
-    """Amendment 17 (D16, after the third, fourth and fifth reviews).  A job is named in the record of bindings by what the engineer signed, its key and the job's name, so an entry for another job is refused, and a name re-enrolled is the same job; a revocation made while the front door is stopped is not undone by putting the earlier binding back; one that could not be recorded is written, recorded when revoke is given again, and recorded by the front door at its start and on its look; one recorded and not written is said so; a move is written before it is recorded; and two consoles at once lose neither's binding, and a changed entry or a lock that is not the console's is reported, not written over or waited on."""
+    """Amendment 17 (D16, after the third, fourth and fifth reviews).  A job is named in the record of bindings by what the engineer signed, its key and the job's name, so an entry for another job is refused, and a name re-enrolled is the same job; a revocation made while the front door is stopped is not undone by putting the earlier binding back; one that could not be recorded is written, recorded when revoke is given again, and recorded by the front door at its start and on its look; one recorded and not written is said so; a move is written before it is recorded; and two consoles at once lose neither's binding, and a changed entry or a lock that is not the console's is reported, not written over or waited on; a job with no usable entry is revoked by name; the console's files are not opened through a link or a pipe."""
     import os
     import shutil
     import front_state
@@ -1998,6 +1998,66 @@ def f38():
                 front_ctl.LOCK_WAIT = wait0
                 if held_fd is not None:
                     os.close(held_fd)
+        # 12. (sixth review, M-2) a job whose entry is removed, spoiled or another job's: its name is revoked in the database, nothing is written,
+        #     and the entry put back admits nobody; with the database unreachable as well, the console says the job is not revoked
+        nameless = {}
+        for label in ('removed', 'spoiled', 'foreign'):
+            jn = 'job-w' + label[0]; jd = s.enrol(jn, r.h, reason=why); seen_w = req(jd); held_w = path.read_text(); enrol_w = json.loads(held_w)['jobs'][jn]
+            jobs_w = json.loads(held_w)
+            if label == 'removed':
+                del jobs_w['jobs'][jn]
+            elif label == 'spoiled':
+                jobs_w['jobs'][jn] = dict(enrol_w, note='changed after it was signed')
+            else:
+                jobs_w['jobs'][jn] = jobs_w['jobs']['job-i']
+            path.write_text(json.dumps(jobs_w)); before_w = path.read_text()
+            try:
+                front_ctl.revoke(s.home, jn, s.engineer); out_w = 'no warning'
+            except front_ctl.Unwritten as exc:
+                out_w = str(exc)
+            except front_ctl.Refused as exc:
+                out_w = 'refused: ' + str(exc)
+            unchanged_w = path.read_text() == before_w
+            path.write_text(held_w); put_w = req(jd)
+            nameless[label] = (seen_w[0], 'revoked in the database' in out_w, unchanged_w, row(enrol_w), put_w[0], put_w[1].get('refused'))
+        jd = s.enrol('job-wd', r.h, reason=why); held_wd = path.read_text(); jobs_wd = json.loads(held_wd); del jobs_wd['jobs']['job-wd']; path.write_text(json.dumps(jobs_wd))
+        try:
+            front_ctl.revoke(s.home, 'job-wd', s.engineer, control_dsn=bad_dsn); down_w = 'no refusal'
+        except front_ctl.Refused as exc:
+            down_w = str(exc)
+        except front_ctl.Unwritten as exc:
+            down_w = 'unwritten: ' + str(exc)
+        path.write_text(held_wd)
+        # 13. (sixth review, M-3) in folders of the test's own: a link at jobs.tmp is not followed; a link or a pipe at enrolment.jsonl is refused
+        #     before anything is replaced; the file outside is untouched in every case
+        files = {}
+        for label in ('tmp-link', 'log-link', 'log-fifo'):
+            home_m = OUT / 'F38' / f'files-{label}'; shutil.rmtree(home_m, ignore_errors=True); (home_m / 'front').mkdir(parents=True)
+            target = home_m / 'outside'; target.write_text('KEEP\n')
+            front_ctl._write(home_m, enrol_g, None); start_m = front_door.read_jobs(home_m)['job-g']; log_m = home_m / 'front' / 'enrolment.jsonl'
+            if label == 'tmp-link':
+                os.symlink(target, home_m / 'front' / 'jobs.tmp')
+            elif label == 'log-link':
+                log_m.unlink(); os.symlink(target, log_m)
+            else:
+                log_m.unlink(); os.mkfifo(log_m)
+            t0 = time.monotonic()
+            try:
+                front_ctl._write(home_m, dict(enrol_g, seq=2), start_m); res_m = 'written'
+            except OSError as exc:
+                res_m = 'OSError'
+            files[label] = (res_m, round(time.monotonic() - t0, 1), target.read_text() == 'KEEP\n', (home_m / 'front' / 'jobs.json').is_symlink(), front_door.read_jobs(home_m)['job-g']['seq'])
+        # 14. (sixth review, L-1, L-3) a revocation neither recorded nor written says the job is not revoked; the console's list shows each entry's signer
+        job_v = s.enrol('job-v', r.h, reason=why); import fcntl
+        held_fd = os.open(s.home / 'front' / 'jobs.lock', os.O_RDWR | os.O_CREAT, 0o600); fcntl.flock(held_fd, fcntl.LOCK_EX); wait0 = front_ctl.LOCK_WAIT
+        try:
+            front_ctl.LOCK_WAIT = 1.0; front_ctl.revoke(s.home, 'job-v', s.engineer, control_dsn=bad_dsn); neither = 'no refusal'
+        except front_ctl.Refused as exc:
+            neither = str(exc)
+        finally:
+            front_ctl.LOCK_WAIT = wait0; os.close(held_fd)
+        listing = subprocess.run([sys.executable, '-B', str(GATEWAY / 'verify' / 'front_ctl.py'), 'jobs', str(s.home)], capture_output=True, text=True, timeout=60).stdout
+        listed_v = [l for l in listing.splitlines() if l.startswith('job-v ')]
         e.update(seen=(seen_f[0], seen_g[0], seen_h[0], seen_i[0], seen_j[0], seen_k[0]), revoked_f=b_f.get('event'), put_back_f=(put_back_f[0], put_back_f[1].get('refused')),
                  named=named, row_g=row_g, put_back_g=(put_back_g[0], put_back_g[1].get('refused')),
                  unrec_h=unrec_h, written_h=written_h, rows_h=(row_h_before, row_h_after), again_h=again_h.get('event'), put_back_h=(put_back_h[0], put_back_h[1].get('refused')),
@@ -2009,7 +2069,7 @@ def f38():
                  concurrent=dict(kept=len(kept), all=kept == names, logged=logged, errors=errors),
                  substituted=subst, seen_x=seen_x[0], row_x_untouched=row_x_untouched, still_x=still_x[0], put_back_x=(put_back_x[0], put_back_x[1].get('refused')), row_x=row_x,
                  reenrol=dict(seen_first=seen_r1[0], second=(second_r[0], second_r[1].get('refused')), row=row_r, first_put_back=(first_r_put_back[0], first_r_put_back[1].get('refused'))),
-                 lockcases=lockcases)
+                 lockcases=lockcases, nameless=nameless, down_w=down_w[:300], files=files, neither=neither[:300], listed_v=listed_v)
         checks = {'a revocation made by the console while the front door is stopped is recorded: the earlier binding put back before the front door starts admits nobody':
                       e['seen'][0] == 200 and b_f.get('event') == 'REVOKE' and refused(put_back_f),
                   'a job is named in the record by the engineer\'s key and its name, as signed, the same for every binding of the job; the earlier binding put back after its revocation admits nobody':
@@ -2037,7 +2097,15 @@ def f38():
                   'a write over an entry that changed meanwhile is refused; a lock that is a pipe or a link is refused, and the link is not followed; a lock held by another is given up after the wait; nothing is written in any':
                       lockcases.get('changed', ('',))[0] == 'Changed' and lockcases['changed'][3] == 1 and lockcases.get('fifo', ('',))[0] == 'OSError' and lockcases['fifo'][1] < 5
                       and lockcases.get('link', ('',))[0] == 'OSError' and lockcases['link'][2] is False and lockcases.get('held', ('',))[0] == 'OSError' and 0.9 <= lockcases['held'][1] < 5
-                      and all(v[3] is None for k, v in lockcases.items() if k != 'changed')}
+                      and all(v[3] is None for k, v in lockcases.items() if k != 'changed'),
+                  'a job whose entry is removed, spoiled or another job\'s has its name revoked in the database and nothing written, and the entry put back admits nobody; with the database unreachable too, the console says the job is not revoked':
+                      len(nameless) == 3 and all(v == (200, True, True, (1, True), 403, 'NOT_ENROLLED') for v in nameless.values()) and 'is NOT revoked' in down_w,
+                  'the console\'s files are not opened through a link or a pipe: a link at jobs.tmp is not followed, and a link or a pipe at the log is refused before anything is replaced; the file outside is untouched':
+                      files.get('tmp-link') is not None and files['tmp-link'][0] == 'written' and files['tmp-link'][4] == 2
+                      and all(files.get(k, ('',))[0] == 'OSError' and files[k][4] == 1 for k in ('log-link', 'log-fifo'))
+                      and all(v[1] < 5 and v[2] and not v[3] for v in files.values()) and len(files) == 3,
+                  'a revocation neither recorded nor written says the job is not revoked, and the console\'s list of jobs shows each entry\'s signer':
+                      'is NOT revoked' in neither and len(listed_v) == 1 and ('signer ' + s.engineer.public_hex[:16]) in listed_v[0]}
     finally:
         r.stop()
     return checks, e

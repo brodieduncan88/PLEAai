@@ -1,0 +1,14 @@
+{
+ "admitted": true,
+ "revoke": [
+  "Changed",
+  "the entry of job-c in jobs.json changed while this command ran; nothing was written to it"
+ ],
+ "row": [
+  1,
+  false
+ ],
+ "file_event": "ENROL",
+ "put_back": true
+}
+PREDICTIONS FAILED: none

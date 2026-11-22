@@ -1,0 +1,28 @@
+{
+ "a": [
+  1,
+  "refused: the stored binding of job-w is one signed for another job (job-z); it is not used.  Nothing was changed."
+ ],
+ "a_row": [
+  1,
+  false
+ ],
+ "a_file_same": true,
+ "b": [
+  1,
+  "refused: job-w is not enrolled"
+ ],
+ "c1": [
+  3,
+  "written, not recorded: it could not be recorded in the database (StateUnavailable): the revocation is written to jobs.json; give revoke again to record it, and the front door records it when it next r"
+ ],
+ "c2": [
+  0,
+  ""
+ ],
+ "c_row": [
+  2,
+  true
+ ]
+}
+PREDICTIONS FAILED: none

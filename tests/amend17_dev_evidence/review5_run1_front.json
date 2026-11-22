@@ -1,0 +1,475 @@
+{
+ "tests": {
+  "F38": {
+   "title": "Amendment 17 (D16, after the third, fourth and fifth reviews).  A job is named in the record of bindings by what the engineer signed, its key and the job's name, so an entry for another job is refused, and a name re-enrolled is the same job; a revocation made while the front door is stopped is not undone by putting the earlier binding back; one that could not be recorded is written, recorded when revoke is given again, and recorded by the front door at its start and on its look; one recorded and not written is said so; a move is written before it is recorded; and two consoles at once lose neither's binding, and a changed entry or a lock that is not the console's is reported, not written over or waited on.",
+   "ok": true,
+   "checks": {
+    "a revocation made by the console while the front door is stopped is recorded: the earlier binding put back before the front door starts admits nobody": true,
+    "a job is named in the record by the engineer's key and its name, as signed, the same for every binding of the job; the earlier binding put back after its revocation admits nobody": true,
+    "a revocation that could not be recorded is written and said so; revoke given again records it; the earlier binding put back then admits nobody": true,
+    "a revocation left unrecorded (the command ends with status 3) is recorded by the front door at its start, before any request: the earlier binding put back then admits nobody": true,
+    "one left unrecorded while the front door runs is recorded by its look, with no request from the job: the earlier binding put back then admits nobody": true,
+    "a revocation recorded and not written is said so (status 4 at the command); the front door refuses the job already; revoke given again writes it": true,
+    "a move the console cannot record is written first and said so: the job is then answered on the revision": true,
+    "two consoles at once lose neither's binding: forty written at once are all kept, and all logged": true,
+    "an entry for another job, put in place of this job's, is refused by revoke and by rebind, and nothing is written; the job, revoked after, is refused, and its earlier binding put back admits nobody": true,
+    "a job name enrolled again after its entry is removed admits nobody under the second enrolment, and its revocation covers the first: the first put back admits nobody": true,
+    "a write over an entry that changed meanwhile is refused; a lock that is a pipe or a link is refused, and the link is not followed; a lock held by another is given up after the wait; nothing is written in any": true
+   },
+   "evidence": {
+    "seen": [
+     200,
+     200,
+     200,
+     200,
+     200,
+     200
+    ],
+    "revoked_f": "REVOKE",
+    "put_back_f": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "named": true,
+    "row_g": [
+     2,
+     true
+    ],
+    "put_back_g": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "unrec_h": "it could not be recorded in the database (StateUnavailable): the revocation is written to jobs.json; give revoke again to record it, and the front door records it when it next reads the file",
+    "written_h": "REVOKE",
+    "rows_h": [
+     [
+      1,
+      false
+     ],
+     [
+      2,
+      true
+     ]
+    ],
+    "again_h": "REVOKE",
+    "put_back_h": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "cli": [
+     3,
+     "REVOKE",
+     "written, not recorded: it could not be recorded in the database (StateUnavailable): the revocation is written to jobs.json; give revoke again to record it, and the front door records it when it next reads the file"
+    ],
+    "rows_i": [
+     [
+      1,
+      false
+     ],
+     [
+      2,
+      true
+     ]
+    ],
+    "put_back_i": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "unrec_j": "it could not be recorded in the database (StateUnavailable): the revocation is written to jobs.json; give revoke again to record it, and the front door records it when it next reads the file",
+    "rows_j": [
+     [
+      1,
+      false
+     ],
+     [
+      2,
+      true
+     ]
+    ],
+    "put_back_j": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "unwritten": "the revocation is recorded in the database, so the front door refuses job-k; it could not be written to jobs.json (IsADirectoryError): give revoke again to write it",
+    "still_enrol_k": "ENROL",
+    "refused_k": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "row_k": [
+     2,
+     true
+    ],
+    "cli_k": [
+     4,
+     "recorded, not written: the revocation is recorded in the database, so the front door refuses job-k; it could not be written to jobs.json (IsADirectoryError): give revoke again to write it"
+    ],
+    "again_k": "REVOKE",
+    "written_k": "REVOKE",
+    "unrec_a": "the move is written to jobs.json and could not be recorded in the database (StateUnavailable); the front door records it when it reads the file",
+    "written_a": [
+     "REBIND",
+     true
+    ],
+    "on_b": [
+     200,
+     true
+    ],
+    "concurrent": {
+     "kept": 40,
+     "all": true,
+     "logged": 40,
+     "errors": []
+    },
+    "substituted": {
+     "revoke, another ENROL": [
+      true,
+      true
+     ],
+     "revoke, another REVOKE": [
+      true,
+      true
+     ],
+     "rebind, another ENROL": [
+      true,
+      true
+     ]
+    },
+    "seen_x": 200,
+    "row_x_untouched": [
+     1,
+     false
+    ],
+    "still_x": 200,
+    "put_back_x": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "row_x": [
+     2,
+     true
+    ],
+    "reenrol": {
+     "seen_first": 200,
+     "second": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "row": [
+      2,
+      true
+     ],
+     "first_put_back": [
+      403,
+      "NOT_ENROLLED"
+     ]
+    },
+    "lockcases": {
+     "changed": [
+      "Changed",
+      0.0,
+      false,
+      1
+     ],
+     "fifo": [
+      "OSError",
+      0.0,
+      false,
+      null
+     ],
+     "link": [
+      "OSError",
+      0.0,
+      false,
+      null
+     ],
+     "held": [
+      "OSError",
+      1.0,
+      false,
+      null
+     ]
+    }
+   },
+   "seconds": 9.4
+  },
+  "F37": {
+   "title": "Amendment 17 (D16).  The latest binding seen for each job, and its revocation, are kept in the database: a restart forgets nothing, a revocation is never undone, and a stale, conflicting or mismatched binding admits nobody.",
+   "ok": true,
+   "checks": {
+    "an enrolled job is admitted, and still admitted after the front door restarts": true,
+    "a revoked job is refused, and the earlier signed binding put back after a restart does not undo it": true,
+    "revocation is absorbing: a later binding signed by the engineer does not admit the revoked job": true,
+    "a second binding with the same number is refused; the one seen first, asked again, is answered": true,
+    "a binding naming this baseline and another's budget admits nobody, and nothing reaches the gate": true,
+    "when the record cannot be read, the front door answers 503 and runs nothing; then it answers again": true,
+    "the service's role cannot write the table, and a rolled-back call leaves nothing": true,
+    "concurrent observers end at the highest number, and a lower one is then stale": true,
+    "the service's role can deny a job with a made-up revocation, and cannot admit one (it fails closed)": true,
+    "a revocation the revoked job never sees, whether the console recorded it or only the file holds it, is not undone by putting the earlier bindings back, by a restart or by a change to the authority's file": true,
+    "a revocation signed at a number the record has already seen is kept: the earlier binding put back after it admits nobody": true
+   },
+   "evidence": {
+    "unobserved": {
+     "seen": [
+      200,
+      200,
+      200
+     ],
+     "after_put_back_and_ca_change": [
+      403,
+      "NOT_ENROLLED",
+      403,
+      "NOT_ENROLLED"
+     ],
+     "same_number": [
+      403,
+      403,
+      "NOT_ENROLLED"
+     ]
+    },
+    "first": 200,
+    "after_restart": 200,
+    "revoked": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "put_back_after_restart": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "unrevoked": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "conflict": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "same_again": [
+     200,
+     200,
+     200
+    ],
+    "ok_b": 200,
+    "mismatch": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "calls_mismatch": 0,
+    "unreadable": [
+     503,
+     "UNAVAILABLE"
+    ],
+    "calls_unreadable": 0,
+    "readable_again": 200,
+    "direct": {
+     "update": "InsufficientPrivilege",
+     "delete": "InsufficientPrivilege",
+     "insert": "InsufficientPrivilege"
+    },
+    "after_rollback": "CURRENT",
+    "race": {
+     "final": [
+      40,
+      false
+     ],
+     "current": 5,
+     "late": [
+      "STALE",
+      "STALE"
+     ]
+    },
+    "denied_by_role": "REVOKED",
+    "job_b_after": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "calls": [
+     2,
+     2,
+     2
+    ]
+   },
+   "seconds": 7.4
+  },
+  "F10": {
+   "title": "Only the certificate the engineer enrolled, for a job the engineer has not revoked, under a binding the engineer signed, is answered.",
+   "ok": true,
+   "checks": {
+    "a certificate from another authority gets no answer at all": true,
+    "a certificate of this authority that was not enrolled is refused (403), whatever its name": true,
+    "a binding pointed at another baseline, or re-signed by another key, or unreadable, admits nobody": true,
+    "after the engineer revokes the job its own certificate is refused, and the tool says so as an error": true,
+    "putting the earlier signed binding back in the file does not undo the revocation": true,
+    "nothing was run in any of this": true
+   },
+   "evidence": {
+    "submit": {
+     "the right name from another authority": [
+      null,
+      "SSLError"
+     ],
+     "this authority, a name never enrolled": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the enrolled name, another certificate": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the front door's own name": [
+      403,
+      "NOT_ENROLLED"
+     ]
+    },
+    "read": {
+     "the right name from another authority": [
+      null,
+      "SSLError"
+     ],
+     "this authority, a name never enrolled": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the enrolled name, another certificate": [
+      403,
+      "NOT_ENROLLED"
+     ],
+     "this authority, the front door's own name": [
+      403,
+      "NOT_ENROLLED"
+     ]
+    },
+    "enrolled": 200,
+    "edited": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "resigned": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "broken": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "restored": 200,
+    "revoked": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "put_back": [
+     403,
+     "NOT_ENROLLED"
+    ],
+    "by_tool": [
+     true,
+     "REFUSED: this certificate is not enrolled for a job, or the job was re"
+    ],
+    "by_cli": 4,
+    "enrol_again": "job-a is already enrolled; a job name is used once",
+    "relaxed_copy_after_revoking": "REQ-SELFTEST-001 is already under baseline d28e63ee7058c5d3\u2026 on job jo",
+    "tool_calls": 0,
+    "audit_rows": 0,
+    "audit_rows_other": 0
+   },
+   "seconds": 3.7
+  },
+  "F12": {
+   "title": "The service dying part-way through a run leaves it counted, without a verdict, and never run again.",
+   "ok": true,
+   "checks": {
+    "the host died during the run (exit 137) and the tool did not say it passed": true,
+    "asked again, twice, the answer is UNKNOWN: interrupted, not met": true,
+    "the check was started once for that design and never produced a verdict": true,
+    "the record shows it INTERRUPTED and counted, and that design is not verified": true,
+    "a different design can still be verified": true,
+    "an error that is not the gate's signed \"unknown\" is reported as no verdict, not as an interrupted run (the front door's own code, called directly)": true
+   },
+   "evidence": {
+    "during": [
+     true,
+     "The verification service could not be reached (RemoteDisconnected).  NOT VERIFIE"
+    ],
+    "host_exit": 137,
+    "again": [
+     false,
+     "UNKNOWN: THE RUN WAS INTERRUPTED",
+     "INTERRUPTED",
+     false
+    ],
+    "again2": "UNKNOWN: THE RUN WAS INTERRUPTED",
+    "tool_calls_for_design": 1,
+    "verdicts_for_design": 0,
+    "outcomes": [
+     "INTERRUPTED",
+     "PASS"
+    ],
+    "released": {
+     "design_sha256": "3d052bbd639f6e6ef2e6994aaf59c480fae29d84702895123feecb15b625dc34",
+     "met": false,
+     "seen": true
+    },
+    "other": "DECLARED CHECK MET",
+    "stray": [
+     503,
+     "UNAVAILABLE",
+     null,
+     0
+    ],
+    "status_says": [
+     "Official runs 2: 1 met, 0 not met, 1 unknown."
+    ],
+    "record_verifies": true,
+    "why": []
+   },
+   "seconds": 6.3
+  },
+  "F28": {
+   "title": "A job is not enrolled on a baseline, or moved to a revision, until the gate has shown that it can write that baseline's inbox: with the gate not running, or with an inbox the gate cannot write, the engineer is refused there and then, and nothing is changed.  (Amendment 8, D3.)",
+   "ok": true,
+   "checks": {
+    "with the gate not running, a job is not enrolled on a new baseline: the refusal says the service has not shown that it can write the inbox, and nothing is changed: no binding, no folder, no line in the log of enrolments": true,
+    "with an inbox the gate cannot write, the gate says so when it starts, and enrolment is refused, saying the service cannot write the inbox; nothing is changed": true,
+    "once the inbox can be written, the gate shows it with no run, and the job is enrolled and its design answered": true,
+    "a job is not moved to a revision whose inbox the gate cannot write, and stays on its own baseline": true,
+    "once that inbox can be written, the job moves to the revision": true
+   },
+   "evidence": {
+    "down": "the verification service has not shown that it can write a notice to the inbox of this baseline (417418e972297877\u2026), so a failure might not reach its ",
+    "after_down": [
+     false,
+     false,
+     false
+    ],
+    "state_blocked": "NOT_WRITABLE",
+    "blocked": "the verification service cannot write a notice to the inbox of this baseline (417418e972297877\u2026), so a failure might not reach its engineer.  Start th",
+    "after_blocked": [
+     false,
+     false,
+     false
+    ],
+    "host_said": 1,
+    "state_restored": "WRITABLE",
+    "answered": [
+     false,
+     "DECLARED CHECK MET"
+    ],
+    "state_rev": "NOT_WRITABLE",
+    "moved": "the verification service cannot write a notice to the inbox of this baseline (2035f19d0b159f97\u2026), so a failure might not reach its engineer.  Start th",
+    "still": true,
+    "state_rev_restored": "WRITABLE",
+    "rebound": [
+     "REBIND",
+     true
+    ]
+   },
+   "seconds": 11.0
+  }
+ },
+ "passed": 5,
+ "of": 5,
+ "seconds": 37.8,
+ "PASS": true
+}

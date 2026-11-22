@@ -540,3 +540,21 @@ copy on the diagnostic branch is not changed.
   - Now a job is named by the engineer's key and the job's name, and the console refuses an entry signed for another
     job.
   - Status: implemented, development only. Official runs not made. What remains is as in G7.
+
+### G9. 22 November 2026: the sixth review; the G8 commit named
+
+- The corrections of G8 are in `c5c9832`. The sixth review, of `c5c9832`, is kept in
+  `verify/reviews/AMEND17_REVIEW_C5C9832_2026-11-22.md`. It found nothing critical or high.
+- **D16, more pinned keys (new, medium; recorded, not changed).**
+  - A job is named in the record by the engineer's key and its name. So with two engineer keys pinned, or during a
+    change of key, a name revoked under one key does not cover another key's enrolment of the same name, and that
+    enrolment put back is admitted.
+  - Closing it needs a row common to all keys, which is a design decision for the owner.
+  - The stated rule, in `README_FRONT.md`: pin one engineer key for a front door, and revoke a key's jobs before
+    changing it.
+- **D16, a job whose entry is removed or spoiled could not be revoked (medium; predates Amendment 17).** Corrected in
+  development: its name is revoked in the database.
+- **The console's files opened by name (medium; predates Amendment 17).** A link at `jobs.tmp` let a folder writer have
+  the console overwrite a file of its account's choosing. Corrected in development.
+- **Status of D16:** implemented; development runs pass. Official runs not made. What remains: as in G7, with the rule
+  for more pinned keys above.

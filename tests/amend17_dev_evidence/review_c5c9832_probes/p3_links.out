@@ -1,0 +1,25 @@
+{
+ "p3a_revoke": [
+  "ok",
+  "REVOKE"
+ ],
+ "p3a_victim_now": "{\n \"jobs\": {\n  \"job-t\": {\n   \"event\": \"REVOKE\",\n   \"seq\": 2,",
+ "p3a_jobs_is_link": true,
+ "p3a_jobs_reads_revoke": "REVOKE",
+ "p3b_outside_lines": 2,
+ "p3b_last_has_binding": true,
+ "p3c_blocked_after_3s": true,
+ "p3c_second_console": [
+  "OSError",
+  "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review6/homes/p3c-8d9bec/front/jobs.lock is held by another process; nothing was"
+ ],
+ "p3c_row": [
+  2,
+  true
+ ],
+ "p3c_first_result": [
+  "ok",
+  "REVOKE"
+ ]
+}
+PREDICTIONS FAILED: none

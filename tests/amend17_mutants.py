@@ -21,6 +21,9 @@ added.  The fifth review's corrections also rewrote the text of 'a revocation no
 (restated)', 'the front door records no revocation at its start' and 'a move not written when it cannot be recorded'; each is
 kept and restated.
 
+After the sixth review: four are added, for a job revoked by name, the temporary file, the log, and the message of a
+revocation neither recorded nor written.
+
     amend17_mutants.py COMMIT WORKDIR PYTHON OUT.json [NAME ...]
 """
 import json, pathlib, shutil, subprocess, sys, time
@@ -84,6 +87,13 @@ MUTANTS = [
     ('the front door records no revocation at its start (restated)', 'verify/front_door.py', "        front.record_revocations()\n    except (front_state.StateUnavailable, ValueError)", "        pass\n    except (front_state.StateUnavailable, ValueError)", ['F38']),
     ('a move not written when it cannot be recorded (restated)', 'verify/front_ctl.py', "    _write(home, binding, cur)                           # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding, cur)                           # written first", ['F38']),
     ('jobs.json written without a lock (restated)', 'verify/front_ctl.py', "                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)\n                return fd", "                return fd", ['F38']),
+    # after the sixth review
+    ('a job with no usable entry not revoked by name', 'verify/front_ctl.py', "    except Refused as no_entry:\n        if not isinstance(job, str)", "    except Refused as no_entry:\n        raise\n        if not isinstance(job, str)", ['F38']),
+    ('the temporary file opened by name', 'verify/front_ctl.py', "            tfd, tname = tempfile.mkstemp(dir=path.parent, prefix='.jobs-', suffix='.tmp')",
+     "            tname = str(path.with_suffix('.tmp')); tfd = os.open(tname, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)", ['F38']),
+    ('the log opened through a link or a pipe', 'verify/front_ctl.py', "    fd = os.open(p, flags | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC, 0o644)\n    if not stat.S_ISREG(os.fstat(fd).st_mode):",
+     "    fd = os.open(p, flags | os.O_NONBLOCK | os.O_CLOEXEC, 0o644)\n    if False:", ['F38']),
+    ('a revocation neither recorded nor written not said', 'verify/front_ctl.py', "        raise Refused(f'{why}, and it could not be written to jobs.json ({exc}): {job} is NOT revoked; give revoke again') from None", "        raise", ['F38']),
     ('a move not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)                                # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding)                                # written first", ['F38']),
 ]
 

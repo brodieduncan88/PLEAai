@@ -75,7 +75,7 @@ import front_state                                                   # noqa: E40
 
 JOB_NAME = re.compile(r'^[a-z0-9][a-z0-9-]{1,40}$')
 RESERVED = ('frontdoor', 'front', 'witness', 'host', 'governor', 'engineer')
-HEX64 = re.compile(r'^[0-9a-f]{64}$')
+HEX64 = re.compile(r'[0-9a-f]{64}')      # used with fullmatch: '$' let a trailing newline through (Amendment 17, sixth review, L-4)
 MAX_BODY = 16384
 MAX_DEPTH = 4
 EVENTS = ('ENROL', 'REBIND', 'REVOKE')
@@ -116,7 +116,7 @@ def binding_valid(b, engineer_keys) -> bool:
         return False
     if not isinstance(b.get('job'), str) or not JOB_NAME.match(b['job']) or b['job'] in RESERVED:
         return False
-    if not isinstance(b.get('baseline_sha256'), str) or not HEX64.match(b['baseline_sha256']) or not isinstance(b.get('cert_sha256'), str):
+    if not isinstance(b.get('baseline_sha256'), str) or not HEX64.fullmatch(b['baseline_sha256']) or not isinstance(b.get('cert_sha256'), str):
         return False
     if not isinstance(b.get('root'), str) or not isinstance(b.get('seq'), int) or isinstance(b['seq'], bool) or b['seq'] < 1:
         return False
