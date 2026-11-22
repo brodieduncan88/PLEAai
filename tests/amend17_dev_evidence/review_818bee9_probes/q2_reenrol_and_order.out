@@ -1,0 +1,49 @@
+{
+ "q2a_first_admit_C1": true,
+ "q2a_name_in_file": false,
+ "q2a_admit_C2": true,
+ "q2a_revoke": "returned normally",
+ "q2a_admitted_C1_after_put_back": true,
+ "q2a_rows": {
+  "C1": [
+   1,
+   false
+  ],
+  "C2": [
+   2,
+   true
+  ]
+ },
+ "q2b_first_admit_a": true,
+ "q2b_admit_with_Cb_on_move": false,
+ "q2b_row_after_move": [
+  2,
+  false
+ ],
+ "q2b_admit_with_Cb_on_put_back": false,
+ "q2b_row_after_put_back": [
+  2,
+  false
+ ],
+ "q2b_admit_with_Ca_on_put_back": false,
+ "q2c_upper_usable": false,
+ "q2c_upper_admit": false,
+ "q2c_upper_rows": 0,
+ "q2c_newline_usable": true,
+ "q2c_newline_admit": "ValueError(a binding names its certificate by its SHA-256 and its job by a name)",
+ "q2c_newline_record_revocations": "ValueError: a binding names its certificate by its SHA-256 and its job by a name",
+ "q2d_unrevoke_attempt": "REVOKED",
+ "q2d_row_k": [
+  2,
+  true
+ ],
+ "q2d_first_admit_l": true,
+ "q2d_bump": "CURRENT",
+ "q2d_admit_l_after_bump": false,
+ "q2d_select": "InsufficientPrivilege",
+ "q2e_admit_1": true,
+ "q2e_admit_2": true,
+ "q2e_admit_2_after_revoke_1": true,
+ "q2e_home1_revoked_binding_in_home2": false,
+ "q2e_home2_binding_in_home1": true
+}

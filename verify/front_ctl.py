@@ -35,14 +35,16 @@ if it is running and its account can write the inbox.
 revoke ends a job: its certificate is refused from the next request.
 
 Amendment 17 (D16, after the third and fourth reviews).  rebind and revoke also put the new binding to the database's record
-of bindings (through PLEA_CONTROL_DSN), where a job is named by what the engineer signs: its certificate's hash and its name.
+of bindings (through PLEA_CONTROL_DSN), where a job is named by what the engineer signs: the engineer's key and the job's name.
+An entry of jobs.json for another job than the one named is refused (after the fifth review, N-H1).
 No realm, file or setting is needed for that.  A revocation is recorded first if it can be, and is always written to
 jobs.json.  If it was not recorded, the console says so and ends with status 3; revoke given again for that job records the
 same revocation (it is not refused as already revoked), and the front door records it when it next reads the file (at its
 start, and on its look every 30 seconds).  If it was recorded and could not be written, the console says so and ends with
 status 4: the front door refuses the job already, and revoke given again writes it.  A move is written to jobs.json first,
 then recorded; a failure to record it, or an answer other than CURRENT, is said, with status 3.  jobs.json is changed under
-a lock (HOME/front/jobs.lock), so two consoles at once lose neither's binding.
+a lock (HOME/front/jobs.lock), so two consoles at once lose neither's binding; a write is refused if the job's entry changed
+while the command ran, and a lock held by another for 30 seconds, or one that is not a plain file, is reported, not waited on.
 
 record builds the verification record exactly as verify_ctl.py does, adding the front door's own journal of what was
 sent, so a run interrupted before the gate wrote anything down can still be tied to its design.
@@ -139,18 +141,55 @@ def _record(binding: dict, control_dsn) -> str:
                                hashlib.sha256(canonical(binding).encode()).hexdigest(), binding['event'] == 'REVOKE')
 
 
-def _write(home, binding: dict) -> None:
+LOCK_WAIT = 30.0       # seconds the console waits for HOME/front/jobs.lock before it gives up and says so (fifth review, N-L1)
+
+
+class Changed(OSError):
+    """jobs.json's entry for the job is not the one this command started from: another console changed it meanwhile, or it was
+    changed by hand.  Nothing is written (Amendment 17, after the fifth review, N-L2)."""
+
+
+def _locked(home):
+    """HOME/front/jobs.lock, opened without following a link, made if it is not there, and locked; a lock that is not a plain
+    file, or one held by another for LOCK_WAIT seconds, raises OSError, which the command reports (after the fifth review,
+    N-L1: it was opened by name and waited for without end)."""
+    import fcntl
+    import stat
+    p = jobs_path(home).parent / 'jobs.lock'
+    fd = os.open(p, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC, 0o600)
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise OSError(f'{p} is not a plain file')
+        deadline = time.monotonic() + LOCK_WAIT
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                return fd
+            except BlockingIOError:
+                if time.monotonic() >= deadline:
+                    raise OSError(f'{p} is held by another process; nothing was written') from None
+                time.sleep(0.05)
+    except BaseException:
+        os.close(fd); raise
+
+
+def _write(home, binding: dict, start) -> None:
     """The signed binding becomes the job's current one, and is added to the log.  The file is replaced whole, under a lock that
     every console takes (after the fourth review, L5: two at once could each read the file and the second's write lose the
-    first's binding)."""
-    import fcntl
+    first's binding).  `start` is the job's entry this command started from (None for an enrolment); if the entry is not that
+    one any more, nothing is written and Changed is raised (after the fifth review, N-L2)."""
     path = jobs_path(home); path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path.parent / 'jobs.lock', 'a') as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)
-        jobs = read_jobs(home); jobs[binding['job']] = binding
+    fd = _locked(home)
+    try:
+        jobs = read_jobs(home)
+        if jobs.get(binding['job']) != start:
+            raise Changed(f'the entry of {binding["job"]} in jobs.json changed while this command ran; nothing was written to it')
+        jobs[binding['job']] = binding
         tmp = path.with_suffix('.tmp'); tmp.write_text(json.dumps({'jobs': jobs}, indent=1) + '\n'); os.replace(tmp, path)
         with (path.parent / 'enrolment.jsonl').open('a') as f:
             f.write(json.dumps(binding) + '\n')
+    finally:
+        os.close(fd)
 
 
 def _signed(event: str, seq: int, job: str, env: dict, cert_sha256: str, previous, note, key: Key) -> dict:
@@ -167,6 +206,8 @@ def _current(home, job: str, key: Key) -> dict:
         raise Refused(f'{job} is not enrolled')
     if not binding_valid(b, (key.public_hex,)):
         raise Refused(f'the stored binding of {job} is not signed by this engineer; it is not used')
+    if b.get('job') != job:                              # after the fifth review (N-H1): an entry for another job is not this job's
+        raise Refused(f'the stored binding of {job} is one signed for another job ({b.get("job")}); it is not used.  Nothing was changed.')
     return b
 
 
@@ -202,7 +243,7 @@ def enrol(home, job: str, baseline_hash: str, key: Key, ca_cert_pem: bytes, ca_k
     with os.fdopen(fd, 'wb') as f:
         f.write(key_pem)
     (out / 'job.json').write_text(json.dumps({'job': job, 'url': url.rstrip('/'), 'ca': 'ca.crt', 'cert': 'job.crt', 'key': 'job.key'}, indent=1) + '\n')
-    _write(home, binding)
+    _write(home, binding, None)
     return binding
 
 
@@ -220,7 +261,7 @@ def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0, control_
                       f'own baseline (verify_ctl.py revise), so that the change and what had failed are on the record.')
     _deliverable(home, new_hash, wait)                   # Amendment 8 (D3): the same check is needed for the revision
     binding = _signed('REBIND', cur['seq'] + 1, job, env, cur['cert_sha256'], cur['baseline_sha256'], None, key)
-    _write(home, binding)                                # written first (after the third review, M-b): a failure after it loses nothing
+    _write(home, binding, cur)                           # written first (after the third review, M-b): a failure after it loses nothing
     try:
         answer = _record(binding, control_dsn)
     except Exception as exc:
@@ -258,7 +299,7 @@ def revoke(home, job: str, key: Key, control_dsn: str = verify_ctl.CONTROL_DSN) 
     except Exception as exc:
         why = f'it could not be recorded in the database ({type(exc).__name__})'
     try:
-        _write(home, binding)
+        _write(home, binding, cur)
     except OSError as exc:
         if why is None:
             raise Unwritten(binding, f'the revocation is recorded in the database, so the front door refuses {job}; it could not be written to jobs.json '

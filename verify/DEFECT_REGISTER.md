@@ -485,3 +485,58 @@ copy on the diagnostic branch is not changed.
 - **Finding 2 (D6), stated rather than "carried":** one design that leaves a record unable to verify is refused at the front
   door (F7). A holder of the service's own role can still send one, since nothing in the gateway refuses a NUL or a
   number that is not finite (the second review, M7). Open.
+
+### G7. 22 November 2026: the third and fourth reviews; the full runs before the declaration
+
+- **Commits.** `f4c1de6` corrects the second review. `3473478` corrects the third. `818bee9` corrects the fourth. The
+  reviews are kept in `verify/reviews/`, and each correction is described in `verify/AMEND17_DEV_LOG.md` (entries 13 to
+  15).
+- **Full runs at `f4c1de6`.**
+  - The gate suite passed 34 of 34, with R1 to R13 through the front door.
+  - The front suite passed 35 of 35.
+  - The gateway chain passed 22 of 22 stages.
+  - The planted-defect runner stopped part-way, a fault of the runner (entry 14).
+- **Full runs at `3473478`.** The gate passed 34 of 34 and the front 36 of 36. The runner caught 23 of 23 planted
+  defects; 3 were not planted. These runs are development runs, not official ones.
+- **D16:**
+  - The third review found that a revocation made by the console could be lost, through a realm the console was not
+    given, or was given wrongly, or a restart under another realm.
+  - The fourth review found that the realm file meant to correct this could be forged by the same party that D16
+    guards against.
+  - At `818bee9` a job is named in the record by its certificate's hash and its name, which the engineer signs. No
+    realm, file or setting bears on it.
+  - A revocation is always written. One that could not be recorded is recorded when revoke is given again, and by the
+    front door at its start and on its look.
+  - Status: implemented; development runs pass (F37, F38). Official runs not made.
+  - What remains:
+    - a revocation that neither side has yet recorded is undone by a put-back made before either records it;
+    - a restore of the database, together with the file, undoes later bindings;
+    - a role-made revocation denies a job;
+    - a move is written before it is recorded, so a put-back before that admits the superseded binding, whose old
+      budget `revise` has stopped;
+    - nothing checks that the console's database is the front door's.
+- **L-d of the third review (new, low): an upgrade with two forms of code at once.**
+  - During a rolling upgrade, a process still running the code from before Amendment 17 writes attempts of the
+    64-bit form.
+  - On a budget where the new code has written one of the current form, the budget then holds both forms, and makes
+    no further run (`IdentityFormsMixed`). Before the third review's correction it would have changed form.
+  - It fails closed. The way out is to baseline again.
+  - Status: recorded, not changed.
+  - What remains: an upgrade must stop every process of the earlier code before the first run of the new.
+- **The planted-defect runner** is development tooling, not a test of the product. At `818bee9` it holds 34 entries.
+  Every earlier entry is kept, and those whose text the corrections rewrote are expected NOT PLANTED.
+
+### G8. 22 November 2026: the fifth review; how a job is named in the record
+
+- **Commits.** The fifth review is of `818bee9`. Its corrections are in the commit that adds this entry (named in a
+  later entry). The review is kept in `verify/reviews/AMEND17_REVIEW_818BEE9_2026-11-22.md`.
+- **D16, correcting G7.** G7 says that at `818bee9` "No realm, file or setting bears on it". The fifth review found that
+  wrong:
+  - The console took the certificate hash from the `jobs.json` entry, and did not match the entry to the job.
+  - So an entry for another job, put in by one who can write the folder, sent a revocation to a row no binding uses
+    (N-H1, HIGH).
+  - A name enrolled again had a row apart from its first enrolment (N-M1, MEDIUM).
+  - Both were regressions from `3473478`.
+  - Now a job is named by the engineer's key and the job's name, and the console refuses an entry signed for another
+    job.
+  - Status: implemented, development only. Official runs not made. What remains is as in G7.

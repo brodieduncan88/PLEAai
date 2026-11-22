@@ -431,3 +431,73 @@ the owner's rules VP-1 to VP-6 (`plan/GOVERNANCE_NOTE_2026-11-22.md`). Nothing h
   - then the runner on the commit that holds these changes: 34 in all, 26 planted and 26 caught, 8 NOT PLANTED.
   - One of the 26, 'jobs.json written without a lock', is caught only if forty writes at once race. It is expected
     caught, and the declaration says so.
+
+**The rest of entry 15's runs.**
+- F38, F37, F10, F12 and F28 at 818bee9: 5 of 5 passed, as declared (F38 8 of 8 checks, F37 11 of 11).
+- The full runs at 818bee9 also matched the declaration:
+  - the gate suite, 34 of 34;
+  - the front suite, 36 of 36;
+  - the runner, 34 in all: 26 planted and 26 caught, 8 NOT PLANTED.
+- These runs, and the container's restart before them, are kept in
+  `tests/amend17_dev_evidence/predecl_run3_818bee9/`. PostgreSQL was started again, and `fs.file-max` set to
+  33617920, under the owner's earlier approval.
+
+## Entry 16. The fifth review (of 818bee9), and what it changed
+
+- The review is kept as returned in `verify/reviews/AMEND17_REVIEW_818BEE9_2026-11-22.md`. Its probes are in
+  `tests/amend17_dev_evidence/review_818bee9_probes/`.
+- **N-H1, accepted.** This is a regression from 3473478.
+  - The console took the job's certificate hash from the `jobs.json` entry it read, and never checked that the entry
+    was the named job's.
+  - An entry for another job, put in its place by one who can write the folder, sent the revocation to a row no
+    binding uses. The console exited 0, and the earlier binding put back admitted the job.
+  - Changes:
+    - The console refuses an entry signed for another job (`_current`), for revoke, for the revoke that is
+      recorded again, and for rebind.
+    - The row is named by the engineer's public key (the binding's signer) and the job's name, which the
+      console takes from what it signs, not from the entry.
+- **N-M1, accepted.** This is also a regression from 3473478. A job name enrolled again after its entry was removed had
+  a row of its own, and its revocation did not cover the earlier enrolment.
+  - With the row named by the engineer's key and the job's name, every enrolment of one name by one engineer falls on
+    one row.
+  - A second enrolment has the number 1 again, is answered CONFLICT and admits nobody, as at 3473478. A revocation
+    covers every enrolment of the name.
+  - Each test deployment makes its own engineer key, so deployments sharing a database stay apart.
+- **N-L1, accepted.** The lock is opened without following a link, must be a plain file, and is given up after
+  `LOCK_WAIT` (30 s) with a message. Before, a link was followed, a pipe was waited on, and a lock held by another was
+  waited on without end.
+- **N-L2, accepted.** `_write` is given the entry the command started from, and refuses (`Changed`) if the entry is
+  not that one any more.
+- **N-L3, accepted.**
+  - `usable()` checks the certificate hash with the same strict form as `front_state` (fullmatch).
+  - It requires a binding the record can name (`front_state.nameable`).
+  - The front door's start catches `ValueError` with `StateUnavailable`.
+- **N-L4, recorded.** Rows written by earlier forms of this development are not read. No deployment holds them. This
+  is stated in `front_state`.
+- **N-L5, accepted in part.**
+  - F37's comment is corrected. F37's case of a change of the authority's file is kept, though it can no longer fail.
+  - F38's files beside `jobs.json` are removed. Its second check now compares the row's name, and the put-back.
+- **L7 (fourth review).** The register's entry G7 holds L-d. It is committed with this entry, not with 818bee9 as entry
+  15 said; that statement in entry 15 was wrong when it was written.
+- **F38 gains three checks** (9 to 11): an entry of another job put in place; a name enrolled again; and the write over
+  a changed entry, a lock that is a pipe or a link, and a lock held by another. Its eighth check's call of `_write` gives
+  the new argument.
+- **The runner.** Every earlier entry is kept:
+  - 'the record keyed by the job name alone' and 'jobs.json written without a lock' are restated;
+  - three entries whose text this entry rewrote are restated again;
+  - five are added.
+  That makes 43 in all.
+- **Before these test changes.** The files at 818bee9 are kept in `before_review5/`: `verify_tests.py` c4ab6164… (not
+  changed by this entry), `verify_front_tests.py` b6197528…, `amend17_mutants.py` 2a04a183…. No predicate was changed
+  after a failure.
+- **Declared before the next run (VP-5).** SHA-256 of the test files:
+  - `tests/verify_tests.py`: `c4ab616416c4a85405bb4ebd1a4e079ccbf3f7da9c009979222a1932ba473cb1`;
+  - `tests/verify_front_tests.py`: `cef36de775f3f815da40f32ba535e703573583442c8d88ddf11df877ac2d8314`;
+  - `tests/amend17_mutants.py`: `688516808fdce1c3cbde03147e576c55fd0600d6deb99931236c22ede3fb9c67`.
+
+  Expected:
+  - F38: 11 of 11 checks;
+  - F37: 11 of 11 checks;
+  - F10, F12 and F28 pass;
+  - then the full suites: the gate 34 of 34, the front 36 of 36;
+  - then the runner on the commit that holds these changes: 43 in all, 30 planted and 30 caught, 13 NOT PLANTED.

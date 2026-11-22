@@ -1,0 +1,28 @@
+{
+ "q3a_blocked_after_3s": true,
+ "q3a_row_while_blocked": [
+  2,
+  true
+ ],
+ "q3a_file_while_blocked": "ENROL",
+ "q3a_after_release": "REVOKE",
+ "q3a_file_after_release": "REVOKE",
+ "q3b_blocked_after_3s": true,
+ "q3b_row_while_blocked": [
+  1,
+  false
+ ],
+ "q3b_file_while_blocked": "ENROL",
+ "q3b_after_release": "Unrecorded: it could not be recorded in the database (StateUnavailable): the revocation is written to jobs.json; give revoke again t",
+ "q3b_file_after_release": "REVOKE",
+ "q3c_blocked_after_3s": true,
+ "q3c_row_while_blocked": [
+  2,
+  true
+ ],
+ "q3c_after_release": "REVOKE",
+ "q3d_target_before": false,
+ "q3d_ret": "REVOKE",
+ "q3d_target_created": true,
+ "q3d_target_size": 0
+}

@@ -15,8 +15,8 @@ for each job, the highest sequence number seen, the digest of that binding and w
 Only CURRENT admits.  The function is the only way to the table: it is SECURITY DEFINER, owned by the database owner, and
 EXECUTE on it is granted to the service's role, `plea_local`, and to the engineer's console's role, `plea_control` (which
 records each revocation before it is written to `jobs.json`, so that a revocation does not wait for the front door to see it);
-neither has any privilege on the table itself.  A job's name in the record is taken from what the engineer signed: the hash
-of the job's client certificate and the job's name (state_name), which every binding of one enrolment shares; at most 200
+neither has any privilege on the table itself.  A job's name in the record is taken from what the engineer signed: the
+engineer's public key and the job's name (state_name), which every binding of that name by that engineer shares; at most 200
 characters.  It only moves
 forward: a sequence number is raised and never lowered, and a revocation is never cleared.  It takes the row's lock
 (SELECT ... FOR UPDATE, and an INSERT that loses a race reads the winner's row), so concurrent front doors agree.
@@ -30,17 +30,27 @@ What it does not do.
     operator (CAP-OWNER), not the service's role; it is stated as a limit, not met.
   - Pacing counters and the per-job lock are still in the front door's memory.
 
-How a job is named in the record (after the fourth review, H1'').  It was once named by a realm: first the hash of the
+How a job is named in the record (after the fourth and fifth reviews).  It was once named by a realm: first the hash of the
 certificate authority's file, then a name the operator gave the front door, then a name kept in HOME/front/realm.  Each could
 be changed by someone short of the engineer: a change of authority, a restart under another name, or a write to that file,
 which anyone who can put back jobs.json can make.  After any of them a revocation recorded under the old name was not found,
-and the earlier binding put back admitted the job again.  A job is now named by the hash of its client certificate and its
-name, both in every binding the engineer signs for it.  No file and no setting of the front door's bears on it: one who
-rewrites HOME/front cannot change which row a binding is put to, since a binding with another certificate's hash is not one
-the engineer signed.  Two front doors on one database share the rows of a job only if they hold the same enrolment.  A row's
-lock held open by a caller holding plea_local stalls the console's revocation, and that job's admissions with it: nothing
-is admitted meanwhile.  CREATE TABLE IF NOT EXISTS does not add a CHECK to a table made before it; the function's own test of
-its arguments stands in.
+and the earlier binding put back admitted the job again (fourth review, H1'').  It was then named, at 818bee9, by the job's
+certificate hash and its name.  That let a re-used name escape: a job enrolled again after its entry was removed from
+jobs.json had a row of its own, and its revocation did not cover the earlier enrolment (fifth review, N-M1).
+
+A job is now named by the engineer's public key (the binding's signer) and the job's name.  Neither can be changed without
+the engineer's key: a binding is used only if a pinned engineer key signed it, and only for the job it names (the front
+door's usable(), and the console's _current()).  No file and no setting of the front door's bears on it.  Every binding of
+one job name by one engineer falls on one row, so a name is used once: a second enrolment of it has the number 1 again, is
+answered CONFLICT, and admits nobody; a revocation of the name covers every enrolment of it.  Each engineer's names are
+apart, and so are a test deployment's, each having its own engineer key.  Two front doors on one database, pinning the same
+engineer and using the same job names, share rows, which fails closed.  A change of the engineer's key starts new rows: a
+binding signed by the earlier key, while that key is still pinned, falls on the earlier key's rows.  Rows written by
+earlier forms of this development (named by a realm, or by a certificate's hash) are not read; no deployment holds them.
+
+A row's lock held open by a caller holding plea_local stalls the console's revocation, and that job's admissions with it:
+nothing is admitted meanwhile.  CREATE TABLE IF NOT EXISTS does not add a CHECK to a table made before it; the function's
+own test of its arguments stands in.
 """
 
 SCHEMA = r"""
@@ -101,14 +111,19 @@ ANSWERS = ('CURRENT', 'REVOKED', 'STALE', 'CONFLICT', 'INVALID')
 HEX64 = re.compile(r'[0-9a-f]{64}')
 
 
+def nameable(binding) -> bool:
+    """True if the binding has what state_name needs.  The front door uses no binding without it (usable())."""
+    signer, job = (binding.get('signer'), binding.get('job')) if isinstance(binding, dict) else (None, None)
+    return isinstance(signer, str) and HEX64.fullmatch(signer) is not None and isinstance(job, str) and 0 < len(job) <= 64
+
+
 def state_name(binding: dict) -> str:
-    """A job's name in the record (after the fourth review, H1''): the hash of the job's client certificate and the job's name,
-    both signed by the engineer in every binding of one enrolment.  The front door and the engineer's console use it.  Raises
-    ValueError for a binding without them; the front door uses no such binding."""
-    cert, job = binding.get('cert_sha256'), binding.get('job')
-    if not isinstance(cert, str) or not HEX64.fullmatch(cert) or not isinstance(job, str) or not job or len(job) > 64:
-        raise ValueError('a binding names its certificate by its SHA-256 and its job by a name')
-    return f'{cert}:{job}'
+    """A job's name in the record (after the fifth review, N-H1 and N-M1): the engineer's public key that signed the binding,
+    and the job's name, both signed.  The front door and the engineer's console use it.  Raises ValueError for a binding
+    without them (nameable)."""
+    if not nameable(binding):
+        raise ValueError('a binding names its engineer by a public key of 64 hex digits and its job by a name')
+    return f"{binding['signer']}:{binding['job']}"
 
 
 class StateUnavailable(Exception):

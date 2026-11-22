@@ -1,0 +1,13 @@
+{
+ "q6a_first_admit": true,
+ "q6a_revoke": "returned normally",
+ "q6a_row": [
+  2,
+  true
+ ],
+ "q6a_admitted_after_put_back": false,
+ "q6b_first_admit_C1": true,
+ "q6b_admit_C2": false,
+ "q6b_revoke": "returned normally",
+ "q6b_admitted_C1_after_put_back": false
+}

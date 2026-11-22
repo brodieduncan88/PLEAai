@@ -412,12 +412,13 @@ class Front:
         by admit() and by the look for pending runs alike (after the second review, M2: the look did not ask the last)."""
         return (binding_valid(b, self.engineer_keys) and b['job'] == name and '/' in b['root']
                 and b['root'].rsplit('/', 1)[-1] == b['baseline_sha256'][:32]
-                and HEX64.match(b['cert_sha256']) is not None)  # the record names a job by it (fourth review, H1'')
+                and front_state.HEX64.fullmatch(b['cert_sha256']) is not None    # one strict form of the check (fifth review, N-L3)
+                and front_state.nameable(b))     # the record names a job by its engineer's key and its name (fifth review, N-H1, N-M1)
 
     def observe(self, name, b) -> str:
         """Put one usable binding to the record, and return its answer (front_state.observe).  The job is named in the record by
-        what the engineer signed, the hash of its certificate and its name (after the fourth review, H1''); no file or setting of
-        this front door's bears on it."""
+        what the engineer signed, the engineer's public key and the job's name (after the fourth and fifth reviews); no file or
+        setting of this front door's bears on it."""
         return front_state.observe(self.store, front_state.state_name(b), b['seq'], hashlib.sha256(canonical(b).encode()).hexdigest(), b['event'] == 'REVOKE')
 
     def record_revocations(self) -> int:
@@ -1037,7 +1038,7 @@ def main():
     front = Front(home, Store(a.local_dsn), cfg, a.engineer_key, a.rate)
     try:                                                 # Amendment 17 (second review, H1): every revocation in jobs.json is recorded before anyone is admitted
         front.record_revocations()
-    except front_state.StateUnavailable as exc:          # then nobody is admitted until the record can be written (admit raises, 503)
+    except (front_state.StateUnavailable, ValueError) as exc:   # then nobody is admitted until the record can be written (admit raises, 503)
         print(f'front door: the record of job bindings could not be written at start ({exc})', file=sys.stderr, flush=True)
     server = wrap_server(ThreadingHTTPServer((a.bind, a.port), make_handler(front)), tls)
     threading.Thread(target=sweeper, args=(front, max(SWEEP_MIN_WAIT, a.sweep_after), min(600.0, max(0.1, a.sweep_every))), name='front-door-sweep', daemon=True).start()

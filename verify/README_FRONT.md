@@ -137,8 +137,8 @@ The service side, once (the witness service and the gate host as in `deploy.py`,
         --tls-cert front.crt --tls-key front.key --tls-ca ca.crt --upstream-cert frontdoor.crt --upstream-key frontdoor.key
 
 Before the first start, install the database's record of job bindings (Amendment 17) once, as the database's owner
-(`front_state.install`, which `deploy_front.py` does). A job is named in it by what the engineer signs, its certificate's
-hash and its name, so the front door is given no name or setting for it.
+(`front_state.install`, which `deploy_front.py` does). A job is named in it by what the engineer signs, the engineer's
+key and the job's name, so the front door is given no name or setting for it, and a job name is used once.
 
 The engineer, for each job, after baselining with `verify_ctl.py baseline`:
 

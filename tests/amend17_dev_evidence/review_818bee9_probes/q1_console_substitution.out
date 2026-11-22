@@ -1,0 +1,44 @@
+{
+ "q1a_first_admit_x": true,
+ "q1a_revoke": "returned normally (exit 0)",
+ "q1a_revoke_binding": {
+  "event": "REVOKE",
+  "seq": 2,
+  "job": "job-x",
+  "cert_is_Cy": true
+ },
+ "q1a_rows_job_x": [
+  [
+   "1227f548\u2026:job-x",
+   1,
+   false
+  ],
+  [
+   "9804577b\u2026:job-x",
+   2,
+   true
+  ]
+ ],
+ "q1a_row_Cx_job_x": [
+  1,
+  false
+ ],
+ "q1a_admitted_after_put_back": true,
+ "q1b_first_admit_w": true,
+ "q1b_cli": {
+  "exit": 0,
+  "stdout": "{\"event\": \"REVOKE\", \"seq\": 2, \"job\": \"job-z\", \"baseline_sha256\": \"abababababababababababababababababababababababababababababababab\", \"root\": \"budget/abababababababababababababababab\", \"previous\": \"abababababababababababababababababababababababababababababababab\", \"time\": \"2026-11-22T01:36:26Z\", \"note\": null}",
+  "stderr": ""
+ },
+ "q1b_file_entry_w": {
+  "event": "REVOKE",
+  "job": "job-z"
+ },
+ "q1b_row_Cw_job_w": [
+  1,
+  false
+ ],
+ "q1b_admitted_after_put_back": true,
+ "q1c_first_admit": true,
+ "q1c_admitted_after_put_back": false
+}

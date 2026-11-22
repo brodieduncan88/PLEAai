@@ -15,6 +15,12 @@ entries about the realm are kept and are NOT PLANTED, with no restatement; 'a re
 recorded' is restated; six are added; and the SQL function is installed again however the run ends (L-c).  The runner uses
 the database the tests use (PLEA_ADMIN_DSN, else `plea`): nothing else may run on it at the same time.
 
+After the fifth review: a job is named in the record by the engineer's key and the job's name.  'the record keyed by the job
+name alone' and 'jobs.json written without a lock' are restated (their earlier entries are kept, NOT PLANTED), and five are
+added.  The fifth review's corrections also rewrote the text of 'a revocation not written when it cannot be recorded
+(restated)', 'the front door records no revocation at its start' and 'a move not written when it cannot be recorded'; each is
+kept and restated.
+
     amend17_mutants.py COMMIT WORKDIR PYTHON OUT.json [NAME ...]
 """
 import json, pathlib, shutil, subprocess, sys, time
@@ -66,6 +72,18 @@ MUTANTS = [
                                         ('verify/front_door.py', "                if self.observe(name, b) != 'CURRENT':", "                if b['event'] == 'REVOKE' or self.observe(name, b) != 'CURRENT':")], None, ['F38']),
     ('a revocation recorded and not written said to be refused', 'verify/front_ctl.py', "            raise Unwritten(binding, f'the revocation is recorded", "            raise Refused(f'the revocation is recorded", ['F38']),
     ('jobs.json written without a lock', 'verify/front_ctl.py', "        fcntl.flock(lock, fcntl.LOCK_EX)", "        pass", ['F38']),
+    # after the fifth review
+    ('the record keyed by the job name alone (restated)', 'verify/front_state.py', "    return f\"{binding['signer']}:{binding['job']}\"", "    return binding['job']", ['F38']),
+    ('the record keyed by the certificate\'s hash', 'verify/front_state.py', "    return f\"{binding['signer']}:{binding['job']}\"", "    return f\"{binding.get('cert_sha256')}:{binding['job']}\"", ['F38']),
+    ('the console does not match the entry to its job', 'verify/front_ctl.py', "    if b.get('job') != job:                              # after the fifth review (N-H1)", "    if False:                              # after the fifth review (N-H1)", ['F38']),
+    ('a changed entry written over', 'verify/front_ctl.py', "        if jobs.get(binding['job']) != start:", "        if False:", ['F38']),
+    ('the lock followed through a link, and a pipe taken', 'verify/front_ctl.py', "    fd = os.open(p, os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC, 0o600)\n    try:\n        if not stat.S_ISREG(os.fstat(fd).st_mode):",
+     "    fd = os.open(p, os.O_RDWR | os.O_CREAT | os.O_NONBLOCK | os.O_CLOEXEC, 0o600)\n    try:\n        if False:", ['F38']),
+    ('a revocation not written when it cannot be recorded (restated again)', 'verify/front_ctl.py', "    try:\n        _write(home, binding, cur)\n    except OSError as exc:\n        if why is None:",
+     "    if why:\n        raise Refused(why)\n    try:\n        _write(home, binding, cur)\n    except OSError as exc:\n        if why is None:", ['F38']),
+    ('the front door records no revocation at its start (restated)', 'verify/front_door.py', "        front.record_revocations()\n    except (front_state.StateUnavailable, ValueError)", "        pass\n    except (front_state.StateUnavailable, ValueError)", ['F38']),
+    ('a move not written when it cannot be recorded (restated)', 'verify/front_ctl.py', "    _write(home, binding, cur)                           # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding, cur)                           # written first", ['F38']),
+    ('jobs.json written without a lock (restated)', 'verify/front_ctl.py', "                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)\n                return fd", "                return fd", ['F38']),
     ('a move not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)                                # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding)                                # written first", ['F38']),
 ]
 

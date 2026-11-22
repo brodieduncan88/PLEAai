@@ -1,0 +1,326 @@
+{
+ "of": 34,
+ "planted": 26,
+ "not_planted": [
+  "no form kept per budget",
+  "a binding for another budget admitted",
+  "revocations recorded only when the job calls",
+  "realm from the authority's file",
+  "a binding for another budget admitted (restated)",
+  "the console does not read the front door's realm",
+  "the front door started under another realm",
+  "a revocation not written when it cannot be recorded"
+ ],
+ "entries": {
+  "binder removed": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R30"
+   ]
+  },
+  "binder always binds": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R30"
+   ]
+  },
+  "identity back to 64 bits": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R31"
+   ]
+  },
+  "request key back to 96 bits": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R31"
+   ]
+  },
+  "front door does not check the design of a verdict": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R31"
+   ]
+  },
+  "checker allows mixed forms": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R31"
+   ]
+  },
+  "no form kept per budget": {
+   "planted": false,
+   "counts": [
+    0
+   ],
+   "tests": [
+    "R33"
+   ]
+  },
+  "front door ignores the budget's form": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R33"
+   ]
+  },
+  "record of bindings not consulted": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F37"
+   ]
+  },
+  "revocation not absorbing": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F37"
+   ]
+  },
+  "a stale binding accepted": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F37"
+   ]
+  },
+  "a binding for another budget admitted": {
+   "planted": false,
+   "counts": [
+    0
+   ],
+   "tests": [
+    "F37"
+   ]
+  },
+  "controls not put to the checker": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R32"
+   ]
+  },
+  "the first client not retired": {
+   "planted": true,
+   "counts": [
+    "git"
+   ],
+   "tests": [
+    "R34"
+   ]
+  },
+  "revocations recorded only when the job calls": {
+   "planted": false,
+   "counts": [
+    1,
+    0
+   ],
+   "tests": [
+    "F37"
+   ]
+  },
+  "realm from the authority's file": {
+   "planted": false,
+   "counts": [
+    0
+   ],
+   "tests": [
+    "F37"
+   ]
+  },
+  "a revocation at a number already seen not kept": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F37"
+   ]
+  },
+  "mixed forms not refused": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R33"
+   ]
+  },
+  "controls not put to rederive": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R32"
+   ]
+  },
+  "no form kept per budget (restated)": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "R33"
+   ]
+  },
+  "a binding for another budget admitted (restated)": {
+   "planted": false,
+   "counts": [
+    0
+   ],
+   "tests": [
+    "F37"
+   ]
+  },
+  "revocations recorded only when the job calls (restated)": {
+   "planted": true,
+   "counts": [
+    1,
+    1
+   ],
+   "tests": [
+    "F37",
+    "F38"
+   ]
+  },
+  "the console does not read the front door's realm": {
+   "planted": false,
+   "counts": [
+    0
+   ],
+   "tests": [
+    "F38"
+   ]
+  },
+  "the front door started under another realm": {
+   "planted": false,
+   "counts": [
+    0
+   ],
+   "tests": [
+    "F38"
+   ]
+  },
+  "a revocation not written when it cannot be recorded": {
+   "planted": false,
+   "counts": [
+    0
+   ],
+   "tests": [
+    "F38"
+   ]
+  },
+  "a revocation not written when it cannot be recorded (restated)": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F38"
+   ]
+  },
+  "a binding for another budget admitted (restated again)": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F37"
+   ]
+  },
+  "the record keyed by the job name alone": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F38"
+   ]
+  },
+  "an unrecorded revocation not recorded again": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F38"
+   ]
+  },
+  "the front door records no revocation at its start": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F38"
+   ]
+  },
+  "the look records no revocation": {
+   "planted": true,
+   "counts": [
+    1,
+    1
+   ],
+   "tests": [
+    "F38"
+   ]
+  },
+  "a revocation recorded and not written said to be refused": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F38"
+   ]
+  },
+  "jobs.json written without a lock": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F38"
+   ]
+  },
+  "a move not written when it cannot be recorded": {
+   "planted": true,
+   "counts": [
+    1
+   ],
+   "tests": [
+    "F38"
+   ]
+  }
+ }
+}
