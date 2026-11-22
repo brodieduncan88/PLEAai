@@ -1,0 +1,114 @@
+{
+ "number": [
+  {
+   "printed": "199.999999999999",
+   "verdict": "FAIL",
+   "reason": "LIMIT_NOT_MET",
+   "achieved": "199.999999999999",
+   "rederive_problems": []
+  },
+  {
+   "printed": "199.9999999999999",
+   "verdict": "FAIL",
+   "reason": "LIMIT_NOT_MET",
+   "achieved": "199.9999999999999",
+   "rederive_problems": []
+  },
+  {
+   "printed": "199.99999999999999",
+   "verdict": "PASS",
+   "reason": "MET",
+   "achieved": "200",
+   "rederive_problems": []
+  },
+  {
+   "printed": "199.999999999999999",
+   "verdict": "PASS",
+   "reason": "MET",
+   "achieved": "200",
+   "rederive_problems": []
+  },
+  {
+   "printed": "199.9999999999999999999999999",
+   "verdict": "PASS",
+   "reason": "MET",
+   "achieved": "200",
+   "rederive_problems": []
+  },
+  {
+   "printed": "199.99999999999999999999999999999",
+   "verdict": "PASS",
+   "reason": "MET",
+   "achieved": "200",
+   "rederive_problems": []
+  }
+ ],
+ "string": [
+  {
+   "printed": "\"199.999999999999\"",
+   "verdict": "FAIL",
+   "reason": "LIMIT_NOT_MET",
+   "achieved": "199.999999999999",
+   "rederive_problems": []
+  },
+  {
+   "printed": "\"199.9999999999999\"",
+   "verdict": "FAIL",
+   "reason": "LIMIT_NOT_MET",
+   "achieved": "199.9999999999999",
+   "rederive_problems": []
+  },
+  {
+   "printed": "\"199.99999999999999\"",
+   "verdict": "FAIL",
+   "reason": "LIMIT_NOT_MET",
+   "achieved": "199.99999999999999",
+   "rederive_problems": []
+  },
+  {
+   "printed": "\"199.999999999999999\"",
+   "verdict": "FAIL",
+   "reason": "LIMIT_NOT_MET",
+   "achieved": "199.999999999999999",
+   "rederive_problems": []
+  },
+  {
+   "printed": "\"199.9999999999999999999999999\"",
+   "verdict": "FAIL",
+   "reason": "LIMIT_NOT_MET",
+   "achieved": "199.9999999999999999999999999",
+   "rederive_problems": []
+  },
+  {
+   "printed": "\"199.99999999999999999999999999999\"",
+   "verdict": "UNKNOWN",
+   "reason": "CHECK_OUTPUT_INVALID",
+   "achieved": null,
+   "rederive_problems": []
+  }
+ ],
+ "le_number_above": [
+  {
+   "printed": "200.0000000000001",
+   "verdict": "FAIL",
+   "reason": "LIMIT_NOT_MET",
+   "achieved": "200.0000000000001",
+   "rederive_problems": []
+  },
+  {
+   "printed": "200.00000000000001",
+   "verdict": "PASS",
+   "reason": "MET",
+   "achieved": "200",
+   "rederive_problems": []
+  },
+  {
+   "printed": "200.000000000000001",
+   "verdict": "PASS",
+   "reason": "MET",
+   "achieved": "200",
+   "rederive_problems": []
+  }
+ ]
+}
+ALL PREDICTIONS HELD

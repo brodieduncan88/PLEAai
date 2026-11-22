@@ -1,0 +1,4 @@
+more than one engineer key accepted: CAUGHT by ['F39']
+an engineer key of another form accepted: CAUGHT by ['F39']
+the front door's start does not check its keys: CAUGHT by ['F39']
+caught 3 of 3 planted; 0 not planted; 3 in all

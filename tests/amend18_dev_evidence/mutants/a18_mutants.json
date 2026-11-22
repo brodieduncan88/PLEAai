@@ -1,0 +1,55 @@
+{
+ "commit": "8c4762f",
+ "results": {
+  "more than one engineer key accepted": {
+   "planted": true,
+   "file": "verify/front_door.py",
+   "tests": {
+    "F39": {
+     "ok": false,
+     "failed_checks": [
+      "in process, a front door is made with exactly one engineer key of 64 lower-case hex digits, and refused, saying it is not started, with none, two, the same key twice, or one of another form",
+      "as a process, a front door given no engineer key, two, the same key twice, or one of another form does not start, says why, and binds no port"
+     ],
+     "error": null,
+     "seconds": 124.1
+    }
+   },
+   "caught": true
+  },
+  "an engineer key of another form accepted": {
+   "planted": true,
+   "file": "verify/front_door.py",
+   "tests": {
+    "F39": {
+     "ok": false,
+     "failed_checks": [
+      "in process, a front door is made with exactly one engineer key of 64 lower-case hex digits, and refused, saying it is not started, with none, two, the same key twice, or one of another form",
+      "as a process, a front door given no engineer key, two, the same key twice, or one of another form does not start, says why, and binds no port"
+     ],
+     "error": null,
+     "seconds": 64.2
+    }
+   },
+   "caught": true
+  },
+  "the front door's start does not check its keys": {
+   "planted": true,
+   "file": "verify/front_door.py",
+   "tests": {
+    "F39": {
+     "ok": false,
+     "failed_checks": [
+      "as a process, a front door given no engineer key, two, the same key twice, or one of another form does not start, says why, and binds no port"
+     ],
+     "error": null,
+     "seconds": 4.4
+    }
+   },
+   "caught": true
+  }
+ },
+ "caught": 3,
+ "planted": 3,
+ "of": 3
+}

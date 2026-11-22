@@ -78,3 +78,48 @@ Kept in `tests/amend18_dev_evidence/run1_front.*`.
 - Under the owner's point 8 there is no open-ended cycle. If the review finds something critical, high or medium in
   this change, it is either corrected once, with that correction's own record, or reported to the owner as it stands.
   No second review follows.
+
+**The planted-defect run (entry 2's declaration).**
+- At `8c4762f`: 3 planted, 3 caught by F39, as declared. Each defect, alone in a copy of the tree, made F39 fail.
+- Kept in `tests/amend18_dev_evidence/mutants/`.
+
+## Entry 3. D20: can the rounding change a PASS or a FAIL? (the owner's point 3)
+
+Two in-process probes of the gate's own decision path, `verify_tools._decide`. Only the sandbox is replaced, by a stand-in
+that returns the bytes a check prints. Each probe's expectations were written in its text and committed before it ran
+(`f840daf`, `e0dce97`). Both are in `tests/amend18_dev_evidence/d20/`.
+
+- **First probe, run 1:** it stopped before testing anything, because `verify_tools` needs `VERIFY_HOME`. That was a
+  fault of the probe's setup. The output is kept (`d20_rounding_probe_run1_PROBE_ERROR.out`).
+- **First probe, run 2** (unchanged, with `VERIFY_HOME` set): **its predictions failed** (P1 a, P2 a, P2 b, P1 f, P2 f).
+  - A check printing `199.99999999999999999999999999999` (a JSON number, below the limit of 200) was signed **PASS**,
+    with achieved written as `200`.
+  - So was `199.9999999999999999999999999`, which has 28 significant digits and is not rounded by the decimal
+    context at all.
+  - `check_record.rederive` accepted both.
+  - The predictions were wrong about the mechanism, as the second probe shows. They are not changed.
+- **Second probe** (`d20_float_probe.py`, declared after the first and before it ran): **all predictions held.**
+  - **A JSON number is read by `json.loads` as a binary float** before it is turned into a decimal.
+    - A value 1e-13 below the limit stays below and is FAIL.
+    - Values 1e-14 below or closer become 200.0 and are signed **PASS**, with achieved `200`.
+    - The same happens mirrored for a `<=` criterion: 200.00000000000001 is PASS.
+    - Each such verdict is accepted by the record's checker, so the record verifies. The false PASS cannot be seen
+      from the record.
+  - **A JSON string is decided on the exact decimal.**
+    - Every value below 200 with at most 28 significant digits is FAIL.
+    - A value with more than 28 significant digits is UNKNOWN (CHECK_OUTPUT_INVALID), never PASS.
+- **Assessment.**
+  - **The rounding case of the register (more than 28 significant digits, written rounded) cannot change a PASS or a
+    FAIL.** Where rounding would cross the limit, or the margin would not recompute, the record's checker refuses
+    the verdict, and the gate answers UNKNOWN. That fails closed.
+  - **A different loss of precision, on the way in, can change a FAIL into a PASS.** This is a security-relevant
+    false PASS: the checker passes a design whose check printed a value on the wrong side of the limit. It needs:
+    - a check that prints, as a JSON number, a value closer to the limit than a binary float can resolve (about
+      1e-14 of 200 here, relative about 5e-17);
+    - and a check that computes more precisely than a float, for instance with `decimal` or `fractions`.
+    - A check that computes in floats prints values that read back as the same float, and is decided as it computed
+      (ARGUED from how Python prints floats; not probed).
+  - Recorded in the register as a new finding, D20-F, apart from D20's rounding. The likely correction reads JSON
+    numbers as decimals (`json.loads(..., parse_float=decimal.Decimal)` in `baseline.evaluate`). It is not made here:
+    it changes behaviour, so it needs its own amendment and the owner's approval. The owner asked that this exercise
+    not be broadened into a numerical redesign.
