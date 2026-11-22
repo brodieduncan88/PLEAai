@@ -661,3 +661,13 @@ copy on the diagnostic branch is not changed.
     approval.
 - **D21:** a process of the code from before Amendment 17, during a rolling upgrade, stops a budget's runs (G7, L-d).
   Recorded again as an availability limit; not changed.
+
+### G14. 22 November 2026: the official runs of Amendment 18
+
+- **Declared:** `verify/DECLARED_AMEND18.md`, at `56bbb69`. **Runs:** once each, 03:39 to 03:49 UTC. Both came out as
+  declared:
+  - the gate: 34 of 34 tests and 252 of 252 checks (R1 to R13 through the front door);
+  - the front door: 37 of 37 tests and 214 of 214 checks (F39 3 of 3).
+  The results are in `verify/results_*_amended18_2026-11-22*`.
+- **D16:** internally tested, with the single-key enforcement. Not closed. What remains is as in G13.
+- No other row changes status.
