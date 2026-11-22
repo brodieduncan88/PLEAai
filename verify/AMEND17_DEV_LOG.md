@@ -552,3 +552,39 @@ recorded below when they end.
   - F10, F12 and F28 pass;
   - then the full suites: the gate 34 of 34, the front 36 of 36;
   - then the runner on the commit that holds these changes: 47 in all, 34 planted and 34 caught, 13 NOT PLANTED.
+
+**Entry 17's first run, and a predicate restated after it (VP-1 to VP-5).**
+- F38, F37, F10, F12 and F28 at 7b2066a: 4 of 5 passed. F38 stopped with an uncaught `Unwritten`, so none of its
+  checks was counted. Its check 9, written for the fifth review (N-H1), expected `revoke`, given another job's entry in
+  place of this job's, to be refused with the job's row left at (1, False).
+- Entry 17's M-2 change deliberately makes that case revoke the job's name in the database instead. Check 9 was not
+  restated with it. That is the author's oversight: entry 17 declared F38 14 of 14 without it.
+- The run is kept as it came out, with the test file it ran (SHA-256 `d3505acd…`), in
+  `tests/amend17_dev_evidence/review6_run1_FAILED/`.
+- Check 9 is restated for the design as changed:
+  - rebind, given another job's entry, is refused and writes nothing, with the row untouched;
+  - revoke, given another job's ENROL or REVOKE, writes nothing and revokes the job's name: `Unwritten`, the row
+    (1, True), and the job refused;
+  - the earlier binding put back admits nobody, before and after an honest revocation, which leaves the row at
+    (2, True).
+- What check 9 guards, that a substituted entry cannot make a revocation miss the job, is kept, and is now stronger.
+  The only predicate that changed is how revoke answers.
+- **Declared before the next run (VP-5).** `tests/verify_front_tests.py` has SHA-256
+  `74638b00f54fb1f0f95504549d35c9af4268926d23f29723545533f9be624e13`; the other two test files are as entry 17 gives
+  them. Expected: F38 14 of 14 checks; F37 11 of 11; F10, F12 and F28 pass. The rest is as entry 17 declares.
+
+**Entry 17's second run, and the harness of a check corrected (VP-1 to VP-5).**
+- The declared F38, F37, F10, F12 and F28 at the tree of the previous paragraph: 4 of 5 passed.
+  - F38: 13 of 14. Check 9, as restated, passed.
+  - Check 6 failed: a revocation recorded and not written was written (`unwritten: 'no warning'`, the command's status
+    0).
+- Check 6 made the console's write fail by putting a folder at `jobs.tmp`. Since entry 17's M-3 change the temporary
+  file has a name of its own, so that folder no longer stops the write. The change to the product was intended; the
+  check's means of making the write fail was not updated with it.
+- The run is kept in `tests/amend17_dev_evidence/review6_run2_FAILED/`.
+- Check 6's predicate is not changed. Its harness now makes the write fail at the log: the log is moved aside and a
+  folder is put in its place, since the console opens the log before anything is replaced. The log is put back after.
+- No other test uses `jobs.tmp`.
+- **Declared before the next run (VP-5).** `tests/verify_front_tests.py` has SHA-256
+  `a78f57eb344c2ab9f333af258d9df4e4c197ed0d88d5890693314c83e7d93df1`. Expected: F38 14 of 14; F37 11 of 11; F10, F12
+  and F28 pass.

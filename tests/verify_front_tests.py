@@ -1920,7 +1920,9 @@ def f38():
         s.stop_front(); s.start_front()
         # 6. recorded and not written: said so, with status 4 at the command; the front door refuses the job already; revoke given again writes it
         job_k = s.enrol('job-k', r.h, reason=why); seen_k = req(job_k); enrol_k = json.loads(path.read_text())['jobs']['job-k']
-        blocker = path.with_suffix('.tmp'); blocker.mkdir()                     # the console's temporary file cannot be made
+        # the console's write is made to fail at its log, which it opens before anything is replaced (after the sixth review, M-3, the
+        # temporary file has a name of its own, so a folder at jobs.tmp, as this check used before, no longer stops the write)
+        log_k = path.parent / 'enrolment.jsonl'; aside_k = log_k.with_name('enrolment.jsonl.aside'); os.replace(log_k, aside_k); log_k.mkdir()
         try:
             front_ctl.revoke(s.home, 'job-k', s.engineer); unwritten = 'no warning'
         except front_ctl.Unwritten as exc:
@@ -1928,7 +1930,7 @@ def f38():
         still_enrol_k = json.loads(path.read_text())['jobs']['job-k']['event']; refused_k = req(job_k); row_k = row(enrol_k)
         cli_k = subprocess.run([sys.executable, '-B', str(GATEWAY / 'verify' / 'front_ctl.py'), 'revoke', str(s.home), 'job-k', '--key', str(s.dir / 'engineer.key')],
                                capture_output=True, text=True, timeout=120)
-        blocker.rmdir(); again_k = front_ctl.revoke(s.home, 'job-k', s.engineer)
+        log_k.rmdir(); os.replace(aside_k, log_k); again_k = front_ctl.revoke(s.home, 'job-k', s.engineer)
         written_k = json.loads(path.read_text())['jobs']['job-k']['event']
         # 7. a move whose record cannot be reached is written all the same: the job is answered on the revision
         src = case_b('F38')
@@ -1948,21 +1950,26 @@ def f38():
         threads = [threading.Thread(target=put, args=(n,)) for n in names]
         [t_.start() for t_ in threads]; [t_.join() for t_ in threads]
         kept = sorted(front_door.read_jobs(scratch)); logged = len((scratch / 'front' / 'enrolment.jsonl').read_text().splitlines())
-        # 9. (fifth review, N-H1) an entry for another job put in place of this job's: revoke and rebind refuse it and write nothing; the job,
-        #    revoked honestly after, is refused, and its earlier binding put back admits nobody
+        # 9. (fifth review, N-H1) an entry for another job put in place of this job's: rebind refuses it and writes nothing; revoke writes
+        #    nothing and revokes the job's name in the database (restated after the sixth review, M-2, which changed what revoke does here:
+        #    the form of this check before it is kept in tests/amend17_dev_evidence/review6_run1_FAILED/); the earlier binding put back
+        #    admits nobody, before and after an honest revocation
         job_x = s.enrol('job-x', r.h, reason=why); seen_x = req(job_x); held_x = path.read_text(); enrol_x = json.loads(held_x)['jobs']['job-x']
         other_enrol, other_revoke = json.loads(held_x)['jobs']['job-i'], json.loads(held_x)['jobs']['job-k']   # job-i's ENROL (put back in 4) and job-k's REVOKE (6)
         assert other_enrol['event'] == 'ENROL' and other_revoke['event'] == 'REVOKE', 'the test\'s own setting up'
-        subst = {}
-        for label, sub_b, act in (('revoke, another ENROL', other_enrol, lambda: front_ctl.revoke(s.home, 'job-x', s.engineer)),
-                                  ('revoke, another REVOKE', other_revoke, lambda: front_ctl.revoke(s.home, 'job-x', s.engineer)),
-                                  ('rebind, another ENROL', other_enrol, lambda: front_ctl.rebind(s.home, 'job-x', 'f' * 64, s.engineer, wait=0))):
+        subst, rows_subst = {}, {}
+        for label, sub_b, act in (('rebind, another ENROL', other_enrol, lambda: front_ctl.rebind(s.home, 'job-x', 'f' * 64, s.engineer, wait=0)),
+                                  ('revoke, another ENROL', other_enrol, lambda: front_ctl.revoke(s.home, 'job-x', s.engineer)),
+                                  ('revoke, another REVOKE', other_revoke, lambda: front_ctl.revoke(s.home, 'job-x', s.engineer))):
             jobs_x = json.loads(held_x); jobs_x['jobs']['job-x'] = sub_b; path.write_text(json.dumps(jobs_x)); before_act = path.read_text()
             try:
                 act(); subst[label] = 'done'
+            except front_ctl.Unwritten as exc:
+                subst[label] = ('Unwritten', 'for another job' in str(exc) and 'revoked in the database' in str(exc), path.read_text() == before_act)
             except front_ctl.Refused as exc:
-                subst[label] = ('for another job' in str(exc), path.read_text() == before_act)
-        path.write_text(held_x); row_x_untouched = row(enrol_x); still_x = req(job_x)
+                subst[label] = ('Refused', 'for another job' in str(exc), path.read_text() == before_act)
+            rows_subst[label] = row(enrol_x)
+        path.write_text(held_x); row_x_untouched = rows_subst['rebind, another ENROL']; still_x = req(job_x)
         front_ctl.revoke(s.home, 'job-x', s.engineer); path.write_text(held_x); put_back_x = req(job_x); row_x = row(enrol_x)
         # 10. (fifth review, N-M1) a job name enrolled again after its entry is removed: the second enrolment admits nobody; the name's
         #     revocation covers the first enrolment too
@@ -2067,7 +2074,7 @@ def f38():
                  cli_k=(cli_k.returncode, cli_k.stderr.strip()[-300:]), again_k=again_k.get('event'), written_k=written_k,
                  unrec_a=unrec_a, written_a=(written_a.get('event'), written_a.get('baseline_sha256') == hb), on_b=(on_b[0], on_b[1].get('baseline_sha256') == hb),
                  concurrent=dict(kept=len(kept), all=kept == names, logged=logged, errors=errors),
-                 substituted=subst, seen_x=seen_x[0], row_x_untouched=row_x_untouched, still_x=still_x[0], put_back_x=(put_back_x[0], put_back_x[1].get('refused')), row_x=row_x,
+                 substituted=subst, rows_substituted=rows_subst, seen_x=seen_x[0], row_x_untouched=row_x_untouched, still_x=still_x[0], put_back_x=(put_back_x[0], put_back_x[1].get('refused')), row_x=row_x,
                  reenrol=dict(seen_first=seen_r1[0], second=(second_r[0], second_r[1].get('refused')), row=row_r, first_put_back=(first_r_put_back[0], first_r_put_back[1].get('refused'))),
                  lockcases=lockcases, nameless=nameless, down_w=down_w[:300], files=files, neither=neither[:300], listed_v=listed_v)
         checks = {'a revocation made by the console while the front door is stopped is recorded: the earlier binding put back before the front door starts admits nobody':
@@ -2089,9 +2096,10 @@ def f38():
                       'could not be recorded' in unrec_a and e['written_a'] == ('REBIND', True) and e['on_b'] == (200, True),
                   'two consoles at once lose neither\'s binding: forty written at once are all kept, and all logged':
                       not errors and kept == names and logged == 40,
-                  'an entry for another job, put in place of this job\'s, is refused by revoke and by rebind, and nothing is written; the job, revoked after, is refused, and its earlier binding put back admits nobody':
-                      e['seen_x'] == 200 and all(v == (True, True) for v in subst.values()) and len(subst) == 3 and row_x_untouched == (1, False) and still_x[0] == 200
-                      and refused(put_back_x) and row_x == (2, True),
+                  'an entry for another job, put in place of this job\'s: rebind refuses it and writes nothing; revoke writes nothing and revokes the job\'s name in the database; the earlier binding put back admits nobody, before and after an honest revocation':
+                      e['seen_x'] == 200 and subst.get('rebind, another ENROL') == ('Refused', True, True) and row_x_untouched == (1, False)
+                      and subst.get('revoke, another ENROL') == ('Unwritten', True, True) and subst.get('revoke, another REVOKE') == ('Unwritten', True, True)
+                      and rows_subst.get('revoke, another ENROL') == (1, True) and refused(still_x) and refused(put_back_x) and row_x == (2, True),
                   'a job name enrolled again after its entry is removed admits nobody under the second enrolment, and its revocation covers the first: the first put back admits nobody':
                       seen_r1[0] == 200 and refused(second_r) and row_r == (2, True) and refused(first_r_put_back),
                   'a write over an entry that changed meanwhile is refused; a lock that is a pipe or a link is refused, and the link is not followed; a lock held by another is given up after the wait; nothing is written in any':
