@@ -1,0 +1,12 @@
+p2a_umask_0o77 = 0o644
+p2a_umask_0o0 = 0o644
+p2bc_0o640 = 0o640
+p2bc_0o600 = 0o600
+p2bc_0o666 = 0o666
+p2bc_0o6755 = 0o6755
+p2d = (True, '0o644', 'KEEP\n', '0o600')
+p2e = ('IsADirectoryError', [])
+p2f = ('PermissionError', [], True, 1)
+p2g = ('PermissionError', [], True, 1)
+PREDICTIONS {'p2a': True, 'p2b': True, 'p2c': True, 'p2d': True, 'p2e': True, 'p2f': True, 'p2g': True}
+PREDICTIONS FAILED: []

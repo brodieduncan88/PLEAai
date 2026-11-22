@@ -580,3 +580,19 @@ copy on the diagnostic branch is not changed.
 - **The planted-defect runner, at `c5c9832`:** 30 of 30 caught; 13 not planted, as declared.
 - **Status of D16:** implemented in development; official runs not made. What remains is as in G7 and G9, with the
   items above.
+
+### G11. 22 November 2026: the eighth review; the declaration
+
+- **The corrections of G10** are in `203bdca`. The eighth review, narrowed to `fb544a0..203bdca`, is kept in
+  `verify/reviews/AMEND17_REVIEW_203BDCA_2026-11-22.md`. It found nothing critical, high or medium.
+- **Recorded, not changed (low), brought in by `203bdca`:**
+  - a mode planted on `jobs.json` by one who can write HOME is kept on every later write; one that shuts out the
+    console makes later writes drop other entries;
+  - the temporary file's descriptor leaks on one error path;
+  - a new `jobs.json` is 0644 whatever the umask; a file left at 0600 by `7b2066a` or `fb544a0` needs one chmod;
+  - names are checked with `fullmatch` only for `revoke --by-name`, while enrol, the binding check and the
+    certificate name check use `match`;
+  - the usage line and a docstring are incomplete, and `--by-name` is accepted by actions that ignore it;
+  - F38 check 15 does not cover a link at `jobs.json` for the mode.
+- **Declared:** `verify/DECLARED_AMEND17.md`, at the commit that adds this entry. The code declared is that of
+  `203bdca`. Status words change only after the official runs.

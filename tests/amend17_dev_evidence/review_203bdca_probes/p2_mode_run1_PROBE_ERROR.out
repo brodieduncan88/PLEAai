@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review8/p2_mode.py", line 107, in <module>
+    out['p2h'] = (child.get('h_err'), mode(ph), sorted(json.loads(ph.read_text())['jobs']))
+                                      ^^^^^^^^
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review8/p2_mode.py", line 25, in mode
+    def mode(p): return oct(stat.S_IMODE(os.lstat(p).st_mode))
+                                         ^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review8/homes_nobody/h-af9666/front/jobs.json'

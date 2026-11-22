@@ -1,0 +1,52 @@
+PLANTED     [1] binder removed
+PLANTED     [1] binder always binds
+PLANTED     [1] identity back to 64 bits
+PLANTED     [1] request key back to 96 bits
+PLANTED     [1] front door does not check the design of a verdict
+PLANTED     [1] checker allows mixed forms
+NOT PLANTED [0] no form kept per budget
+PLANTED     [1] front door ignores the budget's form
+PLANTED     [1] record of bindings not consulted
+PLANTED     [1] revocation not absorbing
+PLANTED     [1] a stale binding accepted
+NOT PLANTED [0] a binding for another budget admitted
+PLANTED     [1] controls not put to the checker
+PLANTED     ['git'] the first client not retired
+NOT PLANTED [1, 0] revocations recorded only when the job calls
+NOT PLANTED [0] realm from the authority's file
+PLANTED     [1] a revocation at a number already seen not kept
+PLANTED     [1] mixed forms not refused
+PLANTED     [1] controls not put to rederive
+PLANTED     [1] no form kept per budget (restated)
+NOT PLANTED [0] a binding for another budget admitted (restated)
+PLANTED     [1, 1] revocations recorded only when the job calls (restated)
+NOT PLANTED [0] the console does not read the front door's realm
+NOT PLANTED [0] the front door started under another realm
+NOT PLANTED [0] a revocation not written when it cannot be recorded
+NOT PLANTED [0] a revocation not written when it cannot be recorded (restated)
+PLANTED     [1] a binding for another budget admitted (restated again)
+NOT PLANTED [0] the record keyed by the job name alone
+PLANTED     [1] an unrecorded revocation not recorded again
+NOT PLANTED [0] the front door records no revocation at its start
+PLANTED     [1, 1] the look records no revocation
+PLANTED     [1] a revocation recorded and not written said to be refused
+NOT PLANTED [0] jobs.json written without a lock
+PLANTED     [1] the record keyed by the job name alone (restated)
+PLANTED     [1] the record keyed by the certificate's hash
+PLANTED     [1] the console does not match the entry to its job
+PLANTED     [1] a changed entry written over
+PLANTED     [1] the lock followed through a link, and a pipe taken
+PLANTED     [1] a revocation not written when it cannot be recorded (restated again)
+PLANTED     [1] the front door records no revocation at its start (restated)
+PLANTED     [1] a move not written when it cannot be recorded (restated)
+PLANTED     [1] jobs.json written without a lock (restated)
+NOT PLANTED [0] a job with no usable entry not revoked by name
+PLANTED     [1] the temporary file opened by name
+PLANTED     [1] the log opened through a link or a pipe
+PLANTED     [1] a revocation neither recorded nor written not said
+PLANTED     [1] a job with no usable entry not revoked by name (restated)
+PLANTED     [1] revocation by name done without being asked for
+PLANTED     [1] a name revoked by name not checked whole
+PLANTED     [1] the mode of jobs.json not kept
+NOT PLANTED [0] a move not written when it cannot be recorded
+total 51 planted 37 not planted 14

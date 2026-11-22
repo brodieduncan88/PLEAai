@@ -656,3 +656,31 @@ recorded below when they end.
   - F10, F12 and F28 pass;
   - then the full suites: the gate 34 of 34, the front 36 of 36;
   - then the runner on the commit that holds these changes: 51 in all, 37 planted and 37 caught, 14 NOT PLANTED.
+
+**Entry 18's runs.**
+- **At 203bdca**, F38, F37, F10, F12 and F28 passed, 5 of 5, as declared: F38 15 of 15 checks, F37 11 of 11. Kept in
+  `review7_run1_front.json`.
+- **The full suites at 203bdca:**
+  - the gate, 34 of 34 (252 checks);
+  - the front, 36 of 36 (211 checks).
+  - Kept in `predecl_run6_203bdca/` when the runner ends.
+- **The runner at fb544a0** (entry 17's declaration): 47 in all, 34 planted and 34 caught, 13 NOT PLANTED. Kept in
+  `predecl_run5_fb544a0/`.
+
+## Entry 19. The eighth review, the stopping rule, and the declaration
+
+- The eighth review, narrowed to `fb544a0..203bdca` as entry 18 set it, is kept in
+  `verify/reviews/AMEND17_REVIEW_203BDCA_2026-11-22.md`, with its probes in `review_203bdca_probes/`.
+- Its answer to the stopping rule: the diff brings in nothing critical, high or medium, and it corrects N7-M1 and N7-M2.
+  It found seven lows, R8-L1 to R8-L7:
+  - L1: a mode planted on `jobs.json` is kept;
+  - L2: a descriptor leaked on an error path;
+  - L3: a new `jobs.json` is 0644 whatever the umask;
+  - L4: `fullmatch` is used only for `--by-name`;
+  - L5: the usage line, a docstring, and `--by-name` accepted by other actions;
+  - L6: check 15 does not cover a link at `jobs.json` for the mode;
+  - L7: evidence not yet committed.
+- Under the rule, no code is changed for these. They are recorded as open in the register (G11), and the declaration
+  is written: `verify/DECLARED_AMEND17.md`. L7's evidence is committed with this entry.
+- The runner at 203bdca is still running as this is written. Its result is recorded after the declaration, and is not
+  a condition of it.

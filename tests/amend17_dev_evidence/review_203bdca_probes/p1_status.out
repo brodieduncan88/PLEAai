@@ -1,0 +1,27 @@
+p1a_inproc = ('Refused', True, True)
+p1a_cli = (1, '', "refused: job-typo is not enrolled  If its entry was removed, spoiled or replaced, check the job's name and the key, then give revoke again with --by-name: that revokes the name 'job-typo' in the database under the key 258410dff2ff72b1…, and writes nothing.")
+p1a_row = None
+p1b_admit_before = True
+p1b_cli = (5, '{"event": "REVOKE", "seq": 1, "job": "job-b", "time": "2026-11-22T02:26:02Z", "note": "revoked by name: job-b is not enrolled", "signer": "258410dff2ff72b105c94424c27fcc9de3dd6152043b1bc16f89bb839bff40fc"}', "revoked by name, nothing written: job-b is not enrolled  The name 'job-b' is revoked in the database under the key 258410dff2ff72b1…, so the front door refuses it under any binding signed by that key; nothing was written to jobs.json.  A binding of the name signed by another key is not covered.")
+p1b_unchanged = True
+p1b_row = (1, True)
+p1b_put_back_admitted = False
+p1c_cli = (0, '{"event": "REVOKE", "seq": 2, "job": "job-c", "baseline_sha256": "abababababababababababababababababababababababababababababababab", "root": "budget/abababababababababababababababab", "previous": "abababababababababababababababababababababababababababababababab", "time": "2026-11-22T02:26:02Z", "note": null}', '')
+p1c_entry = ('REVOKE', 2)
+p1c_row = (2, True)
+p1d_cli = (1, '', "refused: job-d is not enrolled  The job's name could not be revoked in the database either (StateUnavailable): job-d is NOT revoked.")
+p1d_row = (1, False)
+p1e = {"'job-n\\n'": (True, None, True, False), "'JOB-A'": (True, None, False, False), "'a'": (True, None, False, False), "'job-x\\x00'": (True, None, False, False), "'ｊob'": (True, None, False, False), "'engineer'": (True, None, True, True), "'jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj'": (True, None, False, False), "'job-n '": (True, None, False, False), "'-job'": (True, None, False, False)}
+p1f_cli = (4, '{"event": "REVOKE", "seq": 2, "job": "job-f", "baseline_sha256": "abababababababababababababababababababababababababababababababab", "root": "budget/abababababababababababababababab", "previous": "abababababababababababababababababababababababababababababababab", "time": "2026-11-22T02:26:02Z", "note": null, "signer": "258410dff2ff72b105c94424c27fcc9de3dd6152043b1bc16f89bb839bff40fc"}', 'recorded, not written: the revocation is recorded in the database, so the front door refuses job-f; it could not be written to jobs.json (IsADirectoryError): give revoke again to write it')
+p1f_row = (2, True)
+p1g_cli = (3, '{"event": "REVOKE", "seq": 2, "job": "job-g", "baseline_sha256": "abababababababababababababababababababababababababababababababab", "root": "budget/abababababababababababababababab", "previous": "abababababababababababababababababababababababababababababababab", "time": "2026-11-22T02:26:03Z", "note": null}', 'written, not recorded: it could not be recorded in the database (StateUnavailable): the revocation is written to jobs.json; give revoke again to record it, and the front door records it when it next reads the file')
+p1h_admit_before = True
+p1h_plain = (1, True, True)
+p1h_byname = (5, True, True)
+p1h_rows = ((1, True), (1, False))
+p1h_admit_after = True
+p1i = True
+p1i_order = True
+p1j_rebind = (1, "refused: no baseline cdcdcdcdcdcdcdcd… signed by this engineer is held: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review8/homes/p1j-d326d9/baselines/cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd/baseline.json'")
+PREDICTIONS {'p1a': True, 'p1b': True, 'p1c': True, 'p1d': True, 'p1e': True, 'p1f': True, 'p1g': True, 'p1h': True, 'p1i': True, 'p1j': True}
+PREDICTIONS FAILED: []

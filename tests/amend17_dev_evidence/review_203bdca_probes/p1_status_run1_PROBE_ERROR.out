@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review8/p1_status.py", line 64, in <module>
+    out['p1e'][repr(n)] = (r, rowk(A, n), bool(front_door.JOB_NAME.match(n)), bool(front_door.JOB_NAME.fullmatch(n)))
+                              ^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review8/p1_status.py", line 26, in rowk
+    def rowk(key, job): return row_named(front_state.state_name({'signer': key.public_hex, 'job': job}))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review8/common.py", line 78, in row_named
+    r = c.execute('SELECT seq, revoked FROM public.verify_front_binding WHERE job = %s', (name,)).fetchone()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/venv/lib/python3.11/site-packages/psycopg/connection.py", line 304, in execute
+    raise ex.with_traceback(None)
+psycopg.DataError: PostgreSQL text fields cannot contain NUL (0x00) bytes
