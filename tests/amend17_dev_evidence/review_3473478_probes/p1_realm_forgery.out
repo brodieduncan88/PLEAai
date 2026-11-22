@@ -1,0 +1,16 @@
+p1a_first_admit: True
+p1a_revoke: returned normally (exit 0)
+p1a_rows: [('realm-forged2-628294:job-x', 2, True), ('realm-real-628294:job-x', 1, False)]
+p1a_admitted_after_put_back: True
+p1b_first_admit: False
+p1b_refused_after_revoke: False
+p1b_realm_started_without_flag: realm-forged3-628294
+p1b_admitted_started_without_flag: True
+p1b_started_with_flag: RealmMismatch
+p1c_first_admit: True
+p1c_revoke: Unrecorded: the realm given (realm-real-628294) is not the front door's (realm-forged4-628294): it was recorded under the front door's own realm, and is written to jobs.json
+p1c_rows: [('realm-forged4-628294:job-y', 2, True), ('realm-real-628294:job-y', 1, False)]
+p1c_admitted_after_put_back: True
+p1d_cli: (0, 'babababababababababab", "root": "budget/abababababababababababababababab", "previous": "abababababababababababababababababababababababababababababababab", "time": "2026-11-22T01:18:49Z", "note": null}', '')
+p1d_rows: [('realm-forged2-628294:job-z', 2, True), ('realm-real-628294:job-z', 1, False)]
+PREDICTIONS: {'p1a': True, 'p1b': True, 'p1c': True, 'p1d': True}

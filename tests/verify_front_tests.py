@@ -1074,7 +1074,7 @@ def front_cfg(r, **extra) -> dict:
     s = r.s
     cfg = {'witness_url': f'https://127.0.0.1:{s.ports["witness"]}', 'witness_keys': [s.keys['witness']], 'gate_url': f'https://127.0.0.1:{s.ports["host"]}',
            'gate_key': s.keys['gate'], 'tls': {'ca': s.pki['ca'], 'cert': s.pki['frontdoor'][0], 'key': s.pki['frontdoor'][1]},
-           'journal': str(front_ctl.journal(s.home)), 'realm': s.realm}           # realm: Amendment 17, as the running front door is given it
+           'journal': str(front_ctl.journal(s.home))}
     cfg.update(extra)
     return cfg
 
@@ -1637,7 +1637,7 @@ def f35():
         r.s.stop_host(); r.s.start_host(); state = proven(r.s, r.h); calls = r.calls()
         cfg = {'witness_url': f"https://127.0.0.1:{r.s.ports['witness']}", 'witness_keys': [r.s.keys['witness']], 'gate_url': f"https://127.0.0.1:{r.s.ports['host']}",
                'gate_key': r.s.keys['gate'], 'tls': {'ca': r.s.pki['ca'], 'cert': r.s.pki['frontdoor'][0], 'key': r.s.pki['frontdoor'][1]},
-               'journal': str(r.s.home / 'front' / 'submissions.jsonl'), 'realm': r.s.realm}   # realm: Amendment 17
+               'journal': str(r.s.home / 'front' / 'submissions.jsonl')}
         door = lambda: front_door.Front(r.s.home, Store(deploy.LOCAL_DSN), cfg, [r.s.keys['engineer']])   # another front door, in this process, on the same service
         journal = pathlib.Path(cfg['journal']); aside = journal.with_name(journal.name + '.aside')
 
@@ -1815,13 +1815,13 @@ def f37():
         with owner.connect() as c:
             final = c.execute('SELECT seq, revoked FROM public.verify_front_binding WHERE job = %s', (racer,)).fetchone()
         late = [front_state.observe(local, racer, n, format(n, '064x'), False) for n in (1, 39)]
-        # after the second review (H1, H2, M1): a revocation the revoked job never sees; one written by a console given no realm; the
+        # after the second review (H1, H2, M1): a revocation the revoked job never sees; one given to the console with no realm (before the fourth review); the
         # authority's file changed; and a revocation signed at a number the record has already seen
         jobs_now = json.loads(path.read_text())
         job_c = s.enrol('job-c', r.h, reason='another job of the same requirement, as the test needs'); seen_c = raw(job_c, 'GET', '/requirement')
         before_c = path.read_text(); s.revoke('job-c')                                   # recorded by the console (it is given the realm)
         job_d = s.enrol('job-d', r.h, reason='another job of the same requirement, as the test needs'); seen_d = raw(job_d, 'GET', '/requirement')
-        before_d = path.read_text(); front_ctl.revoke(s.home, 'job-d', s.engineer)       # no realm: only the file says so, until the front door reads it
+        before_d = path.read_text(); front_ctl.revoke(s.home, 'job-d', s.engineer)       # recorded by the console too (since the third review)
         s.stop_front(); s.start_front()                                                  # it reads every revocation at start
         cleaned = json.loads(path.read_text()); held_cd = path.read_text()
         put = json.loads(before_d); put['jobs']['job-c'] = json.loads(before_c)['jobs']['job-c']; path.write_text(json.dumps(put))   # both earlier bindings put back
@@ -1837,7 +1837,7 @@ def f37():
         e.update(unobserved=dict(seen=(seen_c[0], seen_d[0], seen_e[0]), after_put_back_and_ca_change=(unseen_c[0], unseen_c[1].get('refused'), unseen_d[0], unseen_d[1].get('refused')),
                                  same_number=(revoked_e[0], put_back_e[0], put_back_e[1].get('refused'))))
         # the service's own role can deny a job, never admit one: a made-up revocation, then a made-up lower number
-        denied_by_role = front_state.observe(local, front_state.state_name(s.realm, 'job-b'), 10 ** 6, '3' * 64, True); job_b_after = raw(job_b, 'GET', '/requirement')
+        denied_by_role = front_state.observe(local, front_state.state_name(kb), 10 ** 6, '3' * 64, True); job_b_after = raw(job_b, 'GET', '/requirement')
         e.update(first=first[0], after_restart=after_restart[0], revoked=(revoked[0], revoked[1].get('refused')), put_back_after_restart=(put_back_after_restart[0], put_back_after_restart[1].get('refused')),
                  unrevoked=(unrevoked[0], unrevoked[1].get('refused')), conflict=(conflict[0], conflict[1].get('refused')), same_again=same_again, ok_b=ok_b[0],
                  mismatch=(mismatch[0], mismatch[1].get('refused')), calls_mismatch=calls_mismatch, unreadable=(unreadable[0], unreadable[1].get('refused')), calls_unreadable=calls_unreadable,
@@ -1862,106 +1862,125 @@ def f37():
 
 
 def f38():
-    """Amendment 17 (D16, after the third review: H1', M-a, M-b, L-b).  The front door's realm is kept and the engineer's console records under it without being told it: a revocation made while the front door is stopped is not undone by putting the earlier binding back; another realm is refused by the console and by the front door; a revocation is written even when it cannot be recorded; and a move is written before it is recorded."""
+    """Amendment 17 (D16, after the third and fourth reviews).  A job is named in the record of bindings by what the engineer signed, so no file beside jobs.json bears on it; a revocation made while the front door is stopped is not undone by putting the earlier binding back; one that could not be recorded is written, recorded when revoke is given again, and recorded by the front door at its start and on its look; one recorded and not written is said so; a move is written before it is recorded; and two consoles at once lose neither's binding."""
     import os
+    import shutil
     import front_state
     r = Run('F38'); e = {}
     try:
-        s = r.s; path = front_door.jobs_path(s.home)
+        s = r.s; path = front_door.jobs_path(s.home); owner = Store(deploy_front.OWNER_DSN)
         refused = lambda x: x[0] == 403 and x[1].get('refused') == 'NOT_ENROLLED'
         req = lambda j: raw(j, 'GET', '/requirement')
         why = 'another job of the same requirement, as the test needs'
         bad_dsn = 'postgresql://plea_control:control@127.0.0.1:1/plea'          # nothing listens on port 1
-        stored = front_state.read_realm(s.home)
-        # 1. the console, given no realm, revokes while the front door is stopped; the earlier binding is put back before it starts
+        def row(b):
+            with owner.connect() as c:
+                return c.execute('SELECT seq, revoked FROM public.verify_front_binding WHERE job = %s', (front_state.state_name(b),)).fetchone()
+        def unrecorded(fn):
+            try:
+                fn(); return 'no warning'
+            except front_ctl.Unrecorded as exc:
+                return str(exc)
+        # 1. the console revokes while the front door is stopped; the earlier binding is put back before it starts
         job_f = s.enrol('job-f', r.h, reason=why); seen_f = req(job_f)
         s.stop_front(); before_f = path.read_text()
-        b_f = front_ctl.revoke(s.home, 'job-f', s.engineer)                      # no realm given: it reads the front door's
+        b_f = front_ctl.revoke(s.home, 'job-f', s.engineer)
         path.write_text(before_f); s.start_front(); put_back_f = req(job_f)
-        # 2. another realm given to the console, and one that is not a realm
-        job_g = s.enrol('job-g', r.h, reason=why); seen_g = req(job_g); held_g = path.read_text()
-        other = stored[:-1] + ('1' if stored[-1] == '0' else '0')
-        try:
-            front_ctl.rebind(s.home, 'job-g', 'f' * 64, s.engineer, realm=other); moved_other = 'moved'
-        except front_ctl.Refused as exc:
-            moved_other = str(exc)
-        kept_after_rebind = path.read_text() == held_g
-        try:
-            front_ctl.revoke(s.home, 'job-g', s.engineer, realm=''); empty = 'revoked'
-        except front_ctl.Refused as exc:
-            empty = str(exc)
-        kept_after_empty = path.read_text() == held_g
-        try:
-            front_ctl.revoke(s.home, 'job-g', s.engineer, realm=other); revoked_other = 'no warning'
-        except front_ctl.Unrecorded as exc:
-            revoked_other = str(exc)
-        written_g = json.loads(path.read_text())['jobs']['job-g']['event']
+        # 2. what the record names a job by: files written beside jobs.json, among them the realm file of the third review's form, change nothing
+        job_g = s.enrol('job-g', r.h, reason=why); seen_g = req(job_g); held_g = path.read_text(); enrol_g = json.loads(held_g)['jobs']['job-g']
+        for name, text in (('realm', 'forged-realm-0001\n'), ('state', 'x'), ('jobs.json.bak', held_g)):
+            (s.home / 'front' / name).write_text(text)
+        b_g = front_ctl.revoke(s.home, 'job-g', s.engineer); row_g = row(enrol_g)
+        named = front_state.state_name(enrol_g) == enrol_g['cert_sha256'] + ':job-g' and front_state.state_name(b_g) == front_state.state_name(enrol_g)
         s.stop_front(); path.write_text(held_g); s.start_front(); put_back_g = req(job_g)
-        # 3. the front door is not started under another realm, as a process or in process, and its realm is unchanged
-        s.stop_front(); keep = s.realm; s.realm = other
-        try:
-            s.start_front(); started_other = 'started'
-        except RuntimeError as exc:
-            started_other = str(exc)
-        finally:
-            s.realm = keep
-        told = 'not started' in (s.dir / 'front.log').read_text()[-3000:]
-        try:
-            front_door.Front(s.home, Store(deploy.LOCAL_DSN), {'realm': other}, [s.keys['engineer']]); in_process = 'made'
-        except front_state.RealmMismatch:
-            in_process = 'RealmMismatch'
-        realm_after = front_state.read_realm(s.home)
-        s.start_front(); still_g = req(job_g)
-        # 4. the record cannot be reached from the console: the revocation is written all the same, the running front door refuses the job
-        #    and records it, and the earlier binding put back after that admits nobody; the command ends with status 3
-        job_h = s.enrol('job-h', r.h, reason=why); seen_h = req(job_h); held_h = path.read_text()
-        try:
-            front_ctl.revoke(s.home, 'job-h', s.engineer, control_dsn=bad_dsn); unrec_h = 'no warning'
-        except front_ctl.Unrecorded as exc:
-            unrec_h = str(exc)
-        written_h = json.loads(path.read_text())['jobs']['job-h']['event']; after_h = path.read_text()
-        refused_h = req(job_h)
-        path.write_text(held_h); put_back_h = req(job_h); path.write_text(after_h)
-        job_i = s.enrol('job-i', r.h, reason=why); seen_i = req(job_i)
+        # 3. a revocation that could not be recorded, with the front door stopped: written; revoke given again records it; the put-back admits nobody
+        job_h = s.enrol('job-h', r.h, reason=why); seen_h = req(job_h); held_h = path.read_text(); enrol_h = json.loads(held_h)['jobs']['job-h']
+        s.stop_front()
+        unrec_h = unrecorded(lambda: front_ctl.revoke(s.home, 'job-h', s.engineer, control_dsn=bad_dsn))
+        written_h = json.loads(path.read_text())['jobs']['job-h']['event']; row_h_before = row(enrol_h)
+        again_h = front_ctl.revoke(s.home, 'job-h', s.engineer); row_h_after = row(enrol_h)
+        path.write_text(held_h); s.start_front(); put_back_h = req(job_h)
+        # 4. one that could not be recorded and is not given again: the front door records it at its start, before any request
+        job_i = s.enrol('job-i', r.h, reason=why); seen_i = req(job_i); held_i = path.read_text(); enrol_i = json.loads(held_i)['jobs']['job-i']
+        s.stop_front()
         cli = subprocess.run([sys.executable, '-B', str(GATEWAY / 'verify' / 'front_ctl.py'), 'revoke', str(s.home), 'job-i', '--key', str(s.dir / 'engineer.key')],
                              capture_output=True, text=True, timeout=120, env=dict(os.environ, PLEA_CONTROL_DSN=bad_dsn))
         cli_out = (cli.stdout.strip().splitlines() or [''])[-1]
         cli_event = json.loads(cli_out).get('event') if cli_out.startswith('{') else None
-        refused_i = req(job_i)
-        # 5. a move whose record cannot be reached is written all the same: the job is answered on the revision
+        row_i_before = row(enrol_i)
+        s.start_front(); row_i_after = row(enrol_i)
+        path.write_text(held_i); put_back_i = req(job_i)
+        # 5. and with the front door running, and no request from the job: its look records it
+        s.stop_front(); s.start_front(sweep_every=1.0)
+        job_j = s.enrol('job-j', r.h, reason=why); seen_j = req(job_j); held_j = path.read_text(); enrol_j = json.loads(held_j)['jobs']['job-j']
+        unrec_j = unrecorded(lambda: front_ctl.revoke(s.home, 'job-j', s.engineer, control_dsn=bad_dsn))
+        row_j_before = row(enrol_j); deadline = time.time() + 20
+        while time.time() < deadline and not (row(enrol_j) or (0, False))[1]:
+            time.sleep(0.25)
+        row_j_after = row(enrol_j)
+        path.write_text(held_j); put_back_j = req(job_j)
+        s.stop_front(); s.start_front()
+        # 6. recorded and not written: said so, with status 4 at the command; the front door refuses the job already; revoke given again writes it
+        job_k = s.enrol('job-k', r.h, reason=why); seen_k = req(job_k); enrol_k = json.loads(path.read_text())['jobs']['job-k']
+        blocker = path.with_suffix('.tmp'); blocker.mkdir()                     # the console's temporary file cannot be made
+        try:
+            front_ctl.revoke(s.home, 'job-k', s.engineer); unwritten = 'no warning'
+        except front_ctl.Unwritten as exc:
+            unwritten = str(exc)
+        still_enrol_k = json.loads(path.read_text())['jobs']['job-k']['event']; refused_k = req(job_k); row_k = row(enrol_k)
+        cli_k = subprocess.run([sys.executable, '-B', str(GATEWAY / 'verify' / 'front_ctl.py'), 'revoke', str(s.home), 'job-k', '--key', str(s.dir / 'engineer.key')],
+                               capture_output=True, text=True, timeout=120)
+        blocker.rmdir(); again_k = front_ctl.revoke(s.home, 'job-k', s.engineer)
+        written_k = json.loads(path.read_text())['jobs']['job-k']['event']
+        # 7. a move whose record cannot be reached is written all the same: the job is answered on the revision
         src = case_b('F38')
         rq = dict(json.loads((CASE / 'card.json').read_text())['requirement'], revision='B', statement='The housing shall withstand continuous operation at 170 C.')
         env_b = verify_ctl.revise(s.home, src, relaxed(requirement=rq), s.engineer, r.h, 'Customer lowered the operating temperature (CR-38).')
         hb = env_b['baseline_sha256']
-        try:
-            front_ctl.rebind(s.home, 'job-a', hb, s.engineer, control_dsn=bad_dsn); unrec_a = 'no warning'
-        except front_ctl.Unrecorded as exc:
-            unrec_a = str(exc)
-        written_a = json.loads(path.read_text())['jobs']['job-a']
-        on_b = req(r.job)
-        e.update(realm=stored, seen=(seen_f[0], seen_g[0], seen_h[0], seen_i[0]), revoked_f=b_f.get('event'), put_back_f=(put_back_f[0], put_back_f[1].get('refused')),
-                 moved_other=moved_other, kept_after_rebind=kept_after_rebind, empty=empty, kept_after_empty=kept_after_empty, revoked_other=revoked_other,
-                 written_g=written_g, put_back_g=(put_back_g[0], put_back_g[1].get('refused')), started_other=started_other[:200], told=told, in_process=in_process,
-                 realm_after=realm_after, still_g=(still_g[0], still_g[1].get('refused')), unrec_h=unrec_h, written_h=written_h,
-                 refused_h=(refused_h[0], refused_h[1].get('refused')), put_back_h=(put_back_h[0], put_back_h[1].get('refused')),
-                 cli=(cli.returncode, cli_event, cli.stderr.strip()[-300:]), refused_i=(refused_i[0], refused_i[1].get('refused')),
-                 unrec_a=unrec_a, written_a=(written_a.get('event'), written_a.get('baseline_sha256') == hb), on_b=(on_b[0], on_b[1].get('baseline_sha256') == hb))
-        checks = {'a revocation made by the console while the front door is stopped, with no realm given, is recorded: the earlier binding put back before the front door starts admits nobody':
+        unrec_a = unrecorded(lambda: front_ctl.rebind(s.home, 'job-a', hb, s.engineer, control_dsn=bad_dsn))
+        written_a = json.loads(path.read_text())['jobs']['job-a']; on_b = req(r.job)
+        # 8. two consoles at once: forty bindings written to one jobs.json by forty threads, none lost (in a folder of the test's own)
+        scratch = OUT / 'F38' / 'concurrent'; shutil.rmtree(scratch, ignore_errors=True); (scratch / 'front').mkdir(parents=True)
+        names = [f'job-c{n:02d}' for n in range(40)]; errors = []
+        def put(n):
+            try:
+                front_ctl._write(scratch, dict(enrol_g, job=n))
+            except Exception as exc:
+                errors.append(type(exc).__name__)
+        threads = [threading.Thread(target=put, args=(n,)) for n in names]
+        [t_.start() for t_ in threads]; [t_.join() for t_ in threads]
+        kept = sorted(front_door.read_jobs(scratch)); logged = len((scratch / 'front' / 'enrolment.jsonl').read_text().splitlines())
+        e.update(seen=(seen_f[0], seen_g[0], seen_h[0], seen_i[0], seen_j[0], seen_k[0]), revoked_f=b_f.get('event'), put_back_f=(put_back_f[0], put_back_f[1].get('refused')),
+                 named=named, row_g=row_g, put_back_g=(put_back_g[0], put_back_g[1].get('refused')),
+                 unrec_h=unrec_h, written_h=written_h, rows_h=(row_h_before, row_h_after), again_h=again_h.get('event'), put_back_h=(put_back_h[0], put_back_h[1].get('refused')),
+                 cli=(cli.returncode, cli_event, cli.stderr.strip()[-300:]), rows_i=(row_i_before, row_i_after), put_back_i=(put_back_i[0], put_back_i[1].get('refused')),
+                 unrec_j=unrec_j, rows_j=(row_j_before, row_j_after), put_back_j=(put_back_j[0], put_back_j[1].get('refused')),
+                 unwritten=unwritten, still_enrol_k=still_enrol_k, refused_k=(refused_k[0], refused_k[1].get('refused')), row_k=row_k,
+                 cli_k=(cli_k.returncode, cli_k.stderr.strip()[-300:]), again_k=again_k.get('event'), written_k=written_k,
+                 unrec_a=unrec_a, written_a=(written_a.get('event'), written_a.get('baseline_sha256') == hb), on_b=(on_b[0], on_b[1].get('baseline_sha256') == hb),
+                 concurrent=dict(kept=len(kept), all=kept == names, logged=logged, errors=errors))
+        checks = {'a revocation made by the console while the front door is stopped is recorded: the earlier binding put back before the front door starts admits nobody':
                       e['seen'][0] == 200 and b_f.get('event') == 'REVOKE' and refused(put_back_f),
-                  'another realm given to the console refuses a move and writes nothing; a realm that is not one is refused; a revocation given another realm is recorded under the front door\'s own, written, and said so, and the earlier binding put back admits nobody':
-                      e['seen'][1] == 200 and 'is not the front door' in moved_other and kept_after_rebind and 'a realm is 8 to 64' in empty and kept_after_empty
-                      and 'recorded under the front door' in revoked_other and written_g == 'REVOKE' and refused(put_back_g),
-                  'the front door is not started under another realm, and says why; nor is one made in process; its realm is unchanged and the job stays revoked':
-                      started_other.startswith('front exited') and told and in_process == 'RealmMismatch' and realm_after == stored and refused(still_g),
-                  'a revocation the console cannot record is written all the same and said so; the front door refuses the job, and the earlier binding put back admits nobody; the command ends with status 3':
-                      e['seen'][2] == 200 and 'not recorded' in unrec_h and written_h == 'REVOKE' and refused(refused_h) and refused(put_back_h)
-                      and e['seen'][3] == 200 and cli.returncode == 3 and cli_event == 'REVOKE' and 'written, not recorded' in cli.stderr and refused(refused_i),
+                  'a job is named in the record by its certificate\'s hash and its name, as the engineer signed them: files written beside jobs.json change nothing, and the earlier binding put back admits nobody':
+                      e['seen'][1] == 200 and named and row_g is not None and row_g[1] is True and refused(put_back_g),
+                  'a revocation that could not be recorded is written and said so; revoke given again records it; the earlier binding put back then admits nobody':
+                      e['seen'][2] == 200 and 'could not be recorded' in unrec_h and written_h == 'REVOKE' and row_h_before == (1, False)
+                      and e['again_h'] == 'REVOKE' and row_h_after == (2, True) and refused(put_back_h),
+                  'a revocation left unrecorded (the command ends with status 3) is recorded by the front door at its start, before any request: the earlier binding put back then admits nobody':
+                      e['seen'][3] == 200 and cli.returncode == 3 and cli_event == 'REVOKE' and 'written, not recorded' in cli.stderr
+                      and row_i_before == (1, False) and row_i_after == (2, True) and refused(put_back_i),
+                  'one left unrecorded while the front door runs is recorded by its look, with no request from the job: the earlier binding put back then admits nobody':
+                      e['seen'][4] == 200 and 'could not be recorded' in unrec_j and row_j_before == (1, False) and row_j_after == (2, True) and refused(put_back_j),
+                  'a revocation recorded and not written is said so (status 4 at the command); the front door refuses the job already; revoke given again writes it':
+                      e['seen'][5] == 200 and 'recorded in the database' in unwritten and still_enrol_k == 'ENROL' and refused(refused_k) and row_k == (2, True)
+                      and cli_k.returncode == 4 and 'recorded, not written' in cli_k.stderr and e['again_k'] == 'REVOKE' and written_k == 'REVOKE',
                   'a move the console cannot record is written first and said so: the job is then answered on the revision':
-                      'could not be recorded' in unrec_a and e['written_a'] == ('REBIND', True) and e['on_b'] == (200, True)}
+                      'could not be recorded' in unrec_a and e['written_a'] == ('REBIND', True) and e['on_b'] == (200, True),
+                  'two consoles at once lose neither\'s binding: forty written at once are all kept, and all logged':
+                      not errors and kept == names and logged == 40}
     finally:
         r.stop()
     return checks, e
-
 
 TESTS = {'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35, 'F36': f36, 'F37': f37, 'F38': f38}
 

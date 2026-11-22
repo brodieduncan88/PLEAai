@@ -1,0 +1,27 @@
+binder removed: CAUGHT by ['R30']
+binder always binds: CAUGHT by ['R30']
+identity back to 64 bits: CAUGHT by ['R31']
+request key back to 96 bits: CAUGHT by ['R31']
+front door does not check the design of a verdict: CAUGHT by ['R31']
+checker allows mixed forms: CAUGHT by ['R31']
+no form kept per budget: NOT PLANTED (the text was not found once)
+front door ignores the budget's form: CAUGHT by ['R33']
+record of bindings not consulted: CAUGHT by ['F37']
+revocation not absorbing: CAUGHT by ['F37']
+a stale binding accepted: CAUGHT by ['F37']
+a binding for another budget admitted: NOT PLANTED (the text was not found once)
+controls not put to the checker: CAUGHT by ['R32']
+the first client not retired: CAUGHT by ['R34']
+revocations recorded only when the job calls: NOT PLANTED (the text was not found once)
+realm from the authority's file: CAUGHT by ['F37']
+a revocation at a number already seen not kept: CAUGHT by ['F37']
+mixed forms not refused: CAUGHT by ['R33']
+controls not put to rederive: CAUGHT by ['R32']
+no form kept per budget (restated): CAUGHT by ['R33']
+a binding for another budget admitted (restated): CAUGHT by ['F37']
+revocations recorded only when the job calls (restated): CAUGHT by ['F37', 'F38']
+the console does not read the front door's realm: CAUGHT by ['F38']
+the front door started under another realm: CAUGHT by ['F38']
+a revocation not written when it cannot be recorded: CAUGHT by ['F38']
+a move not written when it cannot be recorded: CAUGHT by ['F38']
+caught 23 of 23 planted; 3 not planted; 26 in all

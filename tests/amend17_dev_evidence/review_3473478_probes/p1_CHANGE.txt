@@ -1,0 +1,5 @@
+p1_realm_forgery.py, P1b: p1b_first_admit came out False, against the setup's intent (True). Cause: the probe reused job name
+'job-x' under the same realm as P1a, so the record's row realm-real-...:job-x (seq 1, P1a's binding) answered CONFLICT to P1b's new
+ENROL. The output is kept unchanged in p1_realm_forgery.out. P1b's own predicate (admitted after forgery and a start without
+--realm; RealmMismatch with --realm) was not changed and held. P1b was re-run alone with a unique realm and job name, with the
+same predicate plus first-admit and after-revoke checks: p1b_rerun.py / p1b_rerun.out (PREDICTION: True).

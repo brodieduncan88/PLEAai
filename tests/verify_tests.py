@@ -3296,7 +3296,7 @@ def in_process_front(s):
     cfg = {'witness_url': f"https://127.0.0.1:{s.ports['witness']}", 'witness_keys': [s.keys['witness']], 'gate_url': f"https://127.0.0.1:{s.ports['host']}",
            'gate_key': s.keys['gate'], 'tls': {'ca': s.pki['ca'], 'cert': s.pki['frontdoor'][0], 'key': s.pki['frontdoor'][1]},
            'journal': str(s.home / 'front' / 'submissions.jsonl'), 'journal_max_bytes': front_door.JOURNAL_MAX, 'disk_reserve_bytes': front_door.DISK_RESERVE,
-           'journal_share_bytes': front_door.JOURNAL_SHARE, 'realm': s.realm}       # realm: Amendment 17, as the running front door is given it
+           'journal_share_bytes': front_door.JOURNAL_SHARE}
     return front_door.Front(s.home, Store(deploy.LOCAL_DSN), cfg, [s.keys['engineer']])
 
 

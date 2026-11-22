@@ -362,3 +362,72 @@ the owner's rules VP-1 to VP-6 (`plan/GOVERNANCE_NOTE_2026-11-22.md`). Nothing h
   - then the full suites: the gate 34 of 34, the front 36 of 36;
   - then the runner on the commit that holds these changes: 26 defects in all, 23 planted and caught, and 3 NOT
     PLANTED (the three kept as they were).
+
+**The rest of entry 14's runs.**
+- F38, F37, F10 and F12 at 3473478: 4 of 4 passed, as declared (F38 5 of 5 checks, F37 11 of 11). Kept in
+  `tests/amend17_dev_evidence/review3_run1_front.json`.
+- The gateway chain at f4c1de6 (database plea31): 22 of 22 stages exited 0. Kept in `predecl_run1/chain.txt`.
+- The full runs at 3473478 matched entry 14's declaration:
+  - the gate suite, 34 of 34;
+  - the front suite, 36 of 36;
+  - the runner, 26 in all: 23 planted and caught, 3 NOT PLANTED.
+  Kept in `tests/amend17_dev_evidence/predecl_run2_3473478/`.
+
+## Entry 15. The fourth review (of 3473478), and what it changed
+
+- The review is kept as returned in `verify/reviews/AMEND17_REVIEW_3473478_2026-11-22.md`. Its probes are in
+  `tests/amend17_dev_evidence/review_3473478_probes/`.
+- **H1'', accepted.** The realm file of entry 14 is in `HOME/front`. The console must be able to write that folder, and
+  so can anyone who can put back `jobs.json`. A forged realm file sent a revocation to another row, and the earlier
+  binding put back then admitted the job again. In one case the console said it had recorded the revocation under the
+  front door's own realm when it had not. That is a regression from f4c1de6 for a console given the realm.
+  - Change: the realm is gone. A job is named in the record by its certificate's hash and its name, both in every
+    binding the engineer signs for one enrolment (`front_state.state_name(binding)`).
+  - No file and no setting bears on it, so the realm's three faults, and this one, have nothing left to act on: H2 (a
+    change of the authority's file), H1' S2 and S3 (another realm), and H1'' (a forged file).
+  - `usable()` also requires the binding's certificate hash to be 64 hex digits.
+  - The front door and the console lose `--realm`, and `deploy_front.py` its realm.
+  - This was the reviewer's first option. It is a change of design within D16, recorded here.
+- **M1, accepted.** A revocation that could not be recorded could never be recorded later from the console: revoke
+  refused it as already revoked. Now a job whose binding in `jobs.json` is already its revocation has that
+  revocation recorded again.
+- **L1, recorded, not changed.** A move is written before it is recorded, so a put-back before the move is recorded
+  admits the superseded binding. Its harm rests on `revise` having stopped the old budget. That the gate refuses runs
+  on a stopped budget is shown by earlier tests (R10), not by a test of this case.
+- **L2.** Gone with the realm.
+- **L3.** Gone with the realm file.
+- **L4, accepted.** F38 now shows the front door's own recording, at its start and on its look, with no request from
+  the job.
+- **L5, accepted.** `jobs.json` is changed under a lock (`HOME/front/jobs.lock`).
+- **L6, accepted.** A revocation recorded and not written raises `Unwritten`, and the command ends with status 4.
+  Before, it was reported as refused.
+- **L7, accepted.** L-d of the third review is now in the register (Part G). README_FRONT's line "a restart forgets
+  that" is corrected.
+- **L-c, partly accepted.** The runner installs the SQL function again however it ends. It still uses the test
+  database: it is run when nothing else is.
+- **F38 is rewritten** for these cases, with eight checks. Its form at 3473478 passed (entry 14) and is kept in
+  `tests/amend17_dev_evidence/before_review4/`. Its realm checks have no code left to test.
+  - F37 changes in one call only: the made-up revocation by the service's role names job-b's row by its binding. Its
+    predicates are unchanged.
+  - The in-process front doors of F12, F28 and the gate suite lose `'realm'` from their configuration.
+- **The runner.** Every earlier entry is kept:
+  - the three about the realm are NOT PLANTED, with no restatement;
+  - 'a revocation not written when it cannot be recorded' and 'a binding for another budget admitted (restated)' are
+    restated again;
+  - six are added.
+  That makes 34 in all.
+- **Before these test changes.** The files at 3473478 are kept in `before_review4/`: `verify_tests.py` 901085c3…,
+  `verify_front_tests.py` 96d80373…, `amend17_mutants.py` 4af36dc0…. No predicate was changed after a failure.
+- **Declared before the next run (VP-5).** SHA-256 of the test files:
+  - `tests/verify_tests.py`: `c4ab616416c4a85405bb4ebd1a4e079ccbf3f7da9c009979222a1932ba473cb1`;
+  - `tests/verify_front_tests.py`: `b6197528a4050a6d5dd50d877dbbcbeffe810fdfeab5664afe1e271cd50b8103`;
+  - `tests/amend17_mutants.py`: `2a04a183e3957dc82b662bf6ef1ec5aa733037109e80f8ae8a3e865dc0c3d713`.
+
+  Expected:
+  - F38: 8 of 8 checks;
+  - F37: 11 of 11 checks;
+  - F10, F12 and F28 pass;
+  - then the full suites: the gate 34 of 34, the front 36 of 36;
+  - then the runner on the commit that holds these changes: 34 in all, 26 planted and 26 caught, 8 NOT PLANTED.
+  - One of the 26, 'jobs.json written without a lock', is caught only if forty writes at once race. It is expected
+    caught, and the declaration says so.

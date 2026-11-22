@@ -1,0 +1,8 @@
+p2a: RecursionError
+p2b: realm-p2-other-b2f680
+p2c_with: RealmMismatch
+p2c_without: (None, 'StateUnavailable(this front door has no realm to key its record of bindings by)')
+p2c_revoke: ('Unrecorded', 'the realm file /tmp/claude-0/-home-user-PLEAai/62f931a2-70f8-57a8-80dd-4abcbc18f7e9/scratchpad/review4/homes/p2c-28d713/', 'REVOKE')
+p2d: ('StateUnavailable(this front door has no realm to key its record of bindings by)', True, None)
+p2e: ('Refused', 'a realm is 8 to 64 letters, digits or hyphens', 'jobs.json unchanged')
+PREDICTIONS: {'p2a': True, 'p2b': True, 'p2c': True, 'p2d': True, 'p2e': True}

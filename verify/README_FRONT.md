@@ -134,14 +134,11 @@ The service side, once (the witness service and the gate host as in `deploy.py`,
 
     python verify/front_door.py --home HOME --port 8973 --witness-url https://... --witness-key HEX \
         --gate-host https://... --gate-key HEX --engineer-key HEX \
-        --tls-cert front.crt --tls-key front.key --tls-ca ca.crt --upstream-cert frontdoor.crt --upstream-key frontdoor.key \
-        --realm pump-station-front
+        --tls-cert front.crt --tls-key front.key --tls-ca ca.crt --upstream-cert frontdoor.crt --upstream-key frontdoor.key
 
-`--realm` names this front door in the database's record of job bindings (Amendment 17): 8 to 64 letters, digits or
-hyphens, given at the first start. It is then kept in `HOME/front/realm`; a later start may leave it out, and a start with
-another is refused, since everything recorded under the first would be forgotten. The engineer's console reads it from the
-same file. Before the first start, install the record's table and function once, as the database's owner
-(`front_state.install`, which `deploy_front.py` does).
+Before the first start, install the database's record of job bindings (Amendment 17) once, as the database's owner
+(`front_state.install`, which `deploy_front.py` does). A job is named in it by what the engineer signs, its certificate's
+hash and its name, so the front door is given no name or setting for it.
 
 The engineer, for each job, after baselining with `verify_ctl.py baseline`:
 
@@ -159,8 +156,10 @@ engineer.key`. The record is built with `front_ctl.py record` and checked with `
 
 A revocation, `front_ctl.py revoke HOME JOB --key engineer.key`, is always written to `HOME/front/jobs.json`, and is recorded
 in the database first if it can be (through `PLEA_CONTROL_DSN`). A move is written first and then recorded. If either is not
-recorded, the console says so and ends with status 3; the front door records the file when it next reads it, at its start
-and on its look every 30 seconds. Nothing checks that `PLEA_CONTROL_DSN` names the front door's database.
+recorded, the console says so and ends with status 3; give `revoke` again to record a revocation, and the front door records
+the file when it next reads it, at its start and on its look every 30 seconds. A revocation recorded and not written ends
+with status 4; the front door refuses the job already, and `revoke` given again writes it. Nothing checks that
+`PLEA_CONTROL_DSN` names the front door's database.
 
 ## What the tools return
 
@@ -181,8 +180,11 @@ call is one request and nothing retries. Sending the same design again returns t
   relaxed requirement given a new id, or baselined at another service, is not linked. Opening a second job for the
   same requirement under another baseline still needs the engineer's reason, which is kept in the service's signed log
   (`HOME/front/enrolment.jsonl`).
-- **A party who can write the service's files** can put an earlier signed binding back. The front door refuses one
-  older than it has seen since it started; a restart forgets that.
+- **A party who can write the service's files** can put an earlier signed binding back. Since Amendment 17 the front door
+  refuses one older than the latest it, or the engineer's console, has recorded in the database, and a revoked job
+  for good, across restarts. Not met: a revocation neither the console nor the front door has yet recorded (the
+  database could not be reached, and the front door had not read it) is undone by putting the earlier binding back
+  before either does; and a restore of the database to an earlier state, together with the file, undoes later ones.
 - **A job certificate is a bearer of the job.** Whoever holds the folder can spend the job's runs and cause notices.
   It cannot change what is verified against.
 - **One machine does not show separation.** In the tests every party runs under one account. An assistant with a

@@ -34,14 +34,15 @@ if it is running and its account can write the inbox.
 
 revoke ends a job: its certificate is refused from the next request.
 
-Amendment 17 (D16, after the third review, H1', M-a and M-b).  rebind and revoke also put the new binding to the database's
-record of bindings, under the front door's realm, which the console reads from HOME/front/realm (the front door writes it at
-its first start).  --realm is not needed; given, it must be that realm.  A revocation is always written to jobs.json, and is
-recorded first if it can be; if it cannot (no realm yet, the database cannot be reached, or another realm was given), the
-console says so and ends with status 3, and the front door records it when it next reads the file (at its start, and on its
-look every 30 seconds).  A move is written to jobs.json first, then recorded; if it cannot be recorded, or the record answers
-anything but CURRENT, the console says so and ends with status 3.  So a failure of the database never keeps a revoked job
-admitted, and never leaves a job bound to a binding the record has passed over.
+Amendment 17 (D16, after the third and fourth reviews).  rebind and revoke also put the new binding to the database's record
+of bindings (through PLEA_CONTROL_DSN), where a job is named by what the engineer signs: its certificate's hash and its name.
+No realm, file or setting is needed for that.  A revocation is recorded first if it can be, and is always written to
+jobs.json.  If it was not recorded, the console says so and ends with status 3; revoke given again for that job records the
+same revocation (it is not refused as already revoked), and the front door records it when it next reads the file (at its
+start, and on its look every 30 seconds).  If it was recorded and could not be written, the console says so and ends with
+status 4: the front door refuses the job already, and revoke given again writes it.  A move is written to jobs.json first,
+then recorded; a failure to record it, or an answer other than CURRENT, is said, with status 3.  jobs.json is changed under
+a lock (HOME/front/jobs.lock), so two consoles at once lose neither's binding.
 
 record builds the verification record exactly as verify_ctl.py does, adding the front door's own journal of what was
 sent, so a run interrupted before the gate wrote anything down can still be tied to its design.
@@ -74,6 +75,13 @@ class Refused(Exception):
 class Unrecorded(Exception):
     """The binding was written to jobs.json, and was not recorded in the database's record of bindings, or was answered other
     than expected (Amendment 17, after the third review, M-a and M-b).  Carries the binding."""
+    def __init__(self, binding: dict, why: str):
+        super().__init__(why); self.binding = binding
+
+
+class Unwritten(Exception):
+    """The revocation was recorded in the database, and could not be written to jobs.json (Amendment 17, after the fourth review,
+    L6).  The front door refuses the job already.  Carries the binding."""
     def __init__(self, binding: dict, why: str):
         super().__init__(why); self.binding = binding
 
@@ -121,40 +129,28 @@ def _deliverable(home, baseline_hash: str, wait: float) -> None:
                   f'running, make the inbox writable by the gate\'s account, and try again.  Nothing was changed.')
 
 
-def _realm(home, given):
-    """The front door's realm, read from HOME/front/realm (Amendment 17, after the third review, H1'), and why it cannot be used:
-    (realm or None, problem or None).  A realm given that is not a realm is refused; one that differs from the file's is a
-    problem."""
-    import front_state
-    if given is not None and (not isinstance(given, str) or not front_state.REALM.fullmatch(given)):
-        raise Refused('a realm is 8 to 64 letters, digits or hyphens')
-    try:
-        stored = front_state.read_realm(home)
-    except front_state.RealmMismatch as exc:
-        return None, str(exc)
-    if stored is None:
-        return None, 'the front door has not been started on this home, so it has no realm yet'
-    if given is not None and given != stored:
-        return stored, f'the realm given ({given}) is not the front door\'s ({stored})'
-    return stored, None
-
-
-def _record(binding: dict, realm: str, control_dsn) -> str:
+def _record(binding: dict, control_dsn) -> str:
     """Amendment 17 (after the second review, H1): put the binding to the database's record of bindings, so that a revocation
-    is recorded whether or not the front door, or the revoked job, ever reads it.  Returns the record's answer."""
+    is recorded whether or not the front door, or the revoked job, ever reads it.  The job is named there by its certificate's
+    hash and its name, as the engineer signed them (after the fourth review, H1'').  Returns the record's answer."""
     import front_state
     from plea_gateway import Store
-    return front_state.observe(Store(control_dsn), front_state.state_name(realm, binding['job']), binding['seq'],
+    return front_state.observe(Store(control_dsn), front_state.state_name(binding), binding['seq'],
                                hashlib.sha256(canonical(binding).encode()).hexdigest(), binding['event'] == 'REVOKE')
 
 
 def _write(home, binding: dict) -> None:
-    """The signed binding becomes the job's current one, and is added to the log.  The file is replaced whole."""
+    """The signed binding becomes the job's current one, and is added to the log.  The file is replaced whole, under a lock that
+    every console takes (after the fourth review, L5: two at once could each read the file and the second's write lose the
+    first's binding)."""
+    import fcntl
     path = jobs_path(home); path.parent.mkdir(parents=True, exist_ok=True)
-    jobs = read_jobs(home); jobs[binding['job']] = binding
-    tmp = path.with_suffix('.tmp'); tmp.write_text(json.dumps({'jobs': jobs}, indent=1) + '\n'); os.replace(tmp, path)
-    with (path.parent / 'enrolment.jsonl').open('a') as f:
-        f.write(json.dumps(binding) + '\n')
+    with open(path.parent / 'jobs.lock', 'a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        jobs = read_jobs(home); jobs[binding['job']] = binding
+        tmp = path.with_suffix('.tmp'); tmp.write_text(json.dumps({'jobs': jobs}, indent=1) + '\n'); os.replace(tmp, path)
+        with (path.parent / 'enrolment.jsonl').open('a') as f:
+            f.write(json.dumps(binding) + '\n')
 
 
 def _signed(event: str, seq: int, job: str, env: dict, cert_sha256: str, previous, note, key: Key) -> dict:
@@ -210,14 +206,11 @@ def enrol(home, job: str, baseline_hash: str, key: Key, ca_cert_pem: bytes, ca_k
     return binding
 
 
-def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0, realm: str | None = None, control_dsn: str = verify_ctl.CONTROL_DSN) -> dict:
+def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0, control_dsn: str = verify_ctl.CONTROL_DSN) -> dict:
     """Move a job to a revision of its baseline.  Refused unless the new baseline says it supersedes the one in force."""
     cur = _current(home, job, key)
     if cur['event'] == 'REVOKE':
         raise Refused(f'{job} was revoked')
-    known, problem = _realm(home, realm)                 # after the third review (H1'): another realm given refuses the move, before anything
-    if problem and known is not None:
-        raise Refused(f'{problem}; nothing was written')
     if new_hash == cur['baseline_sha256']:
         raise Refused(f'{job} is already bound to this baseline')
     env = _envelope(home, new_hash, key)
@@ -228,10 +221,8 @@ def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0, realm: s
     _deliverable(home, new_hash, wait)                   # Amendment 8 (D3): the same check is needed for the revision
     binding = _signed('REBIND', cur['seq'] + 1, job, env, cur['cert_sha256'], cur['baseline_sha256'], None, key)
     _write(home, binding)                                # written first (after the third review, M-b): a failure after it loses nothing
-    if known is None:
-        raise Unrecorded(binding, f'{problem}: the move is written to jobs.json and not recorded in the database; the front door records it when it reads the file')
     try:
-        answer = _record(binding, known, control_dsn)
+        answer = _record(binding, control_dsn)
     except Exception as exc:
         raise Unrecorded(binding, f'the move is written to jobs.json and could not be recorded in the database ({type(exc).__name__}); the front door records '
                                   f'it when it reads the file') from None
@@ -240,30 +231,41 @@ def rebind(home, job: str, new_hash: str, key: Key, wait: float = 15.0, realm: s
     return binding
 
 
-def revoke(home, job: str, key: Key, realm: str | None = None, control_dsn: str = verify_ctl.CONTROL_DSN) -> dict:
-    """Revoke a job.  Amendment 17: the revocation is recorded in the database under the front door's realm (read from
-    HOME/front/realm) if it can be, and is always written to jobs.json (after the third review, M-a: it was once refused when it
-    could not be recorded, and so left a leaked job admitted).  If it was not recorded, Unrecorded is raised after the write."""
+def revoke(home, job: str, key: Key, control_dsn: str = verify_ctl.CONTROL_DSN) -> dict:
+    """Revoke a job.  Amendment 17: the revocation is recorded in the database if it can be, and is always written to jobs.json
+    (after the third review, M-a: it was once refused when it could not be recorded, and so left a leaked job admitted).  If it
+    was not recorded, Unrecorded is raised after the write.  A job whose binding in jobs.json is already its revocation has that
+    revocation recorded again (after the fourth review, M1: it was refused as already revoked, so one that could not be recorded
+    could never be).  If it was recorded and cannot be written, Unwritten is raised (after the fourth review, L6)."""
     cur = _current(home, job, key)
     if cur['event'] == 'REVOKE':
-        raise Refused(f'{job} is already revoked')
-    known, problem = _realm(home, realm)
+        try:
+            answer = _record(cur, control_dsn)
+        except Exception as exc:
+            raise Unrecorded(cur, f'{job} is revoked in jobs.json, and the revocation could not be recorded in the database ({type(exc).__name__}); '
+                                  f'the front door records it when it next reads the file') from None
+        if answer != 'REVOKED':
+            raise Unrecorded(cur, f'{job} is revoked in jobs.json, and the database\'s record of bindings answers {answer}')
+        return cur
     b = {'event': 'REVOKE', 'seq': cur['seq'] + 1, 'job': job, 'baseline_sha256': cur['baseline_sha256'], 'root': cur['root'], 'cert_sha256': cur['cert_sha256'],
          'previous': cur['baseline_sha256'], 'time': now(), 'note': None}
     binding = dict(b, signer=key.public_hex, signature=key.sign(binding_message(b)))
     why = None
-    if known is not None:
-        try:
-            answer = _record(binding, known, control_dsn)
-            if answer != 'REVOKED':
-                why = f'the database\'s record of bindings answers {answer}'
-        except Exception as exc:
-            why = f'it could not be recorded in the database ({type(exc).__name__})'
-    _write(home, binding)
-    if problem or why:
-        recorded = known is not None and why is None
-        raise Unrecorded(binding, '; '.join(x for x in (problem, why) if x) + (f': it was recorded under the front door\'s own realm, and is written to jobs.json' if recorded else
-                                  ': the revocation is written to jobs.json and is not recorded in the database; the front door records it when it next reads the file'))
+    try:
+        answer = _record(binding, control_dsn)
+        if answer != 'REVOKED':
+            why = f'the database\'s record of bindings answers {answer}'
+    except Exception as exc:
+        why = f'it could not be recorded in the database ({type(exc).__name__})'
+    try:
+        _write(home, binding)
+    except OSError as exc:
+        if why is None:
+            raise Unwritten(binding, f'the revocation is recorded in the database, so the front door refuses {job}; it could not be written to jobs.json '
+                                     f'({type(exc).__name__}): give revoke again to write it') from None
+        raise
+    if why:
+        raise Unrecorded(binding, f'{why}: the revocation is written to jobs.json; give revoke again to record it, and the front door records it when it next reads the file')
     return binding
 
 
@@ -289,8 +291,6 @@ def main():
     ap.add_argument('--witness-url', help='record: ask the witness for a checkpoint and put it in the record (Amendment 10)')
     ap.add_argument('--tls-ca'); ap.add_argument('--tls-cert'); ap.add_argument('--tls-key')
     ap.add_argument('--wait', type=float, default=15.0, help='seconds enrol and rebind wait for the gate to show it can write the inbox (Amendment 8)')
-    ap.add_argument('--realm', help='not needed: the front door\'s realm is read from HOME/front/realm; given, it must be that one (Amendment 17). '
-                    'rebind and revoke are recorded in the database through PLEA_CONTROL_DSN')
     a = ap.parse_args()
     try:
         if a.action == 'jobs':
@@ -301,9 +301,9 @@ def main():
         if a.action == 'enrol':
             b = enrol(a.home, a.rest[0], a.rest[1], key, pathlib.Path(a.ca).read_bytes(), pathlib.Path(a.ca_key).read_bytes(), a.url, a.out, a.reason, a.days, a.wait)
         elif a.action == 'rebind':
-            b = rebind(a.home, a.rest[0], a.rest[1], key, a.wait, realm=a.realm)
+            b = rebind(a.home, a.rest[0], a.rest[1], key, a.wait)
         elif a.action == 'revoke':
-            b = revoke(a.home, a.rest[0], key, realm=a.realm)
+            b = revoke(a.home, a.rest[0], key)
         else:
             rec = record(a.home, a.rest[0], key, a.witness_key, a.gate_key,
                          checkpointer=verify_ctl.witness_checkpointer(a.witness_url, a.tls_ca, a.tls_cert, a.tls_key) if a.witness_url else None)
@@ -312,6 +312,9 @@ def main():
     except Unrecorded as exc:                            # written, and not recorded (Amendment 17, after the third review)
         print(json.dumps({k: exc.binding[k] for k in ('event', 'seq', 'job', 'baseline_sha256', 'root', 'previous', 'time', 'note')}))
         print(f'written, not recorded: {exc}', file=sys.stderr); sys.exit(3)
+    except Unwritten as exc:                             # recorded, and not written (Amendment 17, after the fourth review, L6)
+        print(json.dumps({k: exc.binding[k] for k in ('event', 'seq', 'job', 'baseline_sha256', 'root', 'previous', 'time', 'note')}))
+        print(f'recorded, not written: {exc}', file=sys.stderr); sys.exit(4)
     except (Refused, BaselineInvalid, ValueError, OSError, IndexError, TypeError) as exc:
         print(f'refused: {exc}', file=sys.stderr); sys.exit(1)
 

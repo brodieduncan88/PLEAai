@@ -1,0 +1,16 @@
+p3_first: True
+p3_revoke: Unrecorded
+p3_retry: Refused: job-p3ed70c8 is already revoked
+p3_rows: [('realm-p34-ed70c8:job-p3ed70c8', 1, False)]
+p3_admitted_after_put_back: True
+p4a_first: True
+p4a_rebind: Unrecorded: the move is written to jobs.json and could not be recorded in the database (StateUnavailable); the front door records it when it reads the file
+p4a_written: ('REBIND', 2)
+p4a_admitted_after_put_back: (True, True)
+p4a_rows: [('realm-p34-ed70c8:job-p4aed70c8', 1, False)]
+p4b_first: True
+p4b_in_window: True
+p4b_console_answer: CURRENT
+p4b_put_back_after_record: False
+p4b_rows: [('realm-p34-ed70c8:job-p4bed70c8', 2, False)]
+PREDICTIONS: {'p3': True, 'p4a': True, 'p4b': True}

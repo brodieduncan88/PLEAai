@@ -10,6 +10,11 @@ installed again from the commit at the end, since one defect changes it in the d
 whose text the second review's corrections rewrote, and the one whose text the third review's rewrote, are kept, and are NOT
 PLANTED; each has a restated entry after them.
 
+After the fourth review: the realm is gone (a job is named in the record by its certificate's hash and its name), so the three
+entries about the realm are kept and are NOT PLANTED, with no restatement; 'a revocation not written when it cannot be
+recorded' is restated; six are added; and the SQL function is installed again however the run ends (L-c).  The runner uses
+the database the tests use (PLEA_ADMIN_DSN, else `plea`): nothing else may run on it at the same time.
+
     amend17_mutants.py COMMIT WORKDIR PYTHON OUT.json [NAME ...]
 """
 import json, pathlib, shutil, subprocess, sys, time
@@ -49,6 +54,18 @@ MUTANTS = [
     ('the console does not read the front door\'s realm', 'verify/front_ctl.py', "        stored = front_state.read_realm(home)\n", "        stored = given\n", ['F38']),
     ('the front door started under another realm', 'verify/front_state.py', "    if realm is not None and realm != stored:", "    if False:", ['F38']),
     ('a revocation not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)\n    if problem or why:", "    if problem or why:\n        raise Refused(why or problem)\n    _write(home, binding)\n    if problem or why:", ['F38']),
+    # after the fourth review
+    ('a revocation not written when it cannot be recorded (restated)', 'verify/front_ctl.py', "    try:\n        _write(home, binding)\n    except OSError as exc:\n        if why is None:",
+     "    if why:\n        raise Refused(why)\n    try:\n        _write(home, binding)\n    except OSError as exc:\n        if why is None:", ['F38']),
+    ('a binding for another budget admitted (restated again)', 'verify/front_door.py', "                and b['root'].rsplit('/', 1)[-1] == b['baseline_sha256'][:32]\n", "                and True\n", ['F37']),
+    ('the record keyed by the job name alone', 'verify/front_state.py', "    return f'{cert}:{job}'", "    return job", ['F38']),
+    ('an unrecorded revocation not recorded again', 'verify/front_ctl.py', "    if cur['event'] == 'REVOKE':\n        try:\n            answer = _record(cur, control_dsn)",
+     "    if cur['event'] == 'REVOKE':\n        raise Refused(f'{job} is already revoked')\n        try:\n            answer = _record(cur, control_dsn)", ['F38']),
+    ('the front door records no revocation at its start', 'verify/front_door.py', "        front.record_revocations()\n    except front_state.StateUnavailable", "        pass\n    except front_state.StateUnavailable", ['F38']),
+    ('the look records no revocation', [('verify/front_door.py', "            self.record_revocations()\n        except Exception:\n            pass", "            pass\n        except Exception:\n            pass"),
+                                        ('verify/front_door.py', "                if self.observe(name, b) != 'CURRENT':", "                if b['event'] == 'REVOKE' or self.observe(name, b) != 'CURRENT':")], None, ['F38']),
+    ('a revocation recorded and not written said to be refused', 'verify/front_ctl.py', "            raise Unwritten(binding, f'the revocation is recorded", "            raise Refused(f'the revocation is recorded", ['F38']),
+    ('jobs.json written without a lock', 'verify/front_ctl.py', "        fcntl.flock(lock, fcntl.LOCK_EX)", "        pass", ['F38']),
     ('a move not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)                                # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding)                                # written first", ['F38']),
 ]
 
@@ -67,40 +84,42 @@ def write_out():
 
 
 results = {}
-for entry in MUTANTS:
-    name, tests = entry[0], entry[-1]
-    if ONLY and name not in ONLY:
-        continue
-    dest = WORK / 'tree'; tree(dest)
-    path = entry[1]
-    edits = path if isinstance(path, list) else [(path, entry[2], entry[3])]
-    planted = True
-    for pth, o, n in edits:
-        f = dest / pth
-        if n is not None and n.startswith('git:'):
-            _, rev, src = n.split(':', 2)
-            f.write_bytes(subprocess.run(['git', '-C', str(REPO), 'show', f'{rev}:{src}'], capture_output=True, check=True).stdout)
-        else:
-            text = f.read_text(); planted = planted and text.count(o) == 1
-            f.write_text(text.replace(o, n))
-    path = path if isinstance(path, str) else ', '.join(p for p, _, _ in path)
-    if not planted:
-        results[name] = {'planted': False, 'caught': None}; print(f'{name}: NOT PLANTED (the text was not found once)', flush=True); write_out(); continue
-    got = {}
-    for t in tests:
-        suite = 'verify_front_tests.py' if t.startswith('F') else 'verify_tests.py'
-        t0 = time.time()
-        run = subprocess.run([PY, '-B', suite, t], cwd=dest / 'tests', capture_output=True, text=True, timeout=1800)
-        out = json.loads((dest / 'outputs' / ('verify_front_tests.json' if t.startswith('F') else 'verify_tests.json')).read_text()) if run.returncode in (0, 1) else {}
-        res = (out.get('tests') or {}).get(t, {})
-        got[t] = {'ok': res.get('ok'), 'failed_checks': [k for k, v in (res.get('checks') or {}).items() if not v], 'error': res.get('error'), 'seconds': round(time.time() - t0, 1)}
-    caught = any(v['ok'] is False for v in got.values())
-    results[name] = {'planted': True, 'file': path, 'tests': got, 'caught': caught}
-    print(f"{name}: {'CAUGHT' if caught else 'NOT CAUGHT'} by {tests}", flush=True)
-    write_out()
-dest = WORK / 'tree'; tree(dest)                         # the commit's own SQL function, installed again (third review, L-c)
-subprocess.run([PY, '-B', '-c', 'import os, sys; sys.path[:0] = ["verify", "."]; import front_state; from plea_gateway import Store; '
-                'front_state.install(Store(os.environ.get("PLEA_ADMIN_DSN", "postgresql://plea:plea@127.0.0.1:5432/plea")))'], cwd=dest, check=True)
-write_out()
+try:
+  for entry in MUTANTS:
+      name, tests = entry[0], entry[-1]
+      if ONLY and name not in ONLY:
+          continue
+      dest = WORK / 'tree'; tree(dest)
+      path = entry[1]
+      edits = path if isinstance(path, list) else [(path, entry[2], entry[3])]
+      planted = True
+      for pth, o, n in edits:
+          f = dest / pth
+          if n is not None and n.startswith('git:'):
+              _, rev, src = n.split(':', 2)
+              f.write_bytes(subprocess.run(['git', '-C', str(REPO), 'show', f'{rev}:{src}'], capture_output=True, check=True).stdout)
+          else:
+              text = f.read_text(); planted = planted and text.count(o) == 1
+              f.write_text(text.replace(o, n))
+      path = path if isinstance(path, str) else ', '.join(p for p, _, _ in path)
+      if not planted:
+          results[name] = {'planted': False, 'caught': None}; print(f'{name}: NOT PLANTED (the text was not found once)', flush=True); write_out(); continue
+      got = {}
+      for t in tests:
+          suite = 'verify_front_tests.py' if t.startswith('F') else 'verify_tests.py'
+          t0 = time.time()
+          run = subprocess.run([PY, '-B', suite, t], cwd=dest / 'tests', capture_output=True, text=True, timeout=1800)
+          out = json.loads((dest / 'outputs' / ('verify_front_tests.json' if t.startswith('F') else 'verify_tests.json')).read_text()) if run.returncode in (0, 1) else {}
+          res = (out.get('tests') or {}).get(t, {})
+          got[t] = {'ok': res.get('ok'), 'failed_checks': [k for k, v in (res.get('checks') or {}).items() if not v], 'error': res.get('error'), 'seconds': round(time.time() - t0, 1)}
+      caught = any(v['ok'] is False for v in got.values())
+      results[name] = {'planted': True, 'file': path, 'tests': got, 'caught': caught}
+      print(f"{name}: {'CAUGHT' if caught else 'NOT CAUGHT'} by {tests}", flush=True)
+      write_out()
+finally:
+  dest = WORK / 'tree'; tree(dest)                         # the commit's own SQL function, installed again (third review, L-c), however the run ends
+  subprocess.run([PY, '-B', '-c', 'import os, sys; sys.path[:0] = ["verify", "."]; import front_state; from plea_gateway import Store; '
+                 'front_state.install(Store(os.environ.get("PLEA_ADMIN_DSN", "postgresql://plea:plea@127.0.0.1:5432/plea")))'], cwd=dest, check=True)
+  write_out()
 print(f"caught {sum(1 for r in results.values() if r.get('caught'))} of {sum(1 for r in results.values() if r.get('planted'))} planted; "
       f"{sum(1 for r in results.values() if not r.get('planted'))} not planted; {len(results)} in all")
