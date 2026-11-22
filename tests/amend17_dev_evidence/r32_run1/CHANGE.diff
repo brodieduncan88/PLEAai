@@ -1,0 +1,25 @@
+--- tests/amend17_dev_evidence/r32_run1/verify_tests.py.failing	2026-11-22 00:08:55.328427085 +0000
++++ tests/verify_tests.py	2026-11-22 00:08:55.340711131 +0000
+@@ -3331,9 +3331,10 @@
+     """Amendment 17 (D20).  A baseline whose controls, as the record's checker reads them, do not give their verdicts is refused when it is made, not found later in a record that cannot verify."""
+     s = deploy_front.FrontServices(OUT / 'R32').start(); e = {}
+     try:
++        made = []
+         def attempt(src, card):
+-            try:
+-                env = s.baseline(src, card); return env
++            try:                                  # a second baseline of one requirement needs the engineer's reason (Amendment 9)
++                env = s.baseline(src, card, alongside_reason='another baseline of the same requirement, as the test needs' if made else None); made.append(env); return env
+             except B.BaselineInvalid as exc:
+                 return str(exc)
+         across = '199.99999999999999999999999999999'                        # 32 significant digits: written rounded it is 200, at the limit
+@@ -3355,7 +3356,8 @@
+             ok_run, ch_run, sr = check_record.verify(s.record(run_across['baseline_sha256']), s.keys)
+             e['run'] = dict(answer=(got[0], head(got[1])), outcomes=[(x['outcome'], x['reason_code']) for x in sr.get('runs', [])], verifies=ok_run, why=[f'{n} {t}: {d}' for n, t, g, d in ch_run if not g])
+         plain = attempt(CASE, draft())
+-        e.update(refused=refused if isinstance(refused, str) else 'baselined', stored=(stored0, stored1), accepted=isinstance(accepted, dict), run_baselined=isinstance(run_across, dict), plain=isinstance(plain, dict))
++        e.update(refused=refused if isinstance(refused, str) else 'baselined', stored=(stored0, stored1), accepted=isinstance(accepted, dict), run_baselined=run_across if isinstance(run_across, str) else True,
++                 plain=plain if isinstance(plain, str) else True)
+         checks = {'a control whose value, written rounded, falls on its limit is refused at baselining, in the record checker\'s words, and nothing is stored':
+                       isinstance(refused, str) and 'would not verify in a record' in refused and 'does not follow from its recorded numbers' in refused and stored1 == stored0,
+                   'a control given to 33 significant digits that does not cross its limit is baselined; a run on it fails as it should, and the record verifies':

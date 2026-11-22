@@ -1,0 +1,133 @@
+{
+ "tests": {
+  "R32": {
+   "title": "Amendment 17 (D20).  A baseline whose controls, as the record's checker reads them, do not give their verdicts is refused when it is made, not found later in a record that cannot verify.",
+   "ok": true,
+   "checks": {
+    "a control whose value, written rounded, falls on its limit is refused at baselining, in the record checker's words, and nothing is stored": true,
+    "a control given to 33 significant digits that does not cross its limit is baselined; a run on it fails as it should, and the record verifies": true,
+    "a run (not a control) whose value would be written across its limit is still UNKNOWN, and its record verifies, as before": true,
+    "the fixture as written is baselined as before": true
+   },
+   "evidence": {
+    "many": {
+     "controls": [
+      [
+       "FAIL",
+       [
+        "180"
+       ]
+      ],
+      [
+       "PASS",
+       [
+        "250"
+       ]
+      ]
+     ],
+     "run": [
+      2,
+      "FAIL: REQUIREMENT NOT MET"
+     ],
+     "verifies": true,
+     "why": []
+    },
+    "run": {
+     "answer": [
+      3,
+      "UNKNOWN: THE CHECK GAVE NO USABLE RESULT"
+     ],
+     "outcomes": [
+      [
+       "UNKNOWN",
+       "CHECK_OUTPUT_INVALID"
+      ]
+     ],
+     "verifies": true,
+     "why": []
+    },
+    "refused": "the controls as run would not verify in a record of this baseline, by the record's checker: control \"PA66 must fail at 200 C\": its recorded verdict does not follow from its recorded numbers.  A value the check gives to more than 28 significant digits is written rounded, and a rounded value can fall on the other side of its limit.  Nothing was baselined",
+    "stored": [
+     0,
+     0
+    ],
+    "accepted": true,
+    "run_baselined": true,
+    "plain": true
+   },
+   "seconds": 6.0
+  },
+  "R8": {
+   "title": "A baseline is refused unless its check is seen to fail a bad design and pass a good one.",
+   "ok": true,
+   "checks": {
+    "seven defective baselines are refused, each with its reason": true,
+    "the sound one is baselined, and only it is stored": true
+   },
+   "evidence": {
+    "got": {
+     "no failing control": "controls need at least one design that must FAIL and one that must PASS: a check nobody has seen fail is not a check",
+     "no passing control": "controls need at least one design that must FAIL and one that must PASS: a check nobody has seen fail is not a check",
+     "must-fail control passes": "control case \"PA66 must fail at 200 C\" was expected to FAIL and gave PASS (MET): not baselined",
+     "must-pass control fails": "control case \"PEEK must pass at 200 C (outside the design space on purpose)\" was expected to PASS and gave FAIL (LIMIT_NOT_MET): not baselined",
+     "limit so loose nothing fails": "control case \"PA66 must fail at 200 C\" was expected to FAIL and gave PASS (MET): not baselined",
+     "no stated limits of the check": "check.stated_limits is needed: say what the check does not cover",
+     "no plausible range": "criterion service_temperature: a plausible range (min < max) is needed, so that zero or a unit slip is not read as a result",
+     "the fixture as written": "baselined"
+    },
+    "baselines_stored": 1
+   },
+   "seconds": 1.5
+  },
+  "R10": {
+   "title": "A requirement changes only as a new, signed baseline that says what it replaced and what had failed.",
+   "ok": true,
+   "checks": {
+    "a revision with no reason is refused": true,
+    "the old baseline takes no further runs (exit status 4, nothing run)": true,
+    "the new card says what it replaced and what had failed, counted by the console": true,
+    "the design that failed on A meets the check on B, and B's record is headed CHANGED AFTER THE EVENT": true,
+    "the old record still verifies and still shows the failure": true
+   },
+   "evidence": {
+    "first": 2,
+    "no_reason": "a revision needs a reason",
+    "weak_control": "control case \"PEEK-free control: an unlisted material fails the lookup\" was expe",
+    "on_old": [
+     4,
+     "REFUSED: this baseline has been stopped (it was superseded or closed by the responsible engineer).  Nothing was run."
+    ],
+    "on_new": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "supersedes": {
+     "baseline_sha256": "331e063d81b14a71193a2c82a3203beb7b2721bb0418a86fd5f1db9aca118384",
+     "revision": "A",
+     "reason": "Customer lowered the operating temperature (CR-17).",
+     "official_runs": 1,
+     "met": 0,
+     "not_met": 1,
+     "unknown": 0
+    },
+    "rev_a": {
+     "verifies": true,
+     "status": "NOT VERIFIED",
+     "not_met": 1
+    },
+    "rev_b": {
+     "verifies": true,
+     "status": "DECLARED CHECK MET"
+    },
+    "headline": [
+     "CHANGED AFTER THE EVENT: this baseline replaced 331e063d81b14a71\u2026 (rev A) after 1 official runs on i"
+    ]
+   },
+   "seconds": 4.6
+  }
+ },
+ "passed": 3,
+ "of": 3,
+ "seconds": 12.1,
+ "PASS": true
+}

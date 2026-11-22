@@ -1,0 +1,83 @@
+{
+ "tests": {
+  "R32": {
+   "title": "Amendment 17 (D20).  A baseline whose controls, as the record's checker reads them, do not give their verdicts is refused when it is made, not found later in a record that cannot verify.",
+   "ok": false,
+   "checks": {},
+   "error": "Refused: REQ-SELFTEST-001 is already under baseline 107cfd05f4b6b994\u2026 on job job-r32m.  A change to a requirement is a revision (verify_ctl.py revise, then front_ctl.py rebind).  To open a separate job on purpose, give a reason.",
+   "seconds": 4.3
+  },
+  "R8": {
+   "title": "A baseline is refused unless its check is seen to fail a bad design and pass a good one.",
+   "ok": true,
+   "checks": {
+    "seven defective baselines are refused, each with its reason": true,
+    "the sound one is baselined, and only it is stored": true
+   },
+   "evidence": {
+    "got": {
+     "no failing control": "controls need at least one design that must FAIL and one that must PASS: a check nobody has seen fail is not a check",
+     "no passing control": "controls need at least one design that must FAIL and one that must PASS: a check nobody has seen fail is not a check",
+     "must-fail control passes": "control case \"PA66 must fail at 200 C\" was expected to FAIL and gave PASS (MET): not baselined",
+     "must-pass control fails": "control case \"PEEK must pass at 200 C (outside the design space on purpose)\" was expected to PASS and gave FAIL (LIMIT_NOT_MET): not baselined",
+     "limit so loose nothing fails": "control case \"PA66 must fail at 200 C\" was expected to FAIL and gave PASS (MET): not baselined",
+     "no stated limits of the check": "check.stated_limits is needed: say what the check does not cover",
+     "no plausible range": "criterion service_temperature: a plausible range (min < max) is needed, so that zero or a unit slip is not read as a result",
+     "the fixture as written": "baselined"
+    },
+    "baselines_stored": 1
+   },
+   "seconds": 1.6
+  },
+  "R10": {
+   "title": "A requirement changes only as a new, signed baseline that says what it replaced and what had failed.",
+   "ok": true,
+   "checks": {
+    "a revision with no reason is refused": true,
+    "the old baseline takes no further runs (exit status 4, nothing run)": true,
+    "the new card says what it replaced and what had failed, counted by the console": true,
+    "the design that failed on A meets the check on B, and B's record is headed CHANGED AFTER THE EVENT": true,
+    "the old record still verifies and still shows the failure": true
+   },
+   "evidence": {
+    "first": 2,
+    "no_reason": "a revision needs a reason",
+    "weak_control": "control case \"PEEK-free control: an unlisted material fails the lookup\" was expe",
+    "on_old": [
+     4,
+     "REFUSED: this baseline has been stopped (it was superseded or closed by the responsible engineer).  Nothing was run."
+    ],
+    "on_new": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "supersedes": {
+     "baseline_sha256": "7a571c7c700b95d593c9faa581eaaf888937dd91adefdda834195fc6f3ddad1f",
+     "revision": "A",
+     "reason": "Customer lowered the operating temperature (CR-17).",
+     "official_runs": 1,
+     "met": 0,
+     "not_met": 1,
+     "unknown": 0
+    },
+    "rev_a": {
+     "verifies": true,
+     "status": "NOT VERIFIED",
+     "not_met": 1
+    },
+    "rev_b": {
+     "verifies": true,
+     "status": "DECLARED CHECK MET"
+    },
+    "headline": [
+     "CHANGED AFTER THE EVENT: this baseline replaced 7a571c7c700b95d5\u2026 (rev A) after 1 official runs on i"
+    ]
+   },
+   "seconds": 4.5
+  }
+ },
+ "passed": 2,
+ "of": 3,
+ "seconds": 10.3,
+ "PASS": false
+}

@@ -450,3 +450,13 @@ copy on the diagnostic branch is not changed.
 | D5 | implemented; development runs pass (R30) | `d187172` | `tests/amend17_dev_evidence/r30_r31_run2.json` | separate-agent internal review requested | the binder compares the 128-bit hash prefix the budget's name carries; official runs not made |
 | D21 | implemented; development runs pass (R31) | `d187172` | as above; the gateway chain 22 of 22 | as above | records made before keep 64-bit identities; a 64-bit collision before the change still refuses its second design |
 | D16 | implemented; development runs pass (F37, F10) | A2 commit | `tests/amend17_dev_evidence/f37_f10_run1.json` | not yet | rollback of the database with the bindings file; a role-made revocation denies a job; pacing in memory |
+
+### G3. 22 November 2026: commit named
+
+- The row for D16 in G2 says "A2 commit". That commit is `9efccf0`.
+
+### G4. 22 November 2026: D20 in development
+
+| Id | Status now | Commit | Evidence | Reviewed by | What remains |
+|---|---|---|---|---|---|
+| D20 | implemented; reproduced before the change; development runs pass (R32, R8, R10) | the A3 commit (named in a later entry) | `tests/amend17_dev_evidence/d20_repro_before.json`, `r32_r8_r10_run3.json` | not yet | a value given to more than 28 significant digits that does not cross its limit is still written rounded in the record; that is consistent, but it is not the value the check printed |

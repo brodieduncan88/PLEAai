@@ -46,6 +46,7 @@ from baseline import FORMAT, BaselineInvalid, card_hash, evaluate, root_for, sha
 from verify_record import Key, acknowledgement_message, attempts_of, build, load_envelope, now, sign_envelope   # noqa: E402
 from verify_client import OUTCOME_WORDS, met_lines                  # noqa: E402  (Amendment 9: a pass is shown as the declared check met)
 import notices                                                       # noqa: E402  (Amendment 7: notices the service kept undelivered)
+import check_record                                                  # noqa: E402  (Amendment 17, D20: controls put to the record's checker)
 
 CONTROL_DSN = os.environ.get('PLEA_CONTROL_DSN', 'postgresql://plea_control:control@127.0.0.1:5432/plea')
 LOCAL_DSN = os.environ.get('PLEA_LOCAL_DSN', 'postgresql://plea_local:local@127.0.0.1:5432/plea')
@@ -133,6 +134,11 @@ def make_baseline(home, source, draft: dict, key: Key, runs: int = 1000, superse
                              'criteria': [{'id': k['id'], 'achieved': k['achieved'], 'limit': k['limit'], 'met': k['met']} for k in v['criteria']]})
         if v['verdict'] != c['expect']:
             raise BaselineInvalid(f"control case \"{c['name']}\" was expected to {c['expect']} and gave {v['verdict']} ({v['reason_code']}): not baselined")
+    problems = check_record.control_problems(card, controls_run)   # Amendment 17 (D20): the controls as the record's checker reads them
+    if problems:
+        raise BaselineInvalid('the controls as run would not verify in a record of this baseline, by the record\'s checker: '
+                              + '; '.join(problems) + '.  A value the check gives to more than 28 significant digits is written rounded, '
+                              'and a rounded value can fall on the other side of its limit.  Nothing was baselined')
     envelope = sign_envelope(card, controls_run, key)
     directory = home / 'baselines' / envelope['baseline_sha256']
     directory.mkdir(parents=True, exist_ok=False)

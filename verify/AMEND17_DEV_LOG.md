@@ -78,3 +78,34 @@ the owner's rules VP-1 to VP-6 (`plan/GOVERNANCE_NOTE_2026-11-22.md`). Nothing h
   - A change of the front door's certificate authority starts a new record. The old jobs' certificates are then not
     accepted anyway.
   - Pacing counters and the per-job lock stay in memory.
+
+## Entry 5. A3 (D20): reproduced first, then corrected, and R32
+
+- **Reproduced before any change** (`tests/amend17_dev_evidence/d20_repro_before.json`, made by
+  `tests/amend17_dev_evidence/repro_d20.py` on the tree at `9efccf0`):
+  - A control whose value is 199.99999999999999999999999999999 is baselined. It is written as 200, the limit, with
+    "not met". The record of that baseline then fails check 2 for ever.
+  - A run of the same value is UNKNOWN (`CHECK_OUTPUT_INVALID`), because the gate's tool already puts every run's verdict
+    to the record's checker before it returns it.
+  - A value of 33 significant digits that does not cross its limit is written rounded and stays consistent.
+- **Corrected.** Check 2's rule for controls is moved, unchanged, into `check_record.control_problems`. Check 2 calls it,
+  and `verify_ctl.make_baseline` calls it before anything is signed, stored or provisioned.
+- **Declared before R32 is first run (VP-5).** The test file has SHA-256 `b7f41fb3125a0f7bc295b82d34f1b5cf752a28b8fc0584a887e135c6cdc07968`. Expected: R32 passes, 4 of 4.
+
+## Entry 6. R32, run 1: a fault in the test
+
+- **Run 1** (R32, R8, R10): R8 and R10 passed. R32 failed two of its four checks, because its third and fourth baselines
+  were refused. They name a requirement already baselined at that service, and a second baseline of one requirement needs
+  the engineer's reason (Amendment 9). The test gave none. The refusal's words were not kept by the test.
+- **Kept.** `tests/amend17_dev_evidence/r32_run1/`.
+- **Changed.** The test gives the reason for every baseline after the first, and now keeps the words of any refusal in
+  its evidence. The diff is `CHANGE.diff` there. No check's predicate is changed.
+- **Declared before run 2.** The test file has SHA-256 `1a7fb10c021db887ef00164c1673ceaa15940fb2a4b7f26614b57589995cc3b0`. Expected: R32, R8 and R10 pass.
+
+## Entry 7. R32, run 2: the same fault, at enrolment
+
+- **Run 2:** R32 stopped with an error before its checks were judged. Its second job, enrolled for the same requirement,
+  needed the engineer's reason too (`front_ctl.enrol`). R8 and R10 passed.
+- **Kept, and changed.** Kept in `tests/amend17_dev_evidence/r32_run2/`, with the diff. The two enrolments now give the
+  reason. No predicate is changed.
+- **Declared before run 3.** The test file has SHA-256 `0fa75b1a49ba9bc6b099c9dfaa7851c8839eb0ef444186ef75ca797d31fdfc9b`. Expected: R32, R8 and R10 pass.

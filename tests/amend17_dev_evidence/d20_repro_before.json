@@ -1,0 +1,138 @@
+{
+ "rounds_across_limit": {
+  "baselined": true,
+  "controls_run": [
+   {
+    "name": "PA66 must fail at 200 C",
+    "expect": "FAIL",
+    "verdict": "FAIL",
+    "reason_code": "LIMIT_NOT_MET",
+    "criteria": [
+     {
+      "id": "service_temperature",
+      "achieved": "200",
+      "limit": "200",
+      "met": false
+     }
+    ]
+   },
+   {
+    "name": "PEEK must pass at 200 C (outside the design space on purpose)",
+    "expect": "PASS",
+    "verdict": "PASS",
+    "reason_code": "MET",
+    "criteria": [
+     {
+      "id": "service_temperature",
+      "achieved": "250",
+      "limit": "200",
+      "met": true
+     }
+    ]
+   }
+  ],
+  "runs": [
+   [
+    "PA66-GF30",
+    3,
+    [
+     "UNKNOWN: THE CHECK GAVE NO USABLE RESULT"
+    ]
+   ],
+   [
+    "PPS-GF40",
+    0,
+    [
+     "DECLARED CHECK MET"
+    ]
+   ]
+  ],
+  "record_verifies": false,
+  "failed": [
+   "2 baseline, controls and anchor: control \"PA66 must fail at 200 C\": its recorded verdict does not follow from its recorded numbers"
+  ],
+  "outcomes": [
+   [
+    "UNKNOWN",
+    "CHECK_OUTPUT_INVALID",
+    [
+     null
+    ]
+   ],
+   [
+    "PASS",
+    "MET",
+    [
+     "250"
+    ]
+   ]
+  ]
+ },
+ "over_28_digits_not_across": {
+  "baselined": true,
+  "controls_run": [
+   {
+    "name": "PA66 must fail at 200 C",
+    "expect": "FAIL",
+    "verdict": "FAIL",
+    "reason_code": "LIMIT_NOT_MET",
+    "criteria": [
+     {
+      "id": "service_temperature",
+      "achieved": "180",
+      "limit": "200",
+      "met": false
+     }
+    ]
+   },
+   {
+    "name": "PEEK must pass at 200 C (outside the design space on purpose)",
+    "expect": "PASS",
+    "verdict": "PASS",
+    "reason_code": "MET",
+    "criteria": [
+     {
+      "id": "service_temperature",
+      "achieved": "220",
+      "limit": "200",
+      "met": true
+     }
+    ]
+   }
+  ],
+  "runs": [
+   [
+    "PA66-GF30",
+    2,
+    [
+     "FAIL: REQUIREMENT NOT MET"
+    ]
+   ],
+   [
+    "PPS-GF40",
+    0,
+    [
+     "DECLARED CHECK MET"
+    ]
+   ]
+  ],
+  "record_verifies": true,
+  "failed": [],
+  "outcomes": [
+   [
+    "FAIL",
+    "LIMIT_NOT_MET",
+    [
+     "180"
+    ]
+   ],
+   [
+    "PASS",
+    "MET",
+    [
+     "220"
+    ]
+   ]
+  ]
+ }
+}

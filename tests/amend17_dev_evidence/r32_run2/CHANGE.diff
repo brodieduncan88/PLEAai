@@ -1,0 +1,19 @@
+--- tests/amend17_dev_evidence/r32_run2/verify_tests.py.failing	2026-11-22 00:09:17.138248233 +0000
++++ tests/verify_tests.py	2026-11-22 00:09:17.150640258 +0000
+@@ -3345,14 +3345,14 @@
+         accepted = attempt(precise_case('R32-many', {'PA66-GF30': many, 'PPS-GF40': '220', 'PEEK': '250'}), draft())
+         ok_many = None
+         if isinstance(accepted, dict):
+-            job = s.enrol('job-r32m', accepted['baseline_sha256']); bad_many = s.cli(job, 'submit', BAD)
++            job = s.enrol('job-r32m', accepted['baseline_sha256'], reason='another job of the same requirement, as the test needs'); bad_many = s.cli(job, 'submit', BAD)
+             ok_many, ch_many, sm = check_record.verify(s.record(accepted['baseline_sha256']), s.keys)
+             e['many'] = dict(controls=[(c['verdict'], [x['achieved'] for x in c['criteria']]) for c in accepted['controls_run']], run=(bad_many[0], head(bad_many[1])), verifies=ok_many,
+                              why=[f'{n} {t}: {d}' for n, t, g, d in ch_many if not g])
+         run_across = attempt(precise_case('R32-run', {'PA66-GF30': '180', 'PPS-GF40': across, 'PEEK': '250'}), draft())
+         ok_run = None
+         if isinstance(run_across, dict):
+-            job = s.enrol('job-r32r', run_across['baseline_sha256']); got = s.cli(job, 'submit', GOOD)
++            job = s.enrol('job-r32r', run_across['baseline_sha256'], reason='another job of the same requirement, as the test needs'); got = s.cli(job, 'submit', GOOD)
+             ok_run, ch_run, sr = check_record.verify(s.record(run_across['baseline_sha256']), s.keys)
+             e['run'] = dict(answer=(got[0], head(got[1])), outcomes=[(x['outcome'], x['reason_code']) for x in sr.get('runs', [])], verifies=ok_run, why=[f'{n} {t}: {d}' for n, t, g, d in ch_run if not g])
+         plain = attempt(CASE, draft())

@@ -3317,7 +3317,60 @@ def r31():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31}
+# ====================================================================== Amendment 17 (22 November 2026): D20
+def precise_case(tag: str, rows: dict) -> pathlib.Path:
+    """The fixture's check, made to print each material's value exactly as its table writes it (a decimal string), with that table."""
+    src = OUT / tag / 'case'; src.mkdir(parents=True, exist_ok=True)
+    check = (CASE / 'check.py').read_text().replace("value = float(rows[design['material']]['max_service_c'])", "value = rows[design['material']]['max_service_c']")
+    (src / 'check.py').write_text(check.replace('{value:g} C', '{value} C'))
+    (src / 'materials.csv').write_text('material,max_service_c\n' + ''.join(f'{m},{v}\n' for m, v in rows.items()))
+    return src
+
+
+def r32():
+    """Amendment 17 (D20).  A baseline whose controls, as the record's checker reads them, do not give their verdicts is refused when it is made, not found later in a record that cannot verify."""
+    s = deploy_front.FrontServices(OUT / 'R32').start(); e = {}
+    try:
+        made = []
+        def attempt(src, card):
+            try:                                  # a second baseline of one requirement needs the engineer's reason (Amendment 9)
+                env = s.baseline(src, card, alongside_reason='another baseline of the same requirement, as the test needs' if made else None); made.append(env); return env
+            except B.BaselineInvalid as exc:
+                return str(exc)
+        across = '199.99999999999999999999999999999'                        # 32 significant digits: written rounded it is 200, at the limit
+        many = '180.000000000000000000000000000001'                         # 33 significant digits: written rounded it is 180, still below
+        stored0 = len(list((s.home / 'baselines').iterdir()))
+        refused = attempt(precise_case('R32-across', {'PA66-GF30': across, 'PPS-GF40': '220', 'PEEK': '250'}), draft())
+        stored1 = len(list((s.home / 'baselines').iterdir()))
+        accepted = attempt(precise_case('R32-many', {'PA66-GF30': many, 'PPS-GF40': '220', 'PEEK': '250'}), draft())
+        ok_many = None
+        if isinstance(accepted, dict):
+            job = s.enrol('job-r32m', accepted['baseline_sha256'], reason='another job of the same requirement, as the test needs'); bad_many = s.cli(job, 'submit', BAD)
+            ok_many, ch_many, sm = check_record.verify(s.record(accepted['baseline_sha256']), s.keys)
+            e['many'] = dict(controls=[(c['verdict'], [x['achieved'] for x in c['criteria']]) for c in accepted['controls_run']], run=(bad_many[0], head(bad_many[1])), verifies=ok_many,
+                             why=[f'{n} {t}: {d}' for n, t, g, d in ch_many if not g])
+        run_across = attempt(precise_case('R32-run', {'PA66-GF30': '180', 'PPS-GF40': across, 'PEEK': '250'}), draft())
+        ok_run = None
+        if isinstance(run_across, dict):
+            job = s.enrol('job-r32r', run_across['baseline_sha256'], reason='another job of the same requirement, as the test needs'); got = s.cli(job, 'submit', GOOD)
+            ok_run, ch_run, sr = check_record.verify(s.record(run_across['baseline_sha256']), s.keys)
+            e['run'] = dict(answer=(got[0], head(got[1])), outcomes=[(x['outcome'], x['reason_code']) for x in sr.get('runs', [])], verifies=ok_run, why=[f'{n} {t}: {d}' for n, t, g, d in ch_run if not g])
+        plain = attempt(CASE, draft())
+        e.update(refused=refused if isinstance(refused, str) else 'baselined', stored=(stored0, stored1), accepted=isinstance(accepted, dict), run_baselined=run_across if isinstance(run_across, str) else True,
+                 plain=plain if isinstance(plain, str) else True)
+        checks = {'a control whose value, written rounded, falls on its limit is refused at baselining, in the record checker\'s words, and nothing is stored':
+                      isinstance(refused, str) and 'would not verify in a record' in refused and 'does not follow from its recorded numbers' in refused and stored1 == stored0,
+                  'a control given to 33 significant digits that does not cross its limit is baselined; a run on it fails as it should, and the record verifies':
+                      isinstance(accepted, dict) and e['many']['run'] == (2, 'FAIL: REQUIREMENT NOT MET') and ok_many is True,
+                  'a run (not a control) whose value would be written across its limit is still UNKNOWN, and its record verifies, as before':
+                      isinstance(run_across, dict) and e['run']['answer'][0] == 3 and e['run']['outcomes'] == [('UNKNOWN', 'CHECK_OUTPUT_INVALID')] and ok_run is True,
+                  'the fixture as written is baselined as before': isinstance(plain, dict)}
+    finally:
+        s.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31, 'R32': r32}
 
 
 def main():

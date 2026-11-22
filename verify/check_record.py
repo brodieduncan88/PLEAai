@@ -484,6 +484,34 @@ def recorded(words, limit: int = 300) -> str:
     return ''.join(ch if ch.isprintable() else ' ' for ch in words[:limit]) + (f' (+{len(words) - limit} more characters)' if len(words) > limit else '')
 
 
+def control_problems(card: dict, runs) -> list:
+    """Amendment 17 (D20): what is wrong with a baseline's controls as run, by the rules of check 2.  Empty when the controls
+    run are the controls declared, each gave its expected verdict, a failure and a pass are among them, and each one's
+    recorded numbers give its recorded verdict against the card's limits.  The code is check 2's, moved here unchanged.
+    verify_ctl.make_baseline asks it before anything is signed, stored or provisioned, so that no baseline is made whose own
+    controls its record could not verify (a control whose value, written rounded, falls on the other side of its limit)."""
+    out = []
+    runs = runs or []
+    declared = [(c.get('name'), c.get('expect')) for c in card.get('controls') or []]
+    if [(c.get('name'), c.get('expect')) for c in runs] != declared or any(c.get('verdict') != c.get('expect') for c in runs):
+        out.append('a control case did not give its expected verdict at baselining, or the controls run are not the controls declared')
+    if not {'PASS', 'FAIL'} <= {c.get('verdict') for c in runs}:
+        out.append('the controls do not include both a design that failed and one that passed')
+    for c in runs:                                           # a control's recorded numbers must give its recorded verdict against the card's limits
+        got = c.get('criteria') or []
+        if [x.get('id') for x in got] != [x['id'] for x in card['criteria']] or any(x.get('limit') != b['limit'] for x, b in zip(got, card['criteria'])):
+            out.append(f'control "{c.get("name")}": its criteria are not the card\'s'); continue
+        values = [dec(x.get('achieved')) for x in got]
+        if any(v is None for v in values):
+            if REASONS.get(c.get('reason_code')) != 'UNKNOWN' or c.get('verdict') != 'UNKNOWN' or any(x.get('met') is not None for x in got):
+                out.append(f'control "{c.get("name")}": no achieved value, but it is not recorded as UNKNOWN')
+            continue
+        mets = [(v <= D(b['limit'])) if b['comparison'] == '<=' else (v >= D(b['limit'])) for v, b in zip(values, card['criteria'])]
+        if [x.get('met') for x in got] != mets or c.get('verdict') != ('PASS' if all(mets) else 'FAIL') or c.get('reason_code') != ('MET' if all(mets) else 'LIMIT_NOT_MET'):
+            out.append(f'control "{c.get("name")}": its recorded verdict does not follow from its recorded numbers')
+    return out
+
+
 def rederive(card, result, design) -> list:
     """Problems with a signed verdict, re-deriving it from the card.  Empty when the verdict is exactly what the card implies."""
     out = []
@@ -564,24 +592,8 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
         bad(2, 'the baseline is not signed by the engineer\'s key, or the card names another key')
     elif not signed_by(ekey, esig.get('signature', ''), canonical({'card': card, 'controls_run': env.get('controls_run')}).encode()):
         bad(2, 'the engineer\'s signature on the baseline does not verify')
-    runs = env.get('controls_run') or []
-    declared = [(c.get('name'), c.get('expect')) for c in card.get('controls') or []]
-    if [(c.get('name'), c.get('expect')) for c in runs] != declared or any(c.get('verdict') != c.get('expect') for c in runs):
-        bad(2, 'a control case did not give its expected verdict at baselining, or the controls run are not the controls declared')
-    if not {'PASS', 'FAIL'} <= {c.get('verdict') for c in runs}:
-        bad(2, 'the controls do not include both a design that failed and one that passed')
-    for c in runs:                                           # a control's recorded numbers must give its recorded verdict against the card's limits
-        got = c.get('criteria') or []
-        if [x.get('id') for x in got] != [x['id'] for x in card['criteria']] or any(x.get('limit') != b['limit'] for x, b in zip(got, card['criteria'])):
-            bad(2, f'control "{c.get("name")}": its criteria are not the card\'s'); continue
-        values = [dec(x.get('achieved')) for x in got]
-        if any(v is None for v in values):
-            if REASONS.get(c.get('reason_code')) != 'UNKNOWN' or c.get('verdict') != 'UNKNOWN' or any(x.get('met') is not None for x in got):
-                bad(2, f'control "{c.get("name")}": no achieved value, but it is not recorded as UNKNOWN')
-            continue
-        mets = [(v <= D(b['limit'])) if b['comparison'] == '<=' else (v >= D(b['limit'])) for v, b in zip(values, card['criteria'])]
-        if [x.get('met') for x in got] != mets or c.get('verdict') != ('PASS' if all(mets) else 'FAIL') or c.get('reason_code') != ('MET' if all(mets) else 'LIMIT_NOT_MET'):
-            bad(2, f'control "{c.get("name")}": its recorded verdict does not follow from its recorded numbers')
+    for problem in control_problems(card, env.get('controls_run')):      # Amendment 17 (D20): the rule baselining asks too
+        bad(2, problem)
     req = card.get('requirement') or {}
     if root != f"{req.get('id')}/{req.get('revision')}/{b_hash[:32]}":
         bad(2, 'the budget is not named for this requirement, revision and baseline hash')
