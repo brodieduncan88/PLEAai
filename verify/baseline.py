@@ -83,14 +83,27 @@ def root_for(card: dict) -> str:
 
 
 def dec(value):
-    """A finite decimal from a JSON number or a decimal string, else None.  Booleans are not numbers here."""
-    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+    """A finite decimal from a JSON number or a decimal string, else None.  Booleans are not numbers here.  Amendment 19 (D20-F): a
+    JSON number the check printed arrives as a decimal.Decimal, read from its own digits (evaluate's parse_float), and is taken
+    exactly; it is never a float rounded first."""
+    if isinstance(value, bool) or not isinstance(value, (int, float, str, decimal.Decimal)):
         return None
     try:
         d = D(str(value).strip())
     except (decimal.InvalidOperation, ValueError):
         return None
     return d if d.is_finite() else None
+
+
+def _shown(d) -> str:
+    """A number in a reason, by the rule for a number a sender supplied (SENT_NUMBER): whole if its plain form is no longer than
+    that, else only its length as printed.  (Amendment 19: a JSON number such as 1e999999, read exactly, would otherwise be written
+    out as a million digits; it was read as infinity before.)"""
+    if abs(d.adjusted()) <= SENT_NUMBER:
+        plain = text(d)
+        if len(plain) <= SENT_NUMBER:
+            return plain
+    return f'a number of {len(str(d))} characters'
 
 
 def text(d) -> str:
@@ -340,7 +353,12 @@ def evaluate(directory, card: dict, design, control: bool = False) -> dict:
         tail = run.stderr.decode(errors='replace').strip().splitlines()[-1:] or ['no message']
         return _verdict(card, design, 'CHECK_ERROR', _blank(card), detail=f'the check exited with status {run.returncode}: {tail[0]}'[:300])
     try:
-        out = json.loads(run.stdout.decode('utf-8'))
+        # Amendment 19 (D20-F): a JSON number is read as the decimal its digits write, not as a binary float.  Before, a value on
+        # the wrong side of a limit by less than a float resolves (199.99999999999999 against at least 200) was read as the limit
+        # and signed PASS, in a record that verifies.  What is read is now compared exactly; where the record's form (28
+        # significant digits) would write it otherwise than as decided, the record's checker refuses it and the run is UNKNOWN
+        # (verify_tools._decide, CHECK_OUTPUT_INVALID), as for a decimal string.
+        out = json.loads(run.stdout.decode('utf-8'), parse_float=decimal.Decimal)
         achieved, basis = out['achieved'], out.get('basis', '')
         if not isinstance(achieved, dict) or not isinstance(basis, str):
             raise ValueError
@@ -353,7 +371,7 @@ def evaluate(directory, card: dict, design, control: bool = False) -> dict:
             return _verdict(card, design, 'CHECK_OUTPUT_INVALID', _blank(card), basis[:400], f'the check gave no finite number for {c["id"]} (got {achieved.get(c["id"])!r})')
         if not D(c['plausible']['min']) <= value <= D(c['plausible']['max']):
             return _verdict(card, design, 'RESULT_IMPLAUSIBLE', _blank(card), basis[:400],
-                            f'{c["id"]} = {text(value)} {c["units"]} is outside the plausible range {c["plausible"]["min"]} to {c["plausible"]["max"]} declared at baseline')
+                            f'{c["id"]} = {_shown(value)} {c["units"]} is outside the plausible range {c["plausible"]["min"]} to {c["plausible"]["max"]} declared at baseline')
         met, margin = compare(c, value)
         all_met = all_met and met
         criteria.append({'id': c['id'], 'quantity': c['quantity'], 'comparison': c['comparison'], 'limit': c['limit'], 'units': c['units'],

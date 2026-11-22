@@ -1,0 +1,30 @@
+  ok   1  record signature
+  ok   2  baseline, controls and anchor
+  ok   3  audit chain
+  ok   4  witness receipts
+  ok   5  runs bound to baseline and design
+  ok   6  gate reports and re-derived verdicts
+  ok   7  counts
+  ok   8  acknowledgements
+  ok   9  witness checkpoint (none in this record)
+  ok   10  notices delivered (none in this record)
+
+  REQ-SELFTEST-001 rev A: Sensor housing service temperature
+  "The housing shall withstand continuous operation at 200 C."
+  baselined 2026-11-22T05:44:10Z by D. Marsh.  Baseline 2905c132c3cb97c9…   Record as of 2026-11-22T05:44:34Z, sequence number 24.
+  limit: continuous service temperature at least 200 C
+
+  Official runs through the service: 3.  Met 3, not met 0, unknown 0.  Awaiting the engineer's disposition: 0.
+    a2-b52971e277456d8ce9fa93b838ca7fe65585aa47eaae4ccda7f19633afaf571c  design 748f2e3401…  MET         MET                      service_temperature 200 vs limit 200 C
+    a2-b66e9d283ca3f41765108e8f4b98b7f4668ce76adc55a74cef9add53228ae1a9  design 19f2243095…  MET         MET                      service_temperature 200 vs limit 200 C
+    a2-deee3c51467ef5dac9ca074133cce2e79083948d6638f07aa658c7c93dc181d4  design e77b7c456c…  MET         MET                      service_temperature 200 vs limit 200 C
+
+RECORD VERIFIED against the keys given.
+STATUS: DECLARED CHECK MET, for design 748f2e340191b803…, 19f22430957ce169…, e77b7c456c4f3de8… only, after 3 official runs (0 not met, 0 unknown).
+
+This says what the declared check (CHK-SELFTEST v1, written by test author, reviewed by test reviewer) returned against the baselined limits.
+It does not say the check is correct, the requirement is complete, or the design is safe.
+The check does not cover: anything except the material's listed continuous-use temperature.
+A record is a statement as of its sequence number.  Ask the responsible engineer for the current one.
+NOTICES: NOT CHECKED.  This record carries no notices delivered by a courier.
+CURRENCY: NOT CHECKED.  Give a checkpoint obtained separately from this record (--checkpoint) to see whether it is current.

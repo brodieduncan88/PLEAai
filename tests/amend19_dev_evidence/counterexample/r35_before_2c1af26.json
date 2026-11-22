@@ -1,0 +1,338 @@
+{
+ "tests": {
+  "R35": {
+   "title": "Amendment 19 (D20-F).  A number the check prints is decided as printed: a value on the wrong side of a limit by less than a binary float can tell apart is never signed PASS, and a record that verifies offline holds the value as the check printed it.",
+   "ok": false,
+   "checks": {
+    "through the front door, a check printing as a JSON number a value below the limit by less than a binary float resolves (199.99999999999999 against at least 200) is signed FAIL, not PASS; the record holds it as printed, and verifies offline": false,
+    "the limit exactly (200), and a value above it by as little (200.00000000000001), are signed PASS, each held as printed": false,
+    "in process, for 22 printed numbers on three criteria (at least, at most, a negative limit): none is PASS unless its exact value meets the criterion; each gives the verdict expected; every PASS and FAIL is accepted by the record's checker; no verdict is 64 KiB or more": false
+   },
+   "evidence": {
+    "answers": {
+     "PX-EDGE": [
+      0,
+      "DECLARED CHECK MET"
+     ],
+     "PX-AT": [
+      0,
+      "DECLARED CHECK MET"
+     ],
+     "PX-ABOVE": [
+      0,
+      "DECLARED CHECK MET"
+     ]
+    },
+    "written": {
+     "PX-EDGE": [
+      "PASS",
+      "200"
+     ],
+     "PX-AT": [
+      "PASS",
+      "200"
+     ],
+     "PX-ABOVE": [
+      "PASS",
+      "200"
+     ]
+    },
+    "verifies": true,
+    "why": [],
+    "matrix": [
+     {
+      "criterion": "GE",
+      "token": "200",
+      "exact": true,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "PASS",
+       "MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "2e2",
+      "exact": true,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "PASS",
+       "MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "0.2e3",
+      "exact": true,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "PASS",
+       "MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "199.99999999999999",
+      "exact": false,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "200.00000000000001",
+      "exact": true,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "PASS",
+       "MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "1.9999999999999999e2",
+      "exact": false,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "2.0000000000000001e2",
+      "exact": true,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "PASS",
+       "MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "199.9999999999999999999999999",
+      "exact": false,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "200.0000000000000000000000001",
+      "exact": true,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "PASS",
+       "MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "199.99999999999999999999999999999",
+      "exact": false,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "UNKNOWN",
+       "CHECK_OUTPUT_INVALID"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "199.999999999999999999999999999999999999",
+      "exact": false,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "UNKNOWN",
+       "CHECK_OUTPUT_INVALID"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "GE",
+      "token": "1e999999",
+      "exact": true,
+      "verdict": "UNKNOWN",
+      "reason": "CHECK_OUTPUT_INVALID",
+      "want": [
+       "UNKNOWN",
+       null
+      ],
+      "rederive": [],
+      "size": 759
+     },
+     {
+      "criterion": "GE",
+      "token": "1e-999999",
+      "exact": false,
+      "verdict": "UNKNOWN",
+      "reason": "RESULT_IMPLAUSIBLE",
+      "want": [
+       "UNKNOWN",
+       null
+      ],
+      "rederive": [],
+      "size": 780
+     },
+     {
+      "criterion": "GE",
+      "token": "NaN",
+      "exact": null,
+      "verdict": "UNKNOWN",
+      "reason": "CHECK_OUTPUT_INVALID",
+      "want": [
+       "UNKNOWN",
+       "CHECK_OUTPUT_INVALID"
+      ],
+      "rederive": [],
+      "size": 759
+     },
+     {
+      "criterion": "GE",
+      "token": "1e",
+      "exact": null,
+      "verdict": "UNKNOWN",
+      "reason": "CHECK_OUTPUT_INVALID",
+      "want": [
+       "UNKNOWN",
+       "CHECK_OUTPUT_INVALID"
+      ],
+      "rederive": [],
+      "size": 767
+     },
+     {
+      "criterion": "GE",
+      "token": "01",
+      "exact": false,
+      "verdict": "UNKNOWN",
+      "reason": "CHECK_OUTPUT_INVALID",
+      "want": [
+       "UNKNOWN",
+       "CHECK_OUTPUT_INVALID"
+      ],
+      "rederive": [],
+      "size": 767
+     },
+     {
+      "criterion": "LE",
+      "token": "200",
+      "exact": true,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "PASS",
+       "MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "LE",
+      "token": "200.00000000000001",
+      "exact": false,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "LE",
+      "token": "199.99999999999999",
+      "exact": true,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "PASS",
+       "MET"
+      ],
+      "rederive": [],
+      "size": 674
+     },
+     {
+      "criterion": "NEG",
+      "token": "-5",
+      "exact": true,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "PASS",
+       "MET"
+      ],
+      "rederive": [],
+      "size": 672
+     },
+     {
+      "criterion": "NEG",
+      "token": "-5.00000000000000001",
+      "exact": false,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "FAIL",
+       "LIMIT_NOT_MET"
+      ],
+      "rederive": [],
+      "size": 672
+     },
+     {
+      "criterion": "NEG",
+      "token": "-4.99999999999999999",
+      "exact": true,
+      "verdict": "PASS",
+      "reason": "MET",
+      "want": [
+       "PASS",
+       "MET"
+      ],
+      "rederive": [],
+      "size": 672
+     }
+    ]
+   },
+   "seconds": 6.6
+  }
+ },
+ "passed": 0,
+ "of": 1,
+ "seconds": 6.6,
+ "PASS": false
+}
