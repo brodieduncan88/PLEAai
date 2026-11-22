@@ -1,0 +1,130 @@
+The demonstration tree the agent's symlink_demo.py made in scratch, listed rather than copied: its symlinks point at absolute
+scratch paths, and the 128 MiB ext4 build file is not kept. Listing (find -ls, paths relative to demo/), then the two victim files.
+
+drwxr-xr-x root 4096 .
+drwxr-xr-x root 4096 ./run
+drwxr-xr-x root 4096 ./run/tree-src
+drwxr-xr-x root 4096 ./run/tree-src/etc
+-rw-r--r-- root 0 ./run/tree-src/etc/group
+lrwxrwxrwx root 115 ./run/tree-src/etc/passwd<scratch>/stageb_audit/demo/run/victim_passwd
+drwxr-xr-x root 4096 ./run/tree-src/usr
+drwxr-xr-x root 4096 ./run/tree-src/usr/lib
+drwxr-xr-x root 4096 ./run/tree-src/usr/lib/python3.12
+drwxr-xr-x root 4096 ./run/tree-src/usr/lib/python3.12/json
+-rw-r--r-- root 0 ./run/tree-src/usr/lib/python3.12/json/__init__.py
+-rw-r--r-- root 0 ./run/tree-src/usr/lib/python3.12/hashlib.py
+-rw-r--r-- root 0 ./run/tree-src/usr/lib/python3.12/os.py
+drwxr-xr-x root 4096 ./run/tree-src/usr/bin
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/blockdev
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/setpriv
+lrwxrwxrwx root 10 ./run/tree-src/usr/bin/python3python3.12
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/head
+-rw-r--r-- root 4 ./run/tree-src/usr/bin/python3.12
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/bash
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/mkdir
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/chmod
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/stat
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/sleep
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/mkfifo
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/tr
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/sync
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/sha256sum
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/cat
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/dd
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/ls
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/mv
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/cut
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/od
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/mount
+-rw-r--r-- root 2 ./run/tree-src/usr/bin/timeout
+lrwxrwxrwx root 113 ./run/tree-src/plea-init<scratch>/stageb_audit/demo/run/victim_init
+drwxr-xr-x root 4096 ./run/opt
+drwxr-xr-x root 4096 ./run/opt/images
+-rw-r--r-- root 134217728 ./run/opt/images/rootfs.ext4.build
+drwxr-xr-x root 4096 ./run/opt/work
+drwxr-xr-x root 4096 ./run/opt/work/tree
+drwxr-xr-x root 4096 ./run/opt/work/tree/etc
+-rw-r--r-- root 14 ./run/opt/work/tree/etc/group
+lrwxrwxrwx root 115 ./run/opt/work/tree/etc/passwd<scratch>/stageb_audit/demo/run/victim_passwd
+drwxr-xr-x root 4096 ./run/opt/work/tree/proc
+drwxr-xr-x root 4096 ./run/opt/work/tree/dev
+drwxr-xr-x root 4096 ./run/opt/work/tree/sys
+drwxr-xr-x root 4096 ./run/opt/work/tree/usr
+drwxr-xr-x root 4096 ./run/opt/work/tree/usr/lib
+drwxr-xr-x root 4096 ./run/opt/work/tree/usr/lib/python3.12
+drwxr-xr-x root 4096 ./run/opt/work/tree/usr/lib/python3.12/json
+-rw-r--r-- root 0 ./run/opt/work/tree/usr/lib/python3.12/json/__init__.py
+-rw-r--r-- root 0 ./run/opt/work/tree/usr/lib/python3.12/hashlib.py
+-rw-r--r-- root 0 ./run/opt/work/tree/usr/lib/python3.12/os.py
+drwxr-xr-x root 4096 ./run/opt/work/tree/usr/bin
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/blockdev
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/setpriv
+lrwxrwxrwx root 10 ./run/opt/work/tree/usr/bin/python3python3.12
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/head
+-rw-r--r-- root 4 ./run/opt/work/tree/usr/bin/python3.12
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/bash
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/mkdir
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/chmod
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/stat
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/sleep
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/mkfifo
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/tr
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/sync
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/sha256sum
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/cat
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/dd
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/ls
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/mv
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/cut
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/od
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/mount
+-rw-r--r-- root 2 ./run/opt/work/tree/usr/bin/timeout
+drwxr-xr-x root 4096 ./run/opt/work/tree/tmp
+lrwxrwxrwx root 113 ./run/opt/work/tree/plea-init<scratch>/stageb_audit/demo/run/victim_init
+drwxr-xr-x root 4096 ./run/opt/work/tree/run
+-rwxr-xr-x root 7329 ./run/victim_init
+-rw-r--r-- root 96 ./run/victim_passwd
+
+== run/victim_init (mode 755)
+#!/bin/bash
+# /plea-init - PID 1 inside the Stage B microVM. Trusted guest component, pinned inside rootfs.ext4.
+# The payload on /dev/vdb is untrusted: it runs as uid 10001 under `timeout`, never as root.
+# Wire format: /dev/vdb = 8-byte big-endian length N (1..pcap) + N payload bytes.
+#              /dev/vdc = 8-byte big-endian length L + L bytes; body = one JSON header line + stdout + stderr.
+# Console: "PLEA_READY <nonce>" before the payload runs; "PLEA_DONE <nonce> <STATUS>" after the result is
+# written. The nonce is drawn here from /dev/urandom after boot; the workload cannot read it (it is not in
+# the kernel cmdline or the environment, and the workload has no read access to the console).
+
+# BEGIN-LIB  (selftest.py sources this section on the build host; it has no side effects)
+be64() {  # print an unsigned integer as 8 big-endian bytes
+	local n=$1 i s=""
+	for i in 56 48 40 32 24 16 8 0; do s+=$(printf '\\%03o' $(( (n >> i) & 255 ))); done
+	printf "$s"
+}
+read_be64() {  # file -> echo the 8-byte big-endian prefix; fail if short or top bit set
+	local b
+	b=$(dd if="$1" bs=8 count=1 2>/dev/null | od -An -v -tu1) || return 1
+	set -- $b
+	[ $# -eq 8 ] || return 1
+	[ "$1" -lt 128 ] || return 1
+	local n=0 x
+	for x in "$@"; do n=$(( (n << 8) | x )); done
+	echo "$n"
+}
+extract_payload() {  # in_dev in_size pcap out_file -> sets PLEN; returns 2 on any malformed prefix
+	local in=$1 insz=$2 pcap=$3 out=$4 n
+	n=$(read_be64 "$in") || return 2
+	[ "$n" -ge 1 ] && [ "$n" -le "$pcap" ] && [ $(( n + 8 )) -le "$insz" ] || return 2
+	dd if="$in" of="$out" iflag=skip_bytes,count_bytes skip=8 count="$n" bs=65536 2>/dev/null || return 2
+	[ "$(stat -c %s "$out")" = "$n" ] || return 2
+	PLEN=$n
+}
+write_result() {  # out_dev out_size header_json stdout_file stderr_file work_dir
+	local dev=$1 outsz=$2 hdr=$3 so=$4 se=$5 w=$6 blen
+	{ printf '%s\n' "$hdr"; cat "$so" "$se"; } > "$w/body" || return 1
+	blen=$(stat -c %s "$w/body")
+	[ $(( blen + 8 )) -le "$outsz" ] || return 1
+	{ be64 "$blen"; ca
+== run/victim_passwd (mode 644)
+root:x:0:0::/root:/bin/sh
+plea:x:10001:10001:plea guest workload:/nonexistent:/usr/sbin/nologin
