@@ -55,3 +55,26 @@ Expected:
 
 **Run 1.** F39, F10, F12, F37 and F38 passed, 5 of 5, as declared: F39 3 of 3 checks, F10 6, F12 6, F37 11, F38 15.
 Kept in `tests/amend18_dev_evidence/run1_front.*`.
+
+## Entry 2. The planted-defect run and the review, declared before either is made
+
+**The planted-defect run.**
+- `tests/amend17_mutants.py 8c4762f WORKDIR PYTHON OUT.json`, run on the three defects of this amendment, by name:
+  - 'more than one engineer key accepted';
+  - 'an engineer key of another form accepted';
+  - "the front door's start does not check its keys".
+- The runner's file at `8c4762f` has SHA-256 `d721199afdc9f80ce4475892483c636e04055529b0c5e3e84520aaf1cfd39e21`.
+- Expected: 3 planted, 3 caught by F39.
+- The 51 earlier entries are not run again. Their pass at `203bdca` covers every file this amendment does not change,
+  and `verify/front_door.py`'s other text, which their search texts name, is unchanged.
+
+**The review.** One review, by a separate AI agent instructed by the author, read-only.
+- Scope: `git diff ba82e66 8c4762f`.
+- Questions:
+  - does the change do what point 1 of the owner's decision asks;
+  - does it weaken an earlier property (enrolment, revocation, replay, the record of bindings, R1 to R13);
+  - are F39's checks and the three defects discriminating;
+  - is anything at any severity brought in?
+- Under the owner's point 8 there is no open-ended cycle. If the review finds something critical, high or medium in
+  this change, it is either corrected once, with that correction's own record, or reported to the owner as it stands.
+  No second review follows.
