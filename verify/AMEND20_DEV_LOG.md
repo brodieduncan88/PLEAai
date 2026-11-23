@@ -99,3 +99,23 @@ verifies, as the first run of R36 showed; the second is refused by the older che
 **Declared of the new candidate (the commit that adds this entry), before anything is run on it:** the gate 36 of 36, 262
 checks; the front door 38 of 38, 219 checks; the runner 76 entries, 62 planted and 62 caught, 14 not planted. No agent
 review (see entry 3).
+
+## Entry 5. The development run of `8f3bfb3`: R25 failed for a fault already in the test; the gate is run again on the same commit (23 November 2026)
+
+**The run** (once; kept as it came out in `tests/amend20_dev_evidence/dev_run_8f3bfb3/`): front door 38 of 38 and 219 of 219;
+runner 76 entries, 62 of 62 planted caught, 14 not planted (as declared); **gate 35 of 36: R25 failed.** R36 passed.
+
+**Cause (found, and reproduced; not called a flake).** R25's last check takes the nonce the keeper's first fetch printed and gives
+it to `check_record.py` as `--nonce <value>`. The nonce is 24 characters of base64url, so about one in 64 begins with `-`; this
+run's began with `-VLo…`. `argparse` then reads the value as an option and ends with "argument --nonce: expected one argument",
+status 2, so R25's closed-budget check saw `[2, []]` for the command. Run by hand with that nonce: status 2; with
+`--nonce=-VLo…`: the command reads it. It is a fault in the test (`tests/verify_tests.py`, R25, the `cli_closed` line), present
+since Amendment 10, with no connection to this amendment: R25 passed at `be89595` and in Amendment 19's official run. It is
+recorded as T-1 (below); it is **not repaired here**, because a change to a test other than the ones this amendment declares
+would be one more candidate to run in full. It is repaired in a later amendment if the owner wishes.
+
+**T-1 (new, low, a fault in a test): R25's last check fails about once in 64 runs,** when the witness's random nonce begins with
+`-`. The failure is false (the code under test is not at fault). **This risk applies to every official run of the gate.**
+
+**What is done.** The gate only is run once more on the same commit (no code or test changed), and that run is kept beside the
+first. The declaration of this amendment states T-1, and an official run that falls to it is reported as it comes out.

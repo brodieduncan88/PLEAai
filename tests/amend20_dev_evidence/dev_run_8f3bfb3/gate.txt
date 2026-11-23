@@ -1,0 +1,51 @@
+R1   PASS  A design that does not meet the requirement gets a signed FAIL with the reason, kept on the record and sent to the engineer.
+R2   PASS  The same design sent again returns the same verdict: one run, one notice.
+R3   PASS  A design outside the baselined design space is a FAIL, and the check is not run on it.
+R4   PASS  A design that meets the check after two that did not: met for that design only, and the failures stay on the record.
+R5   PASS  A check, a data file or a card changed after baselining gives UNKNOWN, never a pass.
+R6   PASS  A check that crashes, prints rubbish, returns not-a-number, zero or an absurd value, or hangs, gives UNKNOWN with its reason.
+R7   PASS  The service dying part-way through a run leaves it counted, without a verdict, and never run again.
+R8   PASS  A baseline is refused unless its check is seen to fail a bad design and pass a good one.
+R9   PASS  The record verifies offline; an edited one does not, even when re-signed with the engineer's key.
+R10  PASS  A requirement changes only as a new, signed baseline that says what it replaced and what had failed.
+R11  PASS  What the assistant's side holds cannot do the engineer's part.
+R12  PASS  The engineer's disposition of a failure is signed, shown on the record, and cannot be made by anyone else.
+R13  PASS  A verdict that does not follow from its own numbers is rejected, even when the gate and the engineer have both signed it.
+R14  PASS  A stored baseline that is no longer a card at all gives a signed UNKNOWN and a notice, like any other changed baseline: never an interrupted run, never a pass.
+R15  PASS  Whatever a baselined check prints, the answer is a signed verdict that can be kept and checked again, and a notice: never an interrupted run, never a record left unable to verify.
+R16  PASS  From the inside, the tool called directly with no services: its guards take an error of any kind, a verdict the record's checker would reject is not returned, notices of one name are each kept, and a notice is written under a locale that is not UTF-8.
+R17  PASS  What a design supplies cannot be read as the service's own words: not in the reason that is signed, not in the engineer's notice or the answer, not in the checker's print of the record.
+R18  PASS  A notice and an answer say only what is so for their own run: each states its verdict, says the check's files matched only when the check ran on files that did, never says that nothing was changed, says so when the service held no usable copy of the card, and a revised baseline gives every count of the runs it replaced.
+R19  PASS  A notice reaches an engineer's inbox only for that engineer's own baseline: a request naming a hash the service holds no baseline for, even one that shares all but one digit of a real baseline's, is answered UNKNOWN and its notice is kept apart, addressed to no engineer; and a notice about a real baseline still reaches its engineer while the service can find its folder or read its full hash in its inbox.  (Amendment 6.)
+R20  PASS  A notice that cannot be written does not stop a run or lose its verdict: it goes to the service's own store, whole, and the verdict says where it went; where nothing can be written, the verdict says so; a ledger that cannot be written does not stop a run; a card whose notice text cannot be built still gets its notice, in fixed words.  (Amendment 7, D2 and D3.)
+R21  PASS  A check whose stated limits are not text cannot be baselined, and a card signed that way is refused at every run, as not a baseline card, with its notice in the engineer's inbox and no error raised.  (Amendment 7, D4.)
+R22  PASS  The gate's tool shows that it can write each baseline's inbox, and keeps a dated proof of it: when it starts, on every run, and by its own look for a baseline made later or an inbox it could not write; a proof that is missing, old, or says the inbox could not be written reads as not good; and the engineer's console shows which.  (Amendment 8, D3.)
+R23  PASS  A requirement the service already holds a baseline for is changed by a revision, which is linked as before, or baselined again only with the engineer's reason; the reason, and the baselines already held, go into the signed card, and the record's checker and the first client's view of the requirement print them.  (Amendment 9.)
+R24  PASS  What a person or an assistant reads of a pass calls it the declared check met, never a bare PASS, and shows what the check does not cover: the answer, the status the assistant reads (Amendment 17: through the front door, not the first client) and the engineer's console.  A notice shows what the check does not cover under its headline.  The signed verdict and the record keep the word PASS.  (Amendment 9.)
+R25  FAIL  The witness signs a checkpoint of a baseline's chain: how many decisions it holds, the hash of the last, and its clock.  A record carries one, and its checker requires it to be the witness's and to name the record's own head.  Against a checkpoint obtained separately, the checker says whether a record is current, out of date or of another chain; and a log of checkpoints kept apart from the service refuses a rollback or a fork, and keeps the evidence.  (Amendment 10.)   <- the superseded baseline's record, built after the revision and checked against the keeper's first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer's console, given the witness's address, writes a record that carries a checkpoint and verifies
+R26  PASS  A courier that reads only the witness sends the engineer a notice of each run that calls for one, signed with its own key,
+    to the engineer's mailbox, which signs a receipt for it.  It does not read the service, so a notice the service did not
+    write, or that was removed from its inbox, is still sent.  A record can carry the notices and receipts, and its checker
+    says which runs have a notice delivered and which have none.  (Amendment 11.)
+R27  PASS  Each run of a check is made a disposable sandbox of its own: no network, no other process, none of the service's files,
+    nobody's identity, limits on time, memory, processes and output, and nothing kept after it.  A check that tries to read
+    the service's keys, reach its database or the witness, write outside its /work and /tmp, or outlive its run cannot; and
+    if the sandbox cannot be made, the check is not run.  (Amendment 12.)
+R28  PASS  The reading of a baseline's runs, which every answer makes, opens two connections to the database whatever the number of
+    runs already made, and gives exactly what reading each run by itself gives.  Restated by Amendment 14, after a review of its
+    first declared form: connections are counted where the database driver opens them; a reading is cut at the very decision of a
+    report and at the one before; and the store is then changed by hand, to show what the reading must not do: take another
+    budget's reports, receipts or results for a run of the same name, take a result for a run that had no effect or a result
+    that is no value, or fail on a run that has no report, no receipt and no result.  (Amendments 13 and 14.)
+R29  PASS  What the sandbox needs of the machine is looked at before every run, and said: root, x86-64, cgroup v1 control groups, user
+    namespaces, and a file table at least twice what one service's runs can keep open, worked out from the machine's own limits.
+    Where one is not met the check is not run, and the words say which and why; an operator can ask for the same answer.  The
+    floor rests on a measurement, made here again: one run keeping open every file it can.  (Amendment 15.)
+R30  PASS  Amendment 17 (D5).  An attempt admitted under one baseline's budget is never decided against another baseline: the gate host refuses it before it is claimed, runs nothing and signs nothing.
+R31  PASS  Amendment 17 (D21).  Request keys and attempt identities are the whole hash; where two designs share a narrower key, the second is refused, and is never given the first one's verdict.
+R32  PASS  Amendment 17 (D20).  A baseline whose controls, as the record's checker reads them, do not give their verdicts is refused when it is made, not found later in a record that cannot verify.
+R33  PASS  Amendment 17, after its first review (H1).  A budget with runs made before the change keeps their form: a design sent before is not run or charged again after, a run left pending then is finished as the same attempt, and its record still verifies; a new budget takes the current form.
+R34  PASS  Amendment 17 (D6).  The first client, which held the gateway's database credential in an assistant's workspace, refuses to run, and no deployment writes such a workspace; an enrolled job's folder holds no database credential.
+R35  PASS  Amendment 19 (D20-F).  A number the check prints is decided as printed: a value on the wrong side of a limit by less than a binary float can tell apart is never signed PASS, and a record that verifies offline holds the value as the check printed it.
+R36  PASS  Amendment 20 (the owner's decisions of 23 November 2026; external-review findings F-1, F-2 offline, F-4, F-9).  A card's bounds are read as decimals, and are written as text; a released design file is read as strictly as the front door reads a design; no value is written '-0' or quoted whole in a reason; and a verdict whose design is another than the one sent, though equal as Python values, is rejected.
+VERIFY RESULT: FAIL (35 of 36)
