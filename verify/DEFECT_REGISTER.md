@@ -748,3 +748,12 @@ copy on the diagnostic branch is not changed.
   they keep their original commit trailers, some local working paths in their recorded outputs, and the text of earlier register
   entries, so that the declared SHA-256 provenance and the commit hashes the declarations cite stay valid. Anything from this entry on is
   subject to the new rules.
+
+### G21. 23 November 2026: Amendment 21 (T-1), official runs
+
+- **T-1 (R25's nonce hand-over; a fault in a test): repaired, internally tested.** Declared at `507e16f`.
+- Official runs, once each, in a neutral working directory: the gate 36 of 36 tests and 263 of 263 checks; the front door 38 of 38 and 219 of
+  219; planted defects 63 of 63 planted caught, 14 not planted. A false start of the runs (before the machine's services were restored)
+  was stopped within seconds, produced no result, and is disclosed in the amendment report. Results in
+  `verify/results_*_amended21_2026-11-23*`.
+- No other row changes status.
