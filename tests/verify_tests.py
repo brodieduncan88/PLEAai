@@ -3688,7 +3688,7 @@ def r36():
         seen = {'service_below': B.in_design_space(space, below)[0], 'checker_below': check_record.in_design_space(space, below),
                 'service_edges': (B.in_design_space(space, at_lo)[0], B.in_design_space(space, at_hi)[0]), 'checker_edges': (check_record.in_design_space(space, at_lo), check_record.in_design_space(space, at_hi))}
         # 2. the card's rule: bounds are text
-        draftcard = draft()
+        draftcard = json.loads((r.s.home / 'baselines' / r.h / 'baseline.json').read_text())['card']          # the card as it was baselined: a whole card, which validates
 
         def refusal(fn):
             c = copy.deepcopy(draftcard); fn(c)

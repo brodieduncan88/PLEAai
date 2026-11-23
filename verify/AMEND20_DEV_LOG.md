@@ -27,3 +27,23 @@ and F-11 are not in this amendment.
 
 If a prediction does not hold it is recorded here as it came out, and the test or the expectation is changed only in a new,
 dated entry.
+
+## Entry 2. What the run on the uncorrected code showed; one fault in R36's own set-up, restated before the correction (23 November 2026)
+
+**The run** (once, on `bc6d865`, whose code under `verify/` is Amendment 19's; kept as it came out in
+`tests/amend20_dev_evidence/before_bc6d865/`):
+- R36: all six checks false, as predicted. Seen: a value of 0.29999999999999999 against a plausible minimum of 0.3 is PASS; a
+  design 99999999999999995000000 is inside a space from 1e23 to 2e23, and the exact edges 0.1 and 0.3 are outside theirs, in the
+  service and in the checker; the underflowing value is written '-0' by both (the review's claim holds); a 500000-character
+  answer where a number was due gives a reason of 500064 characters; `check_record.py --design` exits 0 on 2.5000000000000001
+  and on a repeated key; a verdict signed for 3.0 where 3 was sent verifies, with no check failed (so the review's F-9 holds).
+- F40: checks 1, 2 and 5 false, 3 and 4 true, as predicted. Seen: five numbers a binary float holds as another were each run;
+  the command line ran both a rounded number and a repeated key; eight official runs, not five.
+
+**A fault in R36's own set-up, found in that run.** Check 3 drew its card from `draft()`, which is the fixture's case card, not
+a whole baselined card: `validate_card` refused it first for its format, whatever it was asked about. Check 3 was false for
+that reason as well as for the right one, and on corrected code it would have been false for that reason alone. The set-up
+now takes the card as it was baselined (the stored envelope's card). Nothing else in the test is changed, and no predicate is
+loosened: the same four numeric refusals are asked for, and the baselined card, in text, is still asked to be accepted.
+R36 is run again on the uncorrected code with this change (expected: all six false, check 3 now for the right reason), and
+that run is kept beside the first.
