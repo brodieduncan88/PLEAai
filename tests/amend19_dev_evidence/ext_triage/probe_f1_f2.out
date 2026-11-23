@@ -1,0 +1,6 @@
+F-1a refused: format must be verification-baseline/1
+F-1c below 10**23: True | baseline inside: (True, '') | check_record inside: True
+F-1b value < 0.3: True | plausible test passes: True
+F-1b verdict: PASS MET | rederive problems: []
+F-1d exact 0.3 inside [0.1, 0.3]: (False, 'w = 0.3 is outside the baselined range 0.1 to 0.3') | exact 0.1: (False, 'w = 0.1 is outside the baselined range 0.1 to 0.3')
+F-2 hash equal (rounded): True | duplicate keys read as: {'wall_mm': 2.0}

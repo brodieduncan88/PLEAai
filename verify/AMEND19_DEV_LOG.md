@@ -129,3 +129,36 @@ The candidate is the commit that adds this entry (named in the next). Declared o
     - Are R35 and the five defects discriminating?
   - Under the owner's point 2, no review-and-patch cycle follows. A substantive finding is either corrected once, as a
     new declared candidate with its own evidence, or reported to the owner as it stands.
+
+## Entry 4. R15 failed on the first candidate; the one correction, declared before it is run (23 November 2026)
+
+**What happened.** The development run of the first candidate (`3d6598f`) gave: gate 34 of 35, front door 37 of 37, planted-defect
+runner 59 entries, 45 planted and 45 caught, 14 not planted. The failing gate run is kept as it came out, with the front and
+runner outputs, in `tests/amend19_dev_evidence/dev_run_3d6598f/` (SHA-256 sums in the same folder). Nothing in it was edited.
+- **The one failure was R15**, check "a check whose output cannot be read at all is answered UNKNOWN: THE CHECK DID NOT RUN TO A
+  RESULT (exit status 3)". R15's fixture prints the string `"1e1000000"`. Before Amendment 19, writing that value overflowed in
+  `text()`, the tool's guard took the error, and the run was CHECK_ERROR. At `3d6598f`, `_shown` made the reason writable, so the
+  run became UNKNOWN: RESULT_IMPLAUSIBLE. It was UNKNOWN, never PASS, but it is not what R15 declares. The author's probe of both
+  commits is in `tests/amend19_dev_evidence/ext_triage/` (the R15 probe was run in the session scratch and its output is in the
+  amendment report).
+- **The cause was the author's.** `_shown` was written to bound a long number in a reason; it also moved the exponent at which a
+  number stops being writable, which R15 had pinned by accident of an overflow.
+- **The internal review of `3d6598f` was not completed.** The reviewing agent stopped on a usage limit part-way through its probes,
+  before reporting. It is reported as incomplete, as the owner directed on 23 November. No finding of it exists.
+
+**The correction (the one allowed; owner decisions of 23 November).** Amendment 19 stays narrow: R15 only.
+- `verify/baseline.py`, `evaluate`: before the plausible-range test, a number whose exponent is above
+  `decimal.DefaultContext.Emax` (a constant, 999999) is answered CHECK_ERROR, as before Amendment 19. The constant, not
+  `getcontext()`, so no code that changes the context can move the boundary. `1e999999` is still RESULT_IMPLAUSIBLE.
+- `tests/verify_tests.py`: R35 gets a fourth check and `D20F_EXPONENT_CASES`: `1e999999` and `-1e999999` give
+  UNKNOWN: RESULT_IMPLAUSIBLE; `1e1000000`, `-1e1000000` and `1e9999999999` give UNKNOWN: CHECK_ERROR; each verdict is under 64 KiB.
+  R35's three earlier checks are as they were, word for word.
+- `tests/amend17_mutants.py`: two planted defects are added: the guard removed (R15 or R35 must fail), and the guard one too early
+  (R35 must fail).
+- Not changed: F-1, F-2, F-4 and F-9 of the external review (to Amendment 20), the five Amendment 19 planted defects, the gateway.
+
+**Declared of this candidate (the commit that adds this entry), before anything is run on it:**
+- the gate, 35 of 35, 256 checks (Amendment 19's first candidate had 255; R35 gains one);
+- the front door, 37 of 37, 214 checks;
+- the whole runner on this exact commit: 61 entries, 47 planted and 47 caught, 14 not planted (the same 14);
+- no review of this candidate (see above); no patch cycle follows.

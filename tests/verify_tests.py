@@ -3564,6 +3564,12 @@ D20F_CASES = [  # (criterion, token as the check prints it, (verdict, reason) ex
 ]
 
 
+D20F_EXPONENT_CASES = [  # Amendment 19 (R15): (token, (verdict, reason)); DefaultContext.Emax is 999999
+    ('1e999999', ('UNKNOWN', 'RESULT_IMPLAUSIBLE')), ('-1e999999', ('UNKNOWN', 'RESULT_IMPLAUSIBLE')),
+    ('1e1000000', ('UNKNOWN', 'CHECK_ERROR')), ('-1e1000000', ('UNKNOWN', 'CHECK_ERROR')), ('1e9999999999', ('UNKNOWN', 'CHECK_ERROR')),
+]
+
+
 def r35():
     """Amendment 19 (D20-F).  A number the check prints is decided as printed: a value on the wrong side of a limit by less than a binary float can tell apart is never signed PASS, and a record that verifies offline holds the value as the check printed it."""
     import copy, decimal, types
@@ -3612,6 +3618,17 @@ def r35():
         finally:
             B.sandbox.run = kept
         e['matrix'] = matrix
+        # Amendment 19 (R15): the exponent at the decimal context's limit and one past it, both signs, on the at-least criterion
+        edge = []
+        try:
+            for token, want in D20F_EXPONENT_CASES:
+                out = '{"achieved": {"service_temperature": %s}, "basis": "the test"}' % token
+                B.sandbox.run = lambda files, script, stdin, timeout=30.0, _o=out, **kw: types.SimpleNamespace(state='RAN', returncode=0, stdout=_o.encode(), stderr=b'', detail='')
+                r = verify_tools._decide(CASE, cards['GE'], design)
+                edge.append(dict(token=token, verdict=r['verdict'], reason=r['reason_code'], want=want, rederive=check_record.rederive(cards['GE'], r, design), size=len(B.canonical(r).encode())))
+        finally:
+            B.sandbox.run = kept
+        e['exponent_edge'] = edge
         checks = {'through the front door, a check printing as a JSON number a value below the limit by less than a binary float resolves (199.99999999999999 against at least 200) is signed FAIL, not PASS; the record holds it as printed, and verifies offline':
                       answers['PX-EDGE'][0] == 2 and written.get('PX-EDGE') == ('FAIL', '199.99999999999999') and ok,
                   'the limit exactly (200), and a value above it by as little (200.00000000000001), are signed PASS, each held as printed':
@@ -3619,7 +3636,9 @@ def r35():
                   'in process, for 22 printed numbers on three criteria (at least, at most, a negative limit): none is PASS unless its exact value meets the criterion; each gives the verdict expected; every PASS and FAIL is accepted by the record\'s checker; no verdict is 64 KiB or more':
                       len(matrix) == len(D20F_CASES) and not any(x['verdict'] == 'PASS' and x['exact'] is not True for x in matrix)
                       and all(x['verdict'] == x['want'][0] and (x['want'][1] is None or x['reason'] == x['want'][1]) for x in matrix)
-                      and not any(x['rederive'] for x in matrix if x['verdict'] in ('PASS', 'FAIL')) and all(x['size'] < 65536 for x in matrix)}
+                      and not any(x['rederive'] for x in matrix if x['verdict'] in ('PASS', 'FAIL')) and all(x['size'] < 65536 for x in matrix),
+                  'a number whose exponent is at the decimal context limit (1e999999, either sign) is UNKNOWN: RESULT_IMPLAUSIBLE, and one past it (1e1000000, 1e9999999999, either sign) is UNKNOWN: CHECK_ERROR, as before Amendment 19; none is PASS, each verdict is under 64 KiB':
+                      len(edge) == len(D20F_EXPONENT_CASES) and all((x['verdict'], x['reason']) == x['want'] and x['size'] < 65536 for x in edge)}
     finally:
         s.stop()
     return checks, e

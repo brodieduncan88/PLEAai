@@ -369,6 +369,10 @@ def evaluate(directory, card: dict, design, control: bool = False) -> dict:
         value = dec(achieved.get(c['id']))
         if value is None:
             return _verdict(card, design, 'CHECK_OUTPUT_INVALID', _blank(card), basis[:400], f'the check gave no finite number for {c["id"]} (got {achieved.get(c["id"])!r})')
+        if value != 0 and value.adjusted() > decimal.DefaultContext.Emax:
+            # Amendment 19 (R15): a number whose exponent is beyond what the decimal context can write is answered as before Amendment 19
+            # (CHECK_ERROR: the check did not run to a result), from the constant default, not from a context that code may have changed.
+            return _verdict(card, design, 'CHECK_ERROR', _blank(card), detail=f'the check printed a number for {c["id"]} whose exponent is beyond the limit of the decimal context')
         if not D(c['plausible']['min']) <= value <= D(c['plausible']['max']):
             return _verdict(card, design, 'RESULT_IMPLAUSIBLE', _blank(card), basis[:400],
                             f'{c["id"]} = {_shown(value)} {c["units"]} is outside the plausible range {c["plausible"]["min"]} to {c["plausible"]["max"]} declared at baseline')

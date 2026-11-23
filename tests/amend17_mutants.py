@@ -34,6 +34,8 @@ Amendment 18 and run alone (by name) against its candidate; the 51 earlier entri
 Amendment 19 (22 November 2026, D20-F): five are added.  With the owner's direction that the planted-defect checks be run
 against the exact final candidate, the whole runner is run against Amendment 19's candidate.
 
+Amendment 19, R15 correction (23 November 2026): two are added.
+
     amend17_mutants.py COMMIT WORKDIR PYTHON OUT.json [NAME ...]
 """
 import json, pathlib, shutil, subprocess, sys, time
@@ -121,6 +123,9 @@ MUTANTS = [
      "    if criterion['comparison'] == '<=':\n        return achieved <= limit + D('1e-12'), text(limit - achieved)\n    return achieved >= limit - D('1e-12'), text(achieved - limit)", ['R35']),
     ('the record checker\'s refusal not asked', 'verify/verify_tools.py', "        if not rederive(card, result, design):\n            return result", "        if True:\n            return result", ['R35']),
     ('the implausible reason writes the number in full', 'verify/baseline.py', "{c[\"id\"]} = {_shown(value)} {c[\"units\"]}", "{c[\"id\"]} = {text(value)} {c[\"units\"]}", ['R35']),
+    # Amendment 19, R15 correction (23 November 2026)
+    ('exponent beyond the context limit not answered as an error', 'verify/baseline.py', "        if value != 0 and value.adjusted() > decimal.DefaultContext.Emax:", "        if False:", ['R15', 'R35']),
+    ('exponent guard one too early', 'verify/baseline.py', "        if value != 0 and value.adjusted() > decimal.DefaultContext.Emax:", "        if value != 0 and value.adjusted() >= decimal.DefaultContext.Emax:", ['R35']),
     ('a move not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)                                # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding)                                # written first", ['F38']),
 ]
 
