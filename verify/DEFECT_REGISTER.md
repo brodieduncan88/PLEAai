@@ -671,3 +671,27 @@ copy on the diagnostic branch is not changed.
   The results are in `verify/results_*_amended18_2026-11-22*`.
 - **D16:** internally tested, with the single-key enforcement. Not closed. What remains is as in G13.
 - No other row changes status.
+
+### G15. 23 November 2026: Amendment 19 (D20-F), two candidates
+
+- **D20-F: implemented and tested internally. NOT closed.** A check's JSON numbers are read as exact decimals and compared
+  exactly (Option A). No tolerance; no decimal made into a float. **Option B was not implemented** (it would change the signed
+  bytes or the numerical contract; the owner's to approve).
+- **The first candidate (`3d6598f`) failed R15** in development (gate 34 of 35): "1e1000000" became RESULT_IMPLAUSIBLE where
+  R15 declares CHECK_ERROR. UNKNOWN, never PASS. Kept as it came out. The second candidate (`5569957`) answers CHECK_ERROR for an
+  exponent above `decimal.DefaultContext.Emax`.
+- **Remaining limit:** a very small number inside a plausible range that includes zero is written in plain notation, about a
+  million characters. Not decision-relevant. Not changed.
+- **The internal review of Amendment 19 was not completed** (usage limit). No finding exists.
+
+### G16. 23 November 2026: the official runs of Amendment 19
+
+- **Declared:** `verify/DECLARED_AMEND19.md`, at `34e662c`. **Runs:** once each, to 04:00 UTC. Both came out as declared:
+  - the gate: 35 of 35 tests and 256 of 256 checks (R35 4 of 4);
+  - the front door: 37 of 37 tests and 214 of 214 checks.
+  The results are in `verify/results_*_amended19_2026-11-23*`. Planted defects at `5569957`: 47 of 47 planted caught, 14 not
+  planted.
+- **D20-F:** internally tested, not closed.
+- **New, from an external AI review of `b97fe6b`, not yet fully verified** (report kept separately): F-1 (a card's float bounds are
+  read as binary floats) and F-2 (a released design file is read non-strictly) were reproduced in process and are Amendment 20's;
+  F-3 to F-11 are argued only. No row of the earlier registers changes status.
