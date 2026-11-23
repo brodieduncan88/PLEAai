@@ -3720,21 +3720,26 @@ def r36():
             f = work / f'release_{i}.json'; f.write_text(text)
             p = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'check_record.py'), str(rec_path), '--keys', str(keys_path), '--design', str(f)], capture_output=True, text=True, timeout=120)
             cli[label] = (p.returncode, want, 'meeting the declared check' in p.stdout)
-        # 5. F-9: a verdict for 3.0 where 3 was sent
-        forged_rec = json.loads(json.dumps(record))
-        att = next(a for a in forged_rec['attempts'] if (a.get('arguments') or {}).get('design') == GOOD)
-        res = att['result']; res['design'] = dict(res['design'], wall_mm=3.0); res['design_sha256'] = hashlib.sha256(canonical(res['design']).encode()).hexdigest()
-        digest = hashlib.sha256(canonical(res).encode()).hexdigest()
-        for item in att['evidence']:
-            ev = item['evidence']
-            if ev.get('claim') == 'EFFECT':
-                ev['result_digest'] = digest; ev['signature'] = r.s.gate._key.sign(check_record.evidence_message(ev)).hex()
-        body = {k: v for k, v in forged_rec.items() if k != 'signature'}
-        forged_rec = dict(body, signature={'signer': r.s.engineer.public_hex, 'signature': r.s.engineer.sign(canonical(body).encode())})
-        ok9, checks9, s9 = check_record.verify(forged_rec, r.s.keys)
-        failed9 = [f'{n} {t}: {d}' for n, t, good, d in checks9 if not good]
+        # 5. F-9: a verdict for 3.0 where 3 was sent, two ways: its design_sha256 written for the 3.0 it carries, and for the 3 that was sent
+        def forged_for(rehash: bool):
+            f = json.loads(json.dumps(record))
+            att = next(a for a in f['attempts'] if (a.get('arguments') or {}).get('design') == GOOD)
+            res = att['result']; res['design'] = dict(res['design'], wall_mm=3.0)
+            if rehash:
+                res['design_sha256'] = hashlib.sha256(canonical(res['design']).encode()).hexdigest()
+            digest = hashlib.sha256(canonical(res).encode()).hexdigest()
+            for item in att['evidence']:
+                ev = item['evidence']
+                if ev.get('claim') == 'EFFECT':
+                    ev['result_digest'] = digest; ev['signature'] = r.s.gate._key.sign(check_record.evidence_message(ev)).hex()
+            body = {k: v for k, v in f.items() if k != 'signature'}
+            f = dict(body, signature={'signer': r.s.engineer.public_hex, 'signature': r.s.engineer.sign(canonical(body).encode())})
+            ok_, checks_, s_ = check_record.verify(f, r.s.keys)
+            return ok_, [f'{n} {t}: {d}' for n, t, good, d in checks_ if not good]
+        ok9, failed9 = forged_for(True)
+        ok9b, failed9b = forged_for(False)
         e.update(low=(low['verdict'], low['reason_code']), mid=(mid['verdict'], mid['reason_code']), forged_rederive=check_record.rederive(fl, forged, design), seen=seen, numeric=numeric, card_ok=card_ok, zero=zero,
-                 long_detail=len(long_text['detail']), long_size=len(B.canonical(long_text).encode()), long_reason=long_text['reason_code'], honest=honest, cli=cli, forged_design_verifies=ok9, failed9=failed9)
+                 long_detail=len(long_text['detail']), long_size=len(B.canonical(long_text).encode()), long_reason=long_text['reason_code'], honest=honest, cli=cli, forged_design_verifies=ok9, failed9=failed9, forged_design_kept_hash_verifies=ok9b, failed9b=failed9b)
         checks = {'a bound written as a number is read as the decimal it says: 0.29999999999999999 against a plausible minimum of 0.3 is UNKNOWN: RESULT_IMPLAUSIBLE, and the record\'s checker rejects a PASS that holds it':
                       (low['verdict'], low['reason_code']) == ('UNKNOWN', 'RESULT_IMPLAUSIBLE') and (mid['verdict'], mid['reason_code']) == ('PASS', 'MET')
                       and any('plausible' in x for x in check_record.rederive(fl, forged, design)),
@@ -3746,8 +3751,9 @@ def r36():
                       zero == ('0', '0') and long_text['reason_code'] == 'CHECK_OUTPUT_INVALID' and len(long_text['detail']) < 200 and len(B.canonical(long_text).encode()) < 65536,
                   'check_record.py --design: the design as it was run is shown as meeting the check (exit 0); a number a binary float reads as another, a repeated key, 1e-400, -0.0, NaN and Infinity are each refused (exit 2)':
                       honest and all(c == w and (c != 0 or met) for c, w, met in cli.values()) and len(cli) == 7,
-                  'a verdict signed by the gate for 3.0 where 3 was sent fails, and only at the check that the verdict is for the design sent':
-                      not ok9 and len(failed9) == 1 and failed9[0].startswith('6 ') and 'another design' in failed9[0]}
+                  'a verdict signed by the gate for 3.0 where 3 was sent fails, and only at the check that the verdict is for the design sent: whether its design_sha256 is written for the 3.0 it carries or for the 3 that was sent':
+                      not ok9 and len(failed9) == 1 and failed9[0].startswith('6 ') and 'another design' in failed9[0]
+                      and not ok9b and len(failed9b) == 1 and failed9b[0].startswith('6 ') and 'another design' in failed9b[0]}
     finally:
         r.stop()
     return checks, e

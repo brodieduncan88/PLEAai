@@ -80,3 +80,22 @@ still pass. This is a first look, not the full run.
 - the whole runner on this exact commit: 76 entries, 62 planted and 62 caught, 14 not planted (the same 14);
 - **no review of this candidate** by an agent: the owner's decision is to proceed and report the review of Amendment 19 as
   incomplete; for this amendment none is made either, and none is claimed.
+
+## Entry 4. The full development run of `be89595`: one planted defect not caught; the one test-only restatement, declared before it is run (23 November 2026)
+
+**The run** (once; kept as it came out in `tests/amend20_dev_evidence/dev_run_be89595/`): gate 36 of 36 tests and 262 of 262
+checks; front door 38 of 38 and 219 of 219; runner 76 entries, **61 of 62 planted caught**, 14 not planted. Declared: 62 of 62.
+
+**The one not caught: "Check 6 compares designs as Python values again".** R36's check 6 forged a verdict for 3.0 where 3 was
+sent, with its design_sha256 written for the 3.0 it carried. With the mutant, that verdict is still refused, by the other half
+of Check 6 (its sha is not the sha of the 3 that was sent), with the same message. So the test could not tell the fix from the
+mutant: a gap in the test, not in the code. The case it missed is a verdict whose design is 3.0 and whose design_sha256 is the
+one for 3: the mutant accepts it; the corrected Check 6 does not.
+
+**The correction (test only; no change to any code under `verify/`).** R36's check 6 now forges both ways and asks both to fail
+at Check 6 only. The first way is as before. Nothing else in R36 or anywhere is changed. On `555f2c6`'s code the first way
+verifies, as the first run of R36 showed; the second is refused by the older check, so the combined check is still false there.
+
+**Declared of the new candidate (the commit that adds this entry), before anything is run on it:** the gate 36 of 36, 262
+checks; the front door 38 of 38, 219 checks; the runner 76 entries, 62 planted and 62 caught, 14 not planted. No agent
+review (see entry 3).

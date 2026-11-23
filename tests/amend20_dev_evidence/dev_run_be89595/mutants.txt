@@ -1,0 +1,77 @@
+binder removed: CAUGHT by ['R30']
+binder always binds: CAUGHT by ['R30']
+identity back to 64 bits: CAUGHT by ['R31']
+request key back to 96 bits: CAUGHT by ['R31']
+front door does not check the design of a verdict: CAUGHT by ['R31']
+checker allows mixed forms: CAUGHT by ['R31']
+no form kept per budget: NOT PLANTED (the text was not found once)
+front door ignores the budget's form: CAUGHT by ['R33']
+record of bindings not consulted: CAUGHT by ['F37']
+revocation not absorbing: CAUGHT by ['F37']
+a stale binding accepted: CAUGHT by ['F37']
+a binding for another budget admitted: NOT PLANTED (the text was not found once)
+controls not put to the checker: CAUGHT by ['R32']
+the first client not retired: CAUGHT by ['R34']
+revocations recorded only when the job calls: NOT PLANTED (the text was not found once)
+realm from the authority's file: NOT PLANTED (the text was not found once)
+a revocation at a number already seen not kept: CAUGHT by ['F37']
+mixed forms not refused: CAUGHT by ['R33']
+controls not put to rederive: CAUGHT by ['R32']
+no form kept per budget (restated): CAUGHT by ['R33']
+a binding for another budget admitted (restated): NOT PLANTED (the text was not found once)
+revocations recorded only when the job calls (restated): CAUGHT by ['F37', 'F38']
+the console does not read the front door's realm: NOT PLANTED (the text was not found once)
+the front door started under another realm: NOT PLANTED (the text was not found once)
+a revocation not written when it cannot be recorded: NOT PLANTED (the text was not found once)
+a revocation not written when it cannot be recorded (restated): NOT PLANTED (the text was not found once)
+a binding for another budget admitted (restated again): CAUGHT by ['F37']
+the record keyed by the job name alone: NOT PLANTED (the text was not found once)
+an unrecorded revocation not recorded again: CAUGHT by ['F38']
+the front door records no revocation at its start: NOT PLANTED (the text was not found once)
+the look records no revocation: CAUGHT by ['F38']
+a revocation recorded and not written said to be refused: CAUGHT by ['F38']
+jobs.json written without a lock: NOT PLANTED (the text was not found once)
+the record keyed by the job name alone (restated): CAUGHT by ['F38']
+the record keyed by the certificate's hash: CAUGHT by ['F38']
+the console does not match the entry to its job: CAUGHT by ['F38']
+a changed entry written over: CAUGHT by ['F38']
+the lock followed through a link, and a pipe taken: CAUGHT by ['F38']
+a revocation not written when it cannot be recorded (restated again): CAUGHT by ['F38']
+the front door records no revocation at its start (restated): CAUGHT by ['F38']
+a move not written when it cannot be recorded (restated): CAUGHT by ['F38']
+jobs.json written without a lock (restated): CAUGHT by ['F38']
+a job with no usable entry not revoked by name: NOT PLANTED (the text was not found once)
+the temporary file opened by name: CAUGHT by ['F38']
+the log opened through a link or a pipe: CAUGHT by ['F38']
+a revocation neither recorded nor written not said: CAUGHT by ['F38']
+a job with no usable entry not revoked by name (restated): CAUGHT by ['F38']
+revocation by name done without being asked for: CAUGHT by ['F38']
+a name revoked by name not checked whole: CAUGHT by ['F38']
+the mode of jobs.json not kept: CAUGHT by ['F38']
+more than one engineer key accepted: CAUGHT by ['F39']
+an engineer key of another form accepted: CAUGHT by ['F39']
+the front door's start does not check its keys: CAUGHT by ['F39']
+JSON numbers read as binary floats again: CAUGHT by ['R35']
+a decimal read from a JSON number refused: CAUGHT by ['R35']
+a tolerance at the limit: CAUGHT by ['R35']
+the record checker's refusal not asked: CAUGHT by ['R35']
+the implausible reason writes the number in full: CAUGHT by ['R35']
+exponent beyond the context limit not answered as an error: CAUGHT by ['R15', 'R35']
+exponent guard one too early: CAUGHT by ['R35']
+a plausible bound read as a binary float again (service): CAUGHT by ['R36']
+a plausible bound read as a binary float again (checker): CAUGHT by ['R36']
+a design-space bound read as a binary float again (service): CAUGHT by ['R36']
+a design-space bound read as a binary float again (checker): CAUGHT by ['R36']
+a plausible range need not be text: CAUGHT by ['R36']
+a design-space range need not be text: CAUGHT by ['R36']
+a value that underflows written '-0' (service): CAUGHT by ['R36']
+a value that underflows written '-0' (checker): CAUGHT by ['R36']
+a reason quotes the value whole again: CAUGHT by ['R36']
+a repeated key accepted in a released design: CAUGHT by ['R36']
+a number a binary float rounds accepted in a released design: CAUGHT by ['R36']
+a released design read as plain JSON again: CAUGHT by ['R36']
+Check 6 compares designs as Python values again: NOT CAUGHT by ['R36']
+the front door accepts a number a binary float rounds: CAUGHT by ['F40']
+the command line reads a design file as JSON and sends it again: CAUGHT by ['F40']
+a move not written when it cannot be recorded: NOT PLANTED (the text was not found once)
+caught 61 of 62 planted; 14 not planted; 76 in all
