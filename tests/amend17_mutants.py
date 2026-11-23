@@ -36,6 +36,8 @@ against the exact final candidate, the whole runner is run against Amendment 19'
 
 Amendment 19, R15 correction (23 November 2026): two are added.
 
+Amendment 20 (23 November 2026): fifteen are added, against Amendment 20's candidate.
+
     amend17_mutants.py COMMIT WORKDIR PYTHON OUT.json [NAME ...]
 """
 import json, pathlib, shutil, subprocess, sys, time
@@ -126,6 +128,22 @@ MUTANTS = [
     # Amendment 19, R15 correction (23 November 2026)
     ('exponent beyond the context limit not answered as an error', 'verify/baseline.py', "        if value != 0 and value.adjusted() > decimal.DefaultContext.Emax:", "        if False:", ['R15', 'R35']),
     ('exponent guard one too early', 'verify/baseline.py', "        if value != 0 and value.adjusted() > decimal.DefaultContext.Emax:", "        if value != 0 and value.adjusted() >= decimal.DefaultContext.Emax:", ['R35']),
+    # Amendment 20 (23 November 2026)
+    ('a plausible bound read as a binary float again (service)', 'verify/baseline.py', "        lo, hi = dec(c['plausible'].get('min')), dec(c['plausible'].get('max'))          # Amendment 20 (F-1)", "        lo, hi = D(c['plausible']['min']), D(c['plausible']['max'])", ['R36']),
+    ('a plausible bound read as a binary float again (checker)', 'verify/check_record.py', "        lo, hi = dec((base.get('plausible') or {}).get('min')), dec((base.get('plausible') or {}).get('max'))          # Amendment 20 (F-1)", "        lo, hi = D(base['plausible']['min']), D(base['plausible']['max'])", ['R36']),
+    ('a design-space bound read as a binary float again (service)', 'verify/baseline.py', "            lo, hi = dec(rule.get('min')), dec(rule.get('max'))          # Amendment 20 (F-1): a bound is read by dec(), as a decimal, never D(float)", "            lo, hi = D(rule['min']), D(rule['max'])", ['R36']),
+    ('a design-space bound read as a binary float again (checker)', 'verify/check_record.py', "            lo, hi = dec(rule.get('min')), dec(rule.get('max'))          # Amendment 20 (F-1)\n            if d is None or isinstance(v, str) or lo is None", "            lo, hi = D(rule['min']), D(rule['max'])\n            if d is None or isinstance(v, str) or lo is None", ['R36']),
+    ('a plausible range need not be text', 'verify/baseline.py', "        need(isinstance(p.get('min'), str) and isinstance(p.get('max'), str) and lo is not None", '        need(lo is not None', ['R36']),
+    ('a design-space range need not be text', 'verify/baseline.py', "            need(isinstance(rule.get('min'), str) and isinstance(rule.get('max'), str) and lo is not None", '            need(lo is not None', ['R36']),
+    ("a value that underflows written '-0' (service)", 'verify/baseline.py', "    return '0' if n == 0 else format(n, 'f')        # Amendment 20 (F-4): a non-zero", "    return format(n, 'f')        # Amendment 20 (F-4): a non-zero", ['R36']),
+    ("a value that underflows written '-0' (checker)", 'verify/check_record.py', "    return '0' if n == 0 else format(n, 'f')        # Amendment 20 (F-4), as baseline.text", "    return format(n, 'f')        # Amendment 20 (F-4), as baseline.text", ['R36']),
+    ('a reason quotes the value whole again', 'verify/baseline.py', '(got {sent(achieved.get(c["id"]))})\')', '(got {achieved.get(c["id"])!r})\')', ['R36']),
+    ('a repeated key accepted in a released design', 'verify/check_record.py', "            if k in out:\n                raise ValueError('a key is repeated')", "            if False:\n                raise ValueError('a key is repeated')", ['R36']),
+    ('a number a binary float rounds accepted in a released design', 'verify/check_record.py', '        if not d.is_finite() or D(repr(v)) != d:', '        if not d.is_finite():', ['R36']),
+    ('a released design read as plain JSON again', 'verify/check_record.py', '                design = load_design(f.read())                    # Amendment 20 (F-2)', '                design = json.loads(f.read())', ['R36']),
+    ('Check 6 compares designs as Python values again', 'verify/check_record.py', "canonical(result['design']) != canonical(args['design']) or result.get('design_sha256') != sha(canonical(args['design']))", "result['design'] != args['design'] or result.get('design_sha256') != sha(canonical(args['design']))", ['R36']),
+    ('the front door accepts a number a binary float rounds', 'verify/front_door.py', '        if not d.is_finite() or decimal.Decimal(repr(v)) != d:', '        if not d.is_finite():', ['F40']),
+    ('the command line reads a design file as JSON and sends it again', 'verify/front_client.py', '            status, out = client.submit_raw(raw.strip())', "            status, out = client.submit(json.loads(raw.decode('utf-8')))", ['F40']),
     ('a move not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)                                # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding)                                # written first", ['F38']),
 ]
 

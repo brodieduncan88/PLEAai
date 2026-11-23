@@ -2198,7 +2198,49 @@ def f39():
     return checks, e
 
 
-TESTS = {'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35, 'F36': f36, 'F37': f37, 'F38': f38, 'F39': f39}
+def f40():
+    """Amendment 20 (F-2; the owner's decision of 23 November 2026).  The front door and its command line read a design as the offline checker reads a released one: a number a binary float cannot hold as written, and a repeated key, are refused before anything happens, so a design is decided as it was sent."""
+    r = Run('F40'); e = {}
+    try:
+        def body(text: str) -> bytes:
+            return ('{"design": {"material": "PPS-GF40", "wall_mm": ' + text + ', "mode": "normal"}}').encode()
+        too_fine = ['2.9999999999999999', '3.0000000000000001', '1.9999999999999999', '4.0000000000000004', '2.50000000000000000001']
+        refused = {t: raw(r.job, 'POST', '/submit', body(t)) for t in too_fine}
+        repeated = raw(r.job, 'POST', '/submit', b'{"design": {"material": "PA66-GF30", "material": "PPS-GF40", "wall_mm": 3, "mode": "normal"}}')
+        folder = pathlib.Path(r.job).parent
+
+        def by_file(name: str, text: str):
+            f = folder / name; f.write_text(text)
+            out = subprocess.run([PY, '-B', str(deploy_front.HERE / 'front_client.py'), '--job-dir', str(r.job), 'submit', str(f)], capture_output=True, text=True, timeout=180, env=deploy_front.CLEAN_ENV)
+            return out.returncode, out.stdout + out.stderr
+        files = {'a number a binary float reads as 2.0': by_file('f40_a.json', '{"material": "PPS-GF40", "wall_mm": 1.9999999999999999, "mode": "normal"}'),
+                 'a repeated key': by_file('f40_b.json', '{"material": "PA66-GF30", "material": "PPS-GF40", "wall_mm": 3, "mode": "normal"}')}
+        after_refused = (r.calls(), r.audit_rows(), r.notices())
+        kept = ['2.5', '3.0', '2.9999999999999996', '3.5e0']
+        decided = {t: raw(r.job, 'POST', '/submit', body(t)) for t in kept}
+
+        def short(answer):
+            st, p = answer
+            v = p.get('verdict') if isinstance(p.get('verdict'), dict) else {}
+            return (st, p.get('outcome'), v.get('reason_code'))
+        pretty = by_file('f40_c.json', '{\n  "material": "PPS-GF40",\n  "wall_mm": 3.25,\n  "mode": "normal"\n}\n')
+        ok, why, s = r.checked(design=GOOD)
+        e.update(refused={t: (st, p.get('refused')) for t, (st, p) in refused.items()}, repeated=(repeated[0], repeated[1].get('refused')), files={k: (c, head(o)[:100]) for k, (c, o) in files.items()},
+                 after_refused=after_refused, decided={t: short(a) for t, a in decided.items()}, pretty=(pretty[0], head(pretty[1])[:100]), record_verifies=ok, why=why, official_runs=s.get('official_runs'))
+        checks = {'five numbers that a binary float holds as another (1.9999999999999999, 3.0000000000000001 and three more) and a repeated key are each refused (400)':
+                      len(refused) == 5 and all(st == 400 and p.get('refused') == 'BAD_REQUEST' for st, p in refused.values()) and repeated[0] == 400 and repeated[1].get('refused') == 'BAD_REQUEST',
+                  'by the command line, a file holding such a number and a file holding a repeated key are refused as they are in the file (exit 4, REFUSED), and nothing was run, no audit row, no notice':
+                      all(c == 4 and 'REFUSED' in o for c, o in files.values()) and after_refused == (0, 0, 0),
+                  'four numbers that a binary float holds as written (2.5, 3.0, 2.9999999999999996, 3.5e0) are decided, each a signed PASS':
+                      len(decided) == 4 and all(short(a) == (200, 'PASS', 'MET') for a in decided.values()),
+                  'a design file written over several lines is sent as it is and decided (exit 0)': pretty[0] == 0,
+                  'the record verifies: five official runs': ok and s.get('official_runs') == 5}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'F3': f3, 'F4': f4, 'F5': f5, 'F6': f6, 'F7': f7, 'F8': f8, 'F9': f9, 'F10': f10, 'F11': f11, 'F12': f12, 'F13': f13, 'F14': f14, 'F15': f15, 'F16': f16, 'F17': f17, 'F18': f18, 'F19': f19, 'F20': f20, 'F21': f21, 'F22': f22, 'F23': f23, 'F24': f24, 'F25': f25, 'F26': f26, 'F27': f27, 'F28': f28, 'F29': f29, 'F30': f30, 'F31': f31, 'F32': f32, 'F33': f33, 'F34': f34, 'F35': f35, 'F36': f36, 'F37': f37, 'F38': f38, 'F39': f39, 'F40': f40}
 
 
 def main():

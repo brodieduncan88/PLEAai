@@ -3644,7 +3644,116 @@ def r35():
     return checks, e
 
 
-TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31, 'R32': r32, 'R33': r33, 'R34': r34, 'R35': r35}
+D20_CLI_RELEASES = [  # Amendment 20 (F-2): (label, a released design file as written, exit status expected of check_record.py --design)
+    ('the design as it was run', '{"material": "PPS-GF40", "wall_mm": 2.5, "mode": "normal"}', 0),
+    ('a number a binary float reads as the one that was run (2.5000000000000001)', '{"material": "PPS-GF40", "wall_mm": 2.5000000000000001, "mode": "normal"}', 2),
+    ('a repeated key', '{"material": "PA66-GF30", "material": "PPS-GF40", "wall_mm": 2.5, "mode": "normal"}', 2),
+    ('a number that underflows to zero (1e-400)', '{"material": "PPS-GF40", "wall_mm": 1e-400, "mode": "normal"}', 2),
+    ('negative zero', '{"material": "PPS-GF40", "wall_mm": -0.0, "mode": "normal"}', 2),
+    ('NaN', '{"material": "PPS-GF40", "wall_mm": NaN, "mode": "normal"}', 2),
+    ('Infinity', '{"material": "PPS-GF40", "wall_mm": Infinity, "mode": "normal"}', 2),
+]
+
+
+def r36():
+    """Amendment 20 (the owner's decisions of 23 November 2026; external-review findings F-1, F-2 offline, F-4, F-9).  A card's bounds are read as decimals, and are written as text; a released design file is read as strictly as the front door reads a design; no value is written '-0' or quoted whole in a reason; and a verdict whose design is another than the one sent, though equal as Python values, is rejected."""
+    import copy, decimal, hashlib, types
+    r = Run('R36'); e = {}
+    try:
+        os.environ['VERIFY_HOME'] = str(OUT / 'R36' / 'tools_home')
+        try:
+            import verify_tools
+        finally:
+            del os.environ['VERIFY_HOME']
+        D = decimal.Decimal
+        GE = json.loads((CASE / 'card.json').read_text()); GE['check']['sha256'] = B.sha256_hex((CASE / GE['check']['file']).read_bytes())
+        for i in GE['inputs']:
+            i['sha256'] = B.sha256_hex((CASE / i['file']).read_bytes())
+        design = {'material': 'PPS-GF40', 'wall_mm': 3, 'mode': 'normal'}
+        kept = B.sandbox.run
+
+        def decide(card, token):
+            out = '{"achieved": {"service_temperature": %s}, "basis": "the test"}' % token
+            B.sandbox.run = lambda files, script, stdin, timeout=30.0, _o=out, **kw: types.SimpleNamespace(state='RAN', returncode=0, stdout=_o.encode(), stderr=b'', detail='')
+            try:
+                return verify_tools._decide(CASE, card, design)
+            finally:
+                B.sandbox.run = kept
+        # 1. F-1: a bound written as a number is read as the decimal it says, by the service and by the record's checker (the card's own rule, below, refuses to baseline one)
+        fl = copy.deepcopy(GE); fl['criteria'][0].update(comparison='<=', limit='1.0', plausible={'min': 0.3, 'max': 5})
+        low, mid = decide(fl, '0.29999999999999999'), decide(fl, '0.5')
+        forged = copy.deepcopy(mid); fc = forged['criteria'][0]; fc['achieved'] = '0.29999999999999999'; fc['margin'] = check_record.text(D('1.0') - D('0.29999999999999999'))
+        space = {'design_space': {'x': {'min': 1e23, 'max': 2e23}, 'w': {'min': 0.1, 'max': 0.3}}}
+        below, at_lo, at_hi = {'x': 99999999999999995000000, 'w': 0.2}, {'x': 10 ** 23, 'w': 0.1}, {'x': 2 * 10 ** 23, 'w': 0.3}
+        seen = {'service_below': B.in_design_space(space, below)[0], 'checker_below': check_record.in_design_space(space, below),
+                'service_edges': (B.in_design_space(space, at_lo)[0], B.in_design_space(space, at_hi)[0]), 'checker_edges': (check_record.in_design_space(space, at_lo), check_record.in_design_space(space, at_hi))}
+        # 2. the card's rule: bounds are text
+        draftcard = draft()
+
+        def refusal(fn):
+            c = copy.deepcopy(draftcard); fn(c)
+            try:
+                B.validate_card(c); return None
+            except Exception as exc:
+                return str(exc)
+
+        def put(path, value):
+            def f(c):
+                x = c
+                for k in path[:-1]:
+                    x = x[k]
+                x[path[-1]] = value
+            return f
+        numeric = {'a plausible minimum as a float': refusal(put(('criteria', 0, 'plausible', 'min'), 20.0)), 'a plausible maximum as a whole number': refusal(put(('criteria', 0, 'plausible', 'max'), 1000)),
+                   'a design-space minimum as a whole number': refusal(put(('design_space', 'wall_mm', 'min'), 2)), 'a design-space maximum as a float': refusal(put(('design_space', 'wall_mm', 'max'), 4.0))}
+        card_ok = refusal(lambda c: None)
+        # 3. F-4
+        zero = (B.text(D('-1e-1000050')), check_record.text(D('-1e-1000050')))
+        long_text = decide(GE, '"' + 'x' * 500000 + '"')
+        # 4. F-2, offline: a released design file
+        r.submit({'material': 'PPS-GF40', 'wall_mm': 2.5, 'mode': 'normal'}); r.submit(GOOD)
+        record = r.record(); honest = check_record.verify(record, r.s.keys)[0]
+        work = OUT / 'R36'; rec_path = work / 'record.json'; keys_path = work / 'keys.json'
+        rec_path.write_text(json.dumps(record)); keys_path.write_text(json.dumps(r.s.keys))
+        cli = {}
+        for i, (label, text, want) in enumerate(D20_CLI_RELEASES):
+            f = work / f'release_{i}.json'; f.write_text(text)
+            p = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'check_record.py'), str(rec_path), '--keys', str(keys_path), '--design', str(f)], capture_output=True, text=True, timeout=120)
+            cli[label] = (p.returncode, want, 'meeting the declared check' in p.stdout)
+        # 5. F-9: a verdict for 3.0 where 3 was sent
+        forged_rec = json.loads(json.dumps(record))
+        att = next(a for a in forged_rec['attempts'] if (a.get('arguments') or {}).get('design') == GOOD)
+        res = att['result']; res['design'] = dict(res['design'], wall_mm=3.0); res['design_sha256'] = hashlib.sha256(canonical(res['design']).encode()).hexdigest()
+        digest = hashlib.sha256(canonical(res).encode()).hexdigest()
+        for item in att['evidence']:
+            ev = item['evidence']
+            if ev.get('claim') == 'EFFECT':
+                ev['result_digest'] = digest; ev['signature'] = r.s.gate._key.sign(check_record.evidence_message(ev)).hex()
+        body = {k: v for k, v in forged_rec.items() if k != 'signature'}
+        forged_rec = dict(body, signature={'signer': r.s.engineer.public_hex, 'signature': r.s.engineer.sign(canonical(body).encode())})
+        ok9, checks9, s9 = check_record.verify(forged_rec, r.s.keys)
+        failed9 = [f'{n} {t}: {d}' for n, t, good, d in checks9 if not good]
+        e.update(low=(low['verdict'], low['reason_code']), mid=(mid['verdict'], mid['reason_code']), forged_rederive=check_record.rederive(fl, forged, design), seen=seen, numeric=numeric, card_ok=card_ok, zero=zero,
+                 long_detail=len(long_text['detail']), long_size=len(B.canonical(long_text).encode()), long_reason=long_text['reason_code'], honest=honest, cli=cli, forged_design_verifies=ok9, failed9=failed9)
+        checks = {'a bound written as a number is read as the decimal it says: 0.29999999999999999 against a plausible minimum of 0.3 is UNKNOWN: RESULT_IMPLAUSIBLE, and the record\'s checker rejects a PASS that holds it':
+                      (low['verdict'], low['reason_code']) == ('UNKNOWN', 'RESULT_IMPLAUSIBLE') and (mid['verdict'], mid['reason_code']) == ('PASS', 'MET')
+                      and any('plausible' in x for x in check_record.rederive(fl, forged, design)),
+                  'by the service and by the checker alike, 99999999999999995000000 is outside a design space from 1e23 to 2e23, and the edges 1e23, 2e23, 0.1 and 0.3 are inside it':
+                      seen == {'service_below': False, 'checker_below': False, 'service_edges': (True, True), 'checker_edges': (True, True)},
+                  'a card whose plausible range or design-space range is written as numbers, not text, is refused at baselining\'s own rule, each naming that text is needed; the fixture\'s card, in text, is not':
+                      card_ok is None and all(v is not None and 'text' in v for v in numeric.values()) and len(numeric) == 4,
+                  'a value that underflows on writing is \'0\', never \'-0\', in the service and in the checker; a 500000-character answer where a number was due is UNKNOWN: CHECK_OUTPUT_INVALID with a reason of under 200 characters':
+                      zero == ('0', '0') and long_text['reason_code'] == 'CHECK_OUTPUT_INVALID' and len(long_text['detail']) < 200 and len(B.canonical(long_text).encode()) < 65536,
+                  'check_record.py --design: the design as it was run is shown as meeting the check (exit 0); a number a binary float reads as another, a repeated key, 1e-400, -0.0, NaN and Infinity are each refused (exit 2)':
+                      honest and all(c == w and (c != 0 or met) for c, w, met in cli.values()) and len(cli) == 7,
+                  'a verdict signed by the gate for 3.0 where 3 was sent fails, and only at the check that the verdict is for the design sent':
+                      not ok9 and len(failed9) == 1 and failed9[0].startswith('6 ') and 'another design' in failed9[0]}
+    finally:
+        r.stop()
+    return checks, e
+
+
+TESTS = {'R1': r1, 'R2': r2, 'R3': r3, 'R4': r4, 'R5': r5, 'R6': r6, 'R7': r7, 'R8': r8, 'R9': r9, 'R10': r10, 'R11': r11, 'R12': r12, 'R13': r13, 'R14': r14, 'R15': r15, 'R16': r16, 'R17': r17, 'R18': r18, 'R19': r19, 'R20': r20, 'R21': r21, 'R22': r22, 'R23': r23, 'R24': r24, 'R25': r25, 'R26': r26, 'R27': r27, 'R28': r28, 'R29': r29, 'R30': r30, 'R31': r31, 'R32': r32, 'R33': r33, 'R34': r34, 'R35': r35, 'R36': r36}
 
 
 def main():
