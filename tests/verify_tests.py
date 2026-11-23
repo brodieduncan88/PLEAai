@@ -2073,6 +2073,10 @@ def r25():
         def cli(*args):
             p = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'check_record.py'), *map(str, args)], capture_output=True, text=True, timeout=120)
             return p.returncode, [l.split('.')[0] for l in p.stdout.splitlines() if l.startswith('CURRENCY')], p.stdout
+        def nonce_arg(n):
+            # Amendment 21 (T-1): the nonce is random base64url, so about one in 64 begins with a dash; as two arguments argparse takes it for an option
+            return [f'--nonce={n}']
+
         def keeper(*args):
             p = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'checkpoints.py'), *map(str, args)], capture_output=True, text=True, timeout=120)
             return p.returncode, p.stdout.strip(), p.stderr.strip()
@@ -2177,7 +2181,8 @@ def r25():
         log3.write_text(json.dumps(signed(root=root, seq=top + 8, head='1' * 64, **when)) + '\n')           # a keeper that was once told of a longer chain
         shorter = keeper('fetch', '--witness-url', url, *keeper_tls, '--root', root, '--log', log3, '--witness-key', wk)
         aside3 = [json.loads(l) for l in (here / 'keeper3' / 'log.jsonl.refused.jsonl').read_text().splitlines()] if (here / 'keeper3' / 'log.jsonl.refused.jsonl').exists() else []
-        rec3 = r.record(); cli_closed = cli(save('rec3.json', rec3), '--keys', keys, '--checkpoint', here / 'cp_cli.json', '--nonce', j1.get('nonce') or '', '--max-age', '600')
+        cli_dash = cli(f_rec1, '--keys', keys, '--checkpoint', f_cp1, *nonce_arg('-FixedLeadingDash0123456'), '--max-age', '600')       # Amendment 21 (T-1): a nonce that begins with a dash, always
+        rec3 = r.record(); cli_closed = cli(save('rec3.json', rec3), '--keys', keys, '--checkpoint', here / 'cp_cli.json', *nonce_arg(j1.get('nonce') or ''), '--max-age', '600')
         keyfile = here / 'engineer.key'; keyfile.write_text(s.engineer.private_hex + '\n')
         console = subprocess.run([PY, '-B', str(GATEWAY / 'verify' / 'verify_ctl.py'), 'record', str(s.home), r.h, '--key', str(keyfile), '--witness-key', wk, '--gate-key', s.keys['gate'],
                                   '--journal', str(r.journal()), '--out', str(here / 'rec_console.json'), '--witness-url', url, '--tls-ca', s.pki['ca'],
@@ -2186,7 +2191,7 @@ def r25():
         console_ok = bool(rec_c) and check_record.verify(rec_c, s.keys)[0] and (rec_c.get('checkpoint') or {}).get('at') == rec_c['as_of']['seq']
         e.update(cp0={k: cp0.get(k) for k in ('seq', 'business', 'witness', 'nonce', 'at')}, reads=(before, after_reads), checks1=next(((n, t, g) for n, t, g, _ in checks1 if n == 9), None), bare=next(((n, t, g) for n, t, g, _ in checksb if n == 9), None),
                  summary=sum1.get('checkpoint'), at_the_time={k: v[0] for k, v in at_the_time.items()}, states={k: v[0] for k, v in states.items()}, sentences={k: v[1][:130] for k, v in states.items()},
-                 cli=(cli_current[:2], cli_none[:2], cli_old[:2], cli_closed[:2]), cli_misuse=cli_misuse, cli_bad=cli_bad, cli_stale=cli_stale,
+                 cli=(cli_current[:2], cli_none[:2], cli_old[:2], cli_closed[:2]), cli_dash=cli_dash[:2], cli_misuse=cli_misuse, cli_bad=cli_bad, cli_stale=cli_stale,
                  inside=inside, old_state=old_state, kept=kept, turned=turned, lines=lines, evidence=evidence, clean=clean, dirty=dirty, witness_says=witness_says, no_cert=no_cert, plain_http=plain_http,
                  chain=(chain_before, chain_after), keeper=(first, second, third, fourth), torn_audit=torn_audit, audited=audited, shorter=shorter, aside3=[(c.get('seq'), c.get('at')) for c in aside3], console=(console.returncode, console.stderr[:200]))
         st = e['states']
@@ -2237,7 +2242,9 @@ def r25():
                   'a keeper whose log holds a longer chain than the witness now has is told of a rollback: the command exits 1, and the witness\'s signed checkpoint of the shorter chain is put aside as the evidence':
                       shorter[0] == 1 and 'ROLLBACK' in shorter[2] and len(aside3) == 1 and aside3[0].get('seq') == top and check_record.checkpoint_problems(aside3[0], wk, root) == [],
                   'the superseded baseline\'s record, built after the revision and checked against the keeper\'s first checkpoint with its nonce, is CURRENT; the command says the budget is no longer open, and exits 0; the engineer\'s console, given the witness\'s address, writes a record that carries a checkpoint and verifies':
-                      cli_closed[0] == 0 and cli_closed[1] == ['CURRENCY: CURRENT'] and 'it was superseded or closed' in cli_closed[2] and console.returncode == 0 and console_ok}
+                      cli_closed[0] == 0 and cli_closed[1] == ['CURRENCY: CURRENT'] and 'it was superseded or closed' in cli_closed[2] and console.returncode == 0 and console_ok,
+                  'a nonce that begins with a dash, handed to the command as --nonce=VALUE, is read as the nonce it is (the command ends with status 1 and a CURRENCY line: it is not the nonce the checkpoint signed back), never as a usage error (status 2)':
+                      cli_dash[0] == 1 and len(cli_dash[1]) == 1 and cli_dash[1][0].startswith('CURRENCY')}
     finally:
         r.stop()
     return checks, e

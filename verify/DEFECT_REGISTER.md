@@ -721,3 +721,30 @@ copy on the diagnostic branch is not changed.
   The results are in `verify/results_*_amended20_2026-11-23*`. Planted defects at `8f3bfb3`: 62 of 62 planted caught, 14 not
   planted; one was not caught at the first candidate.
 - No row of the earlier registers changes status; D20-F stays open.
+
+### G19. 23 November 2026: D20-F closed by the owner's decision, with its scope; two limits recorded as open
+
+- **D20-F is CLOSED, for one path: a check's printed numbers.** The owner decided on 23 November 2026 to close it, on condition that a
+  reviewer confirm that the original below-limit check output receives the correct verdict and that the signed record agrees. The
+  confirmation is `verify/reviews/D20F_CLOSURE_CONFIRMATION_2026-11-23.md` (an extract; **internal, not independent validation**). It
+  found that the original output (199.99999999999999 against at least 200) is FAIL, held as printed, and that the record's checker
+  agrees; a 42-row matrix and 228 adversarial printed numbers gave no false PASS; the decision path has no tolerance and no
+  decimal-to-float conversion. The correction is Option A (the signed-record contract is unchanged). Option B (exact tokens through
+  the whole record) is not implemented and is a separate product question.
+- **What the closure covers:** the path from a check's printed bytes to the signed verdict and its offline re-derivation. It does not
+  cover:
+  - **D20-G (new, medium; open): a design sent through the assistant-facing interface is read as plain JSON before PLEA's strict reader
+    sees it,** so a number a binary float rounds, and a repeated key, are accepted there although the front door and the
+    command-line client refuse them. The record is consistent about the design as decided. Amendment 22 is planned for it.
+  - **D20-H (new, medium; a limit): records signed before Amendment 19 still verify.** A record holds the written value and not the
+    check's printed bytes, so the corrected checker cannot tell a record signed at `2c1af26` or earlier from a correct one: the old
+    false-PASS record still verifies and still says PASS. How such records are to be treated is planned, not done.
+- No other row changes status.
+
+### G20. 23 November 2026: a historical exception for commits at or before `59de0dc`
+
+- Hygiene rules for this branch took effect on 23 November 2026 (no commit trailers, no model, vendor, tier or session identifiers in
+  commits, documents or recorded outputs; a neutral working directory for runs). Commits at or before `59de0dc` **are not rewritten**:
+  they keep their original commit trailers, some local working paths in their recorded outputs, and the text of earlier register
+  entries, so that the declared SHA-256 provenance and the commit hashes the declarations cite stay valid. Anything from this entry on is
+  subject to the new rules.

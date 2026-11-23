@@ -50,9 +50,9 @@ head. To ask whether a record is the latest, fetch a checkpoint yourself, with a
 checker:
 
     python3 checkpoints.py fetch --witness-url URL --ca CA --cert CERT --key KEY --root ROOT --witness-key HEX --out cp.json --log log.jsonl
-    python3 check_record.py record.json --keys keys.json --checkpoint cp.json --nonce NONCE --max-age 600
+    python3 check_record.py record.json --keys keys.json --checkpoint cp.json --nonce=NONCE --max-age 600
 
-`fetch` makes its own nonce and writes it in `cp.json`. The checker prints CURRENT, SUPERSEDED, SUPERSEDED_UNPROVEN,
+`fetch` makes its own nonce and writes it in `cp.json`. Write the nonce as `--nonce=NONCE`, not `--nonce NONCE`: a nonce is random base64url text, about one in 64 begins with a dash, and the command would then read it as an option and stop with a usage error (status 2). The checker prints CURRENT, SUPERSEDED, SUPERSEDED_UNPROVEN,
 FORKED, OLDER, STALE or INVALID, and exits 0 only for CURRENT. With no age given it allows an hour. CURRENT says only that the checkpoint was made within the age allowed and ends where the
 record does: a checkpoint handed over by someone else, not fetched with your own nonce, may be an old one replayed.
 The witness is still one party: a witness that lies the same way to everyone is not caught.

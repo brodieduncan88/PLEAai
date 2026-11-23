@@ -36,6 +36,8 @@ against the exact final candidate, the whole runner is run against Amendment 19'
 
 Amendment 19, R15 correction (23 November 2026): two are added.
 
+Amendment 21 (23 November 2026): one is added, against R25's own repair.
+
 Amendment 20 (23 November 2026): fifteen are added, against Amendment 20's candidate.
 
     amend17_mutants.py COMMIT WORKDIR PYTHON OUT.json [NAME ...]
@@ -144,6 +146,8 @@ MUTANTS = [
     ('Check 6 compares designs as Python values again', 'verify/check_record.py', "canonical(result['design']) != canonical(args['design']) or result.get('design_sha256') != sha(canonical(args['design']))", "result['design'] != args['design'] or result.get('design_sha256') != sha(canonical(args['design']))", ['R36']),
     ('the front door accepts a number a binary float rounds', 'verify/front_door.py', '        if not d.is_finite() or decimal.Decimal(repr(v)) != d:', '        if not d.is_finite():', ['F40']),
     ('the command line reads a design file as JSON and sends it again', 'verify/front_client.py', '            status, out = client.submit_raw(raw.strip())', "            status, out = client.submit(json.loads(raw.decode('utf-8')))", ['F40']),
+    # Amendment 21 (23 November 2026)
+    ('the test hands a nonce as a separate argument again', 'tests/verify_tests.py', "            return [f'--nonce={n}']", "            return ['--nonce', n]", ['R25']),
     ('a move not written when it cannot be recorded', 'verify/front_ctl.py', "    _write(home, binding)                                # written first", "    raise Unrecorded(binding, 'could not be recorded')\n    _write(home, binding)                                # written first", ['F38']),
 ]
 
