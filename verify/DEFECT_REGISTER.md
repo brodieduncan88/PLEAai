@@ -695,3 +695,29 @@ copy on the diagnostic branch is not changed.
 - **New, from an external AI review of `b97fe6b`, not yet fully verified** (report kept separately): F-1 (a card's float bounds are
   read as binary floats) and F-2 (a released design file is read non-strictly) were reproduced in process and are Amendment 20's;
   F-3 to F-11 are argued only. No row of the earlier registers changes status.
+
+### G17. 23 November 2026: Amendment 20 (from an external AI review of `b97fe6b`: F-1, F-2, F-4, F-9)
+
+- **F-1 (card bounds read as binary floats; a false PASS when a card carries float bounds): repaired in Amendment 20,
+  internally tested, NOT closed.** Reproduced in process before the repair (a value below a plausible minimum signed PASS; a
+  design outside a design space accepted), then by R36 on the earlier code. The card rule now requires text bounds.
+- **F-2 (a released design file read non-strictly; the front door and client round a number): repaired, internally tested, NOT
+  closed.** `check_record.py --design`, the front door and the command line refuse a number a binary float holds as another,
+  and a repeated key.
+- **F-4 (the part that is not a policy): `-0` and the unbounded reason repaired. `MAX_PLAIN` deferred.**
+- **F-9 (Check 6 compared designs as Python values): repaired, internally tested, NOT closed.**
+- **T-1 (new, low, a fault in a test): R25's last check fails about once in 64 runs,** when the witness's nonce begins with `-`.
+  Reproduced. Not repaired.
+- **Not verified, not changed:** the external review's F-3 (direct INSERT on `receipts`), F-5 (journal charged before the budget is
+  checked), F-6 (a refused checkpoint written before it is validated), F-7 (sandbox sweep on `/tmp`), F-8 (key files written
+  before chmod), F-10 (gate host fence report, no socket timeouts), F-11 (Stage B header validation). They are argued from the
+  code, not run.
+
+### G18. 23 November 2026: the official runs of Amendment 20
+
+- **Declared:** `verify/DECLARED_AMEND20.md`, at `a350d5b`. **Runs:** once each, to 05:00 UTC. Both came out as declared:
+  - the gate: 36 of 36 tests and 262 of 262 checks (R36 6 of 6);
+  - the front door: 38 of 38 tests and 219 of 219 checks (F40 5 of 5).
+  The results are in `verify/results_*_amended20_2026-11-23*`. Planted defects at `8f3bfb3`: 62 of 62 planted caught, 14 not
+  planted; one was not caught at the first candidate.
+- No row of the earlier registers changes status; D20-F stays open.
