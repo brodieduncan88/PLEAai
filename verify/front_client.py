@@ -49,11 +49,11 @@ class FrontClient:
         ctx.load_cert_chain(str(d / cfg['cert']), str(d / cfg['key']))
         self.ctx = ctx
 
-    def request(self, method: str, path: str, body=None) -> tuple[int, dict]:
+    def request(self, method: str, path: str, body=None, raw_body=None) -> tuple[int, dict]:
         """(HTTP status, the service's JSON answer).  One request; no retry."""
         conn = http.client.HTTPSConnection(self.host, self.port, context=self.ctx, timeout=self.timeout)
         try:
-            data = None if body is None else json.dumps(body).encode()
+            data = raw_body if raw_body is not None else (None if body is None else json.dumps(body).encode())
             conn.request(method, path, body=data, headers={'Content-Type': 'application/json'} if data is not None else {})
             r = conn.getresponse()
             raw = r.read(MAX_ANSWER + 1)
@@ -83,6 +83,11 @@ class FrontClient:
     def submit(self, design):
         return self.request('POST', '/submit', {'design': design})
 
+    def submit_raw(self, design_bytes: bytes):
+        """Amendment 20 (F-2).  The design as its file wrote it, not read and written again: reading a file as JSON would round a number
+        that a binary float cannot hold (1.9999999999999999 is 2.0) and keep the last of a repeated key, before the front door saw it."""
+        return self.request('POST', '/submit', raw_body=b'{"design":' + design_bytes + b'}')
+
 
 def unreachable_text(exc) -> str:
     return f'The verification service could not be reached ({exc}).  NOT VERIFIED.  If a design was sent, its run may be pending; ask for the status, or send the same design again.'
@@ -105,10 +110,11 @@ def main():
             if not a.design:
                 ap.error('submit needs a design file')
             try:
-                design = json.loads(pathlib.Path(a.design).read_text())
-            except (OSError, ValueError) as exc:
+                raw = pathlib.Path(a.design).read_bytes()
+                json.loads(raw.decode('utf-8'))                 # that it is JSON; what it says is the front door's to read
+            except (OSError, ValueError, RecursionError) as exc:
                 print(f'{a.design} could not be read as JSON: {exc}.  Nothing was submitted.'); sys.exit(4)
-            status, out = client.submit(design)
+            status, out = client.submit_raw(raw.strip())
     except Unreachable as exc:
         print(unreachable_text(exc)); sys.exit(4)
     print(out.get('text') or json.dumps(out))

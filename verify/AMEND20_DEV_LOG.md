@@ -47,3 +47,36 @@ now takes the card as it was baselined (the stored envelope's card). Nothing els
 loosened: the same four numeric refusals are asked for, and the baselined card, in text, is still asked to be accepted.
 R36 is run again on the uncorrected code with this change (expected: all six false, check 3 now for the right reason), and
 that run is kept beside the first.
+
+## Entry 3. The candidate, and what is declared of it before the full runs (23 November 2026)
+
+**R36 and F40 on the corrected code** (kept in `tests/amend20_dev_evidence/after_r36_f40/`): R36 6 of 6, F40 5 of 5; R15 and R35
+still pass. This is a first look, not the full run.
+
+**The change (the owner's decisions of 23 November 2026), `verify/` only:**
+- F-1: `baseline.py` and `check_record.py` read every card bound (a plausible range, a design-space range) with `dec()`, as a
+  decimal; a bound that is not a number fails closed. `validate_card` requires the plausible range and each numeric
+  design-space range to be written as text, as a criterion's limit already must be (the card rule; Patch 2 of the external
+  review's patches, re-made here by hand, not applied).
+- F-2: `check_record.py --design` reads the file with `load_design` (no repeated key, no NaN or Infinity, no negative zero, no
+  number a binary float holds as another); `front_door.parse_design` refuses the same numbers (400); `front_client.py submit`
+  sends the file's own bytes (`submit_raw`) so that it does not round them or collapse a repeated key before the front door
+  reads them. No new import in the client.
+- F-4, the part that is not a policy: `text()` never writes '-0' (both modules); the reason for a non-number is quoted by
+  `sent()`, which is bounded. **Not done: `MAX_PLAIN`.** A very small number inside a plausible range is still written in full.
+- F-9: Check 6 compares `canonical()` of the design in the verdict and in the arguments, so 3, 3.0 and True are three designs.
+- Not changed: `plea_gateway/`, `spike/`, `mcp/`, the plausible-range rule's meaning, and any earlier declaration or result.
+
+**Known limits stated before the runs.**
+- `plea_verify_mcp.py` receives a design already read as JSON by the host, and parses a tool call's arguments itself; the
+  rounding and repeated-key cases there are not changed (the host's own reading comes first).
+- A pretty-printed design file over the front door's 16 KiB body limit is now refused by the front door where it was
+  compacted by the client before; `submit_raw` forwards bytes.
+- The external review's F-3, F-5, F-6, F-7, F-8, F-10, F-11 are not in this amendment.
+
+**Declared of this candidate (the commit that adds this entry), before anything is run on it:**
+- the gate, 36 of 36 tests, 262 checks (Amendment 19's 256 and R36's 6);
+- the front door, 38 of 38 tests, 219 checks (214 and F40's 5);
+- the whole runner on this exact commit: 76 entries, 62 planted and 62 caught, 14 not planted (the same 14);
+- **no review of this candidate** by an agent: the owner's decision is to proceed and report the review of Amendment 19 as
+  incomplete; for this amendment none is made either, and none is claimed.

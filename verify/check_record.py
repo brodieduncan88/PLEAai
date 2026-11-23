@@ -119,7 +119,42 @@ def dec(value):
 
 
 def text(d) -> str:
-    return '0' if d == 0 else format(d.normalize(), 'f')
+    if d == 0:
+        return '0'
+    n = d.normalize()
+    return '0' if n == 0 else format(n, 'f')        # Amendment 20 (F-4), as baseline.text
+
+
+def load_design(raw: str):
+    """Amendment 20 (F-2).  A released design file read strictly: no repeated key, no NaN or Infinity, no negative zero, and no JSON
+    number that a binary float cannot hold exactly as written (the front door refuses the same numbers), so that the design hashed
+    is the design the file says."""
+    def pairs(items):
+        out = {}
+        for k, v in items:
+            if k in out:
+                raise ValueError('a key is repeated')
+            out[k] = v
+        return out
+
+    def number(token):
+        v = float(token)
+        if v != v or v in (float('inf'), float('-inf')):
+            raise ValueError('a number is not finite')
+        if repr(v) == '-0.0':
+            raise ValueError('negative zero is not allowed')
+        try:
+            d = D(token)
+        except (decimal.InvalidOperation, ValueError):
+            raise ValueError('a number cannot be read as a decimal') from None
+        if not d.is_finite() or D(repr(v)) != d:
+            raise ValueError('a number cannot be held as written by a binary float')
+        return v
+
+    def constant(name):
+        raise ValueError('NaN and Infinity are not JSON')
+
+    return json.loads(raw, object_pairs_hook=pairs, parse_float=number, parse_constant=constant)
 
 
 def chain_hash(prev_hash, row) -> str:
@@ -447,7 +482,8 @@ def in_design_space(card, design) -> bool:
                 return False
         else:
             d = dec(v)
-            if d is None or isinstance(v, str) or not D(rule['min']) <= d <= D(rule['max']):
+            lo, hi = dec(rule.get('min')), dec(rule.get('max'))          # Amendment 20 (F-1)
+            if d is None or isinstance(v, str) or lo is None or hi is None or not lo <= d <= hi:
                 return False
     return True
 
@@ -481,7 +517,8 @@ def outside_reason(space, design) -> str:
             d = dec(v)
             if d is None or isinstance(v, str):
                 return f'the value sent for {name} is not a number' + tail
-            if not D(rule['min']) <= d <= D(rule['max']):
+            lo, hi = dec(rule.get('min')), dec(rule.get('max'))          # Amendment 20 (F-1)
+            if lo is None or hi is None or not lo <= d <= hi:
                 shown = text(d) if len(text(d)) <= 24 else (written if short else None)
                 return (f'{name} = {shown}' if shown is not None else f'the value sent for {name}') + f' is outside the baselined range {rule["min"]} to {rule["max"]}' + tail
     return 'the record says the design is outside the baselined design space' + tail
@@ -552,7 +589,8 @@ def rederive(card, result, design, control: bool = False) -> list:
         value, limit = dec(c.get('achieved')), D(base['limit'])
         if value is None or not isinstance(c.get('achieved'), str):
             out.append(f'{base["id"]}: no achieved value'); all_met = False; continue
-        if not D(base['plausible']['min']) <= value <= D(base['plausible']['max']):
+        lo, hi = dec((base.get('plausible') or {}).get('min')), dec((base.get('plausible') or {}).get('max'))          # Amendment 20 (F-1)
+        if lo is None or hi is None or not lo <= value <= hi:
             out.append(f'{base["id"]}: achieved {c["achieved"]} is outside the plausible range and should have been UNKNOWN')
         met = value <= limit if base['comparison'] == '<=' else value >= limit
         margin = text(limit - value) if base['comparison'] == '<=' else text(value - limit)
@@ -719,7 +757,7 @@ def verify(record: dict, keys: dict | None = None, design=None) -> tuple[bool, l
                     bad(6, f'{aid}: the verdict does not hash to the digest the gate signed')
                 if result.get('format') != VERDICT_FORMAT or result.get('baseline_sha256') != b_hash:
                     bad(6, f'{aid}: the verdict is for another baseline')
-                if result.get('design') != args.get('design') or result.get('design_sha256') != sha(canonical(result.get('design'))):
+                if 'design' not in result or 'design' not in args or canonical(result['design']) != canonical(args['design']) or result.get('design_sha256') != sha(canonical(args['design'])):      # Amendment 20 (F-9): 1, 1.0 and True are three designs
                     bad(6, f'{aid}: the verdict is for another design than the one sent')
                 if result.get('reason_code') == 'BASELINE_MISMATCH' and result.get('check') is None:
                     # the service held no usable baseline for this request (the stored card was changed, or signed by someone else): no card was used
@@ -910,8 +948,11 @@ def main():
         ap.error('--courier-key and --mailbox-key go with the other keys given separately (--keys, or the three --*-key)')
     design = None
     if a.design:
-        with open(a.design) as f:
-            design = json.load(f)
+        try:
+            with open(a.design, encoding='utf-8') as f:
+                design = load_design(f.read())                    # Amendment 20 (F-2)
+        except (OSError, ValueError, UnicodeDecodeError, RecursionError) as exc:
+            ap.error(f'the design file cannot be read ({exc})')
     ok, checks, s = verify(record, keys, design)
     current = None
     if a.checkpoint is None and (a.max_age is not None or a.nonce is not None):

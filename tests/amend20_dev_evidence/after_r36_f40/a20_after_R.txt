@@ -1,0 +1,4 @@
+R36  PASS  Amendment 20 (the owner's decisions of 23 November 2026; external-review findings F-1, F-2 offline, F-4, F-9).  A card's bounds are read as decimals, and are written as text; a released design file is read as strictly as the front door reads a design; no value is written '-0' or quoted whole in a reason; and a verdict whose design is another than the one sent, though equal as Python values, is rejected.
+R15  PASS  Whatever a baselined check prints, the answer is a signed verdict that can be kept and checked again, and a notice: never an interrupted run, never a record left unable to verify.
+R35  PASS  Amendment 19 (D20-F).  A number the check prints is decided as printed: a value on the wrong side of a limit by less than a binary float can tell apart is never signed PASS, and a record that verifies offline holds the value as the check printed it.
+VERIFY RESULT: PASS (3 of 3)

@@ -48,6 +48,7 @@ to the gate and is an official run with a signed verdict, as before.
 """
 import argparse
 import collections
+import decimal
 import hashlib
 import json
 import os
@@ -181,6 +182,14 @@ def parse_design(raw: bytes):
         # the baseline could not verify again.  Such a number is refused here, before anything is run or recorded.
         if abs(v) >= 1e16 or repr(v) == '-0.0':
             raise BadRequest('a number cannot be kept as written: with a decimal point or an exponent its size must be below 1e16, and it must not be negative zero')
+        # Amendment 20 (F-2): nor one a binary float holds as a different number (1.9999999999999999 is read as 2.0 and would be decided as 2), the
+        # same rule check_record.load_design applies to a released design.
+        try:
+            d = decimal.Decimal(text)
+        except (decimal.InvalidOperation, ValueError):
+            raise BadRequest('a number cannot be read as a decimal') from None
+        if not d.is_finite() or decimal.Decimal(repr(v)) != d:
+            raise BadRequest('a number cannot be kept as written: a binary float holds it as a different number')
         return v
 
     def constant(name):

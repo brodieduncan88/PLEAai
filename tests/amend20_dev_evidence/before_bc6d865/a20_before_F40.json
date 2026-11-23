@@ -1,0 +1,92 @@
+{
+ "tests": {
+  "F40": {
+   "title": "Amendment 20 (F-2; the owner's decision of 23 November 2026).  The front door and its command line read a design as the offline checker reads a released one: a number a binary float cannot hold as written, and a repeated key, are refused before anything happens, so a design is decided as it was sent.",
+   "ok": false,
+   "checks": {
+    "five numbers that a binary float holds as another (1.9999999999999999, 3.0000000000000001 and three more) and a repeated key are each refused (400)": false,
+    "by the command line, a file holding such a number and a file holding a repeated key are refused as they are in the file (exit 4, REFUSED), and nothing was run, no audit row, no notice": false,
+    "four numbers that a binary float holds as written (2.5, 3.0, 2.9999999999999996, 3.5e0) are decided, each a signed PASS": true,
+    "a design file written over several lines is sent as it is and decided (exit 0)": true,
+    "the record verifies: five official runs": false
+   },
+   "evidence": {
+    "refused": {
+     "2.9999999999999999": [
+      200,
+      null
+     ],
+     "3.0000000000000001": [
+      200,
+      null
+     ],
+     "1.9999999999999999": [
+      200,
+      null
+     ],
+     "4.0000000000000004": [
+      200,
+      null
+     ],
+     "2.50000000000000000001": [
+      200,
+      null
+     ]
+    },
+    "repeated": [
+     400,
+     "BAD_REQUEST"
+    ],
+    "files": {
+     "a number a binary float reads as 2.0": [
+      0,
+      "DECLARED CHECK MET"
+     ],
+     "a repeated key": [
+      0,
+      "DECLARED CHECK MET"
+     ]
+    },
+    "after_refused": [
+     5,
+     40,
+     0
+    ],
+    "decided": {
+     "2.5": [
+      200,
+      "PASS",
+      "MET"
+     ],
+     "3.0": [
+      200,
+      "PASS",
+      "MET"
+     ],
+     "2.9999999999999996": [
+      200,
+      "PASS",
+      "MET"
+     ],
+     "3.5e0": [
+      200,
+      "PASS",
+      "MET"
+     ]
+    },
+    "pretty": [
+     0,
+     "DECLARED CHECK MET"
+    ],
+    "record_verifies": true,
+    "why": [],
+    "official_runs": 8
+   },
+   "seconds": 7.3
+  }
+ },
+ "passed": 0,
+ "of": 1,
+ "seconds": 7.3,
+ "PASS": false
+}

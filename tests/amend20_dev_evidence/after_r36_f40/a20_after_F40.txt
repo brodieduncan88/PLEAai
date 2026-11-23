@@ -1,0 +1,2 @@
+F40  PASS  Amendment 20 (F-2; the owner's decision of 23 November 2026).  The front door and its command line read a design as the offline checker reads a released one: a number a binary float cannot hold as written, and a repeated key, are refused before anything happens, so a design is decided as it was sent.
+FRONT RESULT: PASS (1 of 1)

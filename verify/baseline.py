@@ -110,8 +110,8 @@ def text(d) -> str:
     """A decimal as plain text: no exponent, no trailing zeros."""
     if d == 0:
         return '0'
-    s = format(d.normalize(), 'f')
-    return s
+    n = d.normalize()
+    return '0' if n == 0 else format(n, 'f')        # Amendment 20 (F-4): a non-zero value that underflows on normalising is not written '-0'
 
 
 # ---------------------------------------------------------------------------------------------------- what a sender supplied, shown to a person
@@ -238,7 +238,8 @@ def validate_card(card: dict) -> None:
         need(dec(c.get('limit')) is not None and isinstance(c['limit'], str), f'criterion {c["id"]}: limit must be a number written as text')
         p = c.get('plausible') or {}
         lo, hi = dec(p.get('min')), dec(p.get('max'))
-        need(lo is not None and hi is not None and lo < hi, f'criterion {c["id"]}: a plausible range (min < max) is needed, so that zero or a unit slip is not read as a result')
+        need(isinstance(p.get('min'), str) and isinstance(p.get('max'), str) and lo is not None and hi is not None and lo < hi,
+             f'criterion {c["id"]}: a plausible range (min < max) written as text is needed, so that zero or a unit slip is not read as a result')      # Amendment 20 (F-1): text, as the limit is
     need(isinstance(card.get('load_case'), str) and card['load_case'].strip(), 'load_case is needed')
     space = card.get('design_space')
     need(isinstance(space, dict) and space, 'design_space needs at least one parameter')
@@ -248,7 +249,8 @@ def validate_card(card: dict) -> None:
                  f'design_space.{name}: choice must be a list of names or whole numbers')
         else:
             lo, hi = dec(rule.get('min')), dec(rule.get('max'))
-            need(lo is not None and hi is not None and lo <= hi, f'design_space.{name}: needs "choice" or numeric "min" and "max"')
+            need(isinstance(rule.get('min'), str) and isinstance(rule.get('max'), str) and lo is not None and hi is not None and lo <= hi,
+                 f'design_space.{name}: needs "choice" or "min" and "max" written as text')      # Amendment 20 (F-1)
     chk = card.get('check') or {}
     for k in ('id', 'version', 'file', 'sha256', 'author', 'reviewed_by'):
         need(isinstance(chk.get(k), str) and chk[k].strip(), f'check.{k} is needed')
@@ -298,7 +300,8 @@ def in_design_space(card: dict, design) -> tuple[bool, str]:
             d = dec(v)
             if d is None or isinstance(v, str):
                 return False, f'the value sent for {name} is not a number'
-            if not D(rule['min']) <= d <= D(rule['max']):
+            lo, hi = dec(rule.get('min')), dec(rule.get('max'))          # Amendment 20 (F-1): a bound is read by dec(), as a decimal, never D(float)
+            if lo is None or hi is None or not lo <= d <= hi:
                 shown = text(d) if len(text(d)) <= SENT_NUMBER else (_digits(v) if _plain_number(v) else None)     # as before when that is short; else as it was written; else not at all
                 return False, (f'{name} = {shown}' if shown is not None else f'the value sent for {name}') + f' is outside the baselined range {rule["min"]} to {rule["max"]}'
     return True, ''
@@ -368,12 +371,13 @@ def evaluate(directory, card: dict, design, control: bool = False) -> dict:
     for c in card['criteria']:
         value = dec(achieved.get(c['id']))
         if value is None:
-            return _verdict(card, design, 'CHECK_OUTPUT_INVALID', _blank(card), basis[:400], f'the check gave no finite number for {c["id"]} (got {achieved.get(c["id"])!r})')
+            return _verdict(card, design, 'CHECK_OUTPUT_INVALID', _blank(card), basis[:400], f'the check gave no finite number for {c["id"]} (got {sent(achieved.get(c["id"]))})')      # Amendment 20 (F-4): bounded, as a sender's words are
         if value != 0 and value.adjusted() > decimal.DefaultContext.Emax:
             # Amendment 19 (R15): a number whose exponent is beyond what the decimal context can write is answered as before Amendment 19
             # (CHECK_ERROR: the check did not run to a result), from the constant default, not from a context that code may have changed.
             return _verdict(card, design, 'CHECK_ERROR', _blank(card), detail=f'the check printed a number for {c["id"]} whose exponent is beyond the limit of the decimal context')
-        if not D(c['plausible']['min']) <= value <= D(c['plausible']['max']):
+        lo, hi = dec(c['plausible'].get('min')), dec(c['plausible'].get('max'))          # Amendment 20 (F-1)
+        if lo is None or hi is None or not lo <= value <= hi:
             return _verdict(card, design, 'RESULT_IMPLAUSIBLE', _blank(card), basis[:400],
                             f'{c["id"]} = {_shown(value)} {c["units"]} is outside the plausible range {c["plausible"]["min"]} to {c["plausible"]["max"]} declared at baseline')
         met, margin = compare(c, value)

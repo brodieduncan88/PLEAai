@@ -1,0 +1,98 @@
+{
+ "tests": {
+  "R36": {
+   "title": "Amendment 20 (the owner's decisions of 23 November 2026; external-review findings F-1, F-2 offline, F-4, F-9).  A card's bounds are read as decimals, and are written as text; a released design file is read as strictly as the front door reads a design; no value is written '-0' or quoted whole in a reason; and a verdict whose design is another than the one sent, though equal as Python values, is rejected.",
+   "ok": false,
+   "checks": {
+    "a bound written as a number is read as the decimal it says: 0.29999999999999999 against a plausible minimum of 0.3 is UNKNOWN: RESULT_IMPLAUSIBLE, and the record's checker rejects a PASS that holds it": false,
+    "by the service and by the checker alike, 99999999999999995000000 is outside a design space from 1e23 to 2e23, and the edges 1e23, 2e23, 0.1 and 0.3 are inside it": false,
+    "a card whose plausible range or design-space range is written as numbers, not text, is refused at baselining's own rule, each naming that text is needed; the fixture's card, in text, is not": false,
+    "a value that underflows on writing is '0', never '-0', in the service and in the checker; a 500000-character answer where a number was due is UNKNOWN: CHECK_OUTPUT_INVALID with a reason of under 200 characters": false,
+    "check_record.py --design: the design as it was run is shown as meeting the check (exit 0); a number a binary float reads as another, a repeated key, 1e-400, -0.0, NaN and Infinity are each refused (exit 2)": false,
+    "a verdict signed by the gate for 3.0 where 3 was sent fails, and only at the check that the verdict is for the design sent": false
+   },
+   "evidence": {
+    "low": [
+     "PASS",
+     "MET"
+    ],
+    "mid": [
+     "PASS",
+     "MET"
+    ],
+    "forged_rederive": [],
+    "seen": {
+     "service_below": true,
+     "checker_below": true,
+     "service_edges": [
+      false,
+      false
+     ],
+     "checker_edges": [
+      false,
+      false
+     ]
+    },
+    "numeric": {
+     "a plausible minimum as a float": "format must be verification-baseline/1",
+     "a plausible maximum as a whole number": "format must be verification-baseline/1",
+     "a design-space minimum as a whole number": "format must be verification-baseline/1",
+     "a design-space maximum as a float": "format must be verification-baseline/1"
+    },
+    "card_ok": "format must be verification-baseline/1",
+    "zero": [
+     "-0",
+     "-0"
+    ],
+    "long_detail": 500064,
+    "long_size": 500758,
+    "long_reason": "CHECK_OUTPUT_INVALID",
+    "honest": true,
+    "cli": {
+     "the design as it was run": [
+      0,
+      0,
+      true
+     ],
+     "a number a binary float reads as the one that was run (2.5000000000000001)": [
+      0,
+      2,
+      true
+     ],
+     "a repeated key": [
+      0,
+      2,
+      true
+     ],
+     "a number that underflows to zero (1e-400)": [
+      0,
+      2,
+      false
+     ],
+     "negative zero": [
+      0,
+      2,
+      false
+     ],
+     "NaN": [
+      0,
+      2,
+      false
+     ],
+     "Infinity": [
+      0,
+      2,
+      false
+     ]
+    },
+    "forged_design_verifies": true,
+    "failed9": []
+   },
+   "seconds": 4.4
+  }
+ },
+ "passed": 0,
+ "of": 1,
+ "seconds": 4.4,
+ "PASS": false
+}
