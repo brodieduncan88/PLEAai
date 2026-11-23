@@ -743,7 +743,7 @@ copy on the diagnostic branch is not changed.
 
 ### G20. 23 November 2026: a historical exception for commits at or before `59de0dc`
 
-- Hygiene rules for this branch took effect on 23 November 2026 (no commit trailers, no model, vendor, tier or session identifiers in
+- Hygiene rules for this branch took effect on 23 November 2026 (no commit trailers, no identifiers of the tools or services that helped in
   commits, documents or recorded outputs; a neutral working directory for runs). Commits at or before `59de0dc` **are not rewritten**:
   they keep their original commit trailers, some local working paths in their recorded outputs, and the text of earlier register
   entries, so that the declared SHA-256 provenance and the commit hashes the declarations cite stay valid. Anything from this entry on is

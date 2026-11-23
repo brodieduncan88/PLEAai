@@ -26,6 +26,6 @@ Status words: **repaired** means changed and tested internally by the author, an
 "yes, conditionally", through F-1 and F-2. The author's own reproduction agrees, and both are repaired as above. For cards whose bounds
 are written as text (every fixture in the repository), the reviewer found no way to such a PASS.
 
-**What the reviewer did not do:** run any test suite, service or database. **What the author has not done:** verify the open findings, or
+**What the reviewer did not do:** run any test suite or service. **What the author has not done:** verify the open findings, or
 ask a second reviewer to confirm the repairs. D20-F (a related defect, in the reading of a check's printed numbers) is separate and is
 dealt with in Amendments 19 and 20.

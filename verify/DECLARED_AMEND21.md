@@ -18,7 +18,7 @@ read as an option, a false failure). `verify/AMEND21_DEV_LOG.md` entry 1.
 - Documents: `verify/AMEND21_DEV_LOG.md`, `verify/DEFECT_REGISTER.md` (G19, G20), `verify/reviews/EXTERNAL_REVIEW_B97FE6B_SUMMARY_2026-11-23.md`,
   `verify/reviews/D20F_CLOSURE_CONFIRMATION_2026-11-23.md`.
 
-No code under `verify/` other than the readme is changed; `plea_gateway/`, `mcp/` and `spike/` are unchanged.
+No code other than the readme is changed.
 
 ## The changed files
 
@@ -43,8 +43,7 @@ No code under `verify/` other than the readme is changed; `plea_gateway/`, `mcp/
 
 ## Commands and conditions
 
-As Amendment 17's declaration states them: as root; PostgreSQL 16 on 127.0.0.1; `fs.file-max` 33617920; `verify/sandbox.py
---prerequisites` ending with status 0. **The working tree, the interpreter and the working directories are under `/tmp/plea-verify/`**,
+As Amendment 17's declaration states them: as root; PostgreSQL 16 on 127.0.0.1; `fs.file-max` 33617920; the sandbox prerequisites check ending with status 0. **The working tree, the interpreter and the working directories are under `/tmp/plea-verify/`**,
 so that no personal or tool path enters the recorded outputs. Each suite runs once, in this order:
 
     cd tests && <interpreter> -B verify_tests.py

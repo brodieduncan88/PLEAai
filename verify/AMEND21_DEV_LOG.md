@@ -15,7 +15,7 @@ fault in the test, not in the code under test. It was seen once in a development
   and one CURRENCY line, never status 2.
 - `tests/amend17_mutants.py`: one planted defect, the helper handing the nonce as two arguments again (expected caught by R25).
 - `verify/README.md`: the example is `--nonce=NONCE`, with the reason.
-- Not changed: R25's other checks, word for word; any other test; any code under `verify/`, `plea_gateway/`, `mcp/` or `spike/`.
+- Not changed: R25's other checks, word for word; any other test; any code other than the readme.
 
 ## Entry 2. This record is the clean rebuild
 
