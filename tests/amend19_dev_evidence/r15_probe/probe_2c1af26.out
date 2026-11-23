@@ -1,0 +1,2 @@
+dec Decimal('1E+1000000')
+text raised Overflow [<class 'decimal.Overflow'>]
